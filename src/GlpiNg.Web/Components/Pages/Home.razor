@@ -1,0 +1,31 @@
+@page "/"
+@using GlpiNg.Web.Data
+@using Microsoft.EntityFrameworkCore
+@inject GlpiNgDbContext Db
+@rendermode InteractiveServer
+
+<PageTitle>GlpiNg — Tableau de bord</PageTitle>
+
+<h1>Tableau de bord</h1>
+
+<div class="stats">
+    <div class="stat-card">
+        <span class="stat-value">@_computerCount</span>
+        <span class="stat-label">Postes inventoriés</span>
+    </div>
+    <div class="stat-card">
+        <span class="stat-value">@_agentCount</span>
+        <span class="stat-label">Agents enregistrés</span>
+    </div>
+</div>
+
+@code {
+    private int _computerCount;
+    private int _agentCount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _computerCount = await Db.Computers.CountAsync();
+        _agentCount = await Db.Agents.CountAsync();
+    }
+}
