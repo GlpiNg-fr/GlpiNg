@@ -1,0 +1,43 @@
+using GlpiNg.Web.Models;
+using GlpiNg.Web.Models.Agent;
+using Microsoft.EntityFrameworkCore;
+
+namespace GlpiNg.Web.Data;
+
+public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbContext(options)
+{
+    public DbSet<Computer> Computers => Set<Computer>();
+    public DbSet<ComputerComponent> ComputerComponents => Set<ComputerComponent>();
+
+    public DbSet<GlpiAgent> Agents => Set<GlpiAgent>();
+    public DbSet<DeploymentJob> DeploymentJobs => Set<DeploymentJob>();
+    public DbSet<DeploymentPackage> DeploymentPackages => Set<DeploymentPackage>();
+    public DbSet<DeploymentPackageFile> DeploymentPackageFiles => Set<DeploymentPackageFile>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<GlpiAgent>()
+            .HasIndex(a => a.DeviceId)
+            .IsUnique();
+
+        modelBuilder.Entity<Computer>()
+            .HasOne(c => c.Agent)
+            .WithOne(a => a.Computer)
+            .HasForeignKey<Computer>(c => c.AgentId);
+
+        modelBuilder.Entity<DeploymentJob>()
+            .HasOne(j => j.Agent)
+            .WithMany(a => a.DeploymentJobs)
+            .HasForeignKey(j => j.AgentId);
+
+        modelBuilder.Entity<DeploymentJob>()
+            .HasOne(j => j.Package)
+            .WithMany()
+            .HasForeignKey(j => j.PackageId);
+
+        modelBuilder.Entity<DeploymentPackage>()
+            .HasMany(p => p.Files)
+            .WithOne()
+            .HasForeignKey(f => f.DeploymentPackageId);
+    }
+}
