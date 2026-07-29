@@ -43,6 +43,12 @@ public class Computer
     // Lien vers l'agent GLPI qui remonte les infos pour cette machine
     public int? AgentId { get; set; }
     public Agent.GlpiAgent? Agent { get; set; }
+
+    /// <summary>
+    /// Id de l'ordinateur (glpi_computers.id) dans la base GLPI source, quand ce
+    /// poste a été créé par l'import GLPI. Permet un import idempotent (upsert).
+    /// </summary>
+    public int? SourceGlpiId { get; set; }
 }
 
 public enum ComponentType

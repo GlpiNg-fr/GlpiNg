@@ -1,6 +1,7 @@
 using AnthoDingo.Setup;
 using GlpiNg.Web.Components;
 using GlpiNg.Web.Data;
+using GlpiNg.Web.Import;
 using GlpiNg.Web.Services;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -17,6 +18,13 @@ builder.Services.AddRazorComponents()
 // API pour l'agent GLPI (contact / inventory / deploy)
 builder.Services.AddControllers();
 builder.Services.AddScoped<InventoryImportService>();
+
+// Construction du JSON de job de déploiement au format attendu par GLPI-Agent
+builder.Services.AddSingleton<DeployJobJsonBuilder>();
+
+// Import de données depuis une base GLPI MySQL existante
+builder.Services.Configure<GlpiImportOptions>(builder.Configuration.GetSection(GlpiImportOptions.SectionName));
+builder.Services.AddScoped<GlpiMySqlImportService>();
 
 // Assistant d'installation premier démarrage (page /setup intégrée). GlpiNg n'autorise
 // que les bases relationnelles serveur — SQLite n'est volontairement pas proposé.

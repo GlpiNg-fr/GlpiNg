@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models.Agent;
 using GlpiNg.Web.Services;
@@ -14,6 +15,9 @@ namespace GlpiNg.Web.Controllers;
 ///  - CONTACT:  https://glpi-json-protocol.readthedocs.io/en/latest/contact.html
 ///  - INVENTORY: https://glpi-json-protocol.readthedocs.io/en/latest/inventory.html
 ///
+/// Traite aussi "getJobs" (récupération d'une tâche de déploiement) et "setStatus"
+/// (rapport d'exécution), et expose le téléchargement des fichiers de package associés.
+///
 /// Non couvert pour l'instant : compression (zlib/gzip/br), chiffrement (GLPI-CryptoKey-ID),
 /// PROLOG legacy XML (fallback historique FusionInventory), proxy agent (GLPI-Proxy-ID).
 /// </summary>
@@ -21,7 +25,11 @@ namespace GlpiNg.Web.Controllers;
 [Route("glpi-agent")]
 [Consumes("application/json")]
 [Produces("application/json")]
-public class AgentController(GlpiNgDbContext db, InventoryImportService inventoryImport) : ControllerBase
+public class AgentController(
+    GlpiNgDbContext db,
+    InventoryImportService inventoryImport,
+    DeployJobJsonBuilder deployJobJsonBuilder,
+    IConfiguration configuration) : ControllerBase
 {
     private const string AgentIdHeader = "GLPI-Agent-ID";
     private const string RequestIdHeader = "GLPI-Request-ID";
@@ -49,6 +57,8 @@ public class AgentController(GlpiNgDbContext db, InventoryImportService inventor
         {
             "contact" => await HandleContactAsync(agentUuid, document, cancellationToken),
             "inventory" => await HandleInventoryAsync(agentUuid, document, cancellationToken),
+            "getJobs" => await HandleGetJobsAsync(agentUuid, cancellationToken),
+            "setStatus" => await HandleSetStatusAsync(document, cancellationToken),
             _ => BadRequest(new ProtocolAnswer { Status = "error", Message = $"unsupported action '{action}'" })
         };
 
@@ -60,6 +70,33 @@ public class AgentController(GlpiNgDbContext db, InventoryImportService inventor
         Response.Headers[AgentIdHeader] = agentUuid;
 
         return result;
+    }
+
+    /// <summary>
+    /// Téléchargement d'un fichier de package référencé par son hash SHA512
+    /// (présent dans le tableau "associatedFiles" du job renvoyé par getJobs).
+    /// </summary>
+    [HttpGet("deploy/file/{sha512}")]
+    public async Task<IActionResult> GetDeployFile(string sha512)
+    {
+        DeploymentPackageFile? file = await db.DeploymentPackageFiles
+            .FirstOrDefaultAsync(f => f.Sha512 == sha512);
+
+        if (file is null)
+        {
+            return NotFound();
+        }
+
+        string rootPath = configuration["PackageStorage:RootPath"] ?? "PackageStorage";
+        string fullPath = Path.Combine(rootPath, file.StoragePath);
+
+        if (!System.IO.File.Exists(fullPath))
+        {
+            return NotFound();
+        }
+
+        FileStream stream = System.IO.File.OpenRead(fullPath);
+        return File(stream, "application/octet-stream", file.FileName);
     }
 
     private async Task<IActionResult> HandleContactAsync(string agentUuid, JsonDocument document, CancellationToken cancellationToken)
@@ -126,6 +163,72 @@ public class AgentController(GlpiNgDbContext db, InventoryImportService inventor
         return Ok(new ProtocolAnswer { Status = "ok", Expiration = "1d" });
     }
 
+    private async Task<IActionResult> HandleGetJobsAsync(string agentUuid, CancellationToken cancellationToken)
+    {
+        GlpiAgent? agent = await db.Agents.FirstOrDefaultAsync(a => a.AgentUuid == agentUuid, cancellationToken);
+        if (agent is null)
+        {
+            return Ok(new JsonObject { ["jobs"] = new JsonArray() });
+        }
+
+        DeploymentJob? job = await db.DeploymentJobs
+            .Include(j => j.Package)
+            .ThenInclude(p => p!.Files)
+            .Where(j => j.AgentId == agent.Id && j.Status == DeploymentStatus.Pending)
+            .OrderBy(j => j.CreatedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (job is null || job.Package is null)
+        {
+            return Ok(new JsonObject { ["jobs"] = new JsonArray() });
+        }
+
+        string jobUuid = job.Id.ToString("D8");
+        JsonObject payload = deployJobJsonBuilder.Build(job, job.Package, jobUuid);
+
+        job.Status = DeploymentStatus.Running;
+        job.StartedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+
+        return Content(payload.ToJsonString(), "application/json");
+    }
+
+    private async Task<IActionResult> HandleSetStatusAsync(JsonDocument document, CancellationToken cancellationToken)
+    {
+        SetStatusRequest? statusRequest = document.Deserialize<SetStatusRequest>(JsonOptions);
+        if (statusRequest is null || string.IsNullOrEmpty(statusRequest.Uuid) || !int.TryParse(statusRequest.Uuid, out int jobId))
+        {
+            return BadRequest(new ProtocolAnswer { Status = "error", Message = "bad-format" });
+        }
+
+        DeploymentJob? job = await db.DeploymentJobs.FirstOrDefaultAsync(j => j.Id == jobId, cancellationToken);
+        if (job is null)
+        {
+            return NotFound();
+        }
+
+        if (string.Equals(statusRequest.Status, "success", StringComparison.OrdinalIgnoreCase))
+        {
+            job.Status = DeploymentStatus.Success;
+            job.CompletedAt = DateTime.UtcNow;
+        }
+        else if (string.Equals(statusRequest.Status, "error", StringComparison.OrdinalIgnoreCase))
+        {
+            job.Status = DeploymentStatus.Error;
+            job.CompletedAt = DateTime.UtcNow;
+        }
+
+        if (!string.IsNullOrEmpty(statusRequest.Message))
+        {
+            job.Log = string.IsNullOrEmpty(job.Log)
+                ? statusRequest.Message
+                : job.Log + Environment.NewLine + statusRequest.Message;
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        return Ok(new ProtocolAnswer { Status = "ok" });
+    }
+
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 }
 
@@ -160,6 +263,14 @@ public class ContactRequest
 
     [System.Text.Json.Serialization.JsonPropertyName("tag")]
     public string? Tag { get; set; }
+}
+
+/// <summary>Corps attendu pour l'action "setStatus" (rapport d'exécution d'un job de déploiement).</summary>
+public class SetStatusRequest
+{
+    public string? Uuid { get; set; }
+    public string? Status { get; set; }
+    public string? Message { get; set; }
 }
 
 public class DeployJobRef
