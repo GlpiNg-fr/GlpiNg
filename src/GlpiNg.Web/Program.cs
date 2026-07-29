@@ -1,8 +1,9 @@
 using GlpiNg.Web.Components;
 using GlpiNg.Web.Data;
+using GlpiNg.Web.Services;
 using Microsoft.EntityFrameworkCore;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // UI Blazor Server (rendu interactif)
 builder.Services.AddRazorComponents()
@@ -11,12 +12,15 @@ builder.Services.AddRazorComponents()
 // API pour l'agent GLPI (contact / inventory / deploy)
 builder.Services.AddControllers();
 
+// Construction du JSON de job de déploiement au format attendu par GLPI-Agent
+builder.Services.AddSingleton<DeployJobJsonBuilder>();
+
 // Base de données — SQLite par défaut en dev, configurable via appsettings
 builder.Services.AddDbContext<GlpiNgDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")
         ?? "Data Source=glpi-ng.db"));
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
 {

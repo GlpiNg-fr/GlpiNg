@@ -1,6 +1,5 @@
 @page "/"
 @using GlpiNg.Web.Data
-@using Microsoft.EntityFrameworkCore
 @inject GlpiNgDbContext Db
 @rendermode InteractiveServer
 
@@ -19,13 +18,3 @@
     </div>
 </div>
 
-@code {
-    private int _computerCount;
-    private int _agentCount;
-
-    protected override async Task OnInitializedAsync()
-    {
-        _computerCount = await Db.Computers.CountAsync();
-        _agentCount = await Db.Agents.CountAsync();
-    }
-}
