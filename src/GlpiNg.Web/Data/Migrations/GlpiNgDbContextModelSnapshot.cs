@@ -15,7 +15,7 @@ namespace GlpiNg.Web.Data.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "8.0.8");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.10");
 
             modelBuilder.Entity("GlpiNg.Web.Models.Agent.DeploymentJob", b =>
                 {
@@ -128,7 +128,7 @@ namespace GlpiNg.Web.Data.Migrations
                     b.Property<string>("DeviceId")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("EnabledTasks")
+                    b.PrimitiveCollection<string>("EnabledTasks")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -138,7 +138,7 @@ namespace GlpiNg.Web.Data.Migrations
                     b.Property<string>("Hostname")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("InstalledTasks")
+                    b.PrimitiveCollection<string>("InstalledTasks")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
