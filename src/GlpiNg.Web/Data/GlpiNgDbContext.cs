@@ -17,7 +17,7 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<GlpiAgent>()
-            .HasIndex(a => a.DeviceId)
+            .HasIndex(a => a.AgentUuid)
             .IsUnique();
 
         modelBuilder.Entity<Computer>()

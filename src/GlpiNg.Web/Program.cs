@@ -1,5 +1,6 @@
 using GlpiNg.Web.Components;
 using GlpiNg.Web.Data;
+using GlpiNg.Web.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +11,7 @@ builder.Services.AddRazorComponents()
 
 // API pour l'agent GLPI (contact / inventory / deploy)
 builder.Services.AddControllers();
+builder.Services.AddScoped<InventoryImportService>();
 
 // Base de données — SQLite par défaut en dev, configurable via appsettings
 builder.Services.AddDbContext<GlpiNgDbContext>(options =>
