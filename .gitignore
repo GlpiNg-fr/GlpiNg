@@ -9,6 +9,9 @@ obj/
 *.db-shm
 *.db-wal
 
+## AnthoDingo.Setup — écrit à la fin de l'installation, contient la chaîne de connexion
+appsettings.local.json
+
 ## IDE
 .vs/
 .vscode/
