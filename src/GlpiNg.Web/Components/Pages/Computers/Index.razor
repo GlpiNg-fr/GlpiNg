@@ -1,0 +1,63 @@
+@page "/computers"
+@using GlpiNg.Web.Models
+@rendermode InteractiveServer
+
+<PageTitle>GlpiNg — Ordinateurs</PageTitle>
+
+<div class="page-header d-flex align-items-center justify-content-between mb-3">
+    <h2 class="page-title mb-0">Ordinateurs</h2>
+    <div class="text-secondary">@_computers.Count résultat(s)</div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <div class="input-icon" style="max-width: 320px;">
+            <span class="input-icon-addon">
+                <i class="ti ti-search"></i>
+            </span>
+            <input type="text" class="form-control" placeholder="Rechercher un poste..."
+                   @bind="_searchTerm" @bind:event="oninput" @onkeyup="OnSearchChanged" />
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Statut</th>
+                    <th>Fabricant / Modèle</th>
+                    <th>Système d'exploitation</th>
+                    <th>Dernière remontée</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (_filteredComputers.Count == 0)
+                {
+                    <tr>
+                        <td colspan="5" class="text-center text-secondary py-4">Aucun poste trouvé.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (Computer computer in _filteredComputers)
+                    {
+                        <tr>
+                            <td>
+                                <a href="@($"/computers/{computer.Id}")" class="text-reset fw-semibold">
+                                    <i class="ti ti-device-desktop me-1 text-secondary"></i>@computer.Name
+                                </a>
+                            </td>
+                            <td>
+                                <span class="badge @StatusCssClass(computer.Status)">@StatusLabel(computer.Status)</span>
+                            </td>
+                            <td>@ManufacturerAndModel(computer)</td>
+                            <td>@(computer.OperatingSystem ?? "—")</td>
+                            <td>@LastInventoryLabel(computer)</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

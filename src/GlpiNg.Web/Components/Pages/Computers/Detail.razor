@@ -1,0 +1,114 @@
+@page "/computers/{ComputerId:int}"
+@using GlpiNg.Web.Models
+@rendermode InteractiveServer
+
+<PageTitle>GlpiNg — @(_computer?.Name ?? "Ordinateur")</PageTitle>
+
+@if (_computer is null)
+{
+    <div class="text-center text-secondary py-5">
+        <i class="ti ti-device-desktop-off fs-1"></i>
+        <p class="mt-2">Ce poste est introuvable.</p>
+    </div>
+}
+else
+{
+    <div class="page-header d-flex align-items-center justify-content-between mb-3">
+        <div>
+            <h2 class="page-title mb-1">
+                <i class="ti ti-device-desktop me-2 text-secondary"></i>@_computer.Name
+            </h2>
+            <span class="badge @StatusCssClass(_computer.Status)">@StatusLabel(_computer.Status)</span>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-3">
+        <li class="nav-item">
+            <a class="nav-link @(_activeTab == Tab.General ? "active" : "")" href="#" @onclick="() => SetTab(Tab.General)" @onclick:preventDefault>
+                <i class="ti ti-info-circle me-1"></i>Général
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(_activeTab == Tab.Components ? "active" : "")" href="#" @onclick="() => SetTab(Tab.Components)" @onclick:preventDefault>
+                <i class="ti ti-cpu me-1"></i>Composants (@_computer.Components.Count)
+            </a>
+        </li>
+    </ul>
+
+    @if (_activeTab == Tab.General)
+    {
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row mb-0">
+                            <dt class="col-5 text-secondary">Fabricant</dt>
+                            <dd class="col-7">@(_computer.Manufacturer ?? "—")</dd>
+
+                            <dt class="col-5 text-secondary">Modèle</dt>
+                            <dd class="col-7">@(_computer.Model ?? "—")</dd>
+
+                            <dt class="col-5 text-secondary">Numéro de série</dt>
+                            <dd class="col-7">@(_computer.SerialNumber ?? "—")</dd>
+
+                            <dt class="col-5 text-secondary">Type de châssis</dt>
+                            <dd class="col-7">@(_computer.ChassisType ?? "—")</dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="row mb-0">
+                            <dt class="col-5 text-secondary">Système d'exploitation</dt>
+                            <dd class="col-7">@(_computer.OperatingSystem ?? "—")</dd>
+
+                            <dt class="col-5 text-secondary">Version OS</dt>
+                            <dd class="col-7">@(_computer.OsVersion ?? "—")</dd>
+
+                            <dt class="col-5 text-secondary">Mémoire totale</dt>
+                            <dd class="col-7">@(_computer.TotalMemoryMb is { } mb ? $"{mb} Mo" : "—")</dd>
+
+                            <dt class="col-5 text-secondary">Dernière remontée</dt>
+                            <dd class="col-7">@LastInventoryLabel(_computer)</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Désignation</th>
+                            <th>Capacité</th>
+                            <th>Numéro de série</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (_computer.Components.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center text-secondary py-4">Aucun composant remonté.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (ComputerComponent component in _computer.Components)
+                            {
+                                <tr>
+                                    <td>@ComponentTypeLabel(component.Type)</td>
+                                    <td>@component.Designation</td>
+                                    <td>@(component.Capacity ?? "—")</td>
+                                    <td>@(component.Serial ?? "—")</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+}
