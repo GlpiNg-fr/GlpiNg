@@ -25,6 +25,11 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
             .WithOne(a => a.Computer)
             .HasForeignKey<Computer>(c => c.AgentId);
 
+        modelBuilder.Entity<Computer>()
+            .HasIndex(c => c.SourceGlpiId)
+            .IsUnique()
+            .HasFilter("\"SourceGlpiId\" IS NOT NULL");
+
         modelBuilder.Entity<DeploymentJob>()
             .HasOne(j => j.Agent)
             .WithMany(a => a.DeploymentJobs)
