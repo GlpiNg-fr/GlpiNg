@@ -2,8 +2,10 @@ using System.Reflection;
 using GlpiNg.Modules.Inventory;
 using GlpiNg.Web.Components;
 using GlpiNg.Web.Data;
+using GlpiNg.Web.Options;
 using GlpiNg.Web.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -40,6 +42,15 @@ builder.Services.AddSwaggerGen(options =>
 // Construction du JSON de job de déploiement au format attendu par GLPI-Agent
 builder.Services.AddSingleton<DeployJobJsonBuilder>();
 
+// Activation de Swagger pilotée par la config (section "Swagger:Enabled",
+// modifiable depuis la page /config) : IOptionsMonitor permet une bascule à chaud,
+// sans redémarrage — voir l'usage dans le pipeline ci-dessous.
+builder.Services.Configure<SwaggerOptions>(builder.Configuration.GetSection(SwaggerOptions.SectionName));
+
+// Lecture/écriture de appsettings.json depuis la page /config (adresses d'écoute
+// du serveur, activation de Swagger).
+builder.Services.AddSingleton<AppSettingsFileStore>();
+
 // Module Inventory (modèle de parc + import GLPI MySQL) : voir
 // GlpiNg.Modules.Inventory.InventoryModuleServiceCollectionExtensions. Les futurs
 // modules (Tickets, etc.) suivront le même schéma AddXxxModule(...).
@@ -62,13 +73,19 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
-else
-{
-    // Réservé au développement : /admin/import/glpi n'a pas encore d'authentification
-    // (voir README), donc pas d'exposition de sa documentation hors de cet environnement.
-    app.UseSwagger();
-    app.UseSwaggerUI(options => options.SwaggerEndpoint("/swagger/v1/swagger.json", "GlpiNg API v1"));
-}
+
+// Activation de Swagger pilotée par appsettings.json ("Swagger:Enabled", éditable
+// depuis /config) plutôt que par l'environnement : IOptionsMonitor est réévalué à
+// chaque requête, donc le changement s'applique sans redémarrage. Par défaut
+// désactivé, car /admin/import/glpi n'a pas encore d'authentification (voir README).
+IOptionsMonitor<SwaggerOptions> swaggerOptionsMonitor = app.Services.GetRequiredService<IOptionsMonitor<SwaggerOptions>>();
+app.MapWhen(
+    context => context.Request.Path.StartsWithSegments("/swagger") && swaggerOptionsMonitor.CurrentValue.Enabled,
+    branch =>
+    {
+        branch.UseSwagger();
+        branch.UseSwaggerUI(options => options.SwaggerEndpoint("/swagger/v1/swagger.json", "GlpiNg API v1"));
+    });
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
