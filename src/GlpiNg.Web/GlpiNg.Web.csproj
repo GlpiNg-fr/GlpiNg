@@ -6,6 +6,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>GlpiNg.Web</RootNamespace>
     <UserSecretsId>glpi-ng-web-secrets</UserSecretsId>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- CS1591 : commentaire XML manquant sur un membre public — pas pertinent ici,
+         seuls les commentaires déjà présents sur les contrôleurs sont exploités par Swagger. -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,6 +26,10 @@
          Microsoft.Data.Sqlite (pour tester une connexion SQLite dans son wizard), qui ramène
          SQLitePCLRaw.lib.e_sqlite3 2.1.11 (vulnérable, non corrigé en amont — dotnet/efcore#38257). -->
     <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.53.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GlpiNg.Modules.Inventory\GlpiNg.Modules.Inventory.csproj" />
   </ItemGroup>
 
 </Project>

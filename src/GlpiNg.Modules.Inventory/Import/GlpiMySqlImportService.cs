@@ -1,12 +1,10 @@
 using System.Runtime.CompilerServices;
-using GlpiNg.Web.Data;
-using GlpiNg.Web.Models;
-using GlpiNg.Web.Models.Agent;
+using GlpiNg.Modules.Inventory.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using MySqlConnector;
 
-namespace GlpiNg.Web.Import;
+namespace GlpiNg.Modules.Inventory.Import;
 
 /// <summary>
 /// Importe les postes, agents et composants matériels depuis une base GLPI MySQL
@@ -27,7 +25,7 @@ namespace GlpiNg.Web.Import;
 /// détecter les colonnes réellement présentes et se dégrade proprement (valeur NULL,
 /// jamais d'erreur SQL) si une colonne attendue n'existe pas.
 /// </summary>
-public class GlpiMySqlImportService(GlpiNgDbContext db, IOptions<GlpiImportOptions> options)
+public class GlpiMySqlImportService(DbContext db, IOptions<GlpiImportOptions> options)
 {
     public async Task<GlpiImportResult> RunAsync(CancellationToken cancellationToken = default)
     {
@@ -68,7 +66,7 @@ public class GlpiMySqlImportService(GlpiNgDbContext db, IOptions<GlpiImportOptio
 
         await foreach (GlpiComputerRow row in ReadComputersAsync(connection, cancellationToken))
         {
-            Computer? computer = await db.Computers.FirstOrDefaultAsync(c => c.SourceGlpiId == row.Id, cancellationToken);
+            Computer? computer = await db.Set<Computer>().FirstOrDefaultAsync(c => c.SourceGlpiId == row.Id, cancellationToken);
             bool isNew = computer is null;
             computer ??= new Computer { Name = row.Name ?? $"glpi-{row.Id}", SourceGlpiId = row.Id };
 
@@ -111,7 +109,7 @@ public class GlpiMySqlImportService(GlpiNgDbContext db, IOptions<GlpiImportOptio
 
             if (isNew)
             {
-                db.Computers.Add(computer);
+                db.Set<Computer>().Add(computer);
                 result.ComputersCreated++;
             }
             else
@@ -189,7 +187,7 @@ public class GlpiMySqlImportService(GlpiNgDbContext db, IOptions<GlpiImportOptio
 
             if (isNew)
             {
-                db.Agents.Add(agent);
+                db.Set<GlpiAgent>().Add(agent);
                 result.AgentsCreated++;
             }
             else
@@ -310,14 +308,14 @@ public class GlpiMySqlImportService(GlpiNgDbContext db, IOptions<GlpiImportOptio
                 continue;
             }
 
-            List<ComputerComponent> existing = await db.ComputerComponents
+            List<ComputerComponent> existing = await db.Set<ComputerComponent>()
                 .Where(c => c.ComputerId == localComputerId && c.Type == componentType)
                 .ToListAsync(cancellationToken);
-            db.ComputerComponents.RemoveRange(existing);
+            db.Set<ComputerComponent>().RemoveRange(existing);
 
             foreach ((string Designation, string? Capacity) item in entry.Value)
             {
-                db.ComputerComponents.Add(new ComputerComponent
+                db.Set<ComputerComponent>().Add(new ComputerComponent
                 {
                     ComputerId = localComputerId,
                     Type = componentType,
