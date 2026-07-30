@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "glping-web",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "src/GlpiNg.Web/GlpiNg.Web.csproj", "--urls", "http://localhost:65441"],
+      "port": 65441
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-namespace GlpiNg.Web.Import;
+namespace GlpiNg.Modules.Inventory.Import;
 
 /// <summary>Résumé d'une exécution de l'import GLPI.</summary>
 public class GlpiImportResult

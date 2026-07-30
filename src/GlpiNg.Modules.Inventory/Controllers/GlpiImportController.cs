@@ -1,7 +1,7 @@
-using GlpiNg.Web.Import;
+using GlpiNg.Modules.Inventory.Import;
 using Microsoft.AspNetCore.Mvc;
 
-namespace GlpiNg.Web.Controllers;
+namespace GlpiNg.Modules.Inventory.Controllers;
 
 /// <summary>
 /// Déclenche l'import de données depuis une base GLPI MySQL source (configuration

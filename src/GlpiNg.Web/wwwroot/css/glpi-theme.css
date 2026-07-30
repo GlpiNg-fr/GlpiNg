@@ -111,6 +111,92 @@ body {
   gap: 1rem;
 }
 
+.glpi-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  color: #6c737b;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.glpi-breadcrumb-sep {
+  color: #c3c8cf;
+}
+
+.glpi-breadcrumb-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.glpi-breadcrumb-item .ti {
+  font-size: 1rem;
+}
+
+.glpi-breadcrumb-item:hover {
+  color: var(--tblr-primary);
+}
+
+.glpi-breadcrumb-item.active {
+  color: #232629;
+  font-weight: 600;
+}
+
+.glpi-topbar .glpi-search {
+  width: 280px;
+  flex-shrink: 0;
+}
+
+.glpi-topbar-user {
+  flex-shrink: 0;
+}
+
+.glpi-user-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.glpi-user-toggle::after {
+  margin-left: 0.35rem;
+}
+
+.glpi-user-info {
+  display: flex;
+  flex-direction: column;
+  text-align: right;
+  line-height: 1.25;
+}
+
+.glpi-user-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #232629;
+}
+
+.glpi-user-entity {
+  font-size: 0.75rem;
+  color: #8a919a;
+}
+
+.glpi-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  background: #e07a8b;
+  color: #fff;
+  font-weight: 700;
+  flex-shrink: 0;
 .glpi-topbar .glpi-search {
   max-width: 420px;
   flex: 1;
