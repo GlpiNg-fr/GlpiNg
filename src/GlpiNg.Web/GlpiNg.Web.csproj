@@ -19,7 +19,14 @@
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.8" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.3" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+    <PackageReference Include="AnthoDingo.Setup" Version="2.0.0" />
+    <!-- Contournement de CVE-2025-6965 / GHSA-2m69-gcr7-jv3q : AnthoDingo.Setup dépend de
+         Microsoft.Data.Sqlite (pour tester une connexion SQLite dans son wizard), qui ramène
+         SQLitePCLRaw.lib.e_sqlite3 2.1.11 (vulnérable, non corrigé en amont — dotnet/efcore#38257). -->
+    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.53.3" />
   </ItemGroup>
 
   <ItemGroup>

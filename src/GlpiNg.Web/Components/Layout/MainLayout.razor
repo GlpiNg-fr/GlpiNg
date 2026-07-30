@@ -1,18 +1,140 @@
 @inherits LayoutComponentBase
+@implements IDisposable
+@inject NavigationManager Nav
 
-<div class="page">
-    <aside class="sidebar">
-        <h2>GlpiNg</h2>
+<div class="glpi-app">
+    <aside class="glpi-sidebar">
+        <a href="/" class="glpi-brand">
+            <i class="ti ti-server-2"></i>
+            <span>GlpiNg</span>
+        </a>
         <nav>
-            <a href="/">Tableau de bord</a>
-            <a href="/computers">Parc informatique</a>
-            <a href="/agents">Agents</a>
-            <a href="/deployments">Déploiements</a>
-            <a href="/config">Configuration</a>
+            <NavLink href="/" Match="NavLinkMatch.All" class="nav-link">
+                <i class="ti ti-layout-dashboard"></i>
+                <span>Tableau de bord</span>
+            </NavLink>
+            <NavLink href="/computers" class="nav-link">
+                <i class="ti ti-device-desktop"></i>
+                <span>Ordinateurs</span>
+            </NavLink>
+            <NavLink href="/agents" class="nav-link">
+                <i class="ti ti-cpu"></i>
+                <span>Agents</span>
+            </NavLink>
+            <NavLink href="/deployments" class="nav-link">
+                <i class="ti ti-package"></i>
+                <span>Déploiements</span>
+            </NavLink>
+            <NavLink href="/config" class="nav-link">
+                <i class="ti ti-settings"></i>
+                <span>Configuration</span>
+            </NavLink>
         </nav>
     </aside>
 
-    <main>
-        @Body
-    </main>
+    <div class="glpi-content">
+        <header class="glpi-topbar">
+            <nav class="glpi-breadcrumb">
+                @for (int i = 0; i < Breadcrumb.Count; i++)
+                {
+                    var crumb = Breadcrumb[i];
+                    var isLast = i == Breadcrumb.Count - 1;
+                    if (i > 0)
+                    {
+                        <span class="glpi-breadcrumb-sep">/</span>
+                    }
+                    if (isLast || crumb.Href is null)
+                    {
+                        <span class="glpi-breadcrumb-item active">
+                            <i class="ti @crumb.Icon"></i>
+                            <span>@crumb.Label</span>
+                        </span>
+                    }
+                    else
+                    {
+                        <a href="@crumb.Href" class="glpi-breadcrumb-item">
+                            <i class="ti @crumb.Icon"></i>
+                            <span>@crumb.Label</span>
+                        </a>
+                    }
+                }
+            </nav>
+
+            <div class="input-icon glpi-search">
+                <span class="input-icon-addon">
+                    <i class="ti ti-search"></i>
+                </span>
+                <input type="text" class="form-control" placeholder="Rechercher..." />
+            </div>
+
+            <div class="glpi-topbar-user dropdown">
+                <a href="#" class="glpi-user-toggle dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="glpi-user-info">
+                        <span class="glpi-user-name">Super-Admin</span>
+                        <span class="glpi-user-entity">Root entity (Arborescence)</span>
+                    </span>
+                    <span class="glpi-avatar">I</span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#"><i class="ti ti-user"></i> Mon profil</a></li>
+                    <li><a class="dropdown-item" href="/config"><i class="ti ti-settings"></i> Préférences</a></li>
+                    <li><hr class="dropdown-divider" /></li>
+                    <li><a class="dropdown-item" href="#"><i class="ti ti-logout"></i> Se déconnecter</a></li>
+                </ul>
+            </div>
+        </header>
+
+        <main class="glpi-page-body">
+            @Body
+        </main>
+    </div>
 </div>
+
+@code {
+    private List<(string Icon, string Label, string? Href)> Breadcrumb { get; set; } = [];
+
+    protected override void OnInitialized()
+    {
+        Nav.LocationChanged += OnLocationChanged;
+        Breadcrumb = BuildBreadcrumb();
+    }
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        Breadcrumb = BuildBreadcrumb();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private List<(string Icon, string Label, string? Href)> BuildBreadcrumb()
+    {
+        var path = new Uri(Nav.Uri).AbsolutePath.Trim('/');
+        var items = new List<(string Icon, string Label, string? Href)>
+        {
+            ("ti-home", "Accueil", "/")
+        };
+
+        if (path.StartsWith("computers", StringComparison.OrdinalIgnoreCase))
+        {
+            items.Add(("ti-device-desktop", "Ordinateurs", "/computers"));
+        }
+        else if (path.StartsWith("agents", StringComparison.OrdinalIgnoreCase))
+        {
+            items.Add(("ti-cpu", "Agents", "/agents"));
+        }
+        else if (path.StartsWith("deployments", StringComparison.OrdinalIgnoreCase))
+        {
+            items.Add(("ti-package", "Déploiements", "/deployments"));
+        }
+        else if (path.StartsWith("config", StringComparison.OrdinalIgnoreCase))
+        {
+            items.Add(("ti-settings", "Configuration", "/config"));
+        }
+
+        return items;
+    }
+
+    public void Dispose()
+    {
+        Nav.LocationChanged -= OnLocationChanged;
+    }
+}
