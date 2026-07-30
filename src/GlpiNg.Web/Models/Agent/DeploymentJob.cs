@@ -1,3 +1,5 @@
+using GlpiNg.Modules.Inventory.Models;
+
 namespace GlpiNg.Web.Models.Agent;
 
 public enum DeploymentStatus

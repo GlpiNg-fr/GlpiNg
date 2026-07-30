@@ -21,12 +21,22 @@ avec le protocole **GLPI-Agent**, en .NET 8 / Blazor Server.
 ```
 GlpiNg.sln
 src/
-  GlpiNg.Web/
-    Components/       # UI Blazor (pages, layout)
-    Controllers/       # Endpoints API protocole agent
-    Data/               # DbContext EF Core
-    Models/             # Entités (Computer, Agent, DeploymentJob...)
+  GlpiNg.Web/                    # Hôte : UI Blazor, protocole agent, déploiement, DbContext
+    Components/                  # UI Blazor (pages, layout)
+    Controllers/                 # Endpoints API protocole agent (contact/getJobs/setStatus)
+    Data/                        # DbContext EF Core (composé à partir des modules)
+    Models/Agent/                # Domaine Deploy (DeploymentJob/Package/File)
+  GlpiNg.Modules.Inventory/      # Module Inventory (parc, agents GLPI, import MySQL)
+    Models/                      # Computer, ComputerComponent, GlpiAgent
+    Import/                      # Import depuis une base GLPI MySQL source
+    Controllers/                 # POST /admin/import/glpi
 ```
+
+Les modules (`GlpiNg.Modules.*`) sont des bibliothèques de classes autonomes,
+référencées uniquement par `GlpiNg.Web` (jamais l'inverse) : chacune expose une
+extension `AddXxxModule(...)` appelée depuis `Program.cs`, et ne dépend que du
+`DbContext` EF Core de base (pas du `GlpiNgDbContext` concret de l'hôte). Un futur
+module Tickets suivrait le même schéma dans `src/GlpiNg.Modules.Tickets/`.
 
 ## État actuel
 

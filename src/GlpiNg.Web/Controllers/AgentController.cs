@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using GlpiNg.Modules.Inventory.Models;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models.Agent;
 using GlpiNg.Web.Services;

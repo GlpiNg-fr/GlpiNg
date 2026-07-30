@@ -1,4 +1,4 @@
-namespace GlpiNg.Web.Models;
+namespace GlpiNg.Modules.Inventory.Models;
 
 public enum ComputerStatus
 {
@@ -33,31 +33,11 @@ public class Computer
 
     // Lien vers l'agent GLPI qui remonte les infos pour cette machine
     public int? AgentId { get; set; }
-    public Agent.GlpiAgent? Agent { get; set; }
+    public GlpiAgent? Agent { get; set; }
 
     /// <summary>
     /// Id de l'ordinateur (glpi_computers.id) dans la base GLPI source, quand ce
     /// poste a été créé par l'import GLPI. Permet un import idempotent (upsert).
     /// </summary>
     public int? SourceGlpiId { get; set; }
-}
-
-public enum ComponentType
-{
-    Cpu,
-    Ram,
-    Disk,
-    NetworkCard,
-    Gpu,
-    Motherboard
-}
-
-public class ComputerComponent
-{
-    public int Id { get; set; }
-    public int ComputerId { get; set; }
-    public ComponentType Type { get; set; }
-    public required string Designation { get; set; }
-    public string? Capacity { get; set; }
-    public string? Serial { get; set; }
 }
