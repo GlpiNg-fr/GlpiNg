@@ -6,40 +6,145 @@
 
 <PageTitle>GlpiNg — Configuration</PageTitle>
 
-<h1>Configuration</h1>
-
-@if (_settings is null)
-{
-    <p>Chargement…</p>
-}
-else
-{
-    <EditForm Model="_settings" OnValidSubmit="SaveAsync" class="config-form">
-        <div class="field">
-            <label for="urls">Adresses d'écoute du serveur</label>
-            <input id="urls" @bind="_settings.Urls" placeholder="http://0.0.0.0:5000" />
-            <p class="hint">
-                Clé de configuration "Urls" (adresses d'écoute Kestrel). Un
-                redémarrage de l'application est nécessaire pour appliquer ce
-                changement. Si un argument <code>--urls</code> ou une autre source de
-                configuration définit aussi les adresses d'écoute, vérifiez laquelle
-                l'emporte sur votre déploiement avant de vous fier uniquement à cette page.
-            </p>
-        </div>
-
-        <div class="field">
-            <label class="checkbox-label">
-                <input type="checkbox" @bind="_settings.SwaggerEnabled" />
-                Activer Swagger (/swagger)
-            </label>
-            <p class="hint">Pris en compte immédiatement, sans redémarrage.</p>
-        </div>
-
-        @if (_statusMessage is not null)
+<div class="glpi-config">
+    <aside class="glpi-config-sidebar">
+        @foreach (var section in Sections)
         {
-            <p class="status">@_statusMessage</p>
+            <button type="button"
+                    class="glpi-config-nav-item @(section.Key == _activeSection ? "active" : "")"
+                    @onclick="() => SelectSection(section.Key)">
+                <i class="ti @section.Icon"></i>
+                <span>@section.Label</span>
+            </button>
         }
+    </aside>
 
-        <button type="submit" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
-    </EditForm>
-}
+    <div class="glpi-config-body">
+        @if (_activeSection == "generale")
+        {
+            @if (_general is null)
+            {
+                <p>Chargement…</p>
+            }
+            else
+            {
+                <EditForm Model="_general" OnValidSubmit="SaveGeneralAsync" class="glpi-config-form">
+                    <div class="glpi-config-field">
+                        <label for="app-url">URL de l'application</label>
+                        <input id="app-url" @bind="_general.ApplicationUrl" placeholder="http://localhost" />
+                    </div>
+
+                    <div class="glpi-config-field">
+                        <label for="login-message">Texte sur la page de connexion</label>
+                        <textarea id="login-message" rows="4" @bind="_general.LoginPageMessage"></textarea>
+                    </div>
+
+                    <div class="glpi-config-field">
+                        <label for="help-simplified">Lien d'aide dans l'interface simplifiée</label>
+                        <input id="help-simplified" @bind="_general.SimplifiedInterfaceHelpLink" />
+                    </div>
+
+                    <div class="glpi-config-field">
+                        <label for="help-standard">Lien d'aide dans l'interface standard</label>
+                        <input id="help-standard" @bind="_general.StandardInterfaceHelpLink" />
+                    </div>
+
+                    <div class="glpi-config-field">
+                        <label for="decimals">Nombre de décimales par défaut <span class="required">*</span></label>
+                        <input id="decimals" type="number" min="0" max="8" class="glpi-config-input-sm" @bind="_general.DefaultDecimalsCount" />
+                    </div>
+
+                    <div class="glpi-config-field checkbox">
+                        <label for="anon-faq">Autoriser l'accès anonyme à la FAQ</label>
+                        <input id="anon-faq" type="checkbox" @bind="_general.AllowAnonymousFaqAccess" />
+                    </div>
+
+                    <div class="glpi-config-field checkbox">
+                        <label for="anon-imports">
+                            Autoriser les imports (de fichiers) anonymes
+                            <i class="ti ti-help-circle glpi-config-help" title="Permet l'import de fichiers sans authentification préalable."></i>
+                        </label>
+                        <input id="anon-imports" type="checkbox" @bind="_general.AllowAnonymousFileImports" />
+                    </div>
+
+                    <div class="glpi-config-divider">
+                        <span><i class="ti ti-list"></i> Affichage dynamique</span>
+                    </div>
+
+                    <div class="glpi-config-field">
+                        <label for="dropdown-limit">Taille par défaut pour les listes déroulantes <span class="required">*</span></label>
+                        <input id="dropdown-limit" type="number" min="1" class="glpi-config-input-sm" @bind="_general.DefaultDropdownListLimit" />
+                    </div>
+
+                    <div class="glpi-config-field">
+                        <label for="search-threshold">
+                            Ne pas utiliser le moteur de recherche dans les intitulés si le nombre d'éléments est inférieur à
+                            <span class="required">*</span>
+                        </label>
+                        <select id="search-threshold" class="glpi-config-input-sm" @bind="_general.SearchEngineDisableThreshold">
+                            @foreach (var value in new[] { 0, 10, 20, 30, 40, 50, 75, 100, 150, 200, 500, 1000 })
+                            {
+                                <option value="@value">@value</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="glpi-config-divider">
+                        <span><i class="ti ti-search"></i> Moteur de recherche</span>
+                    </div>
+
+                    @if (_generalStatusMessage is not null)
+                    {
+                        <p class="status">@_generalStatusMessage</p>
+                    }
+
+                    <button type="submit" class="glpi-config-save" disabled="@_isSavingGeneral">@(_isSavingGeneral ? "Enregistrement…" : "Enregistrer")</button>
+                </EditForm>
+            }
+        }
+        else if (_activeSection == "systeme")
+        {
+            @if (_settings is null)
+            {
+                <p>Chargement…</p>
+            }
+            else
+            {
+                <EditForm Model="_settings" OnValidSubmit="SaveAsync" class="glpi-config-form">
+                    <div class="glpi-config-field">
+                        <label for="urls">Adresses d'écoute du serveur</label>
+                        <input id="urls" @bind="_settings.Urls" placeholder="http://0.0.0.0:5000" />
+                    </div>
+                    <p class="hint">
+                        Clé de configuration "Urls" (adresses d'écoute Kestrel). Un
+                        redémarrage de l'application est nécessaire pour appliquer ce
+                        changement. Si un argument <code>--urls</code> ou une autre source de
+                        configuration définit aussi les adresses d'écoute, vérifiez laquelle
+                        l'emporte sur votre déploiement avant de vous fier uniquement à cette page.
+                    </p>
+
+                    <div class="glpi-config-field checkbox">
+                        <label for="swagger">Activer Swagger (/swagger)</label>
+                        <input id="swagger" type="checkbox" @bind="_settings.SwaggerEnabled" />
+                    </div>
+                    <p class="hint">Pris en compte immédiatement, sans redémarrage.</p>
+
+                    @if (_statusMessage is not null)
+                    {
+                        <p class="status">@_statusMessage</p>
+                    }
+
+                    <button type="submit" class="glpi-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+                </EditForm>
+            }
+        }
+        else
+        {
+            var current = Sections.First(s => s.Key == _activeSection);
+            <div class="glpi-config-placeholder">
+                <i class="ti @current.Icon"></i>
+                <p>Cette section n'est pas encore disponible.</p>
+            </div>
+        }
+    </div>
+</div>

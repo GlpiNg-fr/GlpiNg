@@ -18,6 +18,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.18" />
+	<PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0" />
     <PackageReference Include="MySqlConnector" Version="2.6.1" />
@@ -30,6 +31,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GlpiNg.Modules.Inventory\GlpiNg.Modules.Inventory.csproj" />
+    <ProjectReference Include="..\GlpiNg.Modules.Abstractions\GlpiNg.Modules.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>
