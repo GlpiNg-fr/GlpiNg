@@ -1,7 +1,12 @@
-namespace GlpiNg.Web.Models.Agent;
+namespace GlpiNg.Modules.Inventory.Models;
 
 /// <summary>
-/// Représente un agent GLPI-Agent enregistré (identifié par sa deviceid).
+/// Représente un agent GLPI-Agent enregistré (identifié par sa deviceid). C'est
+/// l'entité par laquelle un poste remonte son inventaire ; elle appartient donc au
+/// module Inventory. Le module Deploy (voir GlpiNg.Web) référence un agent par son
+/// seul <see cref="Id"/> (via <c>DeploymentJob.AgentId</c>) plutôt que par une
+/// navigation object-relationnelle, afin de ne pas créer de dépendance de ce module
+/// vers le module Deploy.
 /// </summary>
 public class GlpiAgent
 {
@@ -19,6 +24,4 @@ public class GlpiAgent
 
     public int? ComputerId { get; set; }
     public Computer? Computer { get; set; }
-
-    public List<DeploymentJob> DeploymentJobs { get; set; } = [];
 }

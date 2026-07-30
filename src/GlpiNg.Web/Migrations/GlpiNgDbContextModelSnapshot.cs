@@ -17,6 +17,136 @@ namespace GlpiNg.Web.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.8");
 
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.Computer", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("AgentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AssignedUser")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Building")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("LastInventoryAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Manufacturer")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Model")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OperatingSystem")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OsVersion")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Room")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SerialNumber")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Site")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("SourceGlpiId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AgentId")
+                        .IsUnique();
+
+                    b.HasIndex("SourceGlpiId")
+                        .IsUnique()
+                        .HasFilter("\"SourceGlpiId\" IS NOT NULL");
+
+                    b.ToTable("Computers");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerComponent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Capacity")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ComputerId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Designation")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Serial")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ComputerId");
+
+                    b.ToTable("ComputerComponents");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.GlpiAgent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AgentVersion")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ComputerId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("DeviceId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("FirstContactAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Hostname")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("LastContactAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Tags")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DeviceId")
+                        .IsUnique();
+
+                    b.ToTable("Agents");
+                });
+
             modelBuilder.Entity("GlpiNg.Web.Models.Agent.DeploymentJob", b =>
                 {
                     b.Property<int>("Id")
@@ -109,140 +239,28 @@ namespace GlpiNg.Web.Migrations
                     b.ToTable("DeploymentPackageFiles");
                 });
 
-            modelBuilder.Entity("GlpiNg.Web.Models.Agent.GlpiAgent", b =>
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.Computer", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                    b.HasOne("GlpiNg.Modules.Inventory.Models.GlpiAgent", "Agent")
+                        .WithOne("Computer")
+                        .HasForeignKey("GlpiNg.Modules.Inventory.Models.Computer", "AgentId");
 
-                    b.Property<string>("AgentVersion")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("ComputerId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("DeviceId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("FirstContactAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Hostname")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("LastContactAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Tags")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DeviceId")
-                        .IsUnique();
-
-                    b.ToTable("Agents");
+                    b.Navigation("Agent");
                 });
 
-            modelBuilder.Entity("GlpiNg.Web.Models.Computer", b =>
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerComponent", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("AgentId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("AssignedUser")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Building")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("LastInventoryAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Manufacturer")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Model")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("OperatingSystem")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("OsVersion")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Room")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("SerialNumber")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Site")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("SourceGlpiId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AgentId")
-                        .IsUnique();
-
-                    b.HasIndex("SourceGlpiId")
-                        .IsUnique()
-                        .HasFilter("\"SourceGlpiId\" IS NOT NULL");
-
-                    b.ToTable("Computers");
-                });
-
-            modelBuilder.Entity("GlpiNg.Web.Models.ComputerComponent", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Capacity")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("ComputerId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Designation")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Serial")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ComputerId");
-
-                    b.ToTable("ComputerComponents");
+                    b.HasOne("GlpiNg.Modules.Inventory.Models.Computer", null)
+                        .WithMany("Components")
+                        .HasForeignKey("ComputerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.Agent.DeploymentJob", b =>
                 {
-                    b.HasOne("GlpiNg.Web.Models.Agent.GlpiAgent", "Agent")
-                        .WithMany("DeploymentJobs")
+                    b.HasOne("GlpiNg.Modules.Inventory.Models.GlpiAgent", "Agent")
+                        .WithMany()
                         .HasForeignKey("AgentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -267,39 +285,19 @@ namespace GlpiNg.Web.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("GlpiNg.Web.Models.Computer", b =>
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.Computer", b =>
                 {
-                    b.HasOne("GlpiNg.Web.Models.Agent.GlpiAgent", "Agent")
-                        .WithOne("Computer")
-                        .HasForeignKey("GlpiNg.Web.Models.Computer", "AgentId");
-
-                    b.Navigation("Agent");
+                    b.Navigation("Components");
                 });
 
-            modelBuilder.Entity("GlpiNg.Web.Models.ComputerComponent", b =>
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.GlpiAgent", b =>
                 {
-                    b.HasOne("GlpiNg.Web.Models.Computer", null)
-                        .WithMany("Components")
-                        .HasForeignKey("ComputerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Navigation("Computer");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.Agent.DeploymentPackage", b =>
                 {
                     b.Navigation("Files");
-                });
-
-            modelBuilder.Entity("GlpiNg.Web.Models.Agent.GlpiAgent", b =>
-                {
-                    b.Navigation("Computer");
-
-                    b.Navigation("DeploymentJobs");
-                });
-
-            modelBuilder.Entity("GlpiNg.Web.Models.Computer", b =>
-                {
-                    b.Navigation("Components");
                 });
 #pragma warning restore 612, 618
         }

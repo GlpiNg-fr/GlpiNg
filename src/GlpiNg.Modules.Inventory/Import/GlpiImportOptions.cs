@@ -1,4 +1,4 @@
-namespace GlpiNg.Web.Import;
+namespace GlpiNg.Modules.Inventory.Import;
 
 /// <summary>
 /// Configuration de connexion à la base MySQL GLPI source (section "GlpiImport" de

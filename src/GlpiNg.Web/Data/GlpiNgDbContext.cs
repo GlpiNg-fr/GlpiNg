@@ -1,4 +1,4 @@
-using GlpiNg.Web.Models;
+using GlpiNg.Modules.Inventory.Models;
 using GlpiNg.Web.Models.Agent;
 using Microsoft.EntityFrameworkCore;
 
@@ -30,9 +30,12 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
             .IsUnique()
             .HasFilter("\"SourceGlpiId\" IS NOT NULL");
 
+        // Pas de navigation GlpiAgent.DeploymentJobs : DeploymentJob (module Deploy,
+        // dans GlpiNg.Web) référence l'agent (module Inventory) par sa seule clé
+        // étrangère, pour ne pas faire dépendre le module Inventory du module Deploy.
         modelBuilder.Entity<DeploymentJob>()
             .HasOne(j => j.Agent)
-            .WithMany(a => a.DeploymentJobs)
+            .WithMany()
             .HasForeignKey(j => j.AgentId);
 
         modelBuilder.Entity<DeploymentJob>()
