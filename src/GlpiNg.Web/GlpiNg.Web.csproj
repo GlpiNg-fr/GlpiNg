@@ -6,6 +6,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>GlpiNg.Web</RootNamespace>
     <UserSecretsId>glpi-ng-web-secrets</UserSecretsId>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- CS1591 : commentaire XML manquant sur un membre public — pas pertinent ici,
+         seuls les commentaires déjà présents sur les contrôleurs sont exploités par Swagger. -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,6 +19,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.8" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
   <ItemGroup>
