@@ -1,0 +1,210 @@
+/*
+ * Palette "Auror" (thème clair par défaut de GLPI 11), reconstituée à partir
+ * des sources publiques de GLPI 11.0.8 (glpi-project/glpi, GPL-3.0) :
+ *   - css/palettes/_auror.scss
+ *   - css/install.scss (valeurs --tblr-body-bg / --tblr-link-color)
+ *
+ * Valeurs vérifiées :
+ *   --glpi-palette-color-1 : #1b2f62 (bleu marine — fond menu principal)
+ *   --glpi-palette-color-2 : #fff
+ *   --glpi-palette-color-3 : #3a5693 (bleu moyen)
+ *   --glpi-palette-color-4 : #fec95c (jaune-or — liens/accent)
+ *   --glpi-mainmenu-fg     : #f4f6fa (quasi-blanc, confirmé sur la variante sombre)
+ *
+ * Le reste (nuances de gris, ombres, arrondis) reprend les défauts de Tabler
+ * tels quels : GLPI ne les redéfinit pas dans sa palette Auror, donc les
+ * défauts Tabler *sont* le rendu réel de GLPI sur ces aspects.
+ */
+
+:root {
+  --glpi-mainmenu-bg: #1b2f62;
+  --glpi-mainmenu-fg: #f4f6fa;
+  --glpi-mainmenu-fg-muted: rgba(244, 246, 250, 0.65);
+  --glpi-accent: #fec95c;
+  --glpi-accent-fg: #1b2f62;
+  --tblr-primary: #3a5693;
+  --tblr-primary-rgb: 58, 86, 147;
+}
+
+body {
+  background: #f4f6fa;
+}
+
+/* --- Sidebar verticale (menu principal GLPI) --- */
+.glpi-sidebar {
+  background: var(--glpi-mainmenu-bg);
+  color: var(--glpi-mainmenu-fg);
+  width: 260px;
+  min-height: 100vh;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.glpi-sidebar .glpi-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1rem 1.25rem;
+  color: var(--glpi-mainmenu-fg);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1.1rem;
+  border-bottom: 1px solid rgba(244, 246, 250, 0.12);
+}
+
+.glpi-sidebar .glpi-brand .ti {
+  color: var(--glpi-accent);
+  font-size: 1.4rem;
+}
+
+.glpi-sidebar nav {
+  padding: 0.75rem 0;
+  flex: 1;
+}
+
+.glpi-sidebar .nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1.25rem;
+  color: var(--glpi-mainmenu-fg-muted);
+  border-left: 3px solid transparent;
+  font-size: 0.925rem;
+}
+
+.glpi-sidebar .nav-link .ti {
+  font-size: 1.15rem;
+  width: 1.25rem;
+  text-align: center;
+}
+
+.glpi-sidebar .nav-link:hover {
+  color: var(--glpi-mainmenu-fg);
+  background: rgba(244, 246, 250, 0.06);
+}
+
+.glpi-sidebar .nav-link.active {
+  color: var(--glpi-mainmenu-fg);
+  font-weight: 600;
+  border-left-color: var(--glpi-accent);
+  background: rgba(254, 201, 92, 0.08);
+}
+
+/* --- Structure générale --- */
+.glpi-app {
+  display: flex;
+  min-height: 100vh;
+}
+
+.glpi-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.glpi-topbar {
+  background: #fff;
+  border-bottom: 1px solid #e6e7e9;
+  padding: 0.6rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.glpi-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  color: #6c737b;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.glpi-breadcrumb-sep {
+  color: #c3c8cf;
+}
+
+.glpi-breadcrumb-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.glpi-breadcrumb-item .ti {
+  font-size: 1rem;
+}
+
+.glpi-breadcrumb-item:hover {
+  color: var(--tblr-primary);
+}
+
+.glpi-breadcrumb-item.active {
+  color: #232629;
+  font-weight: 600;
+}
+
+.glpi-topbar .glpi-search {
+  width: 280px;
+  flex-shrink: 0;
+}
+
+.glpi-topbar-user {
+  flex-shrink: 0;
+}
+
+.glpi-user-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.glpi-user-toggle::after {
+  margin-left: 0.35rem;
+}
+
+.glpi-user-info {
+  display: flex;
+  flex-direction: column;
+  text-align: right;
+  line-height: 1.25;
+}
+
+.glpi-user-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #232629;
+}
+
+.glpi-user-entity {
+  font-size: 0.75rem;
+  color: #8a919a;
+}
+
+.glpi-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  background: #e07a8b;
+  color: #fff;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.glpi-page-body {
+  padding: 1.5rem;
+}
+
+/* --- Badges de statut de poste --- */
+.glpi-status-instock { background: #e9ecef; color: #495057; }
+.glpi-status-inproduction { background: #d3f2df; color: #1a7f4b; }
+.glpi-status-broken { background: #fbdcdc; color: #b42318; }
+.glpi-status-retired { background: #e6e7e9; color: #6c737b; }
