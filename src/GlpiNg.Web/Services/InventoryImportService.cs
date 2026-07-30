@@ -1,5 +1,5 @@
+using GlpiNg.Modules.Inventory.Models;
 using GlpiNg.Web.Data;
-using GlpiNg.Web.Models;
 using GlpiNg.Web.Models.Agent;
 using Microsoft.EntityFrameworkCore;
 

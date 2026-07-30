@@ -1,5 +1,5 @@
+using GlpiNg.Modules.Inventory.Models;
 using GlpiNg.Web.Data;
-using GlpiNg.Web.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;

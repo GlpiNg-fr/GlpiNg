@@ -1,35 +1,79 @@
 @inherits LayoutComponentBase
 @implements IDisposable
+@using GlpiNg.Modules.Abstractions.Menu
 @inject NavigationManager Nav
+@inject IEnumerable<IMenuProvider> MenuProviders
 
 <div class="glpi-app">
-    <aside class="glpi-sidebar">
+    <aside class="glpi-sidebar @(_collapsed ? "collapsed" : "")">
         <a href="/" class="glpi-brand">
             <i class="ti ti-server-2"></i>
             <span>GlpiNg</span>
         </a>
-        <nav>
-            <NavLink href="/" Match="NavLinkMatch.All" class="nav-link">
-                <i class="ti ti-layout-dashboard"></i>
-                <span>Tableau de bord</span>
-            </NavLink>
-            <NavLink href="/computers" class="nav-link">
-                <i class="ti ti-device-desktop"></i>
-                <span>Ordinateurs</span>
-            </NavLink>
-            <NavLink href="/agents" class="nav-link">
-                <i class="ti ti-cpu"></i>
-                <span>Agents</span>
-            </NavLink>
-            <NavLink href="/deployments" class="nav-link">
-                <i class="ti ti-package"></i>
-                <span>Déploiements</span>
-            </NavLink>
-            <NavLink href="/config" class="nav-link">
-                <i class="ti ti-settings"></i>
-                <span>Configuration</span>
-            </NavLink>
+
+        @if (_searchOpen)
+        {
+            <div class="glpi-menu-search open">
+                <i class="ti ti-search"></i>
+                <input type="text" placeholder="Chercher dans le menu"
+                       value="@_searchTerm" @oninput="OnSearchInput" />
+                <button type="button" class="glpi-menu-search-close" @onclick="ToggleSearch">
+                    <i class="ti ti-x"></i>
+                </button>
+            </div>
+        }
+        else
+        {
+            <button type="button" class="glpi-menu-search" @onclick="ToggleSearch">
+                <i class="ti ti-arrow-right"></i>
+                <span>Chercher dans le menu</span>
+            </button>
+        }
+
+        <nav class="glpi-nav">
+            @foreach (var group in Groups)
+            {
+                if (!GroupMatches(group))
+                {
+                    continue;
+                }
+
+                var isOpen = IsGroupOpen(group);
+                <div class="glpi-nav-group @(isOpen ? "open" : "")">
+                    <button type="button" class="glpi-nav-group-toggle" @onclick="() => ToggleGroup(group.Key)">
+                        <i class="ti @group.Icon"></i>
+                        <span>@group.Label</span>
+                        <i class="ti ti-chevron-down glpi-chevron"></i>
+                    </button>
+                    @if (isOpen)
+                    {
+                        <div class="glpi-nav-group-items">
+                            @foreach (var item in FilteredItems(group))
+                            {
+                                if (item.Href is not null)
+                                {
+                                    <NavLink href="@item.Href" Match="@(item.Href == "/" ? NavLinkMatch.All : NavLinkMatch.Prefix)" class="glpi-nav-subitem">
+                                        <span>@item.Label</span>
+                                    </NavLink>
+                                }
+                                else
+                                {
+                                    <span class="glpi-nav-subitem disabled" title="Pas encore disponible">@item.Label</span>
+                                }
+                            }
+                        </div>
+                    }
+                </div>
+            }
         </nav>
+
+        <button type="button" class="glpi-sidebar-collapse" @onclick="ToggleSidebarCollapse">
+            <i class="ti @(_collapsed ? "ti-chevrons-right" : "ti-chevrons-left")"></i>
+            @if (!_collapsed)
+            {
+                <span>Réduire le menu</span>
+            }
+        </button>
     </aside>
 
     <div class="glpi-content">
@@ -91,19 +135,193 @@
 </div>
 
 @code {
+    private sealed record NavItem(string Label, string? Href = null);
+    private sealed record NavGroup(string Key, string Icon, string Label, List<NavItem> Items);
+
+    // Groupes/entrées non encore repris par un module : chaque module qui prend en charge
+    // un domaine retire ses entrées d'ici et les fournit via un IMenuProvider (voir
+    // GlpiNg.Modules.Inventory.InventoryMenuProvider pour "parc" et les entrées Agents/
+    // Déploiements de "outils"). L'ordre d'apparition dans le menu suit GroupOrder,
+    // pas cette liste.
+    private static readonly List<NavGroup> HostGroups =
+    [
+        new("assistance", "ti-headset", "Assistance",
+        [
+            new("Tickets"),
+            new("Problèmes"),
+            new("Changements"),
+            new("Planning"),
+            new("Statistiques"),
+        ]),
+        new("gestion", "ti-wallet", "Gestion",
+        [
+            new("Licences"),
+            new("Budgets"),
+            new("Fournisseurs"),
+            new("Contacts"),
+            new("Contrats"),
+            new("Documents"),
+            new("Lignes téléphoniques"),
+            new("Certificats"),
+            new("Data centers"),
+            new("Clusters"),
+            new("Domaines"),
+            new("Applicatifs"),
+            new("Bases de données"),
+        ]),
+        new("outils", "ti-briefcase", "Outils",
+        [
+            new("Réservations"),
+            new("Rapports"),
+            new("Base de connaissances"),
+        ]),
+        new("administration", "ti-shield", "Administration",
+        [
+            new("Utilisateurs"),
+            new("Groupes"),
+            new("Entités"),
+            new("Règles"),
+            new("Dictionnaires"),
+            new("Profils"),
+            new("File d'attente des notifications"),
+            new("Journaux"),
+            new("Inventaire"),
+            new("Formulaires"),
+            new("GLPI Inventory"),
+        ]),
+        new("configuration", "ti-settings", "Configuration",
+        [
+            new("Générale", "/config"),
+            new("Actifs personnalisés"),
+            new("Intitulés"),
+            new("Composants"),
+            new("Notifications"),
+            new("Webhooks"),
+            new("Niveaux de services"),
+            new("Unicité des champs"),
+            new("Actions automatiques"),
+            new("Authentification"),
+            new("Clients OAuth"),
+            new("Collecteurs"),
+            new("Liens externes"),
+            new("Plugins"),
+            new("Champs supplémentaires"),
+        ]),
+    ];
+
+    // Ordre canonique des groupes dans le menu. Un groupe n'apparaît que s'il a du contenu
+    // (host et/ou module) ; les groupes hors de cette liste (nouveau domaine apporté par un
+    // futur module) sont ajoutés à la suite, dans l'ordre où les modules les déclarent.
+    private static readonly string[] GroupOrder =
+        ["parc", "assistance", "gestion", "outils", "administration", "configuration"];
+
+    private List<NavGroup> Groups { get; set; } = [];
+
+    private string? _expandedGroup;
+    private bool _collapsed;
+    private bool _searchOpen;
+    private string _searchTerm = string.Empty;
+
     private List<(string Icon, string Label, string? Href)> Breadcrumb { get; set; } = [];
 
     protected override void OnInitialized()
     {
+        Groups = BuildGroups();
         Nav.LocationChanged += OnLocationChanged;
         Breadcrumb = BuildBreadcrumb();
+        _expandedGroup = FindGroupForPath();
+    }
+
+    private List<NavGroup> BuildGroups()
+    {
+        var byKey = new Dictionary<string, NavGroup>();
+        var ordered = new List<NavGroup>();
+
+        void AddOrMerge(string key, string icon, string label, IEnumerable<NavItem> items)
+        {
+            if (byKey.TryGetValue(key, out var existing))
+            {
+                existing.Items.AddRange(items);
+                return;
+            }
+
+            var group = new NavGroup(key, icon, label, [.. items]);
+            byKey[key] = group;
+            ordered.Add(group);
+        }
+
+        var hostByKey = HostGroups.ToDictionary(g => g.Key);
+        var moduleGroups = MenuProviders.SelectMany(p => p.GetMenuGroups()).ToList();
+
+        foreach (var key in GroupOrder)
+        {
+            if (hostByKey.TryGetValue(key, out var hostGroup))
+            {
+                AddOrMerge(hostGroup.Key, hostGroup.Icon, hostGroup.Label, hostGroup.Items);
+            }
+
+            foreach (var moduleGroup in moduleGroups.Where(g => g.Key == key))
+            {
+                AddOrMerge(moduleGroup.Key, moduleGroup.Icon, moduleGroup.Label, moduleGroup.Items.Select(i => new NavItem(i.Label, i.Href)));
+            }
+        }
+
+        // Groupes hors du GroupOrder connu : nouveau domaine apporté par un module,
+        // pas encore intégré au menu hôte.
+        foreach (var moduleGroup in moduleGroups.Where(g => !GroupOrder.Contains(g.Key)))
+        {
+            AddOrMerge(moduleGroup.Key, moduleGroup.Icon, moduleGroup.Label, moduleGroup.Items.Select(i => new NavItem(i.Label, i.Href)));
+        }
+
+        return ordered;
     }
 
     private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
     {
         Breadcrumb = BuildBreadcrumb();
+        _expandedGroup = FindGroupForPath() ?? _expandedGroup;
         InvokeAsync(StateHasChanged);
     }
+
+    private string? FindGroupForPath()
+    {
+        var path = "/" + new Uri(Nav.Uri).AbsolutePath.Trim('/');
+        return Groups.FirstOrDefault(g => g.Items.Any(i => i.Href is not null &&
+            (i.Href == "/" ? path == "/" : path.StartsWith(i.Href, StringComparison.OrdinalIgnoreCase))))?.Key;
+    }
+
+    private void ToggleGroup(string key)
+    {
+        _expandedGroup = _expandedGroup == key ? null : key;
+    }
+
+    private void ToggleSidebarCollapse()
+    {
+        _collapsed = !_collapsed;
+    }
+
+    private void ToggleSearch()
+    {
+        _searchOpen = !_searchOpen;
+        _searchTerm = string.Empty;
+    }
+
+    private void OnSearchInput(Microsoft.AspNetCore.Components.ChangeEventArgs e)
+    {
+        _searchTerm = e.Value?.ToString() ?? string.Empty;
+    }
+
+    private bool IsSearching => !string.IsNullOrWhiteSpace(_searchTerm);
+
+    private bool GroupMatches(NavGroup group) => !IsSearching
+        || group.Label.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase)
+        || group.Items.Any(i => i.Label.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase));
+
+    private List<NavItem> FilteredItems(NavGroup group) => !IsSearching || group.Label.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase)
+        ? group.Items
+        : group.Items.Where(i => i.Label.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    private bool IsGroupOpen(NavGroup group) => IsSearching || _expandedGroup == group.Key;
 
     private List<(string Icon, string Label, string? Href)> BuildBreadcrumb()
     {
