@@ -1,5 +1,3 @@
-using GlpiNg.Web.Models;
-
 namespace GlpiNg.Web.Components.Pages;
 
 public partial class Config
@@ -28,72 +26,8 @@ public partial class Config
 
     private string _activeSection = "generale";
 
-    private GeneralSettings? _general;
-    private bool _isSavingGeneral;
-    private string? _generalStatusMessage;
-
-    private ServerSettings? _settings;
-    private bool _isSaving;
-    private string? _statusMessage;
-
-    protected override async Task OnInitializedAsync()
-    {
-        _general = await SettingsStore.ReadGeneralAsync();
-        _settings = await SettingsStore.ReadAsync();
-    }
-
     private void SelectSection(string key)
     {
         _activeSection = key;
-    }
-
-    private async Task SaveGeneralAsync()
-    {
-        if (_general is null)
-        {
-            return;
-        }
-
-        _isSavingGeneral = true;
-        _generalStatusMessage = null;
-
-        try
-        {
-            await SettingsStore.SaveGeneralAsync(_general);
-            _generalStatusMessage = "Configuration enregistrée.";
-        }
-        catch (IOException ex)
-        {
-            _generalStatusMessage = $"Échec de l'enregistrement : {ex.Message}";
-        }
-        finally
-        {
-            _isSavingGeneral = false;
-        }
-    }
-
-    private async Task SaveAsync()
-    {
-        if (_settings is null)
-        {
-            return;
-        }
-
-        _isSaving = true;
-        _statusMessage = null;
-
-        try
-        {
-            await SettingsStore.SaveAsync(_settings);
-            _statusMessage = "Configuration enregistrée.";
-        }
-        catch (IOException ex)
-        {
-            _statusMessage = $"Échec de l'enregistrement : {ex.Message}";
-        }
-        finally
-        {
-            _isSaving = false;
-        }
     }
 }

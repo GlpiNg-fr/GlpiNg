@@ -19,11 +19,16 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<DeploymentPackageFile> DeploymentPackageFiles => Set<DeploymentPackageFile>();
 
     public DbSet<GlpiUser> Users => Set<GlpiUser>();
+    public DbSet<DashboardCardPreference> DashboardCardPreferences => Set<DashboardCardPreference>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<GlpiUser>()
             .HasIndex(u => u.UserName)
+            .IsUnique();
+
+        modelBuilder.Entity<DashboardCardPreference>()
+            .HasIndex(p => p.UserId)
             .IsUnique();
 
         modelBuilder.Entity<GlpiAgent>()

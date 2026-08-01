@@ -1,0 +1,90 @@
+@using GlpiNg.Web.Models
+@using GlpiNg.Web.Services
+@inject AppSettingsFileStore SettingsStore
+@inject ConfigHistoryService History
+
+@if (_model is null)
+{
+    <p>Chargement…</p>
+}
+else
+{
+    <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glpi-config-form">
+        <div class="glpi-config-field checkbox">
+            <label for="api-hlapi">Activer l'API</label>
+            <input id="api-hlapi" type="checkbox" @bind="_model.EnableHighLevelApi" />
+        </div>
+
+        <div class="glpi-config-field checkbox">
+            <label for="api-legacy">Activer l'API REST legacy</label>
+            <input id="api-legacy" type="checkbox" @bind="_model.EnableLegacyRestApi" />
+        </div>
+
+        <div class="glpi-config-field">
+            <label for="api-url">URL de l'API</label>
+            <input id="api-url" @bind="_model.LegacyApiUrl" />
+        </div>
+        <p class="hint">
+            GlpiNg expose déjà sa propre API REST (voir <code>/swagger</code>, activable dans
+            l'onglet Système) : ces réglages ne font que documenter des équivalents GLPI, ils ne
+            pilotent pas encore ce endpoint.
+        </p>
+
+        <div class="glpi-config-field checkbox">
+            <label for="api-login-creds">Activer la connexion avec identifiants</label>
+            <input id="api-login-creds" type="checkbox" @bind="_model.EnableLoginWithCredentials" />
+        </div>
+
+        <div class="glpi-config-field checkbox">
+            <label for="api-login-token">Activer la connexion avec un jeton externe</label>
+            <input id="api-login-token" type="checkbox" @bind="_model.EnableLoginWithExternalToken" />
+        </div>
+
+        @if (_statusMessage is not null)
+        {
+            <p class="status">@_statusMessage</p>
+        }
+
+        <button type="submit" class="glpi-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+    </EditForm>
+}
+
+@code {
+    private const string SectionName = "ApiSettings";
+
+    private ApiSettings? _model;
+    private bool _isSaving;
+    private string? _statusMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _model = await SettingsStore.ReadSectionAsync<ApiSettings>(SectionName);
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_model is null)
+        {
+            return;
+        }
+
+        _isSaving = true;
+        _statusMessage = null;
+
+        try
+        {
+            var before = await SettingsStore.ReadSectionAsync<ApiSettings>(SectionName);
+            await SettingsStore.SaveSectionAsync(SectionName, _model);
+            await History.AppendAsync("Administrateur", SettingsDiff.Compare(before, _model));
+            _statusMessage = "Configuration enregistrée.";
+        }
+        catch (IOException ex)
+        {
+            _statusMessage = $"Échec de l'enregistrement : {ex.Message}";
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+}

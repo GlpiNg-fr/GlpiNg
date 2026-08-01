@@ -5,6 +5,7 @@ using GlpiNg.Web.Components;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Options;
 using GlpiNg.Web.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
@@ -26,8 +27,26 @@ public class Program
         builder.Services.AddRazorComponents()
             .AddInteractiveServerComponents();
 
-        // API pour l'agent GLPI (contact / inventory / deploy)
-        builder.Services.AddControllers();
+        // Authentification applicative par cookie : /login (GlpiUser + PasswordHasher, déjà
+        // utilisé par l'admin créé au setup — voir GlpiNgSetupInitializer) et /Account/Logout
+        // (voir AccountController). AddCascadingAuthenticationState rend l'utilisateur courant
+        // disponible aux composants Blazor (ex. MainLayout) via [CascadingParameter] Task<AuthenticationState>.
+        builder.Services.AddCascadingAuthenticationState();
+        builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+            .AddCookie(options =>
+            {
+                options.LoginPath = "/login";
+                options.AccessDeniedPath = "/login";
+                options.ExpireTimeSpan = TimeSpan.FromHours(8);
+                options.SlidingExpiration = true;
+            });
+        builder.Services.AddAuthorization();
+
+        // API pour l'agent GLPI (contact / inventory / deploy). AddControllersWithViews (plutôt
+        // que AddControllers) est nécessaire pour enregistrer les services ViewFeatures dont
+        // dépend [ValidateAntiForgeryToken] (voir AccountController.Login) : sans ça, le filtre
+        // ne se résout pas et /Account/Login lève une InvalidOperationException au runtime.
+        builder.Services.AddControllersWithViews();
         builder.Services.AddScoped<InventoryImportService>();
 
         // Documentation OpenAPI/Swagger des contrôleurs API (protocole agent + import GLPI).
@@ -63,6 +82,7 @@ public class Program
         // Lecture/écriture de appsettings.json depuis la page /config (adresses d'écoute
         // du serveur, activation de Swagger).
         builder.Services.AddSingleton<AppSettingsFileStore>();
+        builder.Services.AddSingleton<ConfigHistoryService>();
 
         // Module Inventory (modèle de parc + import GLPI MySQL) : voir
         // GlpiNg.Modules.Inventory.InventoryModuleServiceCollectionExtensions. Les futurs
@@ -127,13 +147,21 @@ public class Program
         // n'est pas terminée, toute autre requête y est redirigée.
         app.UseSetupMiddleware("GlpiNg");
 
+        app.UseAuthentication();
+        app.UseAuthorization();
+
         app.MapStaticAssets();
         app.UseAntiforgery();
 
+        // Pas de RequireAuthorization() ici : les agents GLPI (glpi-agent, voir AgentController)
+        // et /Account/Login|Logout ne portent pas de cookie de session applicative.
         app.MapControllers();
 
+        // Toutes les pages Blazor exigent une session authentifiée, sauf celles marquées
+        // @attribute [AllowAnonymous] (Login.razor).
         app.MapRazorComponents<App>()
-            .AddInteractiveServerRenderMode();
+            .AddInteractiveServerRenderMode()
+            .RequireAuthorization();
 
         app.Run();
     }
