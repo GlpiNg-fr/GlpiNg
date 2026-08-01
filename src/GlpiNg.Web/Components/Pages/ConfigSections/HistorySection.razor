@@ -1,0 +1,52 @@
+@using GlpiNg.Web.Models
+@using GlpiNg.Web.Services
+@inject ConfigHistoryService History
+
+@if (_entries is null)
+{
+    <p>Chargement…</p>
+}
+else if (_entries.Count == 0)
+{
+    <p class="hint" style="margin-left:0;">
+        Aucune entrée pour le moment : cet historique s'alimente à chaque enregistrement effectué
+        depuis les autres onglets de cette page.
+    </p>
+}
+else
+{
+    <div class="glpi-config-table-wrap" style="max-width:100%;">
+        <table class="glpi-config-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Date</th>
+                    <th>Utilisateur</th>
+                    <th>Champ</th>
+                    <th>Mise à jour</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var entry in _entries)
+                {
+                    <tr>
+                        <td>@entry.Id</td>
+                        <td>@entry.Date.LocalDateTime.ToString("dd-MM-yyyy HH:mm")</td>
+                        <td>@entry.User</td>
+                        <td>@entry.Field</td>
+                        <td>@entry.Update</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private List<HistoryEntry>? _entries;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _entries = await History.ReadAllAsync();
+    }
+}

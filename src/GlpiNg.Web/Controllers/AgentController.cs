@@ -30,7 +30,8 @@ public class AgentController(
     GlpiNgDbContext db,
     InventoryImportService inventoryImport,
     DeployJobJsonBuilder deployJobJsonBuilder,
-    IConfiguration configuration) : ControllerBase
+    IConfiguration configuration,
+    ILogger<AgentController> logger) : ControllerBase
 {
     private const string AgentIdHeader = "GLPI-Agent-ID";
     private const string RequestIdHeader = "GLPI-Request-ID";
@@ -42,35 +43,63 @@ public class AgentController(
         if (!Request.Headers.TryGetValue(AgentIdHeader, out Microsoft.Extensions.Primitives.StringValues agentIdValues)
             || string.IsNullOrWhiteSpace(agentIdValues.ToString()))
         {
+            logger.LogWarning("glpi-agent 400: missing {Header} header. Headers reçus: {Headers}",
+                AgentIdHeader, string.Join(", ", Request.Headers.Select(h => h.Key)));
             return BadRequest(new ProtocolAnswer { Status = "error", Message = "missing GLPI-Agent-ID header" });
         }
 
         string agentUuid = agentIdValues.ToString();
 
-        // On lit le corps une seule fois en JsonDocument pour dispatcher sur "action"
-        // avant de désérialiser vers le DTO précis (contact vs inventory ont des formes différentes).
-        using JsonDocument document = await JsonDocument.ParseAsync(Request.Body, cancellationToken: cancellationToken);
-        string action = document.RootElement.TryGetProperty("action", out JsonElement actionEl)
-            ? actionEl.GetString() ?? "inventory"
-            : "inventory"; // défaut du protocole COMMON quand "action" est absent
+        // On lit le corps une seule fois en texte pour pouvoir le logguer en cas d'erreur,
+        // puis on le reparse en JsonDocument pour dispatcher sur "action".
+        Request.EnableBuffering();
+        using StreamReader bodyReader = new(Request.Body, leaveOpen: true);
+        string rawBody = await bodyReader.ReadToEndAsync(cancellationToken);
+        Request.Body.Position = 0;
 
-        IActionResult result = action switch
+        string action;
+        JsonDocument document;
+        try
         {
-            "contact" => await HandleContactAsync(agentUuid, document, cancellationToken),
-            "inventory" => await HandleInventoryAsync(agentUuid, document, cancellationToken),
-            "getJobs" => await HandleGetJobsAsync(agentUuid, cancellationToken),
-            "setStatus" => await HandleSetStatusAsync(document, cancellationToken),
-            _ => BadRequest(new ProtocolAnswer { Status = "error", Message = $"unsupported action '{action}'" })
-        };
-
-        // Le header GLPI-Request-ID, quand présent, doit être renvoyé tel quel (protocole COMMON).
-        if (Request.Headers.TryGetValue(RequestIdHeader, out Microsoft.Extensions.Primitives.StringValues reqId))
-        {
-            Response.Headers[RequestIdHeader] = reqId;
+            document = JsonDocument.Parse(rawBody);
+            action = document.RootElement.TryGetProperty("action", out JsonElement actionEl)
+                ? actionEl.GetString() ?? "inventory"
+                : "inventory"; // défaut du protocole COMMON quand "action" est absent
         }
-        Response.Headers[AgentIdHeader] = agentUuid;
+        catch (JsonException ex)
+        {
+            logger.LogWarning(ex, "glpi-agent 400: corps non-JSON (Content-Type={ContentType}, Content-Encoding={ContentEncoding}, {Length} octets). Début du corps: {Preview}",
+                Request.ContentType, Request.Headers.ContentEncoding.ToString(), rawBody.Length,
+                rawBody.Length > 200 ? rawBody[..200] : rawBody);
+            return BadRequest(new ProtocolAnswer { Status = "error", Message = "malformed json" });
+        }
 
-        return result;
+        using (document)
+        {
+            IActionResult result = action switch
+            {
+                "contact" => await HandleContactAsync(agentUuid, document, cancellationToken),
+                "inventory" => await HandleInventoryAsync(agentUuid, document, cancellationToken),
+                "getJobs" => await HandleGetJobsAsync(agentUuid, cancellationToken),
+                "setStatus" => await HandleSetStatusAsync(document, cancellationToken),
+                _ => BadRequest(new ProtocolAnswer { Status = "error", Message = $"unsupported action '{action}'" })
+            };
+
+            if (result is BadRequestObjectResult badRequest)
+            {
+                logger.LogWarning("glpi-agent 400 sur action {Action}: {Answer}. Corps reçu: {Body}",
+                    action, System.Text.Json.JsonSerializer.Serialize(badRequest.Value), rawBody);
+            }
+
+            // Le header GLPI-Request-ID, quand présent, doit être renvoyé tel quel (protocole COMMON).
+            if (Request.Headers.TryGetValue(RequestIdHeader, out Microsoft.Extensions.Primitives.StringValues reqId))
+            {
+                Response.Headers[RequestIdHeader] = reqId;
+            }
+            Response.Headers[AgentIdHeader] = agentUuid;
+
+            return result;
+        }
     }
 
     /// <summary>
@@ -102,7 +131,17 @@ public class AgentController(
 
     private async Task<IActionResult> HandleContactAsync(string agentUuid, JsonDocument document, CancellationToken cancellationToken)
     {
-        ContactRequest? contactRequest = document.Deserialize<ContactRequest>(JsonOptions);
+        ContactRequest? contactRequest;
+        try
+        {
+            contactRequest = document.Deserialize<ContactRequest>(JsonOptions);
+        }
+        catch (JsonException ex)
+        {
+            logger.LogWarning(ex, "glpi-agent 400 (contact): échec de désérialisation. Corps: {Body}", document.RootElement.GetRawText());
+            return BadRequest(new ProtocolAnswer { Status = "error", Message = $"malformed json: {ex.Message}" });
+        }
+
         if (contactRequest is null)
         {
             return BadRequest(new ProtocolAnswer { Status = "error", Message = "malformed json" });
@@ -144,7 +183,18 @@ public class AgentController(
 
     private async Task<IActionResult> HandleInventoryAsync(string agentUuid, JsonDocument document, CancellationToken cancellationToken)
     {
-        InventoryRequest? inventoryRequest = document.Deserialize<InventoryRequest>(JsonOptions);
+        InventoryRequest? inventoryRequest;
+        try
+        {
+            inventoryRequest = document.Deserialize<InventoryRequest>(JsonOptions);
+        }
+        catch (JsonException ex)
+        {
+            logger.LogWarning(ex, "glpi-agent 400 (inventory): échec de désérialisation. Clés reçues à la racine: {Keys}",
+                string.Join(", ", document.RootElement.EnumerateObject().Select(p => p.Name)));
+            return BadRequest(new ProtocolAnswer { Status = "error", Message = $"bad-format: {ex.Message}" });
+        }
+
         if (inventoryRequest is null)
         {
             return BadRequest(new ProtocolAnswer { Status = "error", Message = "bad-format" });

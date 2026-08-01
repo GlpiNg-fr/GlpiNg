@@ -1,8 +1,12 @@
 @inherits LayoutComponentBase
 @implements IDisposable
 @using GlpiNg.Modules.Abstractions.Menu
+@using GlpiNg.Web.Models
+@using GlpiNg.Web.Services
+@using Microsoft.AspNetCore.Components.Authorization
 @inject NavigationManager Nav
 @inject IEnumerable<IMenuProvider> MenuProviders
+@inject AppSettingsFileStore SettingsStore
 
 <div class="glpi-app">
     <aside class="glpi-sidebar @(_collapsed ? "collapsed" : "")">
@@ -53,12 +57,16 @@
                                 if (item.Href is not null)
                                 {
                                     <NavLink href="@item.Href" Match="@(item.Href == "/" ? NavLinkMatch.All : NavLinkMatch.Prefix)" class="glpi-nav-subitem">
+                                        <i class="ti @(item.Icon ?? "ti-point")"></i>
                                         <span>@item.Label</span>
                                     </NavLink>
                                 }
                                 else
                                 {
-                                    <span class="glpi-nav-subitem disabled" title="Pas encore disponible">@item.Label</span>
+                                    <span class="glpi-nav-subitem disabled" title="Pas encore disponible">
+                                        <i class="ti @(item.Icon ?? "ti-point")"></i>
+                                        <span>@item.Label</span>
+                                    </span>
                                 }
                             }
                         </div>
@@ -114,16 +122,21 @@
             <div class="glpi-topbar-user dropdown">
                 <a href="#" class="glpi-user-toggle dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                     <span class="glpi-user-info">
-                        <span class="glpi-user-name">Super-Admin</span>
+                        <span class="glpi-user-name">@_userName</span>
                         <span class="glpi-user-entity">Root entity (Arborescence)</span>
                     </span>
-                    <span class="glpi-avatar">I</span>
+                    <span class="glpi-avatar">@_userInitial</span>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li><a class="dropdown-item" href="#"><i class="ti ti-user"></i> Mon profil</a></li>
                     <li><a class="dropdown-item" href="/config"><i class="ti ti-settings"></i> Préférences</a></li>
                     <li><hr class="dropdown-divider" /></li>
-                    <li><a class="dropdown-item" href="#"><i class="ti ti-logout"></i> Se déconnecter</a></li>
+                    <li>
+                        <form method="post" action="/Account/Logout">
+                            <AntiforgeryToken />
+                            <button type="submit" class="dropdown-item glpi-logout-button"><i class="ti ti-logout"></i> Se déconnecter</button>
+                        </form>
+                    </li>
                 </ul>
             </div>
         </header>
@@ -135,7 +148,7 @@
 </div>
 
 @code {
-    private sealed record NavItem(string Label, string? Href = null);
+    private sealed record NavItem(string Label, string? Href = null, string? Icon = null);
     private sealed record NavGroup(string Key, string Icon, string Label, List<NavItem> Items);
 
     // Groupes/entrées non encore repris par un module : chaque module qui prend en charge
@@ -147,65 +160,65 @@
     [
         new("assistance", "ti-headset", "Assistance",
         [
-            new("Tickets"),
-            new("Problèmes"),
-            new("Changements"),
-            new("Planning"),
-            new("Statistiques"),
+            new("Tickets", Icon: "ti-ticket"),
+            new("Problèmes", Icon: "ti-alert-triangle"),
+            new("Changements", Icon: "ti-replace"),
+            new("Planning", Icon: "ti-calendar"),
+            new("Statistiques", Icon: "ti-chart-bar"),
         ]),
         new("gestion", "ti-wallet", "Gestion",
         [
-            new("Licences"),
-            new("Budgets"),
-            new("Fournisseurs"),
-            new("Contacts"),
-            new("Contrats"),
-            new("Documents"),
-            new("Lignes téléphoniques"),
-            new("Certificats"),
-            new("Data centers"),
-            new("Clusters"),
-            new("Domaines"),
-            new("Applicatifs"),
-            new("Bases de données"),
+            new("Licences", Icon: "ti-license"),
+            new("Budgets", Icon: "ti-report-money"),
+            new("Fournisseurs", Icon: "ti-truck"),
+            new("Contacts", Icon: "ti-address-book"),
+            new("Contrats", Icon: "ti-file-text"),
+            new("Documents", Icon: "ti-file"),
+            new("Lignes téléphoniques", Icon: "ti-phone-call"),
+            new("Certificats", Icon: "ti-certificate"),
+            new("Data centers", Icon: "ti-building-warehouse"),
+            new("Clusters", Icon: "ti-affiliate"),
+            new("Domaines", Icon: "ti-world-www"),
+            new("Applicatifs", Icon: "ti-apps"),
+            new("Bases de données", Icon: "ti-database"),
         ]),
         new("outils", "ti-briefcase", "Outils",
         [
-            new("Réservations"),
-            new("Rapports"),
-            new("Base de connaissances"),
+            new("Réservations", Icon: "ti-calendar-event"),
+            new("Rapports", Icon: "ti-report"),
+            new("Base de connaissances", Icon: "ti-book"),
         ]),
         new("administration", "ti-shield", "Administration",
         [
-            new("Utilisateurs"),
-            new("Groupes"),
-            new("Entités"),
-            new("Règles"),
-            new("Dictionnaires"),
-            new("Profils"),
-            new("File d'attente des notifications"),
-            new("Journaux"),
-            new("Inventaire"),
-            new("Formulaires"),
-            new("GLPI Inventory"),
+            new("Utilisateurs", Icon: "ti-user"),
+            new("Groupes", Icon: "ti-users"),
+            new("Entités", Icon: "ti-sitemap"),
+            new("Règles", Icon: "ti-adjustments"),
+            new("Dictionnaires", Icon: "ti-book-2"),
+            new("Profils", Icon: "ti-id-badge"),
+            new("File d'attente des notifications", Icon: "ti-bell"),
+            new("Journaux", Icon: "ti-history"),
+            new("Inventaire", Icon: "ti-clipboard-list"),
+            new("Formulaires", Icon: "ti-forms"),
+            new("GLPI Inventory", Icon: "ti-cloud-upload"),
         ]),
         new("configuration", "ti-settings", "Configuration",
         [
-            new("Générale", "/config"),
-            new("Actifs personnalisés"),
-            new("Intitulés"),
-            new("Composants"),
-            new("Notifications"),
-            new("Webhooks"),
-            new("Niveaux de services"),
-            new("Unicité des champs"),
-            new("Actions automatiques"),
-            new("Authentification"),
-            new("Clients OAuth"),
-            new("Collecteurs"),
-            new("Liens externes"),
-            new("Plugins"),
-            new("Champs supplémentaires"),
+            new("Générale", "/config", "ti-settings"),
+            new("Actifs personnalisés", Icon: "ti-tool"),
+            new("Intitulés", Icon: "ti-edit"),
+            new("Composants", Icon: "ti-puzzle"),
+            new("Notifications", Icon: "ti-bell-ringing"),
+            new("Webhooks", Icon: "ti-webhook"),
+            new("Niveaux de services", Icon: "ti-clipboard-check"),
+            new("Unicité des champs", Icon: "ti-fingerprint"),
+            new("Actions automatiques", Icon: "ti-robot"),
+            new("Authentification", Icon: "ti-key"),
+            new("Clients OAuth", Icon: "ti-lock-access"),
+            new("Collecteurs", Icon: "ti-mail"),
+            new("Liens externes", Icon: "ti-external-link"),
+            new("Plugins", Icon: "ti-plug"),
+            new("Champs supplémentaires", Icon: "ti-list-details"),
         ]),
     ];
 
@@ -224,28 +237,42 @@
 
     private List<(string Icon, string Label, string? Href)> Breadcrumb { get; set; } = [];
 
-    protected override void OnInitialized()
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthStateTask { get; set; }
+
+    private string _userName = string.Empty;
+    private string _userInitial = string.Empty;
+
+    protected override async Task OnInitializedAsync()
     {
-        Groups = BuildGroups();
+        var modules = await SettingsStore.ReadSectionAsync<ModulesSettings>("ModulesSettings");
+        Groups = BuildGroups(modules);
         Nav.LocationChanged += OnLocationChanged;
         Breadcrumb = BuildBreadcrumb();
         _expandedGroup = FindGroupForPath();
+
+        _userName = AuthStateTask is not null
+            ? (await AuthStateTask).User.Identity?.Name ?? string.Empty
+            : string.Empty;
+        _userInitial = _userName.Length > 0 ? _userName[..1].ToUpperInvariant() : "?";
     }
 
-    private List<NavGroup> BuildGroups()
+    private List<NavGroup> BuildGroups(ModulesSettings modules)
     {
         var byKey = new Dictionary<string, NavGroup>();
         var ordered = new List<NavGroup>();
 
         void AddOrMerge(string key, string icon, string label, IEnumerable<NavItem> items)
         {
+            var enabledItems = items.Where(i => modules.IsEnabled(key, i.Label));
+
             if (byKey.TryGetValue(key, out var existing))
             {
-                existing.Items.AddRange(items);
+                existing.Items.AddRange(enabledItems);
                 return;
             }
 
-            var group = new NavGroup(key, icon, label, [.. items]);
+            var group = new NavGroup(key, icon, label, [.. enabledItems]);
             byKey[key] = group;
             ordered.Add(group);
         }
@@ -262,7 +289,7 @@
 
             foreach (var moduleGroup in moduleGroups.Where(g => g.Key == key))
             {
-                AddOrMerge(moduleGroup.Key, moduleGroup.Icon, moduleGroup.Label, moduleGroup.Items.Select(i => new NavItem(i.Label, i.Href)));
+                AddOrMerge(moduleGroup.Key, moduleGroup.Icon, moduleGroup.Label, moduleGroup.Items.Select(i => new NavItem(i.Label, i.Href, i.Icon)));
             }
         }
 
@@ -270,7 +297,7 @@
         // pas encore intégré au menu hôte.
         foreach (var moduleGroup in moduleGroups.Where(g => !GroupOrder.Contains(g.Key)))
         {
-            AddOrMerge(moduleGroup.Key, moduleGroup.Icon, moduleGroup.Label, moduleGroup.Items.Select(i => new NavItem(i.Label, i.Href)));
+            AddOrMerge(moduleGroup.Key, moduleGroup.Icon, moduleGroup.Label, moduleGroup.Items.Select(i => new NavItem(i.Label, i.Href, i.Icon)));
         }
 
         return ordered;

@@ -1,0 +1,109 @@
+@using GlpiNg.Web.Models
+@using GlpiNg.Web.Services
+@inject AppSettingsFileStore SettingsStore
+@inject ConfigHistoryService History
+
+@if (_model is null)
+{
+    <p>Chargement…</p>
+}
+else
+{
+    <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glpi-config-form">
+        <p class="hint" style="margin-left:0;">
+            Colonnes affichées par défaut dans les listes, par type d'objet. GLPI propose ce
+            réglage pour une centaine de types ; GlpiNg le limite aux types déjà présents dans
+            l'application ou son menu.
+        </p>
+
+        <div class="glpi-itemtype-columns">
+            @foreach (var (itemType, label) in DisplayColumnsSettings.ItemTypes)
+            {
+                var selected = _model.ColumnsByItemType.TryGetValue(itemType, out var cols) ? cols : [];
+                <div class="glpi-itemtype-columns-row">
+                    <div class="itemtype-label">@label</div>
+                    <div class="glpi-checkbox-grid" style="margin:0;">
+                        @foreach (var (columnKey, columnLabel) in DisplayColumnsSettings.AvailableColumns)
+                        {
+                            <label>
+                                <input type="checkbox" checked="@selected.Contains(columnKey)"
+                                       @onchange="e => Toggle(itemType, columnKey, (bool)e.Value!)" />
+                                @columnLabel
+                            </label>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        @if (_statusMessage is not null)
+        {
+            <p class="status">@_statusMessage</p>
+        }
+
+        <button type="submit" class="glpi-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+    </EditForm>
+}
+
+@code {
+    private const string SectionName = "DisplayColumnsSettings";
+
+    private DisplayColumnsSettings? _model;
+    private bool _isSaving;
+    private string? _statusMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _model = await SettingsStore.ReadSectionAsync<DisplayColumnsSettings>(SectionName);
+    }
+
+    private void Toggle(string itemType, string columnKey, bool enabled)
+    {
+        if (_model is null)
+        {
+            return;
+        }
+
+        if (!_model.ColumnsByItemType.TryGetValue(itemType, out var columns))
+        {
+            columns = [];
+            _model.ColumnsByItemType[itemType] = columns;
+        }
+
+        if (enabled && !columns.Contains(columnKey))
+        {
+            columns.Add(columnKey);
+        }
+        else if (!enabled)
+        {
+            columns.Remove(columnKey);
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_model is null)
+        {
+            return;
+        }
+
+        _isSaving = true;
+        _statusMessage = null;
+
+        try
+        {
+            var before = await SettingsStore.ReadSectionAsync<DisplayColumnsSettings>(SectionName);
+            await SettingsStore.SaveSectionAsync(SectionName, _model);
+            await History.AppendAsync("Administrateur", SettingsDiff.Compare(before, _model));
+            _statusMessage = "Configuration enregistrée.";
+        }
+        catch (IOException ex)
+        {
+            _statusMessage = $"Échec de l'enregistrement : {ex.Message}";
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+}

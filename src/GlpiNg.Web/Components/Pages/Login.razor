@@ -1,0 +1,52 @@
+@page "/login"
+@layout GlpiNg.Web.Components.Layout.BlankLayout
+@attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+
+<PageTitle>GlpiNg — Connexion</PageTitle>
+
+<div class="glpi-login">
+    <div class="glpi-login-card">
+        <div class="glpi-login-brand">
+            <i class="ti ti-server-2"></i>
+            <span>GlpiNg</span>
+        </div>
+
+        @if (HasError)
+        {
+            <div class="glpi-login-error">
+                <i class="ti ti-alert-circle"></i>
+                <span>Nom d'utilisateur ou mot de passe incorrect.</span>
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(_general?.LoginPageMessage))
+        {
+            <p class="glpi-login-message">@_general.LoginPageMessage</p>
+        }
+
+        <form method="post" action="/Account/Login" class="glpi-login-form">
+            <AntiforgeryToken />
+            <input type="hidden" name="returnUrl" value="@ReturnUrl" />
+
+            <div class="glpi-login-field">
+                <label for="userName">Nom d'utilisateur</label>
+                <input id="userName" name="userName" autocomplete="username" required autofocus />
+            </div>
+
+            <div class="glpi-login-field">
+                <label for="password">Mot de passe</label>
+                <input id="password" name="password" type="password" autocomplete="current-password" required />
+            </div>
+
+            @if (_general is null || _general.RememberMeDuration > 0)
+            {
+                <div class="glpi-login-field checkbox">
+                    <input id="rememberMe" name="rememberMe" type="checkbox" value="true" checked="@(_general?.RememberMeDefaultChecked ?? true)" />
+                    <label for="rememberMe">Se souvenir de moi</label>
+                </div>
+            }
+
+            <button type="submit" class="glpi-login-submit">Se connecter</button>
+        </form>
+    </div>
+</div>

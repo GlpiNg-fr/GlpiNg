@@ -1,0 +1,245 @@
+@using GlpiNg.Web.Models
+@using GlpiNg.Web.Services
+@inject AppSettingsFileStore SettingsStore
+@inject ConfigHistoryService History
+
+@if (_model is null)
+{
+    <p>Chargement…</p>
+}
+else
+{
+    <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glpi-config-form">
+        <div class="glpi-config-field">
+            <label for="dv-language">Langue par défaut</label>
+            <select id="dv-language" @bind="_model.Language">
+                <option value="fr_FR">Français</option>
+                <option value="fr_CA">Français (Canada)</option>
+                <option value="fr_BE">Français (Belgique)</option>
+                <option value="en_GB">English</option>
+                <option value="en_US">English (US)</option>
+                <option value="es_ES">Español (España)</option>
+                <option value="de_DE">Deutsch</option>
+                <option value="it_IT">Italiano</option>
+                <option value="pt_PT">Português</option>
+                <option value="pt_BR">Português do Brasil</option>
+                <option value="nl_NL">Nederlands</option>
+                <option value="ru_RU">Русский</option>
+                <option value="zh_CN">简体中文</option>
+                <option value="ja_JP">日本語</option>
+                <option value="ko_KR">한국어</option>
+            </select>
+        </div>
+
+        <div class="glpi-config-field">
+            <label for="dv-date-format">Format des dates</label>
+            <select id="dv-date-format" class="glpi-config-input-sm" @bind="_model.DateFormat">
+                <option value="ymd">AAAA-MM-JJ</option>
+                <option value="dmy">JJ-MM-AAAA</option>
+                <option value="mdy">MM-JJ-AAAA</option>
+            </select>
+        </div>
+
+        <div class="glpi-config-field">
+            <label for="dv-name-order">Ordre d'affichage du nom complet</label>
+            <select id="dv-name-order" @bind="_model.FullNameOrder">
+                <option value="NomPrenom">Nom, Prénom</option>
+                <option value="PrenomNom">Prénom, Nom</option>
+            </select>
+        </div>
+
+        <div class="glpi-config-field">
+            <label for="dv-number-format">Format des nombres</label>
+            <select id="dv-number-format" @bind="_model.NumberFormat">
+                <option value="1 234.56">1 234.56</option>
+                <option value="1,234.56">1,234.56</option>
+                <option value="1 234,56">1 234,56</option>
+                <option value="1234.56">1234.56</option>
+                <option value="1234,56">1234,56</option>
+            </select>
+        </div>
+
+        <div class="glpi-config-field">
+            <label for="dv-results-per-page">Nombre de résultats par page</label>
+            <input id="dv-results-per-page" type="number" min="1" class="glpi-config-input-sm" @bind="_model.ResultsPerPage" />
+        </div>
+
+        <div class="glpi-config-field checkbox">
+            <label for="dv-goto-created">Après la création, aller à l'élément créé</label>
+            <input id="dv-goto-created" type="checkbox" @bind="_model.GoToCreatedItem" />
+        </div>
+
+        <div class="glpi-config-field checkbox">
+            <label for="dv-full-dropdown">Afficher le nom complet des intitulés dans les listes déroulantes</label>
+            <input id="dv-full-dropdown" type="checkbox" @bind="_model.ShowFullNameInDropdowns" />
+        </div>
+
+        <div class="glpi-config-field checkbox">
+            <label for="dv-full-search">Afficher le nom complet des intitulés dans les résultats de recherche</label>
+            <input id="dv-full-search" type="checkbox" @bind="_model.ShowFullNameInSearchResults" />
+        </div>
+
+        <div class="glpi-config-field">
+            <label for="dv-counters">Afficher les compteurs</label>
+            <select id="dv-counters" class="glpi-config-input-sm" @bind="_model.ShowCounters">
+                <option value="0">Non</option>
+                <option value="1">Oui</option>
+                <option value="2">Jamais</option>
+            </select>
+        </div>
+
+        <div class="glpi-config-field checkbox">
+            <label for="dv-glpi-ids">Afficher les ID GLPI</label>
+            <input id="dv-glpi-ids" type="checkbox" @bind="_model.ShowGlpiIds" />
+        </div>
+
+        <div class="glpi-config-field checkbox">
+            <label for="dv-keep-devices">Garder les composants lors de la suppression définitive d'un élément</label>
+            <input id="dv-keep-devices" type="checkbox" @bind="_model.KeepDevicesOnPurge" />
+        </div>
+
+        <div class="glpi-config-field checkbox">
+            <label for="dv-notify-changes">Notifications pour mes changements</label>
+            <input id="dv-notify-changes" type="checkbox" @bind="_model.NotifyOnMyChanges" />
+        </div>
+
+        <div class="glpi-config-field">
+            <label for="dv-homepage-count">Résultats à afficher sur la page d'accueil</label>
+            <input id="dv-homepage-count" type="number" min="1" class="glpi-config-input-sm" @bind="_model.HomepageResultsCount" />
+        </div>
+
+        <div class="glpi-config-field">
+            <label for="dv-pdf-font">Police pour l'export PDF</label>
+            <select id="dv-pdf-font" @bind="_model.PdfExportFont">
+                <option value="DejaVuSans">DejaVuSans</option>
+                <option value="DejaVuSerif">DejaVuSerif</option>
+                <option value="FreeSans">FreeSans</option>
+                <option value="FreeSerif">FreeSerif</option>
+                <option value="Helvetica">Helvetica</option>
+                <option value="Courier">Courier</option>
+                <option value="Times-Roman">Times-Roman</option>
+            </select>
+        </div>
+
+        <div class="glpi-config-field">
+            <label for="dv-csv-delimiter">Délimiteur CSV</label>
+            <select id="dv-csv-delimiter" class="glpi-config-input-sm" @bind="_model.CsvDelimiter">
+                <option value=";">;</option>
+                <option value=",">,</option>
+            </select>
+        </div>
+
+        <div class="glpi-config-field">
+            <label for="dv-palette">Palette de couleur</label>
+            <select id="dv-palette" @bind="_model.ColorPalette">
+                <option value="Auror">Auror</option>
+                <option value="Dark">Dark</option>
+                <option value="Darker">Darker</option>
+                <option value="Classic">Classic</option>
+                <option value="Midnight">Midnight</option>
+                <option value="Light Blue">Light Blue</option>
+                <option value="Vintage">Vintage</option>
+                <option value="Ice Cream">Ice Cream</option>
+            </select>
+        </div>
+
+        <div class="glpi-config-field">
+            <label for="dv-layout">Mise en page</label>
+            <select id="dv-layout" @bind="_model.Layout">
+                <option value="horizontal">Horizontal (menu dans l'en-tête)</option>
+                <option value="vertical">Vertical (menu dans la barre latérale)</option>
+            </select>
+        </div>
+
+        <div class="glpi-config-field">
+            <label for="dv-richtext">Disposition des champs de texte riche</label>
+            <select id="dv-richtext" @bind="_model.RichTextLayout">
+                <option value="embedded">Intégrée (sans barre d'outils)</option>
+                <option value="classic">Classique (barre d'outils en haut)</option>
+            </select>
+        </div>
+
+        <div class="glpi-config-field checkbox">
+            <label for="dv-contrast">Activer le contraste élevé</label>
+            <input id="dv-contrast" type="checkbox" @bind="_model.HighContrast" />
+        </div>
+
+        <div class="glpi-config-field">
+            <label for="dv-timezone">Fuseau horaire</label>
+            <select id="dv-timezone" @bind="_model.Timezone">
+                <option value="server">Utiliser la configuration serveur</option>
+                <option value="UTC">UTC</option>
+                <option value="Europe/Paris">Europe/Paris</option>
+                <option value="Europe/London">Europe/London</option>
+                <option value="America/New_York">America/New_York</option>
+                <option value="Asia/Tokyo">Asia/Tokyo</option>
+            </select>
+        </div>
+
+        <div class="glpi-config-field">
+            <label for="dv-central-tab">Onglet central par défaut</label>
+            <select id="dv-central-tab" @bind="_model.DefaultCentralTab">
+                <option value="dashboard">Tableau de bord</option>
+                <option value="personal">Vue personnelle</option>
+                <option value="group">Vue groupe</option>
+                <option value="global">Vue globale</option>
+                <option value="rss">Flux RSS</option>
+            </select>
+        </div>
+
+        <div class="glpi-config-field">
+            <label for="dv-history-order">Ordre de l'historique</label>
+            <select id="dv-history-order" @bind="_model.HistoryOrder">
+                <option value="natural">Ordre naturel (anciennes entrées en premier)</option>
+                <option value="reverse">Ordre antéchronologique (nouvelles entrées en premier)</option>
+            </select>
+        </div>
+
+        @if (_statusMessage is not null)
+        {
+            <p class="status">@_statusMessage</p>
+        }
+
+        <button type="submit" class="glpi-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+    </EditForm>
+}
+
+@code {
+    private const string SectionName = "DefaultValuesSettings";
+
+    private DefaultValuesSettings? _model;
+    private bool _isSaving;
+    private string? _statusMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _model = await SettingsStore.ReadSectionAsync<DefaultValuesSettings>(SectionName);
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_model is null)
+        {
+            return;
+        }
+
+        _isSaving = true;
+        _statusMessage = null;
+
+        try
+        {
+            var before = await SettingsStore.ReadSectionAsync<DefaultValuesSettings>(SectionName);
+            await SettingsStore.SaveSectionAsync(SectionName, _model);
+            await History.AppendAsync("Administrateur", SettingsDiff.Compare(before, _model));
+            _statusMessage = "Configuration enregistrée.";
+        }
+        catch (IOException ex)
+        {
+            _statusMessage = $"Échec de l'enregistrement : {ex.Message}";
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+}

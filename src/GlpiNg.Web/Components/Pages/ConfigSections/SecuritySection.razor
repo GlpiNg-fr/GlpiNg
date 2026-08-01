@@ -1,0 +1,153 @@
+@using GlpiNg.Web.Models
+@using GlpiNg.Web.Services
+@inject AppSettingsFileStore SettingsStore
+@inject ConfigHistoryService History
+
+@if (_model is null)
+{
+    <p>Chargement…</p>
+}
+else
+{
+    <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glpi-config-form">
+        <div class="glpi-config-field checkbox">
+            <label for="sec-enforce">Obliger les mots de passe à respecter la politique de sécurité</label>
+            <input id="sec-enforce" type="checkbox" @bind="_model.EnforcePasswordPolicy" />
+        </div>
+
+        <div class="glpi-config-field">
+            <label for="sec-min-length">Longueur minimale des mots de passe</label>
+            <input id="sec-min-length" type="number" min="4" max="64" class="glpi-config-input-sm" @bind="_model.PasswordMinLength" />
+        </div>
+
+        <div class="glpi-config-field checkbox">
+            <label for="sec-number">Le mot de passe requiert au moins un chiffre</label>
+            <input id="sec-number" type="checkbox" @bind="_model.PasswordNeedNumber" />
+        </div>
+
+        <div class="glpi-config-field checkbox">
+            <label for="sec-lower">Le mot de passe requiert au moins une minuscule</label>
+            <input id="sec-lower" type="checkbox" @bind="_model.PasswordNeedLowercase" />
+        </div>
+
+        <div class="glpi-config-field checkbox">
+            <label for="sec-upper">Le mot de passe requiert au moins une majuscule</label>
+            <input id="sec-upper" type="checkbox" @bind="_model.PasswordNeedUppercase" />
+        </div>
+
+        <div class="glpi-config-field checkbox">
+            <label for="sec-symbol">Le mot de passe requiert au moins un symbole</label>
+            <input id="sec-symbol" type="checkbox" @bind="_model.PasswordNeedSymbol" />
+        </div>
+
+        <div class="glpi-config-field">
+            <label for="sec-expiration">Délai d'expiration des mots de passe (en jours)</label>
+            <select id="sec-expiration" @bind="_model.PasswordExpirationDays">
+                <option value="-1">Jamais</option>
+                <option value="30">30 jours</option>
+                <option value="60">60 jours</option>
+                <option value="90">90 jours</option>
+                <option value="180">180 jours</option>
+                <option value="365">365 jours</option>
+            </select>
+        </div>
+
+        <div class="glpi-config-field">
+            <label for="sec-notice">Délai de préavis d'expiration du mot de passe (en jours)</label>
+            <select id="sec-notice" @bind="_model.PasswordExpirationNoticeDays">
+                <option value="-1">Notification désactivée</option>
+                <option value="7">7 jours</option>
+                <option value="15">15 jours</option>
+                <option value="30">30 jours</option>
+            </select>
+        </div>
+
+        <div class="glpi-config-field">
+            <label for="sec-lock-delay">Délai avant la désactivation du compte (en jours)</label>
+            <select id="sec-lock-delay" @bind="_model.PasswordExpirationLockDelayDays">
+                <option value="-1">Ne pas désactiver</option>
+                <option value="7">7 jours</option>
+                <option value="15">15 jours</option>
+                <option value="30">30 jours</option>
+            </select>
+        </div>
+
+        <div class="glpi-config-field">
+            <label for="sec-token-delay">Période de validité du jeton d'initialisation du mot de passe</label>
+            <select id="sec-token-delay" @bind="_model.PasswordInitTokenDelay">
+                @foreach (var days in new[] { 1, 2, 3, 5, 7, 10, 14, 21, 30 })
+                {
+                    <option value="@(days * 86400)">@(days == 1 ? "1 jour" : $"{days} jours")</option>
+                }
+            </select>
+        </div>
+
+        <div class="glpi-config-field">
+            <label for="sec-reuse">Interdire aux utilisateurs de réutiliser leurs anciens mots de passe</label>
+            <select id="sec-reuse" @bind="_model.NonReusablePasswordsCount">
+                <option value="1">Dernier mot de passe</option>
+                <option value="2">Derniers 2 mots de passe</option>
+                <option value="3">Derniers 3 mots de passe</option>
+                <option value="4">Derniers 4 mots de passe</option>
+                <option value="5">Derniers 5 mots de passe</option>
+            </select>
+        </div>
+
+        <div class="glpi-config-field">
+            <label for="sec-2fa-suffix">Suffixe 2FA</label>
+            <input id="sec-2fa-suffix" @bind="_model.TwoFactorSuffix" />
+        </div>
+
+        <div class="glpi-config-field checkbox">
+            <label for="sec-2fa-enforced">Forcer 2FA</label>
+            <input id="sec-2fa-enforced" type="checkbox" @bind="_model.TwoFactorEnforced" />
+        </div>
+
+        @if (_statusMessage is not null)
+        {
+            <p class="status">@_statusMessage</p>
+        }
+
+        <button type="submit" class="glpi-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+    </EditForm>
+}
+
+@code {
+    private const string SectionName = "SecuritySettings";
+
+    private SecuritySettings? _model;
+    private bool _isSaving;
+    private string? _statusMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _model = await SettingsStore.ReadSectionAsync<SecuritySettings>(SectionName);
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_model is null)
+        {
+            return;
+        }
+
+        _isSaving = true;
+        _statusMessage = null;
+
+        try
+        {
+            var before = await SettingsStore.ReadSectionAsync<SecuritySettings>(SectionName);
+            await SettingsStore.SaveSectionAsync(SectionName, _model);
+            await History.AppendAsync("Administrateur", SettingsDiff.Compare(before, _model));
+            _statusMessage = "Configuration enregistrée.";
+        }
+        catch (IOException ex)
+        {
+            _statusMessage = $"Échec de l'enregistrement : {ex.Message}";
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+}

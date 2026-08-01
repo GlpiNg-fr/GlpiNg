@@ -1,0 +1,82 @@
+@using GlpiNg.Web.Models
+@using GlpiNg.Web.Services
+@inject AppSettingsFileStore SettingsStore
+@inject ConfigHistoryService History
+
+@if (_model is null)
+{
+    <p>Chargement…</p>
+}
+else
+{
+    <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glpi-config-form">
+        <div class="glpi-config-divider">
+            <span><i class="ti ti-key"></i> Enregistrement</span>
+        </div>
+
+        <div class="glpi-config-field">
+            <label for="net-key">Clé d'enregistrement</label>
+            <input id="net-key" @bind="_model.RegistrationKey" placeholder="XXXX-XXXX-XXXX-XXXX" />
+        </div>
+
+        <div class="glpi-config-divider">
+            <span><i class="ti ti-apps"></i> Marketplace</span>
+        </div>
+
+        <div class="glpi-config-field">
+            <label for="net-marketplace">Page des plugins</label>
+            <select id="net-marketplace" @bind="_model.MarketplaceBehavior">
+                <option value="ask">Demander avant de remplacer</option>
+                <option value="replace">Remplacer la page des plugins par celle du Marketplace</option>
+                <option value="never">Ne jamais remplacer la page des plugins</option>
+            </select>
+        </div>
+
+        @if (_statusMessage is not null)
+        {
+            <p class="status">@_statusMessage</p>
+        }
+
+        <button type="submit" class="glpi-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+    </EditForm>
+}
+
+@code {
+    private const string SectionName = "GlpiNetworkSettings";
+
+    private GlpiNetworkSettings? _model;
+    private bool _isSaving;
+    private string? _statusMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _model = await SettingsStore.ReadSectionAsync<GlpiNetworkSettings>(SectionName);
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_model is null)
+        {
+            return;
+        }
+
+        _isSaving = true;
+        _statusMessage = null;
+
+        try
+        {
+            var before = await SettingsStore.ReadSectionAsync<GlpiNetworkSettings>(SectionName);
+            await SettingsStore.SaveSectionAsync(SectionName, _model);
+            await History.AppendAsync("Administrateur", SettingsDiff.Compare(before, _model));
+            _statusMessage = "Configuration enregistrée.";
+        }
+        catch (IOException ex)
+        {
+            _statusMessage = $"Échec de l'enregistrement : {ex.Message}";
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+}

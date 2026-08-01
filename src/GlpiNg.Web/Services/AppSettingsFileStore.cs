@@ -66,7 +66,16 @@ public class AppSettingsFileStore(IWebHostEnvironment environment)
             AllowAnonymousFaqAccess = section?["AllowAnonymousFaqAccess"]?.GetValue<bool>() ?? false,
             AllowAnonymousFileImports = section?["AllowAnonymousFileImports"]?.GetValue<bool>() ?? false,
             DefaultDropdownListLimit = section?["DefaultDropdownListLimit"]?.GetValue<int>() ?? 100,
-            SearchEngineDisableThreshold = section?["SearchEngineDisableThreshold"]?.GetValue<int>() ?? 50
+            SearchEngineDisableThreshold = section?["SearchEngineDisableThreshold"]?.GetValue<int>() ?? 50,
+            SearchViewMode = section?["SearchViewMode"]?.GetValue<int>() ?? 2,
+            AllowGlobalSearch = section?["AllowGlobalSearch"]?.GetValue<bool>() ?? true,
+            SearchAllListMode = section?["SearchAllListMode"]?.GetValue<int>() ?? 1,
+            MaxSearchResultsPerPage = section?["MaxSearchResultsPerPage"]?.GetValue<int>() ?? 50,
+            SearchResultsSummaryLength = section?["SearchResultsSummaryLength"]?.GetValue<int>() ?? 500,
+            SearchResultsMaxUrlLength = section?["SearchResultsMaxUrlLength"]?.GetValue<int>() ?? 30,
+            RememberMeDuration = section?["RememberMeDuration"]?.GetValue<int>() ?? 5184000,
+            RememberMeDefaultChecked = section?["RememberMeDefaultChecked"]?.GetValue<bool>() ?? true,
+            ShowAuthSourcesOnLoginPage = section?["ShowAuthSourcesOnLoginPage"]?.GetValue<bool>() ?? false
         };
     }
 
@@ -84,10 +93,42 @@ public class AppSettingsFileStore(IWebHostEnvironment environment)
         section["AllowAnonymousFileImports"] = settings.AllowAnonymousFileImports;
         section["DefaultDropdownListLimit"] = settings.DefaultDropdownListLimit;
         section["SearchEngineDisableThreshold"] = settings.SearchEngineDisableThreshold;
+        section["SearchViewMode"] = settings.SearchViewMode;
+        section["AllowGlobalSearch"] = settings.AllowGlobalSearch;
+        section["SearchAllListMode"] = settings.SearchAllListMode;
+        section["MaxSearchResultsPerPage"] = settings.MaxSearchResultsPerPage;
+        section["SearchResultsSummaryLength"] = settings.SearchResultsSummaryLength;
+        section["SearchResultsMaxUrlLength"] = settings.SearchResultsMaxUrlLength;
+        section["RememberMeDuration"] = settings.RememberMeDuration;
+        section["RememberMeDefaultChecked"] = settings.RememberMeDefaultChecked;
+        section["ShowAuthSourcesOnLoginPage"] = settings.ShowAuthSourcesOnLoginPage;
         root["GeneralSettings"] = section;
 
         string json = root.ToJsonString(WriteOptions);
         await File.WriteAllTextAsync(SettingsFilePath, json, cancellationToken);
+    }
+
+    // Les onglets ajoutés après coup (Valeurs par défaut, Parc, Assistance, Gestion, Purge,
+    // Sécurité, API, Analyse d'impact, GLPI Network, Colonnes par défaut, Helpdesk, Modules)
+    // passent par ces deux méthodes génériques plutôt que par le mapping champ à champ manuel
+    // utilisé ci-dessus pour GeneralSettings/ServerSettings : avec ~12 sections supplémentaires,
+    // dupliquer ce mapping serait la seule chose à maintenir en cas d'ajout de propriété.
+    public Task<T> ReadSectionAsync<T>(string sectionName, CancellationToken cancellationToken = default) where T : new()
+        => ReadSectionCoreAsync<T>(sectionName, cancellationToken);
+
+    public async Task SaveSectionAsync<T>(string sectionName, T settings, CancellationToken cancellationToken = default)
+    {
+        JsonNode root = await ReadRootAsync(cancellationToken);
+        root[sectionName] = JsonSerializer.SerializeToNode(settings, WriteOptions);
+        string json = root.ToJsonString(WriteOptions);
+        await File.WriteAllTextAsync(SettingsFilePath, json, cancellationToken);
+    }
+
+    private async Task<T> ReadSectionCoreAsync<T>(string sectionName, CancellationToken cancellationToken) where T : new()
+    {
+        JsonNode root = await ReadRootAsync(cancellationToken);
+        JsonNode? section = root[sectionName];
+        return section is null ? new T() : (section.Deserialize<T>() ?? new T());
     }
 
     private async Task<JsonNode> ReadRootAsync(CancellationToken cancellationToken)
