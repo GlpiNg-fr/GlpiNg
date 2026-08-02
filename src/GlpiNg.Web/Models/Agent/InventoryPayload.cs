@@ -26,7 +26,7 @@ public class InventoryRequest
 
 /// <summary>
 /// Sous-ensemble du contenu d'inventaire réellement exploité par GlpiNg pour l'instant.
-/// Le schéma officiel couvre bien plus de sections (antivirus, batteries, printers, virtualmachines...)
+/// Le schéma officiel couvre bien plus de sections (antivirus, printers, virtualmachines...)
 /// — celles-ci sont ignorées silencieusement par le (dé)sérialiseur tant qu'elles ne sont pas mappées ici.
 /// </summary>
 public class InventoryContent
@@ -49,8 +49,20 @@ public class InventoryContent
     [JsonPropertyName("storages")]
     public List<InventoryStorage> Storages { get; set; } = [];
 
+    [JsonPropertyName("drives")]
+    public List<InventoryDrive> Drives { get; set; } = [];
+
     [JsonPropertyName("networks")]
     public List<InventoryNetwork> Networks { get; set; } = [];
+
+    [JsonPropertyName("softwares")]
+    public List<InventorySoftware> Softwares { get; set; } = [];
+
+    [JsonPropertyName("monitors")]
+    public List<InventoryMonitor> Monitors { get; set; } = [];
+
+    [JsonPropertyName("batteries")]
+    public List<InventoryBattery> Batteries { get; set; } = [];
 
     [JsonPropertyName("versionclient")]
     public string? VersionClient { get; set; }
@@ -164,6 +176,33 @@ public class InventoryStorage
     public long? DiskSizeMb { get; set; }
 }
 
+/// <summary>content.drives — volumes/partitions de disque, distincts des disques physiques (content.storages).</summary>
+public class InventoryDrive
+{
+    [JsonPropertyName("volumn")]
+    public string? Volume { get; set; }
+
+    [JsonPropertyName("label")]
+    public string? Label { get; set; }
+
+    [JsonPropertyName("letter")]
+    public string? Letter { get; set; }
+
+    [JsonPropertyName("type")]
+    public string? Type { get; set; }
+
+    [JsonPropertyName("filesystem")]
+    public string? FileSystem { get; set; }
+
+    /// <summary>Taille totale en Mo.</summary>
+    [JsonPropertyName("total")]
+    public long? TotalMb { get; set; }
+
+    /// <summary>Espace libre en Mo.</summary>
+    [JsonPropertyName("free")]
+    public long? FreeMb { get; set; }
+}
+
 public class InventoryNetwork
 {
     [JsonPropertyName("description")]
@@ -174,4 +213,93 @@ public class InventoryNetwork
 
     [JsonPropertyName("manufacturer")]
     public string? Manufacturer { get; set; }
+
+    [JsonPropertyName("type")]
+    public string? Type { get; set; }
+
+    [JsonPropertyName("ipaddress")]
+    public string? IpAddress { get; set; }
+
+    [JsonPropertyName("ipmask")]
+    public string? IpMask { get; set; }
+
+    [JsonPropertyName("ipgateway")]
+    public string? IpGateway { get; set; }
+
+    [JsonPropertyName("ipsubnet")]
+    public string? IpSubnet { get; set; }
+
+    [JsonPropertyName("ipdhcp")]
+    public string? IpDhcp { get; set; }
+
+    [JsonPropertyName("mtu")]
+    public int? Mtu { get; set; }
+
+    /// <summary>Vitesse de liaison en Mb/s.</summary>
+    [JsonPropertyName("speed")]
+    public int? SpeedMbps { get; set; }
+
+    [JsonPropertyName("status")]
+    public string? Status { get; set; }
+
+    /// <summary>"1" pour une interface virtuelle (tap, bridge, vlan...), remonté comme chaîne par l'agent.</summary>
+    [JsonPropertyName("virtualdev")]
+    public string? VirtualDevice { get; set; }
+}
+
+public class InventorySoftware
+{
+    [JsonPropertyName("name")]
+    public string? Name { get; set; }
+
+    [JsonPropertyName("version")]
+    public string? Version { get; set; }
+
+    [JsonPropertyName("publisher")]
+    public string? Publisher { get; set; }
+
+    [JsonPropertyName("install_date")]
+    public string? InstallDate { get; set; }
+}
+
+public class InventoryMonitor
+{
+    [JsonPropertyName("caption")]
+    public string? Caption { get; set; }
+
+    [JsonPropertyName("description")]
+    public string? Description { get; set; }
+
+    [JsonPropertyName("manufacturer")]
+    public string? Manufacturer { get; set; }
+
+    [JsonPropertyName("serial")]
+    public string? Serial { get; set; }
+}
+
+/// <summary>content.batteries.</summary>
+public class InventoryBattery
+{
+    [JsonPropertyName("name")]
+    public string? Name { get; set; }
+
+    [JsonPropertyName("manufacturer")]
+    public string? Manufacturer { get; set; }
+
+    [JsonPropertyName("serial")]
+    public string? Serial { get; set; }
+
+    [JsonPropertyName("chemistry")]
+    public string? Chemistry { get; set; }
+
+    /// <summary>Tension en mV.</summary>
+    [JsonPropertyName("voltage")]
+    public int? VoltageMv { get; set; }
+
+    /// <summary>Capacité constructeur en mWh.</summary>
+    [JsonPropertyName("capacity")]
+    public int? CapacityMwh { get; set; }
+
+    [JsonPropertyName("date")]
+    public string? ManufactureDate { get; set; }
 }

@@ -10,11 +10,20 @@
 }
 else
 {
-    <div class="glpi-config-divider">
-        <span><i class="ti ti-toggle-left"></i> Modules à venir</span>
-    </div>
+    <CardExpander Title="Modules" Icon="ti-toggle-left">
+        <div class="glpi-module-master-toggle">
+            <span class="glpi-module-toggle-label">
+                <i class="ti ti-wallet"></i>
+                <span>Module Gestion</span>
+            </span>
+            <label class="glpi-switch">
+                <input type="checkbox" checked="@_moduleEnabled" @onchange="OnModuleMasterToggled" />
+                <span class="glpi-switch-slider"></span>
+            </label>
+        </div>
 
-    <ModuleToggleList GroupKey="gestion" Items="ModuleItems" Modules="_modules" OnToggle="OnModuleToggled" />
+        <ModuleToggleList GroupKey="gestion" Items="ModuleItems" Modules="_modules" OnToggle="OnModuleToggled" Disabled="@(!_moduleEnabled)" />
+    </CardExpander>
 
     <div class="glpi-config-divider">
         <span><i class="ti ti-wallet"></i> Réglages de gestion</span>
@@ -57,6 +66,7 @@ else
 
     private ModulesSettings? _modules;
     private GestionSettings? _model;
+    private bool _moduleEnabled = true;
     private bool _isSaving;
     private string? _statusMessage;
 
@@ -64,6 +74,22 @@ else
     {
         _modules = await SettingsStore.ReadSectionAsync<ModulesSettings>("ModulesSettings");
         _model = await SettingsStore.ReadSectionAsync<GestionSettings>(SectionName);
+        _moduleEnabled = _modules.IsModuleEnabled("gestion");
+    }
+
+    private async Task OnModuleMasterToggled(ChangeEventArgs e)
+    {
+        if (_modules is null)
+        {
+            return;
+        }
+
+        var enabled = (bool)e.Value!;
+        _modules.SetModuleEnabled("gestion", enabled);
+        _moduleEnabled = enabled;
+        await SettingsStore.SaveSectionAsync("ModulesSettings", _modules);
+        await History.AppendAsync("Administrateur",
+            [("Module Gestion", enabled ? "Désactivé" : "Activé", enabled ? "Activé" : "Désactivé")]);
     }
 
     private async Task OnModuleToggled((string Label, bool Enabled) change)

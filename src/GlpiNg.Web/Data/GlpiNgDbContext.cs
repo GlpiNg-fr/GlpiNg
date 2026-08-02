@@ -2,7 +2,11 @@ using AnthoDingo.Setup;
 using GlpiNg.Modules.Inventory.Models;
 using GlpiNg.Web.Models;
 using GlpiNg.Web.Models.Agent;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using MySqlConnector;
+using Npgsql;
+using System.Data.Common;
 
 namespace GlpiNg.Web.Data;
 
@@ -12,6 +16,9 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<ComputerComponent> ComputerComponents => Set<ComputerComponent>();
     public DbSet<ComputerSoftware> ComputerSoftwares => Set<ComputerSoftware>();
     public DbSet<ComputerPeripheral> ComputerPeripherals => Set<ComputerPeripheral>();
+    public DbSet<ComputerVolume> ComputerVolumes => Set<ComputerVolume>();
+    public DbSet<ComputerBattery> ComputerBatteries => Set<ComputerBattery>();
+    public DbSet<ComputerNetworkPort> ComputerNetworkPorts => Set<ComputerNetworkPort>();
 
     public DbSet<GlpiAgent> Agents => Set<GlpiAgent>();
     public DbSet<DeploymentJob> DeploymentJobs => Set<DeploymentJob>();
@@ -72,18 +79,33 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     /// SQLite n'est volontairement pas géré ici : seuls SQL Server, MySQL et PostgreSQL
     /// sont autorisés pour GlpiNg (voir <c>SetupOptions.AllowedProviders</c> dans Program.cs).
     /// </summary>
-    public static void ConfigureProvider(DbContextOptionsBuilder builder, DbProvider provider, string connectionString)
+    /// <param name="builder">Le builder d'options EF Core à configurer.</param>
+    /// <param name="provider">Le provider de base de données choisi lors de l'installation.</param>
+    /// <param name="connectionString">La chaîne de connexion vers le serveur principal.</param>
+    /// <param name="fallbackConnectionString">
+    /// Chaîne de connexion vers un serveur de secours, optionnelle. Si renseignée, le serveur
+    /// principal (<paramref name="connectionString"/>) est sondé au démarrage ; s'il n'est pas
+    /// joignable, c'est le serveur de secours qui est utilisé à sa place.
+    /// </param>
+    public static void ConfigureProvider(DbContextOptionsBuilder builder, DbProvider provider, string connectionString,
+        string? fallbackConnectionString = null)
     {
+        string effectiveConnectionString = connectionString;
+        if (!string.IsNullOrWhiteSpace(fallbackConnectionString) && !CanConnect(provider, connectionString))
+        {
+            effectiveConnectionString = fallbackConnectionString;
+        }
+
         switch (provider)
         {
             case DbProvider.SqlServer:
-                builder.UseSqlServer(connectionString);
+                builder.UseSqlServer(effectiveConnectionString);
                 break;
             case DbProvider.MySql:
-                builder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+                builder.UseMySql(effectiveConnectionString, ServerVersion.AutoDetect(effectiveConnectionString));
                 break;
             case DbProvider.Postgres:
-                builder.UseNpgsql(connectionString);
+                builder.UseNpgsql(effectiveConnectionString);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(provider), provider,
@@ -92,10 +114,47 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     }
 
     /// <summary>Construit un GlpiNgDbContext autonome (hors DI) pour le provider et la chaîne donnés.</summary>
-    public static GlpiNgDbContext Create(DbProvider provider, string connectionString)
+    public static GlpiNgDbContext Create(DbProvider provider, string connectionString, string? fallbackConnectionString = null)
     {
         DbContextOptionsBuilder<GlpiNgDbContext> optionsBuilder = new DbContextOptionsBuilder<GlpiNgDbContext>();
-        ConfigureProvider(optionsBuilder, provider, connectionString);
+        ConfigureProvider(optionsBuilder, provider, connectionString, fallbackConnectionString);
         return new GlpiNgDbContext(optionsBuilder.Options);
+    }
+
+    /// <summary>
+    /// Sonde la joignabilité d'un serveur en tentant une connexion ADO.NET avec un timeout
+    /// court (indépendant du "Connect Timeout" propre à la chaîne, pensé lui pour l'usage
+    /// normal de l'application) : on ne veut pas bloquer le démarrage le temps du timeout
+    /// complet avant de basculer sur le serveur de secours.
+    /// </summary>
+    private static bool CanConnect(DbProvider provider, string connectionString)
+    {
+        const int probeTimeoutSeconds = 3;
+        try
+        {
+            using DbConnection connection = provider switch
+            {
+                DbProvider.SqlServer => new SqlConnection(new SqlConnectionStringBuilder(connectionString)
+                {
+                    ConnectTimeout = probeTimeoutSeconds
+                }.ConnectionString),
+                DbProvider.MySql => new MySqlConnection(new MySqlConnectionStringBuilder(connectionString)
+                {
+                    ConnectionTimeout = probeTimeoutSeconds
+                }.ConnectionString),
+                DbProvider.Postgres => new NpgsqlConnection(new NpgsqlConnectionStringBuilder(connectionString)
+                {
+                    Timeout = probeTimeoutSeconds
+                }.ConnectionString),
+                _ => throw new ArgumentOutOfRangeException(nameof(provider), provider,
+                    "GlpiNg n'autorise que SQL Server, MySQL et PostgreSQL.")
+            };
+            connection.Open();
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

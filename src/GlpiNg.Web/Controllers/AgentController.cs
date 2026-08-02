@@ -1,3 +1,5 @@
+using System.IO.Compression;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using GlpiNg.Modules.Inventory.Models;
@@ -19,12 +21,14 @@ namespace GlpiNg.Web.Controllers;
 /// Traite aussi "getJobs" (récupération d'une tâche de déploiement) et "setStatus"
 /// (rapport d'exécution), et expose le téléchargement des fichiers de package associés.
 ///
-/// Non couvert pour l'instant : compression (zlib/gzip/br), chiffrement (GLPI-CryptoKey-ID),
-/// PROLOG legacy XML (fallback historique FusionInventory), proxy agent (GLPI-Proxy-ID).
+/// Non couvert pour l'instant : compression brotli, chiffrement (GLPI-CryptoKey-ID),
+/// proxy agent (GLPI-Proxy-ID). La compression zlib/gzip (Content-Type
+/// "application/x-compress-zlib"/"-gzip") est décompressée en entrée. Le PROLOG legacy XML
+/// (probe FusionInventory/OCS envoyé avant bascule sur le protocole JSON natif) est accepté
+/// en entrée mais toujours répondu en JSON.
 /// </summary>
 [ApiController]
 [Route("glpi-agent")]
-[Consumes("application/json")]
 [Produces("application/json")]
 public class AgentController(
     GlpiNgDbContext db,
@@ -39,6 +43,30 @@ public class AgentController(
     [HttpPost]
     public async Task<IActionResult> Handle(CancellationToken cancellationToken)
     {
+        // On lit le corps une seule fois (en octets, car il peut être compressé zlib/gzip),
+        // pour pouvoir le logguer en cas d'erreur, puis on le reparse en JsonDocument pour
+        // dispatcher sur "action".
+        Request.EnableBuffering();
+        using MemoryStream bodyBuffer = new();
+        await Request.Body.CopyToAsync(bodyBuffer, cancellationToken);
+        Request.Body.Position = 0;
+        string rawBody = DecompressBody(bodyBuffer.ToArray(), Request.ContentType);
+
+        // L'agent GLPI envoie toujours un PROLOG XML historique (protocole FusionInventory/OCS)
+        // en probe avant de savoir si le serveur supporte le protocole JSON natif. Un vrai
+        // serveur GLPI répond à cette requête XML par un simple statut JSON, ce qui indique à
+        // l'agent de basculer sur le protocole JSON (contact/inventory avec header
+        // GLPI-Agent-ID) pour la suite. Sans cette réponse, l'agent boucle indéfiniment sur
+        // PROLOG. Le header GLPI-Agent-ID n'est pas encore connu à ce stade, donc on répond
+        // avant de le vérifier.
+        string trimmedBody = rawBody.TrimStart();
+        if (trimmedBody.StartsWith("<?xml", StringComparison.OrdinalIgnoreCase)
+            || trimmedBody.StartsWith("<REQUEST", StringComparison.OrdinalIgnoreCase))
+        {
+            logger.LogInformation("glpi-agent: PROLOG XML historique reçu, réponse JSON pour basculer l'agent sur le protocole natif.");
+            return Ok(new ProtocolAnswer { Status = "ok", Expiration = "1d" });
+        }
+
         // Le header GLPI-Agent-ID est l'identité réelle et stable de l'agent (protocole COMMON).
         if (!Request.Headers.TryGetValue(AgentIdHeader, out Microsoft.Extensions.Primitives.StringValues agentIdValues)
             || string.IsNullOrWhiteSpace(agentIdValues.ToString()))
@@ -49,13 +77,6 @@ public class AgentController(
         }
 
         string agentUuid = agentIdValues.ToString();
-
-        // On lit le corps une seule fois en texte pour pouvoir le logguer en cas d'erreur,
-        // puis on le reparse en JsonDocument pour dispatcher sur "action".
-        Request.EnableBuffering();
-        using StreamReader bodyReader = new(Request.Body, leaveOpen: true);
-        string rawBody = await bodyReader.ReadToEndAsync(cancellationToken);
-        Request.Body.Position = 0;
 
         string action;
         JsonDocument document;
@@ -281,6 +302,35 @@ public class AgentController(
     }
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
+    /// <summary>
+    /// L'agent GLPI compresse parfois le corps (PROLOG XML comme requêtes JSON) en zlib ou
+    /// gzip, signalé via un Content-Type dédié ("application/x-compress-zlib" /
+    /// "application/x-compress-gzip") plutôt que le Content-Encoding HTTP standard.
+    /// </summary>
+    private static string DecompressBody(byte[] bodyBytes, string? contentType)
+    {
+        using MemoryStream compressed = new(bodyBytes);
+        Stream? decompressor = contentType switch
+        {
+            not null when contentType.Contains("zlib", StringComparison.OrdinalIgnoreCase)
+                => new ZLibStream(compressed, CompressionMode.Decompress),
+            not null when contentType.Contains("gzip", StringComparison.OrdinalIgnoreCase)
+                => new GZipStream(compressed, CompressionMode.Decompress),
+            _ => null
+        };
+
+        if (decompressor is null)
+        {
+            return Encoding.UTF8.GetString(bodyBytes);
+        }
+
+        using (decompressor)
+        using (StreamReader reader = new(decompressor, Encoding.UTF8))
+        {
+            return reader.ReadToEnd();
+        }
+    }
 }
 
 // --- DTOs de protocole (formes JSON exactes attendues par l'agent) ---

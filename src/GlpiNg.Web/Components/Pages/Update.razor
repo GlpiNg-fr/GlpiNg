@@ -1,0 +1,47 @@
+@page "/update"
+@layout GlpiNg.Web.Components.Layout.BlankLayout
+@attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+@rendermode InteractiveServer
+
+<PageTitle>GlpiNg — Mise à niveau requise</PageTitle>
+
+<div class="glpi-login">
+    <div class="glpi-login-card glpi-update-card">
+        <div class="glpi-login-brand">
+            <i class="ti ti-database-cog"></i>
+            <span>GlpiNg</span>
+        </div>
+
+        @if (_pendingMigrations.Count == 0)
+        {
+            <p class="glpi-login-message">La base de données est à jour.</p>
+            <button type="button" class="glpi-login-submit" @onclick="GoHome">Continuer</button>
+        }
+        else
+        {
+            <p class="glpi-login-message">
+                @(_pendingMigrations.Count == 1
+                    ? "1 migration est en attente avant de pouvoir utiliser GlpiNg :"
+                    : $"{_pendingMigrations.Count} migrations sont en attente avant de pouvoir utiliser GlpiNg :")
+            </p>
+            <ul class="glpi-update-migration-list">
+                @foreach (string migration in _pendingMigrations)
+                {
+                    <li><code>@migration</code></li>
+                }
+            </ul>
+
+            @if (_error is not null)
+            {
+                <div class="glpi-login-error">
+                    <i class="ti ti-alert-circle"></i>
+                    <span>@_error</span>
+                </div>
+            }
+
+            <button type="button" class="glpi-login-submit" disabled="@_applying" @onclick="ApplyAsync">
+                @(_applying ? "Application en cours..." : "Confirmer la mise à niveau")
+            </button>
+        }
+    </div>
+</div>

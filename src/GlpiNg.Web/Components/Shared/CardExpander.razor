@@ -1,0 +1,38 @@
+<div class="glpi-card-expander @(_expanded ? "" : "collapsed")">
+    <button type="button" class="glpi-card-expander-header" @onclick="Toggle">
+        <span class="glpi-card-expander-title">
+            <i class="ti @Icon"></i>
+            <span>@Title</span>
+        </span>
+        <i class="ti ti-chevron-down glpi-card-expander-chevron"></i>
+    </button>
+    @if (_expanded)
+    {
+        <div class="glpi-card-expander-body">
+            @ChildContent
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = "";
+
+    [Parameter]
+    public string Icon { get; set; } = "ti-box";
+
+    [Parameter]
+    public bool Expanded { get; set; } = true;
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private bool _expanded;
+
+    protected override void OnInitialized()
+    {
+        _expanded = Expanded;
+    }
+
+    private void Toggle() => _expanded = !_expanded;
+}

@@ -66,17 +66,26 @@ else
 
         <div class="glpi-config-field checkbox">
             <label for="dv-goto-created">Après la création, aller à l'élément créé</label>
-            <input id="dv-goto-created" type="checkbox" @bind="_model.GoToCreatedItem" />
+            <label class="glpi-switch">
+                <input id="dv-goto-created" type="checkbox" @bind="_model.GoToCreatedItem" />
+                <span class="glpi-switch-slider"></span>
+            </label>
         </div>
 
         <div class="glpi-config-field checkbox">
             <label for="dv-full-dropdown">Afficher le nom complet des intitulés dans les listes déroulantes</label>
-            <input id="dv-full-dropdown" type="checkbox" @bind="_model.ShowFullNameInDropdowns" />
+            <label class="glpi-switch">
+                <input id="dv-full-dropdown" type="checkbox" @bind="_model.ShowFullNameInDropdowns" />
+                <span class="glpi-switch-slider"></span>
+            </label>
         </div>
 
         <div class="glpi-config-field checkbox">
             <label for="dv-full-search">Afficher le nom complet des intitulés dans les résultats de recherche</label>
-            <input id="dv-full-search" type="checkbox" @bind="_model.ShowFullNameInSearchResults" />
+            <label class="glpi-switch">
+                <input id="dv-full-search" type="checkbox" @bind="_model.ShowFullNameInSearchResults" />
+                <span class="glpi-switch-slider"></span>
+            </label>
         </div>
 
         <div class="glpi-config-field">
@@ -90,17 +99,26 @@ else
 
         <div class="glpi-config-field checkbox">
             <label for="dv-glpi-ids">Afficher les ID GLPI</label>
-            <input id="dv-glpi-ids" type="checkbox" @bind="_model.ShowGlpiIds" />
+            <label class="glpi-switch">
+                <input id="dv-glpi-ids" type="checkbox" @bind="_model.ShowGlpiIds" />
+                <span class="glpi-switch-slider"></span>
+            </label>
         </div>
 
         <div class="glpi-config-field checkbox">
             <label for="dv-keep-devices">Garder les composants lors de la suppression définitive d'un élément</label>
-            <input id="dv-keep-devices" type="checkbox" @bind="_model.KeepDevicesOnPurge" />
+            <label class="glpi-switch">
+                <input id="dv-keep-devices" type="checkbox" @bind="_model.KeepDevicesOnPurge" />
+                <span class="glpi-switch-slider"></span>
+            </label>
         </div>
 
         <div class="glpi-config-field checkbox">
             <label for="dv-notify-changes">Notifications pour mes changements</label>
-            <input id="dv-notify-changes" type="checkbox" @bind="_model.NotifyOnMyChanges" />
+            <label class="glpi-switch">
+                <input id="dv-notify-changes" type="checkbox" @bind="_model.NotifyOnMyChanges" />
+                <span class="glpi-switch-slider"></span>
+            </label>
         </div>
 
         <div class="glpi-config-field">
@@ -161,7 +179,10 @@ else
 
         <div class="glpi-config-field checkbox">
             <label for="dv-contrast">Activer le contraste élevé</label>
-            <input id="dv-contrast" type="checkbox" @bind="_model.HighContrast" />
+            <label class="glpi-switch">
+                <input id="dv-contrast" type="checkbox" @bind="_model.HighContrast" />
+                <span class="glpi-switch-slider"></span>
+            </label>
         </div>
 
         <div class="glpi-config-field">

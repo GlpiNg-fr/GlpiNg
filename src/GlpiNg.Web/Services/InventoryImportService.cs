@@ -15,6 +15,11 @@ public class InventoryImportService(GlpiNgDbContext db)
     {
         Computer? computer = await db.Computers
             .Include(c => c.Components)
+            .Include(c => c.Softwares)
+            .Include(c => c.Peripherals)
+            .Include(c => c.Volumes)
+            .Include(c => c.Batteries)
+            .Include(c => c.NetworkPorts)
             .FirstOrDefaultAsync(c => c.AgentId == agent.Id, cancellationToken);
 
         // Fallback de corrélation : si l'agent n'est pas encore lié, on tente de retrouver
@@ -22,6 +27,11 @@ public class InventoryImportService(GlpiNgDbContext db)
         if (computer is null && content.Hardware?.Uuid is { Length: > 0 } uuid)
         {
             computer = await db.Computers.Include(c => c.Components)
+                .Include(c => c.Softwares)
+                .Include(c => c.Peripherals)
+                .Include(c => c.Volumes)
+                .Include(c => c.Batteries)
+                .Include(c => c.NetworkPorts)
                 .FirstOrDefaultAsync(c => c.HardwareUuid == uuid, cancellationToken);
         }
 
@@ -33,6 +43,11 @@ public class InventoryImportService(GlpiNgDbContext db)
 
         ApplyHardware(computer, content);
         ApplyComponents(computer, content);
+        ApplySoftwares(computer, content);
+        ApplyMonitors(computer, content);
+        ApplyVolumes(computer, content);
+        ApplyBatteries(computer, content);
+        ApplyNetworkPorts(computer, content);
 
         computer.LastInventoryAt = DateTime.UtcNow;
         computer.Status = ComputerStatus.InProduction;
@@ -51,6 +66,8 @@ public class InventoryImportService(GlpiNgDbContext db)
             computer.HardwareUuid = hardware.Uuid ?? computer.HardwareUuid;
             computer.ChassisType = hardware.ChassisType ?? computer.ChassisType;
             computer.TotalMemoryMb = hardware.MemoryMb ?? computer.TotalMemoryMb;
+            computer.LastLoggedUser = hardware.LastLoggedUser ?? computer.LastLoggedUser;
+            computer.VmSystem = hardware.VmSystem ?? computer.VmSystem;
         }
 
         if (content.Bios is { } bios)
@@ -64,6 +81,7 @@ public class InventoryImportService(GlpiNgDbContext db)
         {
             computer.OperatingSystem = os.FullName ?? os.Name ?? computer.OperatingSystem;
             computer.OsVersion = os.Version ?? computer.OsVersion;
+            computer.OsKernelVersion = os.KernelVersion ?? computer.OsKernelVersion;
         }
     }
 
@@ -120,6 +138,132 @@ public class InventoryImportService(GlpiNgDbContext db)
                 Designation = network.Description ?? "Carte réseau",
                 Capacity = null,
                 Serial = network.MacAddress
+            });
+        }
+    }
+
+    /// <summary>
+    /// Remplace intégralement les logiciels du poste par ceux de l'inventaire courant, pour
+    /// la même raison que <see cref="ApplyComponents"/> : un inventaire GLPI-Agent est un
+    /// instantané complet des logiciels installés.
+    /// </summary>
+    private static void ApplySoftwares(Computer computer, InventoryContent content)
+    {
+        computer.Softwares.Clear();
+
+        foreach (InventorySoftware software in content.Softwares)
+        {
+            if (string.IsNullOrWhiteSpace(software.Name)) continue;
+
+            computer.Softwares.Add(new ComputerSoftware
+            {
+                Name = software.Name,
+                Version = software.Version,
+                Publisher = software.Publisher,
+                InstallDate = software.InstallDate
+            });
+        }
+    }
+
+    /// <summary>
+    /// Remplace les moniteurs (<see cref="PeripheralKind.Monitor"/>) du poste par ceux de
+    /// l'inventaire courant, même logique d'instantané complet que <see cref="ApplyComponents"/>.
+    /// Ne touche pas aux autres natures de <see cref="ComputerPeripheral"/> (imprimantes, etc.),
+    /// qui ne sont pas encore alimentées par l'inventaire.
+    /// </summary>
+    private static void ApplyMonitors(Computer computer, InventoryContent content)
+    {
+        computer.Peripherals.RemoveAll(peripheral => peripheral.Kind == PeripheralKind.Monitor);
+
+        foreach (InventoryMonitor monitor in content.Monitors)
+        {
+            string designation = monitor.Caption ?? monitor.Description ?? "Écran inconnu";
+
+            computer.Peripherals.Add(new ComputerPeripheral
+            {
+                Kind = PeripheralKind.Monitor,
+                Designation = designation,
+                Manufacturer = monitor.Manufacturer,
+                Serial = monitor.Serial
+            });
+        }
+    }
+
+    /// <summary>
+    /// Remplace intégralement les volumes du poste par ceux de l'inventaire courant, même
+    /// logique d'instantané complet que <see cref="ApplyComponents"/>.
+    /// </summary>
+    private static void ApplyVolumes(Computer computer, InventoryContent content)
+    {
+        computer.Volumes.Clear();
+
+        foreach (InventoryDrive drive in content.Drives)
+        {
+            string name = drive.Volume ?? drive.Label ?? drive.Letter ?? "Volume inconnu";
+
+            computer.Volumes.Add(new ComputerVolume
+            {
+                Name = name,
+                Partition = drive.Type,
+                MountPoint = drive.Letter ?? drive.Volume,
+                FileSystem = drive.FileSystem,
+                TotalSizeMb = drive.TotalMb,
+                FreeSizeMb = drive.FreeMb
+            });
+        }
+    }
+
+    /// <summary>
+    /// Remplace intégralement les batteries du poste par celles de l'inventaire courant, même
+    /// logique d'instantané complet que <see cref="ApplyComponents"/>.
+    /// </summary>
+    private static void ApplyBatteries(Computer computer, InventoryContent content)
+    {
+        computer.Batteries.Clear();
+
+        foreach (InventoryBattery battery in content.Batteries)
+        {
+            computer.Batteries.Add(new ComputerBattery
+            {
+                Name = battery.Name ?? battery.Manufacturer ?? "Batterie inconnue",
+                Manufacturer = battery.Manufacturer,
+                Serial = battery.Serial,
+                Chemistry = battery.Chemistry,
+                VoltageMv = battery.VoltageMv,
+                CapacityMwh = battery.CapacityMwh,
+                ManufactureDate = battery.ManufactureDate
+            });
+        }
+    }
+
+    /// <summary>
+    /// Remplace intégralement les ports réseau du poste par ceux de l'inventaire courant, même
+    /// logique d'instantané complet que <see cref="ApplyComponents"/>. Distinct de
+    /// <see cref="ApplyComponents"/> (qui liste les cartes réseau comme composants matériel) :
+    /// ici on conserve la configuration IP/logique de chaque interface, à l'instar de l'onglet
+    /// "Ports réseau" de GLPI.
+    /// </summary>
+    private static void ApplyNetworkPorts(Computer computer, InventoryContent content)
+    {
+        computer.NetworkPorts.Clear();
+
+        foreach (InventoryNetwork network in content.Networks)
+        {
+            computer.NetworkPorts.Add(new ComputerNetworkPort
+            {
+                Designation = network.Description ?? "Interface réseau",
+                Type = network.Type,
+                MacAddress = network.MacAddress,
+                Manufacturer = network.Manufacturer,
+                IpAddress = network.IpAddress,
+                IpMask = network.IpMask,
+                IpGateway = network.IpGateway,
+                IpSubnet = network.IpSubnet,
+                IpDhcp = network.IpDhcp,
+                Mtu = network.Mtu,
+                SpeedMbps = network.SpeedMbps,
+                Status = network.Status,
+                IsVirtual = network.VirtualDevice == "1"
             });
         }
     }

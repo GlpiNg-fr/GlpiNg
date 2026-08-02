@@ -12,7 +12,10 @@ else
     <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glpi-config-form">
         <div class="glpi-config-field checkbox">
             <label for="sec-enforce">Obliger les mots de passe à respecter la politique de sécurité</label>
-            <input id="sec-enforce" type="checkbox" @bind="_model.EnforcePasswordPolicy" />
+            <label class="glpi-switch">
+                <input id="sec-enforce" type="checkbox" @bind="_model.EnforcePasswordPolicy" />
+                <span class="glpi-switch-slider"></span>
+            </label>
         </div>
 
         <div class="glpi-config-field">
@@ -22,22 +25,34 @@ else
 
         <div class="glpi-config-field checkbox">
             <label for="sec-number">Le mot de passe requiert au moins un chiffre</label>
-            <input id="sec-number" type="checkbox" @bind="_model.PasswordNeedNumber" />
+            <label class="glpi-switch">
+                <input id="sec-number" type="checkbox" @bind="_model.PasswordNeedNumber" />
+                <span class="glpi-switch-slider"></span>
+            </label>
         </div>
 
         <div class="glpi-config-field checkbox">
             <label for="sec-lower">Le mot de passe requiert au moins une minuscule</label>
-            <input id="sec-lower" type="checkbox" @bind="_model.PasswordNeedLowercase" />
+            <label class="glpi-switch">
+                <input id="sec-lower" type="checkbox" @bind="_model.PasswordNeedLowercase" />
+                <span class="glpi-switch-slider"></span>
+            </label>
         </div>
 
         <div class="glpi-config-field checkbox">
             <label for="sec-upper">Le mot de passe requiert au moins une majuscule</label>
-            <input id="sec-upper" type="checkbox" @bind="_model.PasswordNeedUppercase" />
+            <label class="glpi-switch">
+                <input id="sec-upper" type="checkbox" @bind="_model.PasswordNeedUppercase" />
+                <span class="glpi-switch-slider"></span>
+            </label>
         </div>
 
         <div class="glpi-config-field checkbox">
             <label for="sec-symbol">Le mot de passe requiert au moins un symbole</label>
-            <input id="sec-symbol" type="checkbox" @bind="_model.PasswordNeedSymbol" />
+            <label class="glpi-switch">
+                <input id="sec-symbol" type="checkbox" @bind="_model.PasswordNeedSymbol" />
+                <span class="glpi-switch-slider"></span>
+            </label>
         </div>
 
         <div class="glpi-config-field">
@@ -100,7 +115,10 @@ else
 
         <div class="glpi-config-field checkbox">
             <label for="sec-2fa-enforced">Forcer 2FA</label>
-            <input id="sec-2fa-enforced" type="checkbox" @bind="_model.TwoFactorEnforced" />
+            <label class="glpi-switch">
+                <input id="sec-2fa-enforced" type="checkbox" @bind="_model.TwoFactorEnforced" />
+                <span class="glpi-switch-slider"></span>
+            </label>
         </div>
 
         @if (_statusMessage is not null)

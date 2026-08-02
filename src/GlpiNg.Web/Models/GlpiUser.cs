@@ -13,5 +13,6 @@ public class GlpiUser
     public string? DisplayName { get; set; }
     public required string PasswordHash { get; set; }
     public bool IsAdmin { get; set; }
+    public bool SidebarCollapsed { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

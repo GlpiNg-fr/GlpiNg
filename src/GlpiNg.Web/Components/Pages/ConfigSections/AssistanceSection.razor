@@ -10,11 +10,20 @@
 }
 else
 {
-    <div class="glpi-config-divider">
-        <span><i class="ti ti-toggle-left"></i> Modules à venir</span>
-    </div>
+    <CardExpander Title="Modules" Icon="ti-toggle-left">
+        <div class="glpi-module-master-toggle">
+            <span class="glpi-module-toggle-label">
+                <i class="ti ti-headset"></i>
+                <span>Module Assistance</span>
+            </span>
+            <label class="glpi-switch">
+                <input type="checkbox" checked="@_moduleEnabled" @onchange="OnModuleMasterToggled" />
+                <span class="glpi-switch-slider"></span>
+            </label>
+        </div>
 
-    <ModuleToggleList GroupKey="assistance" Items="ModuleItems" Modules="_modules" OnToggle="OnModuleToggled" />
+        <ModuleToggleList GroupKey="assistance" Items="ModuleItems" Modules="_modules" OnToggle="OnModuleToggled" Disabled="@(!_moduleEnabled)" />
+    </CardExpander>
 
     <div class="glpi-config-divider">
         <span><i class="ti ti-headset"></i> Réglages de l'assistance</span>
@@ -72,27 +81,42 @@ else
 
         <div class="glpi-config-field checkbox">
             <label for="as-software-linkable">Par défaut, un logiciel peut être associé à un ticket</label>
-            <input id="as-software-linkable" type="checkbox" @bind="_model.SoftwareLinkableToTicketByDefault" />
+            <label class="glpi-switch">
+                <input id="as-software-linkable" type="checkbox" @bind="_model.SoftwareLinkableToTicketByDefault" />
+                <span class="glpi-switch-slider"></span>
+            </label>
         </div>
 
         <div class="glpi-config-field checkbox">
             <label for="as-keep-tickets">Conserver les tickets à la purge d'un élément de l'inventaire</label>
-            <input id="as-keep-tickets" type="checkbox" @bind="_model.KeepTicketsOnAssetPurge" />
+            <label class="glpi-switch">
+                <input id="as-keep-tickets" type="checkbox" @bind="_model.KeepTicketsOnAssetPurge" />
+                <span class="glpi-switch-slider"></span>
+            </label>
         </div>
 
         <div class="glpi-config-field checkbox">
             <label for="as-show-personal">Afficher les informations personnelles dans le formulaire de nouveau ticket (interface simplifiée)</label>
-            <input id="as-show-personal" type="checkbox" @bind="_model.ShowPersonalInfoOnSimplifiedTicketForm" />
+            <label class="glpi-switch">
+                <input id="as-show-personal" type="checkbox" @bind="_model.ShowPersonalInfoOnSimplifiedTicketForm" />
+                <span class="glpi-switch-slider"></span>
+            </label>
         </div>
 
         <div class="glpi-config-field checkbox">
             <label for="as-anon-tickets">Autoriser les ouvertures de tickets anonymes (collecteur)</label>
-            <input id="as-anon-tickets" type="checkbox" @bind="_model.AllowAnonymousTicketCreation" />
+            <label class="glpi-switch">
+                <input id="as-anon-tickets" type="checkbox" @bind="_model.AllowAnonymousTicketCreation" />
+                <span class="glpi-switch-slider"></span>
+            </label>
         </div>
 
         <div class="glpi-config-field checkbox">
             <label for="as-anon-followups">Autoriser les suivis anonymes (collecteur)</label>
-            <input id="as-anon-followups" type="checkbox" @bind="_model.AllowAnonymousFollowups" />
+            <label class="glpi-switch">
+                <input id="as-anon-followups" type="checkbox" @bind="_model.AllowAnonymousFollowups" />
+                <span class="glpi-switch-slider"></span>
+            </label>
         </div>
 
         <div class="glpi-config-divider">
@@ -193,6 +217,7 @@ else
 
     private ModulesSettings? _modules;
     private AssistanceSettings? _model;
+    private bool _moduleEnabled = true;
     private bool _isSaving;
     private string? _statusMessage;
 
@@ -200,6 +225,22 @@ else
     {
         _modules = await SettingsStore.ReadSectionAsync<ModulesSettings>("ModulesSettings");
         _model = await SettingsStore.ReadSectionAsync<AssistanceSettings>(SectionName);
+        _moduleEnabled = _modules.IsModuleEnabled("assistance");
+    }
+
+    private async Task OnModuleMasterToggled(ChangeEventArgs e)
+    {
+        if (_modules is null)
+        {
+            return;
+        }
+
+        var enabled = (bool)e.Value!;
+        _modules.SetModuleEnabled("assistance", enabled);
+        _moduleEnabled = enabled;
+        await SettingsStore.SaveSectionAsync("ModulesSettings", _modules);
+        await History.AppendAsync("Administrateur",
+            [("Module Assistance", enabled ? "Désactivé" : "Activé", enabled ? "Activé" : "Désactivé")]);
     }
 
     private void ToggleWorkDay(int day, bool enabled)

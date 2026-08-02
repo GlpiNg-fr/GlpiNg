@@ -1,12 +1,15 @@
 @inherits LayoutComponentBase
 @implements IDisposable
 @using GlpiNg.Modules.Abstractions.Menu
+@using GlpiNg.Web.Data
 @using GlpiNg.Web.Models
 @using GlpiNg.Web.Services
 @using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
 @inject NavigationManager Nav
 @inject IEnumerable<IMenuProvider> MenuProviders
 @inject AppSettingsFileStore SettingsStore
+@inject IDbContextFactory<GlpiNgDbContext> DbFactory
 
 <div class="glpi-app">
     <aside class="glpi-sidebar @(_collapsed ? "collapsed" : "")">
@@ -71,6 +74,28 @@
                             }
                         </div>
                     }
+                    <div class="glpi-nav-flyout">
+                        <div class="glpi-nav-flyout-header">@group.Label</div>
+                        <div class="glpi-nav-flyout-items">
+                            @foreach (var item in FilteredItems(group))
+                            {
+                                if (item.Href is not null)
+                                {
+                                    <NavLink href="@item.Href" Match="@(item.Href == "/" ? NavLinkMatch.All : NavLinkMatch.Prefix)" class="glpi-nav-subitem">
+                                        <i class="ti @(item.Icon ?? "ti-point")"></i>
+                                        <span>@item.Label</span>
+                                    </NavLink>
+                                }
+                                else
+                                {
+                                    <span class="glpi-nav-subitem disabled" title="Pas encore disponible">
+                                        <i class="ti @(item.Icon ?? "ti-point")"></i>
+                                        <span>@item.Label</span>
+                                    </span>
+                                }
+                            }
+                        </div>
+                    </div>
                 </div>
             }
         </nav>
@@ -242,6 +267,7 @@
 
     private string _userName = string.Empty;
     private string _userInitial = string.Empty;
+    private int? _userId;
 
     protected override async Task OnInitializedAsync()
     {
@@ -251,10 +277,24 @@
         Breadcrumb = BuildBreadcrumb();
         _expandedGroup = FindGroupForPath();
 
-        _userName = AuthStateTask is not null
-            ? (await AuthStateTask).User.Identity?.Name ?? string.Empty
-            : string.Empty;
+        if (AuthStateTask is not null)
+        {
+            var authState = await AuthStateTask;
+            _userName = authState.User.Identity?.Name ?? string.Empty;
+            string? userIdClaim = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            _userId = int.TryParse(userIdClaim, out int userId) ? userId : null;
+        }
+
         _userInitial = _userName.Length > 0 ? _userName[..1].ToUpperInvariant() : "?";
+
+        if (_userId is int uid)
+        {
+            await using GlpiNgDbContext db = await DbFactory.CreateDbContextAsync();
+            _collapsed = await db.Users.AsNoTracking()
+                .Where(u => u.Id == uid)
+                .Select(u => u.SidebarCollapsed)
+                .FirstOrDefaultAsync();
+        }
     }
 
     private List<NavGroup> BuildGroups(ModulesSettings modules)
@@ -282,6 +322,11 @@
 
         foreach (var key in GroupOrder)
         {
+            if (!modules.IsModuleEnabled(key))
+            {
+                continue;
+            }
+
             if (hostByKey.TryGetValue(key, out var hostGroup))
             {
                 AddOrMerge(hostGroup.Key, hostGroup.Icon, hostGroup.Label, hostGroup.Items);
@@ -295,7 +340,7 @@
 
         // Groupes hors du GroupOrder connu : nouveau domaine apporté par un module,
         // pas encore intégré au menu hôte.
-        foreach (var moduleGroup in moduleGroups.Where(g => !GroupOrder.Contains(g.Key)))
+        foreach (var moduleGroup in moduleGroups.Where(g => !GroupOrder.Contains(g.Key) && modules.IsModuleEnabled(g.Key)))
         {
             AddOrMerge(moduleGroup.Key, moduleGroup.Icon, moduleGroup.Label, moduleGroup.Items.Select(i => new NavItem(i.Label, i.Href, i.Icon)));
         }
@@ -322,9 +367,20 @@
         _expandedGroup = _expandedGroup == key ? null : key;
     }
 
-    private void ToggleSidebarCollapse()
+    private async Task ToggleSidebarCollapse()
     {
         _collapsed = !_collapsed;
+
+        if (_userId is int userId)
+        {
+            await using GlpiNgDbContext db = await DbFactory.CreateDbContextAsync();
+            var user = await db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user is not null)
+            {
+                user.SidebarCollapsed = _collapsed;
+                await db.SaveChangesAsync();
+            }
+        }
     }
 
     private void ToggleSearch()
@@ -361,6 +417,14 @@
         if (path.StartsWith("computers", StringComparison.OrdinalIgnoreCase))
         {
             items.Add(("ti-device-desktop", "Ordinateurs", "/computers"));
+        }
+        else if (path.StartsWith("software", StringComparison.OrdinalIgnoreCase))
+        {
+            items.Add(("ti-apps", "Logiciels", "/software"));
+        }
+        else if (path.StartsWith("monitors", StringComparison.OrdinalIgnoreCase))
+        {
+            items.Add(("ti-device-tv", "Moniteurs", "/monitors"));
         }
         else if (path.StartsWith("agents", StringComparison.OrdinalIgnoreCase))
         {
