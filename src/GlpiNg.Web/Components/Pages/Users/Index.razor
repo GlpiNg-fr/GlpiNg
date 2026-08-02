@@ -1,0 +1,150 @@
+@page "/users"
+@using GlpiNg.Web.Models
+@rendermode InteractiveServer
+
+<PageTitle>GlpiNg — Utilisateurs</PageTitle>
+
+<div class="page-header d-flex align-items-center justify-content-between mb-3">
+    <h2 class="page-title mb-0">Utilisateurs</h2>
+    <div class="text-secondary">@_filteredUsers.Count résultat(s)</div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex align-items-center justify-content-between glpi-list-toolbar">
+        <div class="btn-list">
+            <div class="dropdown">
+                <button type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="ti ti-search me-1"></i>Rechercher
+                </button>
+                <div class="dropdown-menu p-3" style="min-width: 280px;">
+                    <div class="input-icon">
+                        <span class="input-icon-addon">
+                            <i class="ti ti-search"></i>
+                        </span>
+                        <input type="text" class="form-control" placeholder="Rechercher un utilisateur..."
+                               @bind="_searchTerm" @bind:event="oninput" @onkeyup="OnSearchChanged" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="btn-list align-items-center">
+            <label class="form-check m-0 px-2" title="Tout sélectionner">
+                <input class="form-check-input m-0" type="checkbox" checked="@AllSelected"
+                       @onchange="@((ChangeEventArgs e) => ToggleSelectAll((bool)(e.Value ?? false)))" />
+            </label>
+
+            <div class="dropdown">
+                <button type="button" class="btn btn-icon text-danger" data-bs-toggle="dropdown" aria-expanded="false"
+                        disabled="@(_selectedIds.Count == 0)" title="Supprimer la sélection">
+                    <i class="ti ti-trash"></i>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end p-3" style="min-width: 260px;">
+                    <p class="mb-2">Supprimer @_selectedIds.Count utilisateur(s) sélectionné(s) ? Cette action est définitive.</p>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-sm">Annuler</button>
+                        <button type="button" class="btn btn-sm btn-danger" @onclick="DeleteSelectedAsync">Supprimer</button>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-icon" @onclick="OnRefreshAsync" title="Rafraîchir">
+                <i class="ti ti-refresh"></i>
+            </button>
+
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newUserModal">
+                <i class="ti ti-plus me-1"></i>Nouvel utilisateur
+            </button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th style="width: 2.5rem;"></th>
+                    <th></th>
+                    <th>Identifiant</th>
+                    <th>Nom de famille</th>
+                    <th>Prénom</th>
+                    <th>E-mail</th>
+                    <th>Téléphone</th>
+                    <th>Lieu</th>
+                    <th>Actif</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (_filteredUsers.Count == 0)
+                {
+                    <tr>
+                        <td colspan="9" class="text-center text-secondary py-4">Aucun utilisateur trouvé.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (GlpiUser user in _filteredUsers)
+                    {
+                        <tr>
+                            <td>
+                                <input class="form-check-input m-0" type="checkbox" checked="@_selectedIds.Contains(user.Id)"
+                                       @onchange="@((ChangeEventArgs e) => ToggleSelect(user.Id, (bool)(e.Value ?? false)))" />
+                            </td>
+                            <td>
+                                <span style="display:inline-flex;align-items:center;justify-content:center;width:1.75rem;height:1.75rem;border-radius:50%;color:#fff;font-size:0.7rem;font-weight:600;background:@UserAvatar.Color(user)">@UserAvatar.Initials(user)</span>
+                            </td>
+                            <td>
+                                <a href="@($"/users/{user.Id}")" class="text-reset fw-semibold">@user.UserName</a>
+                            </td>
+                            <td>@(user.LastName ?? "—")</td>
+                            <td>@(user.FirstName ?? "—")</td>
+                            <td>@(user.Email ?? "—")</td>
+                            <td>@(user.Phone ?? "—")</td>
+                            <td>@(user.Location ?? "—")</td>
+                            <td>@(user.IsActive ? "Oui" : "Non")</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="newUserModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="ti ti-user me-2"></i>Nouvel élément - Utilisateur</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <UserFormFields User="_newUser" OnChanged="StateHasChanged" />
+
+                <div class="glpi-fiche-block-title mt-2"><i class="ti ti-key"></i>Authentification</div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="glpi-fiche-field">
+                            <label>Mot de passe</label>
+                            <input class="form-control" type="password" @bind="_newPassword" @bind:event="oninput" @bind:after="StateHasChanged" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="glpi-fiche-field">
+                            <label>Confirmer</label>
+                            <input class="form-control" type="password" @bind="_newPasswordConfirm" @bind:event="oninput" @bind:after="StateHasChanged" />
+                        </div>
+                    </div>
+                </div>
+
+                @if (_createError is not null)
+                {
+                    <p class="status">@_createError</p>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-warning" disabled="@(!CanCreate)" @onclick="CreateUserAsync">
+                    <i class="ti ti-plus me-1"></i>Ajouter
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

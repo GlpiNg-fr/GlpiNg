@@ -1,0 +1,107 @@
+@using GlpiNg.Web.Models
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="glpi-fiche-field">
+            <label>Nom</label>
+            <input class="form-control" @bind="Server.Name" @bind:event="oninput" @bind:after="NotifyChangedAsync" />
+        </div>
+        <div class="glpi-fiche-field">
+            <label>Serveur par défaut</label>
+            @YesNoSelect(Server.IsDefault, v => Server.IsDefault = v)
+        </div>
+        <div class="glpi-fiche-field">
+            <label>Activé</label>
+            @YesNoSelect(Server.IsActive, v => Server.IsActive = v)
+        </div>
+        <div class="glpi-fiche-field">
+            <label>Serveur</label>
+            <input class="form-control" @bind="Server.Host" @bind:event="oninput" @bind:after="NotifyChangedAsync" placeholder="ldap.example.com" />
+        </div>
+        <div class="row">
+            <div class="col-8">
+                <div class="glpi-fiche-field">
+                    <label>Port (par défaut 389)</label>
+                    <input type="number" class="form-control" @bind="Server.Port" />
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="glpi-fiche-field">
+                    <label>SSL/TLS</label>
+                    @YesNoSelect(Server.UseSsl, v => Server.UseSsl = v)
+                </div>
+            </div>
+        </div>
+        <div class="glpi-fiche-field">
+            <label>Commentaires</label>
+            <textarea class="form-control" rows="2" @bind="Server.Comment"></textarea>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="glpi-fiche-field">
+            <label>BaseDN</label>
+            <input class="form-control" @bind="Server.BaseDn" @bind:event="oninput" @bind:after="NotifyChangedAsync" placeholder="dc=example,dc=com" />
+        </div>
+        <div class="glpi-fiche-field">
+            <label>Filtre de connexion (optionnel)</label>
+            <textarea class="form-control" rows="2" @bind="Server.LoginFilter" placeholder="(memberOf=cn=glpi-users,ou=groups,dc=example,dc=com)"></textarea>
+        </div>
+        <div class="glpi-fiche-field">
+            <label>Champ de l'identifiant</label>
+            <input class="form-control" @bind="Server.LoginField" />
+        </div>
+        <div class="glpi-fiche-field">
+            <label>Champ de synchronisation (optionnel)</label>
+            <input class="form-control" @bind="Server.SyncField" />
+        </div>
+        <div class="glpi-fiche-field">
+            <label>Utiliser un compte de connexion (bind)</label>
+            @YesNoSelect(Server.UseBind, v => Server.UseBind = v)
+        </div>
+        @if (Server.UseBind)
+        {
+            <div class="glpi-fiche-field">
+                <label>DN du compte (pour les connexions non anonymes)</label>
+                <input class="form-control" @bind="Server.BindDn" placeholder="cn=admin,dc=example,dc=com" />
+            </div>
+            <div class="glpi-fiche-field">
+                <label>Mot de passe du compte</label>
+                <input type="password" class="form-control" value="@BindPasswordPlain" @oninput="OnPasswordInput"
+                       placeholder="@(HasStoredPassword ? "•••••••• (laisser vide pour conserver)" : "")" />
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public AuthLdapServer Server { get; set; } = null!;
+
+    [Parameter]
+    public bool HasStoredPassword { get; set; }
+
+    [Parameter]
+    public string BindPasswordPlain { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> BindPasswordPlainChanged { get; set; }
+
+    // Server est muté directement (référence partagée avec le parent) : ça ne déclenche pas le
+    // re-rendu du parent tout seul, d'où ce callback (même principe que GroupFormFields/ProfileFormFields).
+    [Parameter]
+    public EventCallback OnChanged { get; set; }
+
+    private Task NotifyChangedAsync() => OnChanged.InvokeAsync();
+
+    private async Task OnPasswordInput(ChangeEventArgs e)
+    {
+        BindPasswordPlain = e.Value?.ToString() ?? string.Empty;
+        await BindPasswordPlainChanged.InvokeAsync(BindPasswordPlain);
+    }
+
+    private RenderFragment YesNoSelect(bool value, Action<bool> setter) =>
+        @<select class="form-select" value="@(value ? "true" : "false")" @onchange="@(e => setter(e.Value?.ToString() == "true"))">
+            <option value="false">Non</option>
+            <option value="true">Oui</option>
+        </select>;
+}

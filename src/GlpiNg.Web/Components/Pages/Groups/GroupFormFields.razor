@@ -1,0 +1,101 @@
+@using GlpiNg.Web.Models
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="glpi-fiche-field">
+            <label>Nom</label>
+            <input class="form-control" @bind="Group.Name" @bind:event="oninput" @bind:after="NotifyChangedAsync" />
+        </div>
+        <div class="glpi-fiche-field">
+            <label>Code</label>
+            <input class="form-control" @bind="Group.Code" />
+        </div>
+        <div class="glpi-fiche-field">
+            <label>Comme enfant de</label>
+            <select class="form-select" value="@(Group.ParentId?.ToString() ?? "")" @onchange="OnParentChanged">
+                <option value="">-----</option>
+                @foreach (GlpiGroup candidate in ParentCandidates)
+                {
+                    <option value="@candidate.Id">@FullNameOf(candidate)</option>
+                }
+            </select>
+        </div>
+        <div class="glpi-fiche-field">
+            <label>Appartenance récursive</label>
+            <select class="form-select" value="@(Group.IsRecursive ? "true" : "false")" @onchange="@(e => Group.IsRecursive = e.Value?.ToString() == "true")">
+                <option value="false">Non</option>
+                <option value="true">Oui</option>
+            </select>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="glpi-fiche-field">
+            <label>Commentaires</label>
+            <textarea class="form-control" rows="4" @bind="Group.Comment"></textarea>
+        </div>
+    </div>
+</div>
+
+<div class="glpi-fiche-block-title mt-2"><i class="ti ti-ticket"></i>Visible dans un ticket</div>
+<div class="row">
+    <div class="col-md-6">
+        @YesNo("Demandeur", Group.VisibleAsRequester, v => Group.VisibleAsRequester = v)
+        @YesNo("Attribué à", Group.VisibleAsAssignee, v => Group.VisibleAsAssignee = v)
+        @YesNo("Peut être notifié", Group.CanBeNotified, v => Group.CanBeNotified = v)
+    </div>
+    <div class="col-md-6">
+        @YesNo("Observateur", Group.VisibleAsObserver, v => Group.VisibleAsObserver = v)
+        @YesNo("Tâche", Group.VisibleAsTask, v => Group.VisibleAsTask = v)
+    </div>
+</div>
+
+<div class="glpi-fiche-block-title mt-2"><i class="ti ti-clipboard-list"></i>Visible dans un projet</div>
+<div class="row">
+    <div class="col-md-6">
+        @YesNo("Peut être superviseur", Group.CanBeProjectSupervisor, v => Group.CanBeProjectSupervisor = v)
+    </div>
+</div>
+
+<div class="glpi-fiche-block-title mt-2"><i class="ti ti-box"></i>Peut contenir</div>
+<div class="row">
+    <div class="col-md-6">
+        @YesNo("Éléments", Group.CanContainItems, v => Group.CanContainItems = v)
+    </div>
+    <div class="col-md-6">
+        @YesNo("Utilisateurs", Group.CanContainUsers, v => Group.CanContainUsers = v)
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public GlpiGroup Group { get; set; } = null!;
+
+    [Parameter]
+    public IReadOnlyList<GlpiGroup> ParentCandidates { get; set; } = [];
+
+    [Parameter]
+    public Func<GlpiGroup, string> FullNameOf { get; set; } = g => g.Name;
+
+    // Group est mutée directement (référence partagée avec le parent) : ça ne déclenche pas
+    // le re-rendu du parent tout seul, d'où ce callback pour les cas où le parent affiche un
+    // état dérivé de Group (ex. le bouton "Ajouter" désactivé tant que Name est vide).
+    [Parameter]
+    public EventCallback OnChanged { get; set; }
+
+    private Task NotifyChangedAsync() => OnChanged.InvokeAsync();
+
+    private void OnParentChanged(ChangeEventArgs e)
+    {
+        string? value = e.Value?.ToString();
+        Group.ParentId = string.IsNullOrEmpty(value) ? null : int.Parse(value);
+    }
+
+    private RenderFragment YesNo(string label, bool value, Action<bool> setter) =>
+        @<div class="glpi-fiche-field">
+            <label>@label</label>
+            <select class="form-select" value="@(value ? "true" : "false")" @onchange="@(e => setter(e.Value?.ToString() == "true"))">
+                <option value="false">Non</option>
+                <option value="true">Oui</option>
+            </select>
+        </div>;
+}

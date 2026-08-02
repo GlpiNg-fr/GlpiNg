@@ -1,0 +1,51 @@
+@using GlpiNg.Web.Models
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="glpi-fiche-field">
+            <label>Nom</label>
+            <input class="form-control" @bind="Entity.Name" @bind:event="oninput" @bind:after="NotifyChangedAsync" />
+        </div>
+        <div class="glpi-fiche-field">
+            <label>Comme enfant de</label>
+            <select class="form-select" value="@(Entity.ParentId?.ToString() ?? "")" @onchange="OnParentChanged">
+                <option value="">-----</option>
+                @foreach (GlpiEntity candidate in ParentCandidates)
+                {
+                    <option value="@candidate.Id">@FullNameOf(candidate)</option>
+                }
+            </select>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="glpi-fiche-field">
+            <label>Commentaires</label>
+            <textarea class="form-control" rows="4" @bind="Entity.Comment"></textarea>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public GlpiEntity Entity { get; set; } = null!;
+
+    [Parameter]
+    public IReadOnlyList<GlpiEntity> ParentCandidates { get; set; } = [];
+
+    [Parameter]
+    public Func<GlpiEntity, string> FullNameOf { get; set; } = e => e.Name;
+
+    // Entity est mutée directement (référence partagée avec le parent) : ça ne déclenche pas
+    // le re-rendu du parent tout seul, d'où ce callback pour les cas où le parent affiche un
+    // état dérivé de Entity (ex. le bouton "Ajouter" désactivé tant que Name est vide).
+    [Parameter]
+    public EventCallback OnChanged { get; set; }
+
+    private Task NotifyChangedAsync() => OnChanged.InvokeAsync();
+
+    private void OnParentChanged(ChangeEventArgs e)
+    {
+        string? value = e.Value?.ToString();
+        Entity.ParentId = string.IsNullOrEmpty(value) ? null : int.Parse(value);
+    }
+}

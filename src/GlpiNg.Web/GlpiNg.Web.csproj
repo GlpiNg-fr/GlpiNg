@@ -13,6 +13,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.18">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -27,6 +28,7 @@
          Microsoft.Data.Sqlite (pour tester une connexion SQLite dans son wizard), qui ramène
          SQLitePCLRaw.lib.e_sqlite3 2.1.11 (vulnérable, non corrigé en amont — dotnet/efcore#38257). -->
     <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.53.3" />
+    <PackageReference Include="System.DirectoryServices.Protocols" Version="10.0.10" />
   </ItemGroup>
 
   <ItemGroup>

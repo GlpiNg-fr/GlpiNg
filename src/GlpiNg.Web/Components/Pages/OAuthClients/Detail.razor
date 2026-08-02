@@ -1,0 +1,66 @@
+@page "/oauth-clients/{ClientId:int}"
+@using GlpiNg.Web.Models
+@rendermode InteractiveServer
+
+<PageTitle>GlpiNg — @(_client?.Name ?? "Client OAuth")</PageTitle>
+
+@if (_client is null)
+{
+    <div class="text-center text-secondary py-5">
+        <i class="ti ti-lock-access fs-1"></i>
+        <p class="mt-2">Ce client OAuth est introuvable.</p>
+    </div>
+}
+else
+{
+    <div class="card">
+        <div class="card-header">
+            <i class="ti ti-lock-access me-2"></i>
+            <span class="fw-semibold">Client OAuth - @_client.Name - ID @_client.Id</span>
+        </div>
+        <div class="card-body">
+            <div class="glpi-fiche-field">
+                <label>Client ID</label>
+                <div class="input-group">
+                    <input class="form-control font-monospace" readonly value="@_client.ClientId" />
+                    <button type="button" class="btn btn-outline-secondary" @onclick="CopyClientIdAsync" title="Copier">
+                        <i class="ti ti-copy"></i>
+                    </button>
+                </div>
+            </div>
+
+            <EditForm Model="_client" OnValidSubmit="SaveAsync">
+                <OAuthClientFormFields Client="_client" />
+
+                @if (_statusMessage is not null)
+                {
+                    <p class="status mt-2">@_statusMessage</p>
+                }
+                @if (_revealSecret is not null)
+                {
+                    <div class="mt-2">
+                        <p class="mb-1 text-warning"><i class="ti ti-alert-triangle me-1"></i>Nouveau secret — à copier maintenant, il ne sera plus jamais affiché :</p>
+                        <div class="input-group" style="max-width: 480px;">
+                            <input class="form-control font-monospace" readonly value="@_revealSecret" />
+                            <button type="button" class="btn btn-outline-secondary" @onclick="CopySecretAsync">
+                                <i class="ti ti-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                }
+
+                <div class="d-flex justify-content-end gap-2 mt-3">
+                    <button type="button" class="btn btn-outline-warning" disabled="@_isRegenerating" @onclick="RegenerateSecretAsync">
+                        <i class="ti ti-refresh me-1"></i>@(_isRegenerating ? "Régénération…" : "Régénérer le secret")
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" @onclick="DeleteAsync">
+                        <i class="ti ti-trash me-1"></i>Supprimer définitivement
+                    </button>
+                    <button type="submit" class="btn btn-primary" disabled="@_isSaving">
+                        <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}

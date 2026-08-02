@@ -29,12 +29,15 @@ public partial class Detail : ComponentBase
 
         _computer = await db.Computers
             .AsNoTracking()
+            .AsSplitQuery()
             .Include(computer => computer.Components)
             .Include(computer => computer.Softwares)
             .Include(computer => computer.Peripherals)
             .Include(computer => computer.Volumes)
             .Include(computer => computer.Batteries)
             .Include(computer => computer.NetworkPorts)
+            .Include(computer => computer.ImportHistories)
+            .Include(computer => computer.HistoryEntries)
             .Include(computer => computer.Agent)
             .FirstOrDefaultAsync(computer => computer.Id == ComputerId);
 
@@ -45,18 +48,27 @@ public partial class Detail : ComponentBase
 
         _tabs = BuildTabs(_computer);
 
-        List<int> ids = await db.Computers.AsNoTracking().OrderBy(c => c.Id).Select(c => c.Id).ToListAsync();
-        int index = ids.IndexOf(ComputerId);
-        _position = index + 1;
-        _total = ids.Count;
-        _previousId = index > 0 ? ids[index - 1] : null;
-        _nextId = index >= 0 && index < ids.Count - 1 ? ids[index + 1] : null;
+        // Requêtes séquentielles sur le même DbContext : EF Core ne supporte pas
+        // plusieurs opérations concurrentes sur une même instance.
+        _total = await db.Computers.AsNoTracking().CountAsync();
+        _position = await db.Computers.AsNoTracking().CountAsync(c => c.Id <= ComputerId);
+        _previousId = await db.Computers.AsNoTracking()
+            .Where(c => c.Id < ComputerId)
+            .OrderByDescending(c => c.Id)
+            .Select(c => (int?)c.Id)
+            .FirstOrDefaultAsync();
+        _nextId = await db.Computers.AsNoTracking()
+            .Where(c => c.Id > ComputerId)
+            .OrderBy(c => c.Id)
+            .Select(c => (int?)c.Id)
+            .FirstOrDefaultAsync();
     }
 
     // Reprend la liste et l'ordre des onglets de la fiche "Ordinateur" de GLPI. Seuls
-    // "computer", "os", "components", "batteries", "volumes", "software" et "connections"
-    // ont un contenu réel pour l'instant (voir le @switch de Detail.razor) ; les autres
-    // affichent un placeholder en attendant d'être alimentés au fur et à mesure des besoins.
+    // "computer", "os", "components", "batteries", "volumes", "software", "connections",
+    // "networkports", "importinfo" et "history" ont un contenu réel pour l'instant (voir le
+    // @switch de Detail.razor) ; les autres affichent un placeholder en attendant d'être
+    // alimentés au fur et à mesure des besoins.
     private static List<FicheTab> BuildTabs(Computer computer) =>
     [
         new("computer", "ti-device-desktop", "Ordinateur", null),
@@ -72,8 +84,8 @@ public partial class Detail : ComponentBase
         new("antivirus", "ti-shield-check", "Antivirus", null),
         new("locks", "ti-lock", "Verrous", null),
         new("domains", "ti-world-www", "Domaines", null),
-        new("importinfo", "ti-file-import", "Informations d'import", null),
-        new("history", "ti-history", "Historique", null),
+        new("importinfo", "ti-file-import", "Informations d'import", computer.ImportHistories.Count),
+        new("history", "ti-history", "Historique", computer.HistoryEntries.Count),
         new("tasks", "ti-checklist", "Tâches / groupes", null),
         new("collectinfo", "ti-cloud-upload", "Informations de collecte", null),
         new("deploy", "ti-package", "Déploiement de package", null),

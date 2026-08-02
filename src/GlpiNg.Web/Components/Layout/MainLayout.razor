@@ -215,12 +215,12 @@
         ]),
         new("administration", "ti-shield", "Administration",
         [
-            new("Utilisateurs", Icon: "ti-user"),
-            new("Groupes", Icon: "ti-users"),
-            new("Entités", Icon: "ti-sitemap"),
+            new("Utilisateurs", "/users", "ti-user"),
+            new("Groupes", "/groups", "ti-users"),
+            new("Entités", "/entities", "ti-sitemap"),
             new("Règles", Icon: "ti-adjustments"),
             new("Dictionnaires", Icon: "ti-book-2"),
-            new("Profils", Icon: "ti-id-badge"),
+            new("Profils", "/profiles", "ti-id-badge"),
             new("File d'attente des notifications", Icon: "ti-bell"),
             new("Journaux", Icon: "ti-history"),
             new("Inventaire", Icon: "ti-clipboard-list"),
@@ -238,8 +238,8 @@
             new("Niveaux de services", Icon: "ti-clipboard-check"),
             new("Unicité des champs", Icon: "ti-fingerprint"),
             new("Actions automatiques", Icon: "ti-robot"),
-            new("Authentification", Icon: "ti-key"),
-            new("Clients OAuth", Icon: "ti-lock-access"),
+            new("Authentification", "/authentication", "ti-key"),
+            new("Clients OAuth", "/oauth-clients", "ti-lock-access"),
             new("Collecteurs", Icon: "ti-mail"),
             new("Liens externes", Icon: "ti-external-link"),
             new("Plugins", Icon: "ti-plug"),
@@ -430,6 +430,14 @@
         {
             items.Add(("ti-cpu", "Agents", "/agents"));
         }
+        else if (path.StartsWith("groups", StringComparison.OrdinalIgnoreCase))
+        {
+            items.Add(("ti-users", "Groupes", "/groups"));
+        }
+        else if (path.StartsWith("users", StringComparison.OrdinalIgnoreCase))
+        {
+            items.Add(("ti-user", "Utilisateurs", "/users"));
+        }
         else if (path.StartsWith("deployments", StringComparison.OrdinalIgnoreCase))
         {
             items.Add(("ti-package", "Déploiements", "/deployments"));
@@ -437,6 +445,14 @@
         else if (path.StartsWith("config", StringComparison.OrdinalIgnoreCase))
         {
             items.Add(("ti-settings", "Configuration", "/config"));
+        }
+        else if (path.StartsWith("authentication", StringComparison.OrdinalIgnoreCase))
+        {
+            items.Add(("ti-key", "Authentification", "/authentication"));
+        }
+        else if (path.StartsWith("oauth-clients", StringComparison.OrdinalIgnoreCase))
+        {
+            items.Add(("ti-lock-access", "Clients OAuth", "/oauth-clients"));
         }
 
         return items;
