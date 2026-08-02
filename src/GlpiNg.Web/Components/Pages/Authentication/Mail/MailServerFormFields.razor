@@ -1,0 +1,83 @@
+@using GlpiNg.Web.Models
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="glpi-fiche-field">
+            <label>Nom</label>
+            <input class="form-control" @bind="Server.Name" @bind:event="oninput" @bind:after="NotifyChangedAsync" />
+        </div>
+        <div class="glpi-fiche-field">
+            <label>Serveur par défaut</label>
+            @YesNoSelect(Server.IsDefault, v => Server.IsDefault = v)
+        </div>
+        <div class="glpi-fiche-field">
+            <label>Activé</label>
+            @YesNoSelect(Server.IsActive, v => Server.IsActive = v)
+        </div>
+        <div class="glpi-fiche-field">
+            <label>Commentaires</label>
+            <textarea class="form-control" rows="3" @bind="Server.Comment"></textarea>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="glpi-fiche-field">
+            <label>Serveur</label>
+            <input class="form-control" @bind="Server.Host" @bind:event="oninput" @bind:after="NotifyChangedAsync" placeholder="imap.example.com" />
+        </div>
+        <div class="row">
+            <div class="col-6">
+                <div class="glpi-fiche-field">
+                    <label>Port (optionnel)</label>
+                    <input type="number" class="form-control" value="@Server.Port" @onchange="OnPortChanged" />
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="glpi-fiche-field">
+                    <label>Protocole</label>
+                    <select class="form-select" @bind="Server.Protocol">
+                        <option value="@MailServerProtocol.Imap">IMAP</option>
+                        <option value="@MailServerProtocol.Pop">POP</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="glpi-fiche-field">
+            <label>Chiffrement</label>
+            <select class="form-select" @bind="Server.Encryption">
+                <option value="@MailServerEncryption.None">Aucun</option>
+                <option value="@MailServerEncryption.Ssl">SSL</option>
+                <option value="@MailServerEncryption.Tls">TLS</option>
+            </select>
+        </div>
+        <div class="glpi-fiche-field">
+            <label>Valider le certificat</label>
+            @YesNoSelect(Server.ValidateCertificate, v => Server.ValidateCertificate = v)
+        </div>
+        <div class="glpi-fiche-field">
+            <label>Nom du domaine de messagerie</label>
+            <input class="form-control" @bind="Server.EmailDomain" />
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public AuthMailServer Server { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback OnChanged { get; set; }
+
+    private Task NotifyChangedAsync() => OnChanged.InvokeAsync();
+
+    private void OnPortChanged(ChangeEventArgs e)
+    {
+        string? value = e.Value?.ToString();
+        Server.Port = int.TryParse(value, out int parsed) ? parsed : null;
+    }
+
+    private RenderFragment YesNoSelect(bool value, Action<bool> setter) =>
+        @<select class="form-select" value="@(value ? "true" : "false")" @onchange="@(e => setter(e.Value?.ToString() == "true"))">
+            <option value="false">Non</option>
+            <option value="true">Oui</option>
+        </select>;
+}

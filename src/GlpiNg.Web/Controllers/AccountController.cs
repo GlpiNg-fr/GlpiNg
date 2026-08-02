@@ -1,13 +1,10 @@
 using System.Security.Claims;
-using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
 using GlpiNg.Web.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace GlpiNg.Web.Controllers;
 
@@ -19,10 +16,8 @@ namespace GlpiNg.Web.Controllers;
 /// </summary>
 [AllowAnonymous]
 [Route("Account")]
-public class AccountController(GlpiNgDbContext db, AppSettingsFileStore settingsStore) : Controller
+public class AccountController(UserCredentialAuthenticator credentialAuthenticator, AppSettingsFileStore settingsStore) : Controller
 {
-    private static readonly PasswordHasher<GlpiUser> Hasher = new();
-
     [HttpPost("Login")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(
@@ -30,11 +25,16 @@ public class AccountController(GlpiNgDbContext db, AppSettingsFileStore settings
         [FromForm] string password,
         [FromForm] bool rememberMe,
         [FromForm] string? returnUrl,
+        // Valeur du sélecteur de source de connexion (voir Login.razor, affiché seulement si
+        // GeneralSettings.ShowAuthSourcesOnLoginPage) : null = pas de sélecteur affiché, choix
+        // automatique par UserCredentialAuthenticator ; 0 = "Base GlpiNg (local)" imposé
+        // explicitement ; N = AuthLdapServer.Id imposé explicitement.
+        [FromForm] int? authSource,
         CancellationToken ct)
     {
-        GlpiUser? user = await db.Users.FirstOrDefaultAsync(u => u.UserName == userName, ct);
+        GlpiUser? user = await credentialAuthenticator.AuthenticateAsync(userName, password, authSource, ct);
 
-        if (user is null || Hasher.VerifyHashedPassword(user, user.PasswordHash, password) == PasswordVerificationResult.Failed)
+        if (user is null)
         {
             return Redirect($"/login?error=1&returnUrl={Uri.EscapeDataString(returnUrl ?? "/")}");
         }

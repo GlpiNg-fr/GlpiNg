@@ -457,6 +457,88 @@ else
                     }
                     break;
 
+                case "importinfo":
+                    @if (_computer.ImportHistories.Count == 0)
+                    {
+                        <div class="glpi-config-placeholder">
+                            <i class="ti ti-file-import"></i>
+                            <p class="mb-0">Aucun import d'inventaire enregistré.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="glpi-fiche-block">
+                            <div class="glpi-fiche-block-title"><i class="ti ti-history"></i>Historique des règles d'import</div>
+                            <div class="table-responsive">
+                                <table class="table table-vcenter card-table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Nom de la règle</th>
+                                            <th>Agent</th>
+                                            <th>Module</th>
+                                            <th>Valeur d'entrée</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (ComputerImportHistory entry in _computer.ImportHistories.OrderByDescending(e => e.OccurredAt))
+                                        {
+                                            <tr>
+                                                <td>@entry.OccurredAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                                <td>@entry.RuleName</td>
+                                                <td>@(entry.AgentIdentifier ?? "—")</td>
+                                                <td>@entry.Module</td>
+                                                <td>@(entry.InputValue ?? "—")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    }
+                    break;
+
+                case "history":
+                    @if (_computer.HistoryEntries.Count == 0)
+                    {
+                        <div class="glpi-config-placeholder">
+                            <i class="ti ti-history"></i>
+                            <p class="mb-0">Aucune modification enregistrée.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="glpi-fiche-block">
+                            <div class="glpi-fiche-block-title"><i class="ti ti-history"></i>Historique (@_computer.HistoryEntries.Count)</div>
+                            <div class="table-responsive">
+                                <table class="table table-vcenter card-table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Date</th>
+                                            <th>Utilisateur</th>
+                                            <th>Champ</th>
+                                            <th>Mise à jour</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (ComputerHistoryEntry entry in _computer.HistoryEntries.OrderByDescending(e => e.OccurredAt).ThenByDescending(e => e.Id))
+                                        {
+                                            <tr>
+                                                <td>@entry.Id</td>
+                                                <td>@entry.OccurredAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                                <td>@entry.User</td>
+                                                <td>@entry.Field</td>
+                                                <td>@entry.Description</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    }
+                    break;
+
                 default:
                     var current = _tabs.First(t => t.Key == _activeTabKey);
                     <div class="glpi-config-placeholder">

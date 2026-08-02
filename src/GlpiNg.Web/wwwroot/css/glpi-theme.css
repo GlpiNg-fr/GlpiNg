@@ -943,6 +943,37 @@ body {
 .glpi-status-broken { background: #fbdcdc; color: #b42318; }
 .glpi-status-retired { background: #e6e7e9; color: #6c737b; }
 
+/* --- En-têtes de colonnes triables --- */
+.glpi-sortable-th {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.glpi-sortable-th:hover {
+  color: var(--tblr-primary, #206bc4);
+}
+
+.glpi-sort-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.glpi-sort-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1rem;
+  height: 1rem;
+  padding: 0 0.25rem;
+  border-radius: 50%;
+  background: var(--tblr-primary, #206bc4);
+  color: #fff;
+  font-size: 0.65rem;
+  line-height: 1rem;
+}
+
 /* --- Bouton "Se déconnecter" (formulaire dans le menu utilisateur, pas un <a>) --- */
 .glpi-logout-button {
   width: 100%;

@@ -6,6 +6,7 @@ using GlpiNg.Modules.Inventory.Models;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models.Agent;
 using GlpiNg.Web.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -30,6 +31,7 @@ namespace GlpiNg.Web.Controllers;
 [ApiController]
 [Route("glpi-agent")]
 [Produces("application/json")]
+[AllowAnonymous]
 public class AgentController(
     GlpiNgDbContext db,
     InventoryImportService inventoryImport,
@@ -50,7 +52,7 @@ public class AgentController(
         using MemoryStream bodyBuffer = new();
         await Request.Body.CopyToAsync(bodyBuffer, cancellationToken);
         Request.Body.Position = 0;
-        string rawBody = DecompressBody(bodyBuffer.ToArray(), Request.ContentType);
+        string rawBody = DecompressBody(bodyBuffer.ToArray(), Request.ContentType, Request.Headers.ContentEncoding);
 
         // L'agent GLPI envoie toujours un PROLOG XML historique (protocole FusionInventory/OCS)
         // en probe avant de savoir si le serveur supporte le protocole JSON natif. Un vrai
@@ -305,17 +307,24 @@ public class AgentController(
 
     /// <summary>
     /// L'agent GLPI compresse parfois le corps (PROLOG XML comme requêtes JSON) en zlib ou
-    /// gzip, signalé via un Content-Type dédié ("application/x-compress-zlib" /
-    /// "application/x-compress-gzip") plutôt que le Content-Encoding HTTP standard.
+    /// gzip. Le protocole GLPI-Agent signale historiquement ça via un Content-Type dédié
+    /// ("application/x-compress-zlib" / "application/x-compress-gzip") plutôt que le
+    /// Content-Encoding HTTP standard — mais certaines versions d'agent (ou un proxy
+    /// intermédiaire) utilisent bien l'en-tête Content-Encoding standard. Sans ce second
+    /// contrôle, un corps ainsi compressé était lu tel quel comme texte UTF-8 (donc du binaire
+    /// illisible), échouait au parsing JSON et l'inventaire était silencieusement rejeté (400)
+    /// sans que l'ordinateur n'apparaisse jamais — d'où la vérification des deux en-têtes ici.
     /// </summary>
-    private static string DecompressBody(byte[] bodyBytes, string? contentType)
+    private static string DecompressBody(byte[] bodyBytes, string? contentType, string? contentEncoding)
     {
         using MemoryStream compressed = new(bodyBytes);
-        Stream? decompressor = contentType switch
+        Stream? decompressor = (contentType, contentEncoding) switch
         {
-            not null when contentType.Contains("zlib", StringComparison.OrdinalIgnoreCase)
+            _ when contentType?.Contains("zlib", StringComparison.OrdinalIgnoreCase) == true
+                || contentEncoding?.Contains("zlib", StringComparison.OrdinalIgnoreCase) == true
                 => new ZLibStream(compressed, CompressionMode.Decompress),
-            not null when contentType.Contains("gzip", StringComparison.OrdinalIgnoreCase)
+            _ when contentType?.Contains("gzip", StringComparison.OrdinalIgnoreCase) == true
+                || contentEncoding?.Contains("gzip", StringComparison.OrdinalIgnoreCase) == true
                 => new GZipStream(compressed, CompressionMode.Decompress),
             _ => null
         };

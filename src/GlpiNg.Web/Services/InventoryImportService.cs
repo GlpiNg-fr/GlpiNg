@@ -11,6 +11,8 @@ namespace GlpiNg.Web.Services;
 /// </summary>
 public class InventoryImportService(GlpiNgDbContext db)
 {
+    private const string HistoryUser = "inventory";
+
     public async Task<Computer> ImportAsync(GlpiAgent agent, InventoryContent content, CancellationToken cancellationToken = default)
     {
         Computer? computer = await db.Computers
@@ -22,24 +24,40 @@ public class InventoryImportService(GlpiNgDbContext db)
             .Include(c => c.NetworkPorts)
             .FirstOrDefaultAsync(c => c.AgentId == agent.Id, cancellationToken);
 
+        string ruleName;
+        string? inputValue;
+        bool isNew = false;
+
+        if (computer is not null)
+        {
+            ruleName = "Mise à jour de l'ordinateur (agent associé)";
+            inputValue = $"agent #{agent.Id}";
+        }
         // Fallback de corrélation : si l'agent n'est pas encore lié, on tente de retrouver
         // le poste par son UUID matériel (stable même si le nom de machine change).
-        if (computer is null && content.Hardware?.Uuid is { Length: > 0 } uuid)
+        else if (content.Hardware?.Uuid is { Length: > 0 } uuid && (computer = await db.Computers
+                     .Include(c => c.Components)
+                     .Include(c => c.Softwares)
+                     .Include(c => c.Peripherals)
+                     .Include(c => c.Volumes)
+                     .Include(c => c.Batteries)
+                     .Include(c => c.NetworkPorts)
+                     .FirstOrDefaultAsync(c => c.HardwareUuid == uuid, cancellationToken)) is not null)
         {
-            computer = await db.Computers.Include(c => c.Components)
-                .Include(c => c.Softwares)
-                .Include(c => c.Peripherals)
-                .Include(c => c.Volumes)
-                .Include(c => c.Batteries)
-                .Include(c => c.NetworkPorts)
-                .FirstOrDefaultAsync(c => c.HardwareUuid == uuid, cancellationToken);
+            ruleName = "Mise à jour de l'ordinateur (par UUID matériel)";
+            inputValue = uuid;
         }
-
-        if (computer is null)
+        else
         {
             computer = new Computer { Name = content.Hardware?.Name ?? agent.Hostname ?? agent.DeviceId ?? "Inconnu" };
             db.Computers.Add(computer);
+            isNew = true;
+
+            ruleName = "Création de l'ordinateur";
+            inputValue = content.Hardware?.Uuid ?? agent.DeviceId;
         }
+
+        ComputerSnapshot before = ComputerSnapshot.Capture(computer);
 
         ApplyHardware(computer, content);
         ApplyComponents(computer, content);
@@ -51,6 +69,20 @@ public class InventoryImportService(GlpiNgDbContext db)
 
         computer.LastInventoryAt = DateTime.UtcNow;
         computer.Status = ComputerStatus.InProduction;
+
+        computer.ImportHistories.Add(new ComputerImportHistory
+        {
+            OccurredAt = DateTime.UtcNow,
+            RuleName = ruleName,
+            Module = "Inventaire",
+            AgentIdentifier = agent.DeviceId ?? agent.Hostname ?? agent.AgentUuid,
+            InputValue = inputValue
+        });
+
+        foreach (ComputerHistoryEntry entry in BuildHistoryEntries(before, computer, isNew))
+        {
+            computer.HistoryEntries.Add(entry);
+        }
 
         agent.Computer = computer;
 
@@ -267,4 +299,152 @@ public class InventoryImportService(GlpiNgDbContext db)
             });
         }
     }
+
+    /// <summary>
+    /// Photo de l'état d'un ordinateur juste avant application d'un inventaire, utilisée pour
+    /// produire les entrées de l'onglet "Historique" en comparant avant/après. Les listes sont
+    /// des clés textuelles (pas les entités elles-mêmes) car Apply* vide et recrée les collections
+    /// à chaque import : comparer par identité EF ne distinguerait pas "inchangé" de "recréé".
+    /// </summary>
+    private sealed record ComputerSnapshot(
+        string? Name, string? SerialNumber, string? Manufacturer, string? Model,
+        string? OperatingSystem, string? OsVersion, string? OsKernelVersion,
+        string? HardwareUuid, string? ChassisType, int? TotalMemoryMb,
+        string? LastLoggedUser, string? VmSystem, ComputerStatus Status, DateTime? LastInventoryAt,
+        HashSet<string> Components, HashSet<string> Softwares, HashSet<string> Monitors,
+        HashSet<string> Volumes, HashSet<string> Batteries, HashSet<string> NetworkPorts)
+    {
+        public static ComputerSnapshot Capture(Computer c) => new(
+            c.Name, c.SerialNumber, c.Manufacturer, c.Model,
+            c.OperatingSystem, c.OsVersion, c.OsKernelVersion,
+            c.HardwareUuid, c.ChassisType, c.TotalMemoryMb,
+            c.LastLoggedUser, c.VmSystem, c.Status, c.LastInventoryAt,
+            c.Components.Select(ComponentKey).ToHashSet(),
+            c.Softwares.Select(SoftwareKey).ToHashSet(),
+            c.Peripherals.Where(p => p.Kind == PeripheralKind.Monitor).Select(PeripheralKey).ToHashSet(),
+            c.Volumes.Select(VolumeKey).ToHashSet(),
+            c.Batteries.Select(BatteryKey).ToHashSet(),
+            c.NetworkPorts.Select(NetworkPortKey).ToHashSet());
+    }
+
+    private static string ComponentKey(ComputerComponent c) =>
+        $"{ComponentTypeLabel(c.Type)} {c.Designation}" + (c.Capacity is { Length: > 0 } cap ? $" ({cap})" : "");
+
+    private static string SoftwareKey(ComputerSoftware s) => s.Version is { Length: > 0 } v ? $"{s.Name} ({v})" : s.Name;
+
+    private static string PeripheralKey(ComputerPeripheral p) => p.Designation;
+
+    private static string VolumeKey(ComputerVolume v) => v.MountPoint is { Length: > 0 } mp ? $"{v.Name} ({mp})" : v.Name;
+
+    private static string BatteryKey(ComputerBattery b) => b.Serial is { Length: > 0 } s ? $"{b.Name} ({s})" : b.Name;
+
+    private static string NetworkPortKey(ComputerNetworkPort p) => p.MacAddress is { Length: > 0 } mac ? $"{p.Designation} ({mac})" : p.Designation;
+
+    private static string ComponentTypeLabel(ComponentType type) => type switch
+    {
+        ComponentType.Cpu => "Processeur",
+        ComponentType.Ram => "Barrette mémoire",
+        ComponentType.Disk => "Disque dur",
+        ComponentType.NetworkCard => "Carte réseau",
+        ComponentType.Gpu => "Carte graphique",
+        ComponentType.Motherboard => "Carte mère",
+        _ => "Composant"
+    };
+
+    /// <summary>
+    /// Construit les entrées d'historique en comparant <paramref name="before"/> (état capturé
+    /// avant l'import) à l'état courant de <paramref name="computer"/> (après Apply*). Sur
+    /// création (<paramref name="isNew"/>), on ne journalise que les ajouts de sous-éléments —
+    /// pas les champs scalaires "null → valeur", qui ne correspondent à aucun changement observable.
+    /// </summary>
+    private static IEnumerable<ComputerHistoryEntry> BuildHistoryEntries(ComputerSnapshot before, Computer computer, bool isNew)
+    {
+        if (!isNew)
+        {
+            if (before.Name != computer.Name) yield return FieldChange("Nom", before.Name, computer.Name);
+            if (before.SerialNumber != computer.SerialNumber) yield return FieldChange("Numéro de série", before.SerialNumber, computer.SerialNumber);
+            if (before.Manufacturer != computer.Manufacturer) yield return FieldChange("Fabricant", before.Manufacturer, computer.Manufacturer);
+            if (before.Model != computer.Model) yield return FieldChange("Modèle", before.Model, computer.Model);
+            if (before.OperatingSystem != computer.OperatingSystem) yield return FieldChange("Système d'exploitation", before.OperatingSystem, computer.OperatingSystem);
+            if (before.OsVersion != computer.OsVersion) yield return FieldChange("Version de l'OS", before.OsVersion, computer.OsVersion);
+            if (before.OsKernelVersion != computer.OsKernelVersion) yield return FieldChange("Version du noyau", before.OsKernelVersion, computer.OsKernelVersion);
+            if (before.HardwareUuid != computer.HardwareUuid) yield return FieldChange("UUID matériel", before.HardwareUuid, computer.HardwareUuid);
+            if (before.ChassisType != computer.ChassisType) yield return FieldChange("Type de châssis", before.ChassisType, computer.ChassisType);
+            if (before.TotalMemoryMb != computer.TotalMemoryMb) yield return FieldChange("Mémoire totale", FormatMemory(before.TotalMemoryMb), FormatMemory(computer.TotalMemoryMb));
+            if (before.LastLoggedUser != computer.LastLoggedUser) yield return FieldChange("Dernier utilisateur connecté", before.LastLoggedUser, computer.LastLoggedUser);
+            if (before.VmSystem != computer.VmSystem) yield return FieldChange("Virtualisation", before.VmSystem, computer.VmSystem);
+            if (before.LastInventoryAt != computer.LastInventoryAt) yield return FieldChange("Date de dernier inventaire", FormatDate(before.LastInventoryAt), FormatDate(computer.LastInventoryAt));
+            if (before.Status != computer.Status) yield return FieldChange("Statut", StatusLabel(before.Status), StatusLabel(computer.Status));
+        }
+
+        foreach (ComputerHistoryEntry entry in DiffKeyedSet(before.Components, computer.Components.Select(ComponentKey).ToHashSet(),
+                     "Composants", "Ajouter un composant", "Supprimer un composant"))
+        {
+            yield return entry;
+        }
+
+        foreach (ComputerHistoryEntry entry in DiffKeyedSet(before.Softwares, computer.Softwares.Select(SoftwareKey).ToHashSet(),
+                     "Logiciels", "Ajout d'un lien avec un élément", "Suppression du lien avec l'élément"))
+        {
+            yield return entry;
+        }
+
+        foreach (ComputerHistoryEntry entry in DiffKeyedSet(before.Monitors,
+                     computer.Peripherals.Where(p => p.Kind == PeripheralKind.Monitor).Select(PeripheralKey).ToHashSet(),
+                     "Périphériques", "Ajout d'un lien avec un élément", "Suppression du lien avec l'élément"))
+        {
+            yield return entry;
+        }
+
+        foreach (ComputerHistoryEntry entry in DiffKeyedSet(before.Volumes, computer.Volumes.Select(VolumeKey).ToHashSet(),
+                     "Volumes", "Ajouter un volume", "Supprimer un volume"))
+        {
+            yield return entry;
+        }
+
+        foreach (ComputerHistoryEntry entry in DiffKeyedSet(before.Batteries, computer.Batteries.Select(BatteryKey).ToHashSet(),
+                     "Batteries", "Ajouter un composant", "Supprimer un composant"))
+        {
+            yield return entry;
+        }
+
+        foreach (ComputerHistoryEntry entry in DiffKeyedSet(before.NetworkPorts, computer.NetworkPorts.Select(NetworkPortKey).ToHashSet(),
+                     "Ports réseau", "Ajouter un port réseau", "Supprimer un port réseau"))
+        {
+            yield return entry;
+        }
+    }
+
+    private static IEnumerable<ComputerHistoryEntry> DiffKeyedSet(HashSet<string> before, HashSet<string> after, string field, string addVerb, string removeVerb)
+    {
+        foreach (string added in after.Except(before))
+        {
+            yield return new ComputerHistoryEntry { User = HistoryUser, Field = field, Description = $"{addVerb} : {added}" };
+        }
+
+        foreach (string removed in before.Except(after))
+        {
+            yield return new ComputerHistoryEntry { User = HistoryUser, Field = field, Description = $"{removeVerb} : {removed}" };
+        }
+    }
+
+    private static ComputerHistoryEntry FieldChange(string field, string? oldValue, string? newValue) => new()
+    {
+        User = HistoryUser,
+        Field = field,
+        Description = $"Changement de {oldValue ?? "—"} à {newValue ?? "—"}"
+    };
+
+    private static string? FormatMemory(int? memoryMb) => memoryMb is { } mb ? $"{mb} Mo" : null;
+
+    private static string? FormatDate(DateTime? date) => date?.ToLocalTime().ToString("dd/MM/yyyy HH:mm");
+
+    private static string StatusLabel(ComputerStatus status) => status switch
+    {
+        ComputerStatus.InStock => "En stock",
+        ComputerStatus.InProduction => "En production",
+        ComputerStatus.Broken => "En panne",
+        ComputerStatus.Retired => "Réformé",
+        _ => status.ToString()
+    };
 }

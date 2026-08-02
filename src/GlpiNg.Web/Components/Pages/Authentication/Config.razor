@@ -1,0 +1,137 @@
+@page "/authentication/config"
+@using GlpiNg.Web.Models
+@using GlpiNg.Web.Services
+@inject AppSettingsFileStore SettingsStore
+@rendermode InteractiveServer
+
+<PageTitle>GlpiNg — Authentification</PageTitle>
+
+<AuthTabStrip Current="config" />
+
+@if (_model is null)
+{
+    <p>Chargement…</p>
+}
+else
+{
+    <div class="glpi-config">
+        <div class="glpi-config-body">
+            <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glpi-config-form">
+                <div class="glpi-config-field checkbox">
+                    <label for="auth-auto-add">Ajout automatique des utilisateurs à partir des sources externes d'authentification</label>
+                    <label class="glpi-switch">
+                        <input id="auth-auto-add" type="checkbox" @bind="_model.AutoAddUsersFromExternalAuth" />
+                        <span class="glpi-switch-slider"></span>
+                    </label>
+                </div>
+
+                <div class="glpi-config-field checkbox">
+                    <label for="auth-add-without-right">Ajouter un utilisateur sans habilitation depuis un annuaire LDAP</label>
+                    <label class="glpi-switch">
+                        <input id="auth-add-without-right" type="checkbox" @bind="_model.AddUserWithoutRightFromLdap" />
+                        <span class="glpi-switch-slider"></span>
+                    </label>
+                </div>
+
+                <div class="glpi-config-field">
+                    <label for="auth-restored">Action quand un utilisateur est restauré dans l'annuaire LDAP</label>
+                    <select id="auth-restored" @bind="_model.RestoredUserAction">
+                        @foreach (LdapUserPresenceAction action in Enum.GetValues<LdapUserPresenceAction>())
+                        {
+                            <option value="@action">@ActionLabel(action)</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="glpi-fiche-block-title mt-3"><i class="ti ti-user-x"></i>Action lorsqu'un utilisateur est supprimé de l'annuaire LDAP</div>
+
+                <div class="glpi-config-field">
+                    <label for="auth-deleted-user">Utilisateur</label>
+                    <select id="auth-deleted-user" @bind="_model.DeletedUserAction">
+                        @foreach (LdapUserPresenceAction action in Enum.GetValues<LdapUserPresenceAction>())
+                        {
+                            <option value="@action">@ActionLabel(action)</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="glpi-config-field">
+                    <label for="auth-deleted-groups">Groupes</label>
+                    <select id="auth-deleted-groups" @bind="_model.DeletedUserGroupsAction">
+                        @foreach (LdapUserPresenceAction action in Enum.GetValues<LdapUserPresenceAction>())
+                        {
+                            <option value="@action">@ActionLabel(action)</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="glpi-config-field">
+                    <label for="auth-deleted-hab">Habilitations</label>
+                    <select id="auth-deleted-hab" @bind="_model.DeletedUserHabilitationsAction">
+                        @foreach (LdapUserPresenceAction action in Enum.GetValues<LdapUserPresenceAction>())
+                        {
+                            <option value="@action">@ActionLabel(action)</option>
+                        }
+                    </select>
+                </div>
+
+                <p class="hint mt-3">
+                    Seul « Ajout automatique des utilisateurs » est aujourd'hui appliqué (voir AccountController.Login) :
+                    les autres réglages ci-dessus sont conservés pour la fidélité avec GLPI mais ne pilotent aucune
+                    synchronisation — GlpiNg n'a pas de tâche planifiée de synchronisation LDAP.
+                </p>
+
+                @if (_statusMessage is not null)
+                {
+                    <p class="status">@_statusMessage</p>
+                }
+
+                <button type="submit" class="glpi-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    private const string SectionName = "AuthSettings";
+
+    private AuthSettings? _model;
+    private bool _isSaving;
+    private string? _statusMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _model = await SettingsStore.ReadSectionAsync<AuthSettings>(SectionName);
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_model is null)
+        {
+            return;
+        }
+
+        _isSaving = true;
+        _statusMessage = null;
+
+        try
+        {
+            await SettingsStore.SaveSectionAsync(SectionName, _model);
+            _statusMessage = "Configuration enregistrée.";
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private static string ActionLabel(LdapUserPresenceAction action) => action switch
+    {
+        LdapUserPresenceAction.DoNothing => "Ne rien faire",
+        LdapUserPresenceAction.Restore => "Restaurer",
+        LdapUserPresenceAction.MoveToTrash => "Mettre en corbeille",
+        LdapUserPresenceAction.Delete => "Supprimer",
+        LdapUserPresenceAction.Deactivate => "Désactiver",
+        _ => action.ToString(),
+    };
+}

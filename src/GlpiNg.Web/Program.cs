@@ -1,4 +1,7 @@
 using System.Reflection;
+using System.Security.Cryptography;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using AnthoDingo.Setup;
 using GlpiNg.Modules.Inventory;
 using GlpiNg.Web.Components;
@@ -6,9 +9,13 @@ using GlpiNg.Web.Data;
 using GlpiNg.Web.Middleware;
 using GlpiNg.Web.Options;
 using GlpiNg.Web.Services;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
 namespace GlpiNg.Web;
@@ -33,7 +40,7 @@ public class Program
         // (voir AccountController). AddCascadingAuthenticationState rend l'utilisateur courant
         // disponible aux composants Blazor (ex. MainLayout) via [CascadingParameter] Task<AuthenticationState>.
         builder.Services.AddCascadingAuthenticationState();
-        builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+        AuthenticationBuilder authenticationBuilder = builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
             .AddCookie(options =>
             {
                 options.LoginPath = "/login";
@@ -41,14 +48,34 @@ public class Program
                 options.ExpireTimeSpan = TimeSpan.FromHours(8);
                 options.SlidingExpiration = true;
             });
-        builder.Services.AddAuthorization();
+        // FallbackPolicy (authentification requise par défaut) : sans lui, AuthorizeRouteView
+        // (voir Routes.razor) n'a aucune politique à appliquer aux pages qui n'ont pas
+        // explicitement [Authorize], donc la navigation interne au circuit Blazor (qui ne
+        // repasse pas par RequireAuthorization() au niveau des endpoints) les laisserait
+        // accessibles sans authentification. Login.razor reste accessible via son
+        // [AllowAnonymous] explicite, qui prime toujours sur le FallbackPolicy.
+        builder.Services.AddAuthorization(options =>
+        {
+            options.FallbackPolicy = new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .Build();
+
+            // Utilisée par GlpiImportController (module Inventory) pour exiger un jeton Bearer
+            // valide avec le scope "api" ou "inventory" — remplace le [AllowAnonymous] documenté
+            // comme temporaire sur /admin/import/glpi. Référencée par son nom depuis le module
+            // (chaîne "OAuthApiAccess") plutôt que par une constante partagée, pour ne pas faire
+            // dépendre le module du projet hôte.
+            options.AddPolicy("OAuthApiAccess", policy => policy
+                .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
+                .RequireAuthenticatedUser()
+                .RequireClaim(OAuthTokenConstants.ScopeClaimType, "api", "inventory"));
+        });
 
         // API pour l'agent GLPI (contact / inventory / deploy). AddControllersWithViews (plutôt
         // que AddControllers) est nécessaire pour enregistrer les services ViewFeatures dont
         // dépend [ValidateAntiForgeryToken] (voir AccountController.Login) : sans ça, le filtre
         // ne se résout pas et /Account/Login lève une InvalidOperationException au runtime.
         builder.Services.AddControllersWithViews();
-        builder.Services.AddScoped<InventoryImportService>();
 
         // Documentation OpenAPI/Swagger des contrôleurs API (protocole agent + import GLPI).
         // N'inclut pas les pages Blazor, qui ne sont pas des endpoints API.
@@ -59,7 +86,7 @@ public class Program
             {
                 Title = "GlpiNg API",
                 Version = "v1",
-                Description = "Endpoints REST de GlpiNg : protocole GLPI-Agent (/glpi-agent) et import depuis une base GLPI MySQL (/admin/import/glpi)."
+                Description = "Endpoints REST de GlpiNg : protocole GLPI-Agent (/glpi-agent) et import depuis une base GLPI MySQL (/admin/import/glpi, protégé par OAuth2 — voir /oauth-clients)."
             });
 
             foreach (Assembly assembly in new[] { Assembly.GetExecutingAssembly(), typeof(InventoryModuleServiceCollectionExtensions).Assembly })
@@ -70,6 +97,30 @@ public class Program
                     options.IncludeXmlComments(xmlPath, includeControllerXmlComments: true);
                 }
             }
+
+            // Permet d'utiliser le bouton "Authorize" de Swagger UI pour obtenir un jeton via un
+            // client OAuth "client_credentials" (voir /oauth-clients) et l'attacher automatiquement
+            // aux appels vers /admin/import/glpi.
+            options.AddSecurityDefinition("OAuth2", new OpenApiSecurityScheme
+            {
+                Type = SecuritySchemeType.OAuth2,
+                Flows = new OpenApiOAuthFlows
+                {
+                    ClientCredentials = new OpenApiOAuthFlow
+                    {
+                        TokenUrl = new Uri("/oauth2/token", UriKind.Relative),
+                        Scopes = new Dictionary<string, string>
+                        {
+                            ["api"] = "Accès général à l'API GlpiNg",
+                            ["inventory"] = "Accès aux données d'inventaire (parc, import GLPI)",
+                        },
+                    },
+                },
+            });
+            // N'attache l'exigence de jeton qu'aux opérations réellement protégées (ex.
+            // /admin/import/glpi) plutôt qu'à toutes — voir OAuthSecurityRequirementFilter,
+            // qui n'agit que sur les actions portant [Authorize(AuthenticationSchemes = "Bearer")].
+            options.OperationFilter<OAuthSecurityRequirementFilter>();
         });
 
         // Construction du JSON de job de déploiement au format attendu par GLPI-Agent
@@ -84,11 +135,6 @@ public class Program
         // du serveur, activation de Swagger).
         builder.Services.AddSingleton<AppSettingsFileStore>();
         builder.Services.AddSingleton<ConfigHistoryService>();
-
-        // Module Inventory (modèle de parc + import GLPI MySQL) : voir
-        // GlpiNg.Modules.Inventory.InventoryModuleServiceCollectionExtensions. Les futurs
-        // modules (Tickets, etc.) suivront le même schéma AddXxxModule(...).
-        builder.Services.AddInventoryModule(builder.Configuration);
 
         // Assistant d'installation premier démarrage (page /setup intégrée). GlpiNg n'autorise
         // que les bases relationnelles serveur — SQLite n'est volontairement pas proposé.
@@ -139,6 +185,49 @@ public class Program
             // terminée, donc enregistrés ici plutôt que plus haut (sinon la validation des
             // services au build échoue en environnement Development, faute de DbContext).
             builder.Services.AddScoped<InventoryImportService>();
+
+            // Authentification externe par bind LDAP (voir AccountController.Login et la page
+            // /authentication). AuthSecretProtector n'a pas de dépendance DbContext mais est
+            // enregistré ici pour rester à proximité de son seul consommateur.
+            builder.Services.AddDataProtection();
+            builder.Services.AddSingleton<AuthSecretProtector>();
+            builder.Services.AddSingleton<LdapAuthenticationService>();
+            builder.Services.AddScoped<UserCredentialAuthenticator>();
+
+            // Émission des jetons OAuth2 (voir /oauth2/token, Controllers.OAuthController) pour
+            // les clients gérés depuis /oauth-clients.
+            builder.Services.AddSingleton<OAuthTokenIssuer>();
+
+            // Schéma d'authentification Bearer (jetons émis par /oauth2/token) : enregistré ici
+            // plutôt qu'avec AddCookie plus haut, car EnsureOAuthSigningKey persiste la clé de
+            // signature dans appsettings.local.json — sûr à cet endroit précis, puisque
+            // Setup:IsComplete == "true" garantit que l'assistant d'installation a fini d'écrire
+            // ce fichier et ne l'écrira plus. N'est demandé explicitement que par les endpoints
+            // qui l'exigent (voir la policy "OAuthApiAccess" plus haut et son usage sur
+            // GlpiImportController) : le schéma cookie par défaut n'est pas affecté.
+            string oauthSigningKey = EnsureOAuthSigningKey(builder);
+            authenticationBuilder.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = OAuthTokenConstants.Issuer,
+                    ValidateAudience = true,
+                    ValidAudience = OAuthTokenConstants.Audience,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(oauthSigningKey)),
+                };
+            });
+
+            // Module Inventory (modèle de parc + import GLPI MySQL) : voir
+            // GlpiNg.Modules.Inventory.InventoryModuleServiceCollectionExtensions. Les futurs
+            // modules (Tickets, etc.) suivront le même schéma AddXxxModule(...). Enregistré ici
+            // (et non plus haut) car il enregistre GlpiMySqlImportService, qui dépend lui aussi
+            // du DbContext de base — même raison que InventoryImportService ci-dessus. Sans
+            // conséquence sur la disponibilité de /admin/import/glpi avant la fin de
+            // l'installation : UseSetupMiddleware redirige de toute façon tout vers /setup.
+            builder.Services.AddInventoryModule(builder.Configuration);
         }
 
         WebApplication app = builder.Build();
@@ -151,8 +240,9 @@ public class Program
 
         // Activation de Swagger pilotée par appsettings.json ("Swagger:Enabled", éditable
         // depuis /config) plutôt que par l'environnement : IOptionsMonitor est réévalué à
-        // chaque requête, donc le changement s'applique sans redémarrage. Par défaut
-        // désactivé, car /admin/import/glpi n'a toujours pas d'authentification (voir README).
+        // chaque requête, donc le changement s'applique sans redémarrage. Désactivé par défaut
+        // par prudence, même si /admin/import/glpi exige désormais un jeton OAuth Bearer
+        // (policy "OAuthApiAccess" — voir GlpiImportController).
         IOptionsMonitor<SwaggerOptions> swaggerOptionsMonitor = app.Services.GetRequiredService<IOptionsMonitor<SwaggerOptions>>();
         app.MapWhen(
             context => context.Request.Path.StartsWithSegments("/swagger") && swaggerOptionsMonitor.CurrentValue.Enabled,
@@ -178,7 +268,10 @@ public class Program
         app.UseAuthentication();
         app.UseAuthorization();
 
-        app.MapStaticAssets();
+        // AllowAnonymous() explicite : sans lui, le FallbackPolicy (voir plus haut) exige une
+        // session authentifiée même pour les fichiers statiques (CSS/JS), ce qui casserait entre
+        // autres le style de la page de login elle-même, accessible avant authentification.
+        app.MapStaticAssets().AllowAnonymous();
         app.UseAntiforgery();
 
         // Pas de RequireAuthorization() ici : les agents GLPI (glpi-agent, voir AgentController)
@@ -192,5 +285,40 @@ public class Program
             .RequireAuthorization();
 
         app.Run();
+    }
+
+    /// <summary>
+    /// Renvoie la clé de signature des jetons OAuth2 (base64, 256 bits), en la générant et en la
+    /// persistant dans appsettings.local.json au premier démarrage si elle est absente. Doit
+    /// s'exécuter avant builder.Build() : AddJwtBearer a besoin de la clé pour configurer la
+    /// validation des jetons dès l'enregistrement des services, pas seulement au premier appel.
+    /// </summary>
+    private static string EnsureOAuthSigningKey(WebApplicationBuilder builder)
+    {
+        string? existing = builder.Configuration["Oauth:SigningKey"];
+        if (!string.IsNullOrEmpty(existing))
+        {
+            return existing;
+        }
+
+        string key = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+
+        string localSettingsPath = Path.Combine(builder.Environment.ContentRootPath, "appsettings.local.json");
+        JsonNode root = File.Exists(localSettingsPath)
+            ? JsonNode.Parse(File.ReadAllText(localSettingsPath)) ?? new JsonObject()
+            : new JsonObject();
+
+        JsonObject oauthSection = root["Oauth"] as JsonObject ?? new JsonObject();
+        oauthSection["SigningKey"] = key;
+        root["Oauth"] = oauthSection;
+
+        File.WriteAllText(localSettingsPath, root.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
+
+        // Rend la clé visible immédiatement dans builder.Configuration, sans dépendre du
+        // rechargement automatique du fichier (AddJsonFile(..., reloadOnChange: true) peut ne
+        // pas avoir déjà repris la modification à ce stade du démarrage).
+        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["Oauth:SigningKey"] = key });
+
+        return key;
     }
 }

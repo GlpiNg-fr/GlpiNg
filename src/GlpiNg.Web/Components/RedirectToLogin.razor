@@ -1,0 +1,13 @@
+@inject NavigationManager Navigation
+
+@code {
+    // AuthorizeRouteView.NotAuthorized ne fait que rendre ce fragment côté circuit Blazor
+    // existant : il faut un forceLoad pour repasser par une vraie requête HTTP (donc par
+    // UseAuthentication/UseAuthorization et le formulaire /Account/Login), sans quoi on
+    // resterait dans le même circuit non authentifié.
+    protected override void OnInitialized()
+    {
+        string returnUrl = Uri.EscapeDataString(new Uri(Navigation.Uri).PathAndQuery);
+        Navigation.NavigateTo($"/login?returnUrl={returnUrl}", forceLoad: true);
+    }
+}

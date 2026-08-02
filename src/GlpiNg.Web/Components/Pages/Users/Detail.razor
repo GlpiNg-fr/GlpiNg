@@ -1,0 +1,439 @@
+@page "/users/{UserId:int}"
+@using GlpiNg.Web.Models
+@rendermode InteractiveServer
+
+<PageTitle>GlpiNg — @(_user?.UserName ?? "Utilisateur")</PageTitle>
+
+@if (_user is null)
+{
+    <div class="text-center text-secondary py-5">
+        <i class="ti ti-user-off fs-1"></i>
+        <p class="mt-2">Cet utilisateur est introuvable.</p>
+    </div>
+}
+else
+{
+    <div class="glpi-fiche-topbar">
+        <div class="glpi-fiche-crumb">
+            <i class="ti ti-user"></i>
+            <span>Utilisateur - @_user.UserName - ID @_user.Id</span>
+            <button type="button" class="glpi-fiche-favorite" title="Ajouter aux favoris">
+                <i class="ti ti-star"></i>
+            </button>
+        </div>
+        <div class="glpi-fiche-toolbar">
+            @if (_total > 0)
+            {
+                <span class="glpi-fiche-pager-count">@_position/@_total</span>
+                <a class="glpi-fiche-pager-btn @(_previousId is null ? "disabled" : "")" href="@(_previousId is { } prevId ? $"/users/{prevId}" : "#")">
+                    <i class="ti ti-chevron-left"></i>
+                </a>
+                <a class="glpi-fiche-pager-btn @(_nextId is null ? "disabled" : "")" href="@(_nextId is { } nextId ? $"/users/{nextId}" : "#")">
+                    <i class="ti ti-chevron-right"></i>
+                </a>
+            }
+        </div>
+    </div>
+
+    <div class="glpi-fiche-layout">
+        <aside class="glpi-fiche-sidebar">
+            @foreach (var tab in _tabs)
+            {
+                <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == tab.Key ? "active" : "")" @onclick="() => SetTab(tab.Key)">
+                    <i class="ti @tab.Icon"></i>
+                    <span>@tab.Label</span>
+                    @if (tab.Count is { } count)
+                    {
+                        <span class="glpi-fiche-tab-count">@count</span>
+                    }
+                </button>
+            }
+        </aside>
+
+        <div class="glpi-fiche-panel">
+            @switch (_activeTabKey)
+            {
+                case "utilisateur":
+                    <EditForm Model="_user" OnValidSubmit="SaveAsync">
+                        <UserFormFields User="_user" />
+
+                        <div class="glpi-fiche-block-title mt-2"><i class="ti ti-key"></i>Mot de passe et jeton d'accès</div>
+                        @if (_showPasswordFields)
+                        {
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="glpi-fiche-field">
+                                        <label>Mot de passe</label>
+                                        <input class="form-control" type="password" @bind="_newPassword" />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="glpi-fiche-field">
+                                        <label>Confirmer</label>
+                                        <input class="form-control" type="password" @bind="_newPasswordConfirm" />
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-sm" @onclick="TogglePasswordFields">Annuler</button>
+                        }
+                        else
+                        {
+                            <div class="glpi-fiche-field">
+                                <label>Mot de passe</label>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="TogglePasswordFields">
+                                    <i class="ti ti-lock me-1"></i>Modifier le mot de passe
+                                </button>
+                            </div>
+                        }
+
+                        @if (_statusMessage is not null)
+                        {
+                            <p class="status mt-2">@_statusMessage</p>
+                        }
+
+                        <div class="d-flex justify-content-end gap-2 mt-3">
+                            <button type="button" class="btn btn-outline-danger" @onclick="DeleteAsync">
+                                <i class="ti ti-trash me-1"></i>Supprimer définitivement
+                            </button>
+                            <button type="submit" class="btn btn-primary" disabled="@_isSaving">
+                                <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
+                            </button>
+                        </div>
+                    </EditForm>
+                    break;
+
+                case "groupes":
+                    <div class="glpi-fiche-block">
+                        <div class="glpi-fiche-block-title"><i class="ti ti-users"></i>Groupes (@_user.GroupMemberships.Count)</div>
+                        @if (_user.GroupMemberships.Count == 0)
+                        {
+                            <div class="glpi-config-placeholder">
+                                <i class="ti ti-users"></i>
+                                <p class="mb-0">Cet utilisateur n'appartient à aucun groupe.</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-vcenter card-table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Groupe</th>
+                                            <th style="width: 6rem;"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (GlpiGroupUser membership in _user.GroupMemberships.OrderBy(m => m.Group?.Name ?? string.Empty))
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <a href="@($"/groups/{membership.GroupId}")" class="text-reset">
+                                                        <i class="ti ti-users me-1 text-secondary"></i>@(membership.Group?.Name ?? "Groupe inconnu")
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                    <button type="button" class="btn btn-icon btn-sm text-danger" title="Retirer" @onclick="() => RemoveGroupAsync(membership.GroupId)">
+                                                        <i class="ti ti-x"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        <div class="d-flex gap-2 mt-3">
+                            <select class="form-select" style="max-width: 320px;" @bind="_groupIdToAdd">
+                                <option value="0">-- Choisir un groupe --</option>
+                                @foreach (GlpiGroup group in AvailableGroups())
+                                {
+                                    <option value="@group.Id">@group.Name</option>
+                                }
+                            </select>
+                            <button type="button" class="btn btn-primary" disabled="@(_groupIdToAdd == 0)" @onclick="AddGroupAsync">
+                                <i class="ti ti-plus me-1"></i>Ajouter
+                            </button>
+                        </div>
+                    </div>
+                    break;
+
+                case "habilitations":
+                    <div class="glpi-fiche-block">
+                        <div class="glpi-fiche-block-title"><i class="ti ti-plus"></i>Ajouter une habilitation</div>
+                        <div class="table-responsive">
+                            <table class="table table-vcenter card-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Entité</th>
+                                        <th>Profil</th>
+                                        <th>Récursif</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <select class="form-select" @bind="_habEntityIdToAdd">
+                                                <option value="0">-- Choisir --</option>
+                                                @foreach (GlpiEntity entity in _allEntities.OrderBy(EntityFullName))
+                                                {
+                                                    <option value="@entity.Id">@EntityFullName(entity)</option>
+                                                }
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <select class="form-select" @bind="_habProfileIdToAdd">
+                                                <option value="0">-- Choisir --</option>
+                                                @foreach (GlpiProfile profile in _allProfiles)
+                                                {
+                                                    <option value="@profile.Id">@profile.Name</option>
+                                                }
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <select class="form-select" value="@(_habIsRecursiveToAdd ? "true" : "false")" @onchange="@(e => _habIsRecursiveToAdd = e.Value?.ToString() == "true")">
+                                                <option value="false">Non</option>
+                                                <option value="true">Oui</option>
+                                            </select>
+                                        </td>
+                                        <td style="width: 8rem;">
+                                            <button type="button" class="btn btn-primary w-100" disabled="@(_habEntityIdToAdd == 0 || _habProfileIdToAdd == 0)" @onclick="AddHabilitationAsync">
+                                                <i class="ti ti-plus me-1"></i>Ajouter
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="glpi-fiche-block-title mt-3"><i class="ti ti-key"></i>Habilitations (@_userHabilitations.Count)</div>
+                        @if (_userHabilitations.Count == 0)
+                        {
+                            <div class="glpi-config-placeholder">
+                                <i class="ti ti-key"></i>
+                                <p class="mb-0">Aucune habilitation.</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-vcenter card-table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Entité</th>
+                                            <th>Profil</th>
+                                            <th>Récursif</th>
+                                            <th style="width: 6rem;"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (GlpiUserProfile h in _userHabilitations)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <a href="@($"/entities/{h.EntityId}")" class="text-reset">
+                                                        <i class="ti ti-sitemap me-1 text-secondary"></i>@(h.Entity is not null ? EntityFullName(h.Entity) : "Entité inconnue")
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                    <a href="@($"/profiles/{h.ProfileId}")" class="text-reset">@(h.Profile?.Name ?? "Profil inconnu")</a>
+                                                </td>
+                                                <td>@(h.IsRecursive ? "Oui" : "Non")</td>
+                                                <td>
+                                                    <button type="button" class="btn btn-icon btn-sm text-danger" title="Retirer" @onclick="() => RemoveHabilitationAsync(h.Id)">
+                                                        <i class="ti ti-x"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                    break;
+
+                case "preferences":
+                    <EditForm Model="_user" OnValidSubmit="SaveAsync">
+                        <div class="glpi-fiche-block-title"><i class="ti ti-adjustments"></i>Personnalisation</div>
+                        <p class="text-secondary small">GlpiNg n'a pas (encore) les dizaines de préférences d'affichage de GLPI (langue, thème, tableaux de bord...) : seul le repli du menu latéral est une vraie préférence exploitée par l'application.</p>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="glpi-fiche-field">
+                                    <label>Réduire le menu latéral</label>
+                                    <select class="form-select" value="@(_user.SidebarCollapsed ? "true" : "false")" @onchange="@(e => _user.SidebarCollapsed = e.Value?.ToString() == "true")">
+                                        <option value="false">Non</option>
+                                        <option value="true">Oui</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (_statusMessage is not null)
+                        {
+                            <p class="status mt-2">@_statusMessage</p>
+                        }
+
+                        <div class="d-flex justify-content-end gap-2 mt-3">
+                            <button type="submit" class="btn btn-primary" disabled="@_isSaving">
+                                <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
+                            </button>
+                        </div>
+                    </EditForm>
+                    break;
+
+                case "securite":
+                    <EditForm Model="_user" OnValidSubmit="SaveAsync">
+                        <div class="glpi-fiche-block-title"><i class="ti ti-shield"></i>Double authentification (2FA)</div>
+                        <p class="text-secondary small">Si la double authentification est imposée par l'entité ou un groupe de cet utilisateur, cette dérogation individuelle permet de désactiver l'obligation.</p>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="glpi-fiche-field">
+                                    <label>Désactiver l'obligation du 2FA</label>
+                                    <select class="form-select" value="@(_user.TwoFactorAuthDisabled ? "true" : "false")" @onchange="@(e => _user.TwoFactorAuthDisabled = e.Value?.ToString() == "true")">
+                                        <option value="false">Non</option>
+                                        <option value="true">Oui</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (_statusMessage is not null)
+                        {
+                            <p class="status mt-2">@_statusMessage</p>
+                        }
+
+                        <div class="d-flex justify-content-end gap-2 mt-3">
+                            <button type="submit" class="btn btn-primary" disabled="@_isSaving">
+                                <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
+                            </button>
+                        </div>
+                    </EditForm>
+                    break;
+
+                case "synchronisation":
+                    <div class="glpi-fiche-block">
+                        <div class="glpi-fiche-block-title"><i class="ti ti-refresh"></i>Source d'authentification</div>
+                        <p class="mb-1"><strong>Source :</strong> @(_user.AuthSource == UserAuthSource.Ldap ? "Annuaire LDAP" : "Locale (base GlpiNg)")</p>
+                        @if (_user.AuthSource == UserAuthSource.Ldap)
+                        {
+                            <p class="mb-1">
+                                <strong>Annuaire :</strong>
+                                @if (_user.LdapServerId is { } ldapServerId)
+                                {
+                                    <a href="@($"/authentication/ldap/{ldapServerId}")" class="text-reset">@(_user.LdapServer?.Name ?? $"Annuaire #{ldapServerId}")</a>
+                                }
+                                else
+                                {
+                                    @:aucun (annuaire supprimé depuis)
+                                }
+                            </p>
+                            <p class="mb-0"><strong>DN :</strong> @(_user.ExternalDn ?? "—")</p>
+                        }
+                        else
+                        {
+                            <p class="text-secondary small mb-0">
+                                Ce compte est rattaché à un annuaire LDAP dès qu'une connexion par bind LDAP y réussit
+                                (voir AccountController.Login) — pas de synchronisation planifiée, seulement au moment
+                                de la connexion.
+                            </p>
+                        }
+                    </div>
+                    break;
+
+                case "history":
+                    <div class="glpi-fiche-block">
+                        <div class="glpi-fiche-block-title"><i class="ti ti-history"></i>Historique (@_historyEntries.Count)</div>
+                        @if (_historyEntries.Count == 0)
+                        {
+                            <div class="glpi-config-placeholder">
+                                <i class="ti ti-history"></i>
+                                <p class="mb-0">Aucun historique.</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-vcenter card-table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Date</th>
+                                            <th>Utilisateur</th>
+                                            <th>Champ</th>
+                                            <th>Mise à jour</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (GlpiUserHistoryEntry entry in _historyEntries)
+                                        {
+                                            <tr>
+                                                <td>@entry.Id</td>
+                                                <td>@entry.OccurredAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                                <td>@entry.User</td>
+                                                <td>@entry.Field</td>
+                                                <td>@entry.Description</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                    break;
+
+                case "all":
+                    <div class="glpi-fiche-block">
+                        <div class="glpi-fiche-block-title"><i class="ti ti-user"></i>Utilisateur</div>
+                        <p class="mb-1"><strong>Identifiant :</strong> @_user.UserName</p>
+                        <p class="mb-1"><strong>Nom complet :</strong> @(_user.DisplayName ?? "—")</p>
+                        <p class="mb-1"><strong>E-mail :</strong> @(_user.Email ?? "—")</p>
+                        <p class="mb-0"><strong>Actif :</strong> @YesNo(_user.IsActive)</p>
+                    </div>
+                    <div class="glpi-fiche-block">
+                        <div class="glpi-fiche-block-title"><i class="ti ti-key"></i>Habilitations (@_userHabilitations.Count)</div>
+                        @foreach (GlpiUserProfile h in _userHabilitations)
+                        {
+                            <p class="mb-1">@(h.Entity?.Name ?? "Entité inconnue") — @(h.Profile?.Name ?? "Profil inconnu")@(h.IsRecursive ? " (récursif)" : "")</p>
+                        }
+                    </div>
+                    <div class="glpi-fiche-block">
+                        <div class="glpi-fiche-block-title"><i class="ti ti-users"></i>Groupes (@_user.GroupMemberships.Count)</div>
+                        @foreach (GlpiGroupUser membership in _user.GroupMemberships)
+                        {
+                            <p class="mb-1">@(membership.Group?.Name ?? "Groupe inconnu")</p>
+                        }
+                    </div>
+                    <div class="glpi-fiche-block">
+                        <div class="glpi-fiche-block-title"><i class="ti ti-shield"></i>Sécurité</div>
+                        <p class="mb-0"><strong>Désactiver l'obligation du 2FA :</strong> @YesNo(_user.TwoFactorAuthDisabled)</p>
+                    </div>
+                    <div class="glpi-fiche-block">
+                        <div class="glpi-fiche-block-title"><i class="ti ti-history"></i>Historique (@_historyEntries.Count)</div>
+                        @foreach (GlpiUserHistoryEntry entry in _historyEntries)
+                        {
+                            <p class="mb-1">@entry.OccurredAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") — @entry.User — @entry.Field : @entry.Description</p>
+                        }
+                    </div>
+                    break;
+
+                default:
+                    var current = _tabs.First(t => t.Key == _activeTabKey);
+                    <div class="glpi-config-placeholder">
+                        <i class="ti @current.Icon"></i>
+                        <p class="mb-0">
+                            @if (UnavailableReasons.TryGetValue(_activeTabKey, out string? reason))
+                            {
+                                @reason
+                            }
+                            else
+                            {
+                                @:L'onglet « @current.Label » n'est pas encore disponible.
+                            }
+                        </p>
+                    </div>
+                    break;
+            }
+        </div>
+    </div>
+}

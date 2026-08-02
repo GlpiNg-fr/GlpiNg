@@ -19,6 +19,8 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<ComputerVolume> ComputerVolumes => Set<ComputerVolume>();
     public DbSet<ComputerBattery> ComputerBatteries => Set<ComputerBattery>();
     public DbSet<ComputerNetworkPort> ComputerNetworkPorts => Set<ComputerNetworkPort>();
+    public DbSet<ComputerImportHistory> ComputerImportHistories => Set<ComputerImportHistory>();
+    public DbSet<ComputerHistoryEntry> ComputerHistoryEntries => Set<ComputerHistoryEntry>();
 
     public DbSet<GlpiAgent> Agents => Set<GlpiAgent>();
     public DbSet<DeploymentJob> DeploymentJobs => Set<DeploymentJob>();
@@ -26,7 +28,26 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<DeploymentPackageFile> DeploymentPackageFiles => Set<DeploymentPackageFile>();
 
     public DbSet<GlpiUser> Users => Set<GlpiUser>();
+    public DbSet<GlpiUserHistoryEntry> UserHistoryEntries => Set<GlpiUserHistoryEntry>();
+    public DbSet<GlpiUserProfile> UserProfiles => Set<GlpiUserProfile>();
     public DbSet<DashboardCardPreference> DashboardCardPreferences => Set<DashboardCardPreference>();
+
+    public DbSet<GlpiGroup> Groups => Set<GlpiGroup>();
+    public DbSet<GlpiGroupUser> GroupUsers => Set<GlpiGroupUser>();
+    public DbSet<GlpiGroupNote> GroupNotes => Set<GlpiGroupNote>();
+    public DbSet<GlpiGroupHistoryEntry> GroupHistoryEntries => Set<GlpiGroupHistoryEntry>();
+
+    public DbSet<GlpiEntity> Entities => Set<GlpiEntity>();
+    public DbSet<GlpiEntityNote> EntityNotes => Set<GlpiEntityNote>();
+    public DbSet<GlpiEntityHistoryEntry> EntityHistoryEntries => Set<GlpiEntityHistoryEntry>();
+
+    public DbSet<GlpiProfile> Profiles => Set<GlpiProfile>();
+    public DbSet<GlpiProfileHistoryEntry> ProfileHistoryEntries => Set<GlpiProfileHistoryEntry>();
+
+    public DbSet<AuthLdapServer> AuthLdapServers => Set<AuthLdapServer>();
+    public DbSet<AuthMailServer> AuthMailServers => Set<AuthMailServer>();
+
+    public DbSet<OAuthClient> OAuthClients => Set<OAuthClient>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -69,6 +90,112 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
             .HasMany(p => p.Files)
             .WithOne()
             .HasForeignKey(f => f.DeploymentPackageId);
+
+        modelBuilder.Entity<GlpiGroup>()
+            .HasOne(g => g.Parent)
+            .WithMany(g => g.Children)
+            .HasForeignKey(g => g.ParentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<GlpiGroupUser>()
+            .HasKey(gu => new { gu.GroupId, gu.UserId });
+
+        modelBuilder.Entity<GlpiGroupUser>()
+            .HasOne(gu => gu.Group)
+            .WithMany(g => g.Members)
+            .HasForeignKey(gu => gu.GroupId);
+
+        modelBuilder.Entity<GlpiGroupUser>()
+            .HasOne(gu => gu.User)
+            .WithMany(u => u.GroupMemberships)
+            .HasForeignKey(gu => gu.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<GlpiEntity>()
+            .HasOne(e => e.Parent)
+            .WithMany(e => e.Children)
+            .HasForeignKey(e => e.ParentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<GlpiUserProfile>()
+            .HasOne(up => up.User)
+            .WithMany(u => u.Habilitations)
+            .HasForeignKey(up => up.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<GlpiUserProfile>()
+            .HasOne(up => up.Entity)
+            .WithMany()
+            .HasForeignKey(up => up.EntityId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<GlpiUserProfile>()
+            .HasOne(up => up.Profile)
+            .WithMany()
+            .HasForeignKey(up => up.ProfileId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<GlpiEntityNote>()
+            .HasOne(n => n.Entity)
+            .WithMany()
+            .HasForeignKey(n => n.EntityId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<GlpiEntityHistoryEntry>()
+            .HasOne<GlpiEntity>()
+            .WithMany()
+            .HasForeignKey(h => h.EntityId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<GlpiGroupNote>()
+            .HasOne(n => n.Group)
+            .WithMany()
+            .HasForeignKey(n => n.GroupId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<GlpiGroupHistoryEntry>()
+            .HasOne<GlpiGroup>()
+            .WithMany()
+            .HasForeignKey(h => h.GroupId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<GlpiUserHistoryEntry>()
+            .HasOne<GlpiUser>()
+            .WithMany()
+            .HasForeignKey(h => h.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<GlpiProfileHistoryEntry>()
+            .HasOne<GlpiProfile>()
+            .WithMany()
+            .HasForeignKey(h => h.ProfileId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<AuthLdapServer>()
+            .HasIndex(s => s.Name)
+            .IsUnique();
+
+        modelBuilder.Entity<AuthMailServer>()
+            .HasIndex(s => s.Name)
+            .IsUnique();
+
+        // SetNull plutôt que Restrict/Cascade : supprimer un annuaire LDAP ne doit pas empêcher
+        // sa suppression ni supprimer les comptes qui s'y authentifiaient — ils retombent
+        // simplement sans LdapServerId (AuthSource reste Ldap, la connexion échouera jusqu'à
+        // rattachement à un autre annuaire ou retour en local via un nouveau mot de passe).
+        modelBuilder.Entity<GlpiUser>()
+            .HasOne(u => u.LdapServer)
+            .WithMany()
+            .HasForeignKey(u => u.LdapServerId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<OAuthClient>()
+            .HasIndex(c => c.ClientId)
+            .IsUnique();
+
+        modelBuilder.Entity<OAuthClient>()
+            .HasIndex(c => c.Name)
+            .IsUnique();
     }
 
     /// <summary>
