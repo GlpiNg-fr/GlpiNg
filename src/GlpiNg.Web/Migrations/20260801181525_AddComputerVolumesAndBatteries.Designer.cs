@@ -4,6 +4,7 @@ using GlpiNg.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GlpiNg.Web.Migrations
 {
     [DbContext(typeof(GlpiNgDbContext))]
-    partial class GlpiNgDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260801181525_AddComputerVolumesAndBatteries")]
+    partial class AddComputerVolumesAndBatteries
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -48,9 +51,6 @@ namespace GlpiNg.Web.Migrations
                     b.Property<string>("HardwareUuid")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("LastLoggedUser")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<DateTime?>("LastInventoryAt")
                         .HasColumnType("datetime2");
 
@@ -65,9 +65,6 @@ namespace GlpiNg.Web.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OperatingSystem")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("OsKernelVersion")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OsVersion")
@@ -90,9 +87,6 @@ namespace GlpiNg.Web.Migrations
 
                     b.Property<int?>("TotalMemoryMb")
                         .HasColumnType("int");
-
-                    b.Property<string>("VmSystem")
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -176,64 +170,6 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("ComputerId");
 
                     b.ToTable("ComputerComponents");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerNetworkPort", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ComputerId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Designation")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("IpAddress")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("IpDhcp")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("IpGateway")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("IpMask")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("IpSubnet")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsVirtual")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("MacAddress")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Manufacturer")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("Mtu")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("SpeedMbps")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Status")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Type")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ComputerId");
-
-                    b.ToTable("ComputerNetworkPorts");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerPeripheral", b =>
@@ -571,15 +507,6 @@ namespace GlpiNg.Web.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerNetworkPort", b =>
-                {
-                    b.HasOne("GlpiNg.Modules.Inventory.Models.Computer", null)
-                        .WithMany("NetworkPorts")
-                        .HasForeignKey("ComputerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerPeripheral", b =>
                 {
                     b.HasOne("GlpiNg.Modules.Inventory.Models.Computer", null)
@@ -640,8 +567,6 @@ namespace GlpiNg.Web.Migrations
                     b.Navigation("Batteries");
 
                     b.Navigation("Components");
-
-                    b.Navigation("NetworkPorts");
 
                     b.Navigation("Peripherals");
 

@@ -3,13 +3,25 @@
 @inject AppSettingsFileStore SettingsStore
 @inject ConfigHistoryService History
 
-@if (_general is null)
+@if (_general is null || _server is null)
 {
     <p>Chargement…</p>
 }
 else
 {
     <EditForm Model="_general" OnValidSubmit="SaveAsync" class="glpi-config-form">
+        <div class="glpi-config-field">
+            <label for="urls">Adresses d'écoute du serveur</label>
+            <input id="urls" @bind="_server.Urls" placeholder="http://0.0.0.0:5000" />
+        </div>
+        <p class="hint">
+            Clé de configuration "Urls" (adresses d'écoute Kestrel). Un
+            redémarrage de l'application est nécessaire pour appliquer ce
+            changement. Si un argument <code>--urls</code> ou une autre source de
+            configuration définit aussi les adresses d'écoute, vérifiez laquelle
+            l'emporte sur votre déploiement avant de vous fier uniquement à cette page.
+        </p>
+
         <div class="glpi-config-field">
             <label for="app-url">URL de l'application</label>
             <input id="app-url" @bind="_general.ApplicationUrl" placeholder="http://localhost" />
@@ -37,7 +49,10 @@ else
 
         <div class="glpi-config-field checkbox">
             <label for="anon-faq">Autoriser l'accès anonyme à la FAQ</label>
-            <input id="anon-faq" type="checkbox" @bind="_general.AllowAnonymousFaqAccess" />
+            <label class="glpi-switch">
+                <input id="anon-faq" type="checkbox" @bind="_general.AllowAnonymousFaqAccess" />
+                <span class="glpi-switch-slider"></span>
+            </label>
         </div>
 
         <div class="glpi-config-field checkbox">
@@ -45,7 +60,10 @@ else
                 Autoriser les imports (de fichiers) anonymes
                 <i class="ti ti-help-circle glpi-config-help" title="Permet l'import de fichiers sans authentification préalable."></i>
             </label>
-            <input id="anon-imports" type="checkbox" @bind="_general.AllowAnonymousFileImports" />
+            <label class="glpi-switch">
+                <input id="anon-imports" type="checkbox" @bind="_general.AllowAnonymousFileImports" />
+                <span class="glpi-switch-slider"></span>
+            </label>
         </div>
 
         <div class="glpi-config-divider">
@@ -85,7 +103,10 @@ else
 
         <div class="glpi-config-field checkbox">
             <label for="search-global">Recherche globale</label>
-            <input id="search-global" type="checkbox" @bind="_general.AllowGlobalSearch" />
+            <label class="glpi-switch">
+                <input id="search-global" type="checkbox" @bind="_general.AllowGlobalSearch" />
+                <span class="glpi-switch-slider"></span>
+            </label>
         </div>
 
         <div class="glpi-config-field">
@@ -127,12 +148,18 @@ else
 
         <div class="glpi-config-field checkbox">
             <label for="remember-me-default">État par défaut de la case à cocher</label>
-            <input id="remember-me-default" type="checkbox" @bind="_general.RememberMeDefaultChecked" />
+            <label class="glpi-switch">
+                <input id="remember-me-default" type="checkbox" @bind="_general.RememberMeDefaultChecked" />
+                <span class="glpi-switch-slider"></span>
+            </label>
         </div>
 
         <div class="glpi-config-field checkbox">
             <label for="show-auth-sources">Afficher la liste des sources d'authentification sur la page de login</label>
-            <input id="show-auth-sources" type="checkbox" @bind="_general.ShowAuthSourcesOnLoginPage" />
+            <label class="glpi-switch">
+                <input id="show-auth-sources" type="checkbox" @bind="_general.ShowAuthSourcesOnLoginPage" />
+                <span class="glpi-switch-slider"></span>
+            </label>
         </div>
 
         @if (_statusMessage is not null)
@@ -163,17 +190,19 @@ else
     }
 
     private GeneralSettings? _general;
+    private ServerSettings? _server;
     private bool _isSaving;
     private string? _statusMessage;
 
     protected override async Task OnInitializedAsync()
     {
         _general = await SettingsStore.ReadGeneralAsync();
+        _server = await SettingsStore.ReadAsync();
     }
 
     private async Task SaveAsync()
     {
-        if (_general is null)
+        if (_general is null || _server is null)
         {
             return;
         }
@@ -185,6 +214,7 @@ else
         {
             var before = await SettingsStore.ReadGeneralAsync();
             await SettingsStore.SaveGeneralAsync(_general);
+            await SettingsStore.SaveAsync(_server);
             await History.AppendAsync("Administrateur", SettingsDiff.Compare(before, _general));
             _statusMessage = "Configuration enregistrée.";
         }

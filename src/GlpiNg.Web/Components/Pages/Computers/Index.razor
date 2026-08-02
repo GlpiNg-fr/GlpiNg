@@ -6,17 +6,125 @@
 
 <div class="page-header d-flex align-items-center justify-content-between mb-3">
     <h2 class="page-title mb-0">Ordinateurs</h2>
-    <div class="text-secondary">@_computers.Count résultat(s)</div>
+    <div class="text-secondary">@_filteredComputers.Count résultat(s)</div>
 </div>
 
 <div class="card">
-    <div class="card-header">
-        <div class="input-icon" style="max-width: 320px;">
-            <span class="input-icon-addon">
-                <i class="ti ti-search"></i>
-            </span>
-            <input type="text" class="form-control" placeholder="Rechercher un poste..."
-                   @bind="_searchTerm" @bind:event="oninput" @onkeyup="OnSearchChanged" />
+    <div class="card-header d-flex align-items-center justify-content-between glpi-list-toolbar">
+        <div class="btn-list">
+            <button type="button" class="btn btn-icon" disabled title="Recherches sauvegardées (à venir)">
+                <i class="ti ti-bookmark"></i>
+            </button>
+
+            <div class="dropdown">
+                <button type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="ti ti-search me-1"></i>Rechercher
+                </button>
+                <div class="dropdown-menu p-3" style="min-width: 280px;">
+                    <div class="input-icon">
+                        <span class="input-icon-addon">
+                            <i class="ti ti-search"></i>
+                        </span>
+                        <input type="text" class="form-control" placeholder="Rechercher un poste..."
+                               @bind="_searchTerm" @bind:event="oninput" @onkeyup="OnSearchChanged" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="dropdown">
+                <button type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="ti ti-arrows-sort me-1"></i>Trier
+                </button>
+                <ul class="dropdown-menu">
+                    <li>
+                        <button type="button" class="dropdown-item d-flex align-items-center justify-content-between" @onclick="() => SetSort(SortField.Name)">
+                            Nom
+                            @if (_sortField == SortField.Name)
+                            {
+                                <i class="ti @(_sortDescending ? "ti-sort-descending" : "ti-sort-ascending") ms-2"></i>
+                            }
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button" class="dropdown-item d-flex align-items-center justify-content-between" @onclick="() => SetSort(SortField.Status)">
+                            Statut
+                            @if (_sortField == SortField.Status)
+                            {
+                                <i class="ti @(_sortDescending ? "ti-sort-descending" : "ti-sort-ascending") ms-2"></i>
+                            }
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button" class="dropdown-item d-flex align-items-center justify-content-between" @onclick="() => SetSort(SortField.Manufacturer)">
+                            Fabricant / Modèle
+                            @if (_sortField == SortField.Manufacturer)
+                            {
+                                <i class="ti @(_sortDescending ? "ti-sort-descending" : "ti-sort-ascending") ms-2"></i>
+                            }
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button" class="dropdown-item d-flex align-items-center justify-content-between" @onclick="() => SetSort(SortField.OperatingSystem)">
+                            Système d'exploitation
+                            @if (_sortField == SortField.OperatingSystem)
+                            {
+                                <i class="ti @(_sortDescending ? "ti-sort-descending" : "ti-sort-ascending") ms-2"></i>
+                            }
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button" class="dropdown-item d-flex align-items-center justify-content-between" @onclick="() => SetSort(SortField.LastInventory)">
+                            Dernière remontée
+                            @if (_sortField == SortField.LastInventory)
+                            {
+                                <i class="ti @(_sortDescending ? "ti-sort-descending" : "ti-sort-ascending") ms-2"></i>
+                            }
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="btn-list align-items-center">
+            <div class="btn-group" role="group" aria-label="Affichage">
+                <button type="button" class="btn btn-icon active" title="Vue liste">
+                    <i class="ti ti-list"></i>
+                </button>
+                <button type="button" class="btn btn-icon" disabled title="Vue galerie (à venir)">
+                    <i class="ti ti-layout-grid"></i>
+                </button>
+            </div>
+
+            <label class="form-check m-0 px-2" title="Tout sélectionner">
+                <input class="form-check-input m-0" type="checkbox" checked="@AllSelected"
+                       @onchange="@((ChangeEventArgs e) => ToggleSelectAll((bool)(e.Value ?? false)))" />
+            </label>
+
+            <div class="dropdown">
+                <button type="button" class="btn btn-icon text-danger" data-bs-toggle="dropdown" aria-expanded="false"
+                        disabled="@(_selectedIds.Count == 0)" title="Supprimer la sélection">
+                    <i class="ti ti-trash"></i>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end p-3" style="min-width: 260px;">
+                    <p class="mb-2">Supprimer @_selectedIds.Count poste(s) sélectionné(s) ? Cette action est définitive.</p>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-sm">Annuler</button>
+                        <button type="button" class="btn btn-sm btn-danger" @onclick="DeleteSelectedAsync">Supprimer</button>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-icon" disabled title="Colonnes (à venir)">
+                <i class="ti ti-columns-3"></i>
+            </button>
+
+            <button type="button" class="btn btn-icon" @onclick="OnRefreshAsync" title="Rafraîchir">
+                <i class="ti ti-refresh"></i>
+            </button>
+
+            <button type="button" class="btn btn-icon" disabled title="Export (à venir)">
+                <i class="ti ti-download"></i>
+            </button>
         </div>
     </div>
 
@@ -24,6 +132,7 @@
         <table class="table table-vcenter card-table">
             <thead>
                 <tr>
+                    <th style="width: 2.5rem;"></th>
                     <th>Nom</th>
                     <th>Statut</th>
                     <th>Fabricant / Modèle</th>
@@ -35,7 +144,7 @@
                 @if (_filteredComputers.Count == 0)
                 {
                     <tr>
-                        <td colspan="5" class="text-center text-secondary py-4">Aucun poste trouvé.</td>
+                        <td colspan="6" class="text-center text-secondary py-4">Aucun poste trouvé.</td>
                     </tr>
                 }
                 else
@@ -43,6 +152,10 @@
                     @foreach (Computer computer in _filteredComputers)
                     {
                         <tr>
+                            <td>
+                                <input class="form-check-input m-0" type="checkbox" checked="@_selectedIds.Contains(computer.Id)"
+                                       @onchange="@((ChangeEventArgs e) => ToggleSelect(computer.Id, (bool)(e.Value ?? false)))" />
+                            </td>
                             <td>
                                 <a href="@($"/computers/{computer.Id}")" class="text-reset fw-semibold">
                                     <i class="ti ti-device-desktop me-1 text-secondary"></i>@computer.Name

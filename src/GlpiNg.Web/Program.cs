@@ -3,6 +3,7 @@ using AnthoDingo.Setup;
 using GlpiNg.Modules.Inventory;
 using GlpiNg.Web.Components;
 using GlpiNg.Web.Data;
+using GlpiNg.Web.Middleware;
 using GlpiNg.Web.Options;
 using GlpiNg.Web.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -99,14 +100,35 @@ public class Program
         // aucune page ne tente de résoudre GlpiNgDbContext avant que le provider ne soit connu.
         string? configuredProviderRaw = builder.Configuration["Setup:Provider"];
         string? configuredConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+        // Serveur de secours optionnel ("ConnectionStrings:FallbackConnection") : si le serveur
+        // principal n'est pas joignable au démarrage, GlpiNgDbContext.ConfigureProvider bascule
+        // dessus. Non renseigné par défaut par l'assistant d'installation ; à ajouter à la main
+        // dans appsettings.local.json (ou une variable d'environnement) pour l'activer.
+        string? fallbackConnectionString = builder.Configuration.GetConnectionString("FallbackConnection");
 
         if (builder.Configuration["Setup:IsComplete"] == "true"
             && configuredProviderRaw is not null
             && configuredConnectionString is not null
             && Enum.TryParse(configuredProviderRaw, ignoreCase: true, out DbProvider configuredProvider))
         {
-            builder.Services.AddDbContext<GlpiNgDbContext>(options =>
-                GlpiNgDbContext.ConfigureProvider(options, configuredProvider, configuredConnectionString));
+            // IDbContextFactory (singleton) plutôt que AddDbContext seul : les composants Blazor
+            // Server doivent créer une instance courte durée par opération plutôt que de partager
+            // le DbContext scoped de la requête, car le pré-rendu exécute le layout et la page
+            // en parallèle (leurs OnInitializedAsync se chevauchent), ce qui fait lever le
+            // ConcurrencyDetector d'EF Core ("A second operation was started on this context
+            // instance...") si elles se partagent une seule instance. Voir
+            // https://learn.microsoft.com/aspnet/core/blazor/blazor-server-ef-core#new-dbcontext-instances
+            builder.Services.AddDbContextFactory<GlpiNgDbContext>(options =>
+                GlpiNgDbContext.ConfigureProvider(options, configuredProvider, configuredConnectionString, fallbackConnectionString));
+
+            // GlpiNgDbContext scoped pour les consommateurs non-Blazor (contrôleurs, services) qui
+            // ont un vrai cycle de vie par requête et n'ont pas le problème de concurrence
+            // ci-dessus : résolu via la factory plutôt que via AddDbContext, car AddDbContext
+            // enregistrerait un second DbContextOptions<GlpiNgDbContext> scoped, ce que le
+            // IDbContextFactory singleton ci-dessus ne peut pas consommer (conflit de durée de
+            // vie au démarrage : "Cannot consume scoped service ... from singleton").
+            builder.Services.AddScoped<GlpiNgDbContext>(sp =>
+                sp.GetRequiredService<IDbContextFactory<GlpiNgDbContext>>().CreateDbContext());
 
             // Les modules (ex. GlpiMySqlImportService dans Inventory) dépendent du DbContext de
             // base plutôt que de GlpiNgDbContext, pour ne pas référencer le projet hôte : c'est
@@ -146,6 +168,12 @@ public class Program
         // pipeline (hors Swagger, monté conditionnellement au-dessus) : tant que l'installation
         // n'est pas terminée, toute autre requête y est redirigée.
         app.UseSetupMiddleware("GlpiNg");
+
+        // Gate applicatif de migrations EF Core : tant que des migrations sont en attente,
+        // redirige toute requête navigateur (hors protocole glpi-agent) vers /update, qui
+        // permet à un administrateur de confirmer leur application. Placé après
+        // UseSetupMiddleware pour la même raison que GlpiNgDbContext est garanti enregistré ici.
+        app.UseMigrationsGate();
 
         app.UseAuthentication();
         app.UseAuthorization();

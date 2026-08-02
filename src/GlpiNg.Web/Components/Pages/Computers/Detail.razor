@@ -13,102 +13,458 @@
 }
 else
 {
-    <div class="page-header d-flex align-items-center justify-content-between mb-3">
-        <div>
-            <h2 class="page-title mb-1">
-                <i class="ti ti-device-desktop me-2 text-secondary"></i>@_computer.Name
-            </h2>
-            <span class="badge @StatusCssClass(_computer.Status)">@StatusLabel(_computer.Status)</span>
+    <div class="glpi-fiche-topbar">
+        <div class="glpi-fiche-crumb">
+            <i class="ti ti-device-desktop"></i>
+            <span>Ordinateur - @_computer.Name - ID @_computer.Id</span>
+            <button type="button" class="glpi-fiche-favorite" title="Ajouter aux favoris">
+                <i class="ti ti-star"></i>
+            </button>
+        </div>
+        <div class="glpi-fiche-toolbar">
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="ti ti-dots-vertical me-1"></i>Actions
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#"><i class="ti ti-pencil me-1"></i>Modifier</a></li>
+                    <li><a class="dropdown-item" href="#"><i class="ti ti-copy me-1"></i>Dupliquer</a></li>
+                    <li><hr class="dropdown-divider" /></li>
+                    <li><a class="dropdown-item text-danger" href="#"><i class="ti ti-trash me-1"></i>Mettre à la corbeille</a></li>
+                </ul>
+            </div>
+            @if (_total > 0)
+            {
+                <span class="glpi-fiche-pager-count">@_position/@_total</span>
+                <a class="glpi-fiche-pager-btn @(_previousId is null ? "disabled" : "")" href="@(_previousId is { } prevId ? $"/computers/{prevId}" : "#")">
+                    <i class="ti ti-chevron-left"></i>
+                </a>
+                <a class="glpi-fiche-pager-btn @(_nextId is null ? "disabled" : "")" href="@(_nextId is { } nextId ? $"/computers/{nextId}" : "#")">
+                    <i class="ti ti-chevron-right"></i>
+                </a>
+            }
         </div>
     </div>
 
-    <ul class="nav nav-tabs mb-3">
-        <li class="nav-item">
-            <a class="nav-link @(_activeTab == Tab.General ? "active" : "")" href="#" @onclick="() => SetTab(Tab.General)" @onclick:preventDefault>
-                <i class="ti ti-info-circle me-1"></i>Général
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link @(_activeTab == Tab.Components ? "active" : "")" href="#" @onclick="() => SetTab(Tab.Components)" @onclick:preventDefault>
-                <i class="ti ti-cpu me-1"></i>Composants (@_computer.Components.Count)
-            </a>
-        </li>
-    </ul>
+    <div class="glpi-fiche-layout">
+        <aside class="glpi-fiche-sidebar">
+            @foreach (var tab in _tabs)
+            {
+                <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == tab.Key ? "active" : "")" @onclick="() => SetTab(tab.Key)">
+                    <i class="ti @tab.Icon"></i>
+                    <span>@tab.Label</span>
+                    @if (tab.Count is { } count)
+                    {
+                        <span class="glpi-fiche-tab-count">@count</span>
+                    }
+                </button>
+            }
+        </aside>
 
-    @if (_activeTab == Tab.General)
-    {
-        <div class="card">
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <dl class="row mb-0">
-                            <dt class="col-5 text-secondary">Fabricant</dt>
-                            <dd class="col-7">@(_computer.Manufacturer ?? "—")</dd>
-
-                            <dt class="col-5 text-secondary">Modèle</dt>
-                            <dd class="col-7">@(_computer.Model ?? "—")</dd>
-
-                            <dt class="col-5 text-secondary">Numéro de série</dt>
-                            <dd class="col-7">@(_computer.SerialNumber ?? "—")</dd>
-
-                            <dt class="col-5 text-secondary">Type de châssis</dt>
-                            <dd class="col-7">@(_computer.ChassisType ?? "—")</dd>
-                        </dl>
+        <div class="glpi-fiche-panel">
+            @switch (_activeTabKey)
+            {
+                case "computer":
+                    <div class="glpi-fiche-form">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="glpi-fiche-field">
+                                    <label>Nom</label>
+                                    <div class="glpi-fiche-value-box">@_computer.Name</div>
+                                </div>
+                                <div class="glpi-fiche-field">
+                                    <label>Emplacement</label>
+                                    <div class="glpi-fiche-value-box">@(LocationLabel(_computer) ?? "—")</div>
+                                </div>
+                                <div class="glpi-fiche-field">
+                                    <label>Utilisateur assigné</label>
+                                    <div class="glpi-fiche-value-box">@(_computer.AssignedUser ?? "—")</div>
+                                </div>
+                                <div class="glpi-fiche-field">
+                                    <label>Dernier utilisateur connecté</label>
+                                    <div class="glpi-fiche-value-box">@(_computer.LastLoggedUser ?? "—")</div>
+                                </div>
+                                <div class="glpi-fiche-field">
+                                    <label>UUID matériel</label>
+                                    <div class="glpi-fiche-value-box"><code>@(_computer.HardwareUuid ?? "—")</code></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="glpi-fiche-field">
+                                    <label>Statut</label>
+                                    <div class="glpi-fiche-value-box">
+                                        <span class="badge @StatusCssClass(_computer.Status)">@StatusLabel(_computer.Status)</span>
+                                    </div>
+                                </div>
+                                <div class="glpi-fiche-field">
+                                    <label>Type</label>
+                                    <div class="glpi-fiche-value-box">@(_computer.ChassisType ?? "—")</div>
+                                </div>
+                                <div class="glpi-fiche-field">
+                                    <label>Fabricant</label>
+                                    <div class="glpi-fiche-value-box">@(_computer.Manufacturer ?? "—")</div>
+                                </div>
+                                <div class="glpi-fiche-field">
+                                    <label>Modèle</label>
+                                    <div class="glpi-fiche-value-box">@(_computer.Model ?? "—")</div>
+                                </div>
+                                <div class="glpi-fiche-field">
+                                    <label>N° de série</label>
+                                    <div class="glpi-fiche-value-box">@(_computer.SerialNumber ?? "—")</div>
+                                </div>
+                                <div class="glpi-fiche-field">
+                                    <label>Virtualisation</label>
+                                    <div class="glpi-fiche-value-box">@(_computer.VmSystem is { Length: > 0 } vm && vm != "Physical" ? vm : "Machine physique")</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-md-6">
-                        <dl class="row mb-0">
-                            <dt class="col-5 text-secondary">Système d'exploitation</dt>
-                            <dd class="col-7">@(_computer.OperatingSystem ?? "—")</dd>
 
-                            <dt class="col-5 text-secondary">Version OS</dt>
-                            <dd class="col-7">@(_computer.OsVersion ?? "—")</dd>
+                    @if (_computer.Agent is { } agent)
+                    {
+                        <div class="glpi-fiche-inventory-panel">
+                            <div class="glpi-fiche-inventory-title"><i class="ti ti-cloud-upload"></i>Informations d'inventaire</div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="glpi-fiche-inventory-label">Agent</div>
+                                    <div>@(agent.AgentName ?? agent.Hostname ?? agent.DeviceId ?? "—")</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="glpi-fiche-inventory-label">Dernier contact</div>
+                                    <div>@agent.LastContactAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="glpi-fiche-inventory-label">Dernière mise à jour de l'inventaire</div>
+                                    <div>@LastInventoryLabel(_computer)</div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    break;
 
-                            <dt class="col-5 text-secondary">Mémoire totale</dt>
-                            <dd class="col-7">@(_computer.TotalMemoryMb is { } mb ? $"{mb} Mo" : "—")</dd>
-
-                            <dt class="col-5 text-secondary">Dernière remontée</dt>
-                            <dd class="col-7">@LastInventoryLabel(_computer)</dd>
-                        </dl>
+                case "os":
+                    <div class="glpi-fiche-form">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="glpi-fiche-field">
+                                    <label>Système d'exploitation</label>
+                                    <div class="glpi-fiche-value-box">@(_computer.OperatingSystem ?? "—")</div>
+                                </div>
+                                <div class="glpi-fiche-field">
+                                    <label>Version</label>
+                                    <div class="glpi-fiche-value-box">@(_computer.OsVersion ?? "—")</div>
+                                </div>
+                                <div class="glpi-fiche-field">
+                                    <label>Version du noyau</label>
+                                    <div class="glpi-fiche-value-box">@(_computer.OsKernelVersion ?? "—")</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="glpi-fiche-field">
+                                    <label>Mémoire totale</label>
+                                    <div class="glpi-fiche-value-box">@(_computer.TotalMemoryMb is { } mb ? $"{mb} Mo" : "—")</div>
+                                </div>
+                                <div class="glpi-fiche-field">
+                                    <label>Dernière remontée</label>
+                                    <div class="glpi-fiche-value-box">@LastInventoryLabel(_computer)</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-        </div>
-    }
-    else
-    {
-        <div class="card">
-            <div class="table-responsive">
-                <table class="table table-vcenter card-table">
-                    <thead>
-                        <tr>
-                            <th>Type</th>
-                            <th>Désignation</th>
-                            <th>Capacité</th>
-                            <th>Numéro de série</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (_computer.Components.Count == 0)
+                    break;
+
+                case "components":
+                    @if (_computer.Components.Count == 0)
+                    {
+                        <div class="glpi-config-placeholder">
+                            <i class="ti ti-cpu-off"></i>
+                            <p class="mb-0">Aucun composant remonté.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var group in ComponentGroups(_computer))
                         {
-                            <tr>
-                                <td colspan="4" class="text-center text-secondary py-4">Aucun composant remonté.</td>
-                            </tr>
+                            <div class="glpi-fiche-block">
+                                <div class="glpi-fiche-block-title">
+                                    <i class="ti @ComponentTypeIcon(group.Key)"></i>@ComponentTypeLabel(group.Key) (@group.Count())
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-vcenter card-table mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Désignation</th>
+                                                <th>Capacité</th>
+                                                <th>Numéro de série</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (ComputerComponent component in group)
+                                            {
+                                                <tr>
+                                                    <td>@component.Designation</td>
+                                                    <td>@(component.Capacity ?? "—")</td>
+                                                    <td>@(component.Serial ?? "—")</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         }
-                        else
+                    }
+                    break;
+
+                case "batteries":
+                    @if (_computer.Batteries.Count == 0)
+                    {
+                        <div class="glpi-config-placeholder">
+                            <i class="ti ti-battery-off"></i>
+                            <p class="mb-0">Aucune batterie remontée.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="glpi-fiche-block">
+                            <div class="glpi-fiche-block-title"><i class="ti ti-battery"></i>Batteries (@_computer.Batteries.Count)</div>
+                            <div class="table-responsive">
+                                <table class="table table-vcenter card-table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Nom</th>
+                                            <th>Fabricant</th>
+                                            <th>Type</th>
+                                            <th>Tension</th>
+                                            <th>Capacité</th>
+                                            <th>Numéro de série</th>
+                                            <th>Date de fabrication</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (ComputerBattery battery in _computer.Batteries)
+                                        {
+                                            <tr>
+                                                <td>@battery.Name</td>
+                                                <td>@(battery.Manufacturer ?? "—")</td>
+                                                <td>@(battery.Chemistry ?? "—")</td>
+                                                <td>@VoltageLabel(battery.VoltageMv)</td>
+                                                <td>@CapacityLabel(battery.CapacityMwh)</td>
+                                                <td>@(battery.Serial ?? "—")</td>
+                                                <td>@(battery.ManufactureDate ?? "—")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    }
+                    break;
+
+                case "software":
+                    @if (_computer.Softwares.Count == 0)
+                    {
+                        <div class="glpi-config-placeholder">
+                            <i class="ti ti-apps-off"></i>
+                            <p class="mb-0">Aucun logiciel remonté.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="glpi-fiche-block">
+                            <div class="glpi-fiche-block-title"><i class="ti ti-apps"></i>Logiciels installés (@_computer.Softwares.Count)</div>
+                            <div class="table-responsive">
+                                <table class="table table-vcenter card-table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Nom</th>
+                                            <th>Version</th>
+                                            <th>Éditeur</th>
+                                            <th>Date d'installation</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (ComputerSoftware software in _computer.Softwares.OrderBy(s => s.Name))
+                                        {
+                                            <tr>
+                                                <td>@software.Name</td>
+                                                <td>@(software.Version ?? "—")</td>
+                                                <td>@(software.Publisher ?? "—")</td>
+                                                <td>@(software.InstallDate ?? "—")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    }
+                    break;
+
+                case "volumes":
+                    @if (_computer.Volumes.Count == 0)
+                    {
+                        <div class="glpi-config-placeholder">
+                            <i class="ti ti-server-off"></i>
+                            <p class="mb-0">Aucun volume remonté.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="glpi-fiche-block">
+                            <div class="glpi-fiche-block-title"><i class="ti ti-server-2"></i>Volumes (@_computer.Volumes.Count)</div>
+                            <div class="table-responsive">
+                                <table class="table table-vcenter card-table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Nom</th>
+                                            <th>Inventaire automatique</th>
+                                            <th>Partition</th>
+                                            <th>Point de montage</th>
+                                            <th>Système de fichier</th>
+                                            <th>Taille totale</th>
+                                            <th>Espace disponible</th>
+                                            <th>Taux d'utilisation</th>
+                                            <th>Chiffrement</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (ComputerVolume volume in _computer.Volumes)
+                                        {
+                                            <tr>
+                                                <td>@volume.Name</td>
+                                                <td>Oui</td>
+                                                <td>@(volume.Partition ?? "—")</td>
+                                                <td>@(volume.MountPoint ?? "—")</td>
+                                                <td>@(volume.FileSystem ?? "—")</td>
+                                                <td>@SizeLabel(volume.TotalSizeMb)</td>
+                                                <td>@SizeLabel(volume.FreeSizeMb)</td>
+                                                <td>
+                                                    @if (UsagePercent(volume) is { } percent)
+                                                    {
+                                                        <div class="glpi-usage-bar">
+                                                            <div class="glpi-usage-bar-fill" style="width: @(percent)%"></div>
+                                                            <span>@percent %</span>
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span>—</span>
+                                                    }
+                                                </td>
+                                                <td>@(volume.Encryption ?? "—")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    }
+                    break;
+
+                case "connections":
+                    @if (_computer.Peripherals.Count == 0)
+                    {
+                        <div class="glpi-config-placeholder">
+                            <i class="ti ti-device-tv-off"></i>
+                            <p class="mb-0">Aucun périphérique connecté remonté.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var group in PeripheralGroups(_computer))
                         {
-                            @foreach (ComputerComponent component in _computer.Components)
-                            {
-                                <tr>
-                                    <td>@ComponentTypeLabel(component.Type)</td>
-                                    <td>@component.Designation</td>
-                                    <td>@(component.Capacity ?? "—")</td>
-                                    <td>@(component.Serial ?? "—")</td>
-                                </tr>
-                            }
+                            <div class="glpi-fiche-block">
+                                <div class="glpi-fiche-block-title">
+                                    <i class="ti @PeripheralKindIcon(group.Key)"></i>@PeripheralKindLabel(group.Key) (@group.Count())
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-vcenter card-table mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Désignation</th>
+                                                <th>Fabricant</th>
+                                                <th>Numéro de série</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (ComputerPeripheral peripheral in group)
+                                            {
+                                                <tr>
+                                                    <td>@peripheral.Designation</td>
+                                                    <td>@(peripheral.Manufacturer ?? "—")</td>
+                                                    <td>@(peripheral.Serial ?? "—")</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         }
-                    </tbody>
-                </table>
-            </div>
+                    }
+                    break;
+
+                case "networkports":
+                    @if (_computer.NetworkPorts.Count == 0)
+                    {
+                        <div class="glpi-config-placeholder">
+                            <i class="ti ti-network-off"></i>
+                            <p class="mb-0">Aucun port réseau remonté.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="glpi-fiche-block">
+                            <div class="glpi-fiche-block-title"><i class="ti ti-network"></i>Ports réseau (@_computer.NetworkPorts.Count)</div>
+                            <div class="table-responsive">
+                                <table class="table table-vcenter card-table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Nom</th>
+                                            <th>Type</th>
+                                            <th>Adresse MAC</th>
+                                            <th>Adresse IP</th>
+                                            <th>Masque</th>
+                                            <th>Passerelle</th>
+                                            <th>Sous-réseau</th>
+                                            <th>DHCP</th>
+                                            <th>MTU</th>
+                                            <th>Vitesse</th>
+                                            <th>Statut</th>
+                                            <th>Virtuel</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (ComputerNetworkPort port in _computer.NetworkPorts)
+                                        {
+                                            <tr>
+                                                <td>@port.Designation</td>
+                                                <td>@(port.Type ?? "—")</td>
+                                                <td>@(port.MacAddress ?? "—")</td>
+                                                <td>@(port.IpAddress ?? "—")</td>
+                                                <td>@(port.IpMask ?? "—")</td>
+                                                <td>@(port.IpGateway ?? "—")</td>
+                                                <td>@(port.IpSubnet ?? "—")</td>
+                                                <td>@DhcpLabel(port.IpDhcp)</td>
+                                                <td>@(port.Mtu?.ToString() ?? "—")</td>
+                                                <td>@SpeedLabel(port.SpeedMbps)</td>
+                                                <td>@(port.Status ?? "—")</td>
+                                                <td>@(port.IsVirtual ? "Oui" : "Non")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    }
+                    break;
+
+                default:
+                    var current = _tabs.First(t => t.Key == _activeTabKey);
+                    <div class="glpi-config-placeholder">
+                        <i class="ti @current.Icon"></i>
+                        <p class="mb-0">L'onglet « @current.Label » n'est pas encore disponible.</p>
+                    </div>
+                    break;
+            }
         </div>
-    }
+    </div>
 }

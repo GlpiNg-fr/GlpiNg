@@ -3,7 +3,7 @@
 @inject AppSettingsFileStore SettingsStore
 @inject ConfigHistoryService History
 
-@if (_model is null)
+@if (_model is null || _server is null)
 {
     <p>Chargement…</p>
 }
@@ -12,32 +12,53 @@ else
     <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glpi-config-form">
         <div class="glpi-config-field checkbox">
             <label for="api-hlapi">Activer l'API</label>
-            <input id="api-hlapi" type="checkbox" @bind="_model.EnableHighLevelApi" />
+            <label class="glpi-switch">
+                <input id="api-hlapi" type="checkbox" @bind="_model.EnableHighLevelApi" />
+                <span class="glpi-switch-slider"></span>
+            </label>
         </div>
 
         <div class="glpi-config-field checkbox">
             <label for="api-legacy">Activer l'API REST legacy</label>
-            <input id="api-legacy" type="checkbox" @bind="_model.EnableLegacyRestApi" />
+            <label class="glpi-switch">
+                <input id="api-legacy" type="checkbox" @bind="_model.EnableLegacyRestApi" />
+                <span class="glpi-switch-slider"></span>
+            </label>
         </div>
+
+        <div class="glpi-config-field checkbox">
+            <label for="swagger">Activer Swagger (/swagger)</label>
+            <label class="glpi-switch">
+                <input id="swagger" type="checkbox" @bind="_server.SwaggerEnabled" />
+                <span class="glpi-switch-slider"></span>
+            </label>
+        </div>
+        <p class="hint">Pris en compte immédiatement, sans redémarrage.</p>
 
         <div class="glpi-config-field">
             <label for="api-url">URL de l'API</label>
             <input id="api-url" @bind="_model.LegacyApiUrl" />
         </div>
         <p class="hint">
-            GlpiNg expose déjà sa propre API REST (voir <code>/swagger</code>, activable dans
-            l'onglet Système) : ces réglages ne font que documenter des équivalents GLPI, ils ne
-            pilotent pas encore ce endpoint.
+            GlpiNg expose déjà sa propre API REST (voir <code>/swagger</code> ci-dessus) : ces
+            réglages ne font que documenter des équivalents GLPI, ils ne pilotent pas encore ce
+            endpoint.
         </p>
 
         <div class="glpi-config-field checkbox">
             <label for="api-login-creds">Activer la connexion avec identifiants</label>
-            <input id="api-login-creds" type="checkbox" @bind="_model.EnableLoginWithCredentials" />
+            <label class="glpi-switch">
+                <input id="api-login-creds" type="checkbox" @bind="_model.EnableLoginWithCredentials" />
+                <span class="glpi-switch-slider"></span>
+            </label>
         </div>
 
         <div class="glpi-config-field checkbox">
             <label for="api-login-token">Activer la connexion avec un jeton externe</label>
-            <input id="api-login-token" type="checkbox" @bind="_model.EnableLoginWithExternalToken" />
+            <label class="glpi-switch">
+                <input id="api-login-token" type="checkbox" @bind="_model.EnableLoginWithExternalToken" />
+                <span class="glpi-switch-slider"></span>
+            </label>
         </div>
 
         @if (_statusMessage is not null)
@@ -53,17 +74,19 @@ else
     private const string SectionName = "ApiSettings";
 
     private ApiSettings? _model;
+    private ServerSettings? _server;
     private bool _isSaving;
     private string? _statusMessage;
 
     protected override async Task OnInitializedAsync()
     {
         _model = await SettingsStore.ReadSectionAsync<ApiSettings>(SectionName);
+        _server = await SettingsStore.ReadAsync();
     }
 
     private async Task SaveAsync()
     {
-        if (_model is null)
+        if (_model is null || _server is null)
         {
             return;
         }
@@ -75,6 +98,7 @@ else
         {
             var before = await SettingsStore.ReadSectionAsync<ApiSettings>(SectionName);
             await SettingsStore.SaveSectionAsync(SectionName, _model);
+            await SettingsStore.SaveAsync(_server);
             await History.AppendAsync("Administrateur", SettingsDiff.Compare(before, _model));
             _statusMessage = "Configuration enregistrée.";
         }

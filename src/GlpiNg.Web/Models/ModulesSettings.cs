@@ -9,8 +9,18 @@ namespace GlpiNg.Web.Models;
 /// </summary>
 public class ModulesSettings
 {
+    private const string ModuleMasterLabel = "__module__";
+
     public Dictionary<string, bool> Enabled { get; set; } = [];
 
     public bool IsEnabled(string groupKey, string label) =>
         !Enabled.TryGetValue($"{groupKey}:{label}", out var value) || value;
+
+    /// <summary>
+    /// État du switch maître d'un groupe (ex. "Module Inventaire" dans <see cref="Components.Pages.ConfigSections.ParcSection"/>),
+    /// distinct des toggles individuels par libellé. Un groupe absent du dictionnaire est considéré actif.
+    /// </summary>
+    public bool IsModuleEnabled(string groupKey) => IsEnabled(groupKey, ModuleMasterLabel);
+
+    public void SetModuleEnabled(string groupKey, bool enabled) => Enabled[$"{groupKey}:{ModuleMasterLabel}"] = enabled;
 }

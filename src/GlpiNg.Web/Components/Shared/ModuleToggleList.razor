@@ -4,13 +4,13 @@
     @foreach (var item in Items)
     {
         var enabled = Modules.IsEnabled(GroupKey, item.Label);
-        <div class="glpi-module-toggle-item @(enabled ? "" : "disabled")">
+        <div class="glpi-module-toggle-item @(enabled && !Disabled ? "" : "disabled")">
             <span class="glpi-module-toggle-label">
                 <i class="ti @item.Icon"></i>
                 <span>@item.Label</span>
             </span>
             <label class="glpi-switch">
-                <input type="checkbox" checked="@enabled" @onchange="e => OnToggle.InvokeAsync((item.Label, (bool)e.Value!))" />
+                <input type="checkbox" checked="@enabled" disabled="@Disabled" @onchange="e => OnToggle.InvokeAsync((item.Label, (bool)e.Value!))" />
                 <span class="glpi-switch-slider"></span>
             </label>
         </div>
@@ -29,4 +29,7 @@
 
     [Parameter]
     public EventCallback<(string Label, bool Enabled)> OnToggle { get; set; }
+
+    [Parameter]
+    public bool Disabled { get; set; }
 }

@@ -7,28 +7,90 @@ namespace GlpiNg.Web.Components.Pages.Computers;
 
 public partial class Detail : ComponentBase
 {
-    private enum Tab { General, Components }
+    private sealed record FicheTab(string Key, string Icon, string Label, int? Count);
 
     [Parameter]
     public int ComputerId { get; set; }
 
     [Inject]
-    private GlpiNgDbContext Db { get; set; } = null!;
+    private IDbContextFactory<GlpiNgDbContext> DbFactory { get; set; } = null!;
 
     private Computer? _computer;
-    private Tab _activeTab = Tab.General;
+    private List<FicheTab> _tabs = [];
+    private string _activeTabKey = "computer";
+    private int _position;
+    private int _total;
+    private int? _previousId;
+    private int? _nextId;
 
     protected override async Task OnInitializedAsync()
     {
-        _computer = await Db.Computers
+        await using GlpiNgDbContext db = await DbFactory.CreateDbContextAsync();
+
+        _computer = await db.Computers
             .AsNoTracking()
             .Include(computer => computer.Components)
+            .Include(computer => computer.Softwares)
+            .Include(computer => computer.Peripherals)
+            .Include(computer => computer.Volumes)
+            .Include(computer => computer.Batteries)
+            .Include(computer => computer.NetworkPorts)
+            .Include(computer => computer.Agent)
             .FirstOrDefaultAsync(computer => computer.Id == ComputerId);
+
+        if (_computer is null)
+        {
+            return;
+        }
+
+        _tabs = BuildTabs(_computer);
+
+        List<int> ids = await db.Computers.AsNoTracking().OrderBy(c => c.Id).Select(c => c.Id).ToListAsync();
+        int index = ids.IndexOf(ComputerId);
+        _position = index + 1;
+        _total = ids.Count;
+        _previousId = index > 0 ? ids[index - 1] : null;
+        _nextId = index >= 0 && index < ids.Count - 1 ? ids[index + 1] : null;
     }
 
-    private void SetTab(Tab tab)
+    // Reprend la liste et l'ordre des onglets de la fiche "Ordinateur" de GLPI. Seuls
+    // "computer", "os", "components", "batteries", "volumes", "software" et "connections"
+    // ont un contenu réel pour l'instant (voir le @switch de Detail.razor) ; les autres
+    // affichent un placeholder en attendant d'être alimentés au fur et à mesure des besoins.
+    private static List<FicheTab> BuildTabs(Computer computer) =>
+    [
+        new("computer", "ti-device-desktop", "Ordinateur", null),
+        new("os", "ti-settings-cog", "Systèmes d'exploitation", computer.OperatingSystem is null ? 0 : 1),
+        new("components", "ti-cpu", "Composants", computer.Components.Count),
+        new("batteries", "ti-battery", "Batteries", computer.Batteries.Count),
+        new("volumes", "ti-server-2", "Volumes", computer.Volumes.Count),
+        new("software", "ti-apps", "Logiciels", computer.Softwares.Count),
+        new("connections", "ti-plug-connected", "Connexions", computer.Peripherals.Count),
+        new("networkports", "ti-network", "Ports réseau", computer.NetworkPorts.Count),
+        new("connectors", "ti-usb", "Connecteurs", null),
+        new("remotecontrol", "ti-device-desktop-share", "Contrôle à distance", null),
+        new("antivirus", "ti-shield-check", "Antivirus", null),
+        new("locks", "ti-lock", "Verrous", null),
+        new("domains", "ti-world-www", "Domaines", null),
+        new("importinfo", "ti-file-import", "Informations d'import", null),
+        new("history", "ti-history", "Historique", null),
+        new("tasks", "ti-checklist", "Tâches / groupes", null),
+        new("collectinfo", "ti-cloud-upload", "Informations de collecte", null),
+        new("deploy", "ti-package", "Déploiement de package", null),
+        new("all", "ti-list", "Tous", null),
+    ];
+
+    private void SetTab(string key)
     {
-        _activeTab = tab;
+        _activeTabKey = key;
+    }
+
+    private static string? LocationLabel(Computer computer)
+    {
+        var parts = new[] { computer.Site, computer.Building, computer.Room }
+            .Where(part => !string.IsNullOrWhiteSpace(part));
+        var label = string.Join(" > ", parts);
+        return label.Length > 0 ? label : null;
     }
 
     private static string LastInventoryLabel(Computer computer)
@@ -56,14 +118,92 @@ public partial class Detail : ComponentBase
         _ => "bg-secondary"
     };
 
+    private static IEnumerable<IGrouping<ComponentType, ComputerComponent>> ComponentGroups(Computer computer)
+    {
+        return computer.Components
+            .GroupBy(component => component.Type)
+            .OrderBy(group => (int)group.Key);
+    }
+
     private static string ComponentTypeLabel(ComponentType type) => type switch
     {
-        ComponentType.Cpu => "Processeur",
+        ComponentType.Cpu => "Processeurs",
         ComponentType.Ram => "Mémoire",
-        ComponentType.Disk => "Disque",
-        ComponentType.NetworkCard => "Carte réseau",
-        ComponentType.Gpu => "Carte graphique",
-        ComponentType.Motherboard => "Carte mère",
+        ComponentType.Disk => "Disques durs",
+        ComponentType.NetworkCard => "Cartes réseau",
+        ComponentType.Gpu => "Cartes graphiques",
+        ComponentType.Motherboard => "Cartes mères",
         _ => type.ToString()
+    };
+
+    private static string ComponentTypeIcon(ComponentType type) => type switch
+    {
+        ComponentType.Cpu => "ti-cpu",
+        ComponentType.Ram => "ti-dimensions",
+        ComponentType.Disk => "ti-device-floppy",
+        ComponentType.NetworkCard => "ti-network",
+        ComponentType.Gpu => "ti-device-gamepad",
+        ComponentType.Motherboard => "ti-circuit-board",
+        _ => "ti-puzzle"
+    };
+
+    private static IEnumerable<IGrouping<PeripheralKind, ComputerPeripheral>> PeripheralGroups(Computer computer)
+    {
+        return computer.Peripherals
+            .GroupBy(peripheral => peripheral.Kind)
+            .OrderBy(group => (int)group.Key);
+    }
+
+    private static string PeripheralKindLabel(PeripheralKind kind) => kind switch
+    {
+        PeripheralKind.Monitor => "Écrans",
+        PeripheralKind.Printer => "Imprimantes",
+        PeripheralKind.Other => "Autres périphériques",
+        _ => kind.ToString()
+    };
+
+    private static string PeripheralKindIcon(PeripheralKind kind) => kind switch
+    {
+        PeripheralKind.Monitor => "ti-device-tv",
+        PeripheralKind.Printer => "ti-printer",
+        PeripheralKind.Other => "ti-device-usb",
+        _ => "ti-device-tv"
+    };
+
+    private static string SizeLabel(long? sizeMb) => sizeMb switch
+    {
+        null => "—",
+        >= 1024 => $"{sizeMb.Value / 1024.0:0.##} Gio",
+        _ => $"{sizeMb} Mio"
+    };
+
+    private static int? UsagePercent(ComputerVolume volume)
+    {
+        if (volume.TotalSizeMb is not { } total || total <= 0 || volume.FreeSizeMb is not { } free)
+        {
+            return null;
+        }
+
+        long used = Math.Max(0, total - free);
+        return (int)Math.Round(used * 100.0 / total);
+    }
+
+    private static string VoltageLabel(int? voltageMv) => voltageMv is { } mv ? $"{mv / 1000.0:0.##} V" : "—";
+
+    private static string CapacityLabel(int? capacityMwh) => capacityMwh is { } mwh ? $"{mwh} mWh" : "—";
+
+    private static string DhcpLabel(string? ipDhcp) => ipDhcp switch
+    {
+        null or "" => "—",
+        "1" or "yes" or "true" => "Oui",
+        "0" or "no" or "false" => "Non",
+        _ => ipDhcp
+    };
+
+    private static string SpeedLabel(int? speedMbps) => speedMbps switch
+    {
+        null => "—",
+        >= 1000 => $"{speedMbps.Value / 1000.0:0.##} Gb/s",
+        _ => $"{speedMbps} Mb/s"
     };
 }

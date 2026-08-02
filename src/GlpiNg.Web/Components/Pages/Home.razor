@@ -3,8 +3,35 @@
 
 <PageTitle>GlpiNg — Tableau de bord</PageTitle>
 
-<div class="page-header d-flex align-items-center justify-content-between mb-3">
+<div class="page-header glpi-dashboard-header mb-3">
     <h2 class="page-title mb-0">Tableau de bord</h2>
+    <div class="glpi-dashboard-header-actions">
+        @if (_isEditMode)
+        {
+            <select class="form-select w-auto" disabled="@(AvailableCards.Count == 0)" @bind="_selectedCardKeyToAdd">
+                @if (AvailableCards.Count == 0)
+                {
+                    <option value="">Aucune carte disponible</option>
+                }
+                else
+                {
+                    <option value="">Ajouter une carte...</option>
+                    @foreach (var card in AvailableCards)
+                    {
+                        <option value="@card.Key">@card.Title</option>
+                    }
+                }
+            </select>
+            <button type="button" class="btn btn-outline-primary" disabled="@string.IsNullOrEmpty(_selectedCardKeyToAdd)" @onclick="AddSelectedCard">
+                <i class="ti ti-plus"></i> Ajouter
+            </button>
+        }
+        <button type="button" class="btn btn-icon @(_isEditMode ? "btn-primary" : "btn-outline-secondary")"
+                title="@(_isEditMode ? "Terminer l'édition" : "Modifier les cartes")"
+                @onclick="ToggleEditMode">
+            <i class="ti @(_isEditMode ? "ti-check" : "ti-pencil")"></i>
+        </button>
+    </div>
 </div>
 
 <div class="row row-cards">
@@ -12,23 +39,36 @@
     {
         var index = i;
         var card = _cards[i];
-        <div class="col-sm-6 col-lg-3">
+        <div class="glpi-dashboard-card-col">
             <div class="card glpi-dashboard-card @(_draggedIndex == index ? "dragging" : "")"
-                 draggable="true"
+                 draggable="@_isEditMode"
                  @ondragstart="() => OnCardDragStart(index)"
                  @ondragend="OnCardDragEnd"
                  @ondragover:preventDefault="true"
                  @ondrop="() => OnCardDrop(index)">
                 <div class="card-body">
+                    @if (!_isEditMode)
+                    {
+                        <a href="@card.Href" class="stretched-link" aria-label="@card.Title"></a>
+                    }
                     <div class="d-flex align-items-center">
-                        <span class="glpi-dashboard-drag-handle" title="Glisser pour réorganiser">
-                            <i class="ti ti-grip-vertical"></i>
-                        </span>
+                        @if (_isEditMode)
+                        {
+                            <span class="glpi-dashboard-drag-handle" title="Glisser pour réorganiser">
+                                <i class="ti ti-grip-vertical"></i>
+                            </span>
+                        }
                         <span class="@card.BadgeClass text-white avatar me-3"><i class="ti @card.Icon"></i></span>
-                        <div>
+                        <div class="flex-fill">
                             <div class="text-secondary">@card.Title</div>
                             <div class="h2 mb-0">@card.Value</div>
                         </div>
+                        @if (_isEditMode)
+                        {
+                            <button type="button" class="btn btn-icon btn-ghost-danger" title="Supprimer la carte" @onclick="() => RemoveCard(index)">
+                                <i class="ti ti-x"></i>
+                            </button>
+                        }
                     </div>
                 </div>
             </div>
