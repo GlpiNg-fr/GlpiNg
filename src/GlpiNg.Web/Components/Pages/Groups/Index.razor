@@ -1,4 +1,4 @@
-@page "/groups"
+@page "/admin/groups"
 @using GlpiNg.Web.Models
 @rendermode InteractiveServer
 
@@ -84,7 +84,7 @@
                                        @onchange="@((ChangeEventArgs e) => ToggleSelect(group.Id, (bool)(e.Value ?? false)))" />
                             </td>
                             <td>
-                                <a href="@($"/groups/{group.Id}")" class="text-reset fw-semibold">
+                                <a href="@($"/admin/groups/{group.Id}")" class="text-reset fw-semibold">
                                     <i class="ti ti-users me-1 text-secondary"></i>@FullName(group)
                                 </a>
                             </td>

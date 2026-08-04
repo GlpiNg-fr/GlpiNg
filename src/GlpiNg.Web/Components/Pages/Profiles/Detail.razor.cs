@@ -1,3 +1,4 @@
+using BlazorBootstrap;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
 using Microsoft.AspNetCore.Components;
@@ -28,6 +29,9 @@ public partial class Detail : ComponentBase, IAsyncDisposable
     [Inject]
     private NavigationManager Nav { get; set; } = null!;
 
+    [Inject]
+    private ToastService ToastService { get; set; } = null!;
+
     [CascadingParameter]
     private Task<AuthenticationState>? AuthStateTask { get; set; }
 
@@ -39,7 +43,6 @@ public partial class Detail : ComponentBase, IAsyncDisposable
     private List<GlpiProfileHistoryEntry> _historyEntries = [];
     private List<FicheTab> _tabs = [];
     private string _activeTabKey = "profil";
-    private string? _statusMessage;
     private bool _isSaving;
     private int _userIdToAssign;
     private int _entityIdToAssign;
@@ -176,7 +179,6 @@ public partial class Detail : ComponentBase, IAsyncDisposable
         }
 
         _isSaving = true;
-        _statusMessage = null;
 
         try
         {
@@ -201,7 +203,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
             _beforeEdit = after;
             await ReloadReferenceDataAsync();
             RebuildTabs();
-            _statusMessage = "Profil enregistré.";
+            ToastService.Notify(new ToastMessage(ToastType.Success, "Profil enregistré."));
         }
         finally
         {
@@ -218,14 +220,14 @@ public partial class Detail : ComponentBase, IAsyncDisposable
 
         if (_profileHabilitations.Count > 0)
         {
-            _statusMessage = "Impossible de supprimer un profil auquel des utilisateurs sont rattachés : détachez-les d'abord.";
+            ToastService.Notify(new ToastMessage(ToastType.Danger, "Impossible de supprimer un profil auquel des utilisateurs sont rattachés : détachez-les d'abord."));
             return;
         }
 
         _db.Profiles.Remove(_profile);
         await _db.SaveChangesAsync();
 
-        Nav.NavigateTo("/profiles");
+        Nav.NavigateTo("/admin/profiles");
     }
 
     private async Task AddHabilitationAsync()

@@ -31,14 +31,6 @@
                 }
             </ul>
 
-            @if (_error is not null)
-            {
-                <div class="glpi-login-error">
-                    <i class="ti ti-alert-circle"></i>
-                    <span>@_error</span>
-                </div>
-            }
-
             <button type="button" class="glpi-login-submit" disabled="@_applying" @onclick="ApplyAsync">
                 @(_applying ? "Application en cours..." : "Confirmer la mise à niveau")
             </button>

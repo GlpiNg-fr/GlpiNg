@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using GlpiNg.Modules.Inventory.Models;
 using GlpiNg.Web.Data;
+using GlpiNg.Web.Models;
 using GlpiNg.Web.Models.Agent;
 using GlpiNg.Web.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -37,6 +38,7 @@ public class AgentController(
     InventoryImportService inventoryImport,
     DeployJobJsonBuilder deployJobJsonBuilder,
     IConfiguration configuration,
+    AppSettingsFileStore settingsStore,
     ILogger<AgentController> logger) : ControllerBase
 {
     private const string AgentIdHeader = "GLPI-Agent-ID";
@@ -66,7 +68,7 @@ public class AgentController(
             || trimmedBody.StartsWith("<REQUEST", StringComparison.OrdinalIgnoreCase))
         {
             logger.LogInformation("glpi-agent: PROLOG XML historique reçu, réponse JSON pour basculer l'agent sur le protocole natif.");
-            return Ok(new ProtocolAnswer { Status = "ok", Expiration = "1d" });
+            return Ok(new ProtocolAnswer { Status = "ok", Expiration = await GetExpirationAsync(cancellationToken) });
         }
 
         // Le header GLPI-Agent-ID est l'identité réelle et stable de l'agent (protocole COMMON).
@@ -195,7 +197,7 @@ public class AgentController(
         var answer = new ContactAnswer
         {
             Status = "ok",
-            Expiration = "1d",
+            Expiration = await GetExpirationAsync(cancellationToken),
             Jobs = pendingDeployJobs.Count > 0
                 ? new Dictionary<string, List<DeployJobRef>> { ["deploy"] = pendingDeployJobs }
                 : null
@@ -223,6 +225,19 @@ public class AgentController(
             return BadRequest(new ProtocolAnswer { Status = "error", Message = "bad-format" });
         }
 
+        // Réglage "Activer l'inventaire" de /admin/inventory : on répond quand même
+        // "ok" (comme GLPI) pour ne pas déclencher de boucle de re-essai côté agent, mais sans
+        // toucher aux ordinateurs.
+        InventorySettings inventorySettings =
+            await settingsStore.ReadSectionAsync<InventorySettings>("InventorySettings", cancellationToken);
+        string expiration = FormatExpiration(inventorySettings.InventoryFrequencyHours);
+
+        if (!inventorySettings.Enabled)
+        {
+            logger.LogInformation("glpi-agent: inventaire désactivé dans /admin/inventory, requête ignorée pour l'agent {AgentUuid}.", agentUuid);
+            return Ok(new ProtocolAnswer { Status = "ok", Expiration = expiration });
+        }
+
         GlpiAgent? agent = await db.Agents.FirstOrDefaultAsync(a => a.AgentUuid == agentUuid, cancellationToken);
         if (agent is null)
         {
@@ -234,7 +249,7 @@ public class AgentController(
 
         await inventoryImport.ImportAsync(agent, inventoryRequest.Content, cancellationToken);
 
-        return Ok(new ProtocolAnswer { Status = "ok", Expiration = "1d" });
+        return Ok(new ProtocolAnswer { Status = "ok", Expiration = expiration });
     }
 
     private async Task<IActionResult> HandleGetJobsAsync(string agentUuid, CancellationToken cancellationToken)
@@ -302,6 +317,20 @@ public class AgentController(
         await db.SaveChangesAsync(cancellationToken);
         return Ok(new ProtocolAnswer { Status = "ok" });
     }
+
+    /// <summary>
+    /// Le réglage "Fréquence de l'inventaire (en heures)" de /admin/inventory pilote la
+    /// valeur "expiration" du protocole COMMON, qui indique à l'agent GLPI son délai avant
+    /// prochain contact (ex. "24h") — c'est le seul mécanisme du protocole qui exprime cette
+    /// fréquence côté serveur.
+    /// </summary>
+    private async Task<string> GetExpirationAsync(CancellationToken cancellationToken)
+    {
+        InventorySettings settings = await settingsStore.ReadSectionAsync<InventorySettings>("InventorySettings", cancellationToken);
+        return FormatExpiration(settings.InventoryFrequencyHours);
+    }
+
+    private static string FormatExpiration(int hours) => $"{Math.Max(hours, 1)}h";
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 

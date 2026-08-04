@@ -75,25 +75,27 @@
                         </div>
                     }
                     <div class="glpi-nav-flyout">
-                        <div class="glpi-nav-flyout-header">@group.Label</div>
-                        <div class="glpi-nav-flyout-items">
-                            @foreach (var item in FilteredItems(group))
-                            {
-                                if (item.Href is not null)
+                        <div class="glpi-nav-flyout-panel">
+                            <div class="glpi-nav-flyout-header">@group.Label</div>
+                            <div class="glpi-nav-flyout-items">
+                                @foreach (var item in FilteredItems(group))
                                 {
-                                    <NavLink href="@item.Href" Match="@(item.Href == "/" ? NavLinkMatch.All : NavLinkMatch.Prefix)" class="glpi-nav-subitem">
-                                        <i class="ti @(item.Icon ?? "ti-point")"></i>
-                                        <span>@item.Label</span>
-                                    </NavLink>
+                                    if (item.Href is not null)
+                                    {
+                                        <NavLink href="@item.Href" Match="@(item.Href == "/" ? NavLinkMatch.All : NavLinkMatch.Prefix)" class="glpi-nav-subitem">
+                                            <i class="ti @(item.Icon ?? "ti-point")"></i>
+                                            <span>@item.Label</span>
+                                        </NavLink>
+                                    }
+                                    else
+                                    {
+                                        <span class="glpi-nav-subitem disabled" title="Pas encore disponible">
+                                            <i class="ti @(item.Icon ?? "ti-point")"></i>
+                                            <span>@item.Label</span>
+                                        </span>
+                                    }
                                 }
-                                else
-                                {
-                                    <span class="glpi-nav-subitem disabled" title="Pas encore disponible">
-                                        <i class="ti @(item.Icon ?? "ti-point")"></i>
-                                        <span>@item.Label</span>
-                                    </span>
-                                }
-                            }
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -172,6 +174,8 @@
     </div>
 </div>
 
+<Toasts class="p-3" Placement="ToastsPlacement.TopRight" />
+
 @code {
     private sealed record NavItem(string Label, string? Href = null, string? Icon = null);
     private sealed record NavGroup(string Key, string Icon, string Label, List<NavItem> Items);
@@ -215,15 +219,14 @@
         ]),
         new("administration", "ti-shield", "Administration",
         [
-            new("Utilisateurs", "/users", "ti-user"),
-            new("Groupes", "/groups", "ti-users"),
-            new("Entités", "/entities", "ti-sitemap"),
+            new("Utilisateurs", "/admin/users", "ti-user"),
+            new("Groupes", "/admin/groups", "ti-users"),
+            new("Entités", "/admin/entities", "ti-sitemap"),
             new("Règles", Icon: "ti-adjustments"),
             new("Dictionnaires", Icon: "ti-book-2"),
-            new("Profils", "/profiles", "ti-id-badge"),
+            new("Profils", "/admin/profiles", "ti-id-badge"),
             new("File d'attente des notifications", Icon: "ti-bell"),
             new("Journaux", Icon: "ti-history"),
-            new("Inventaire", Icon: "ti-clipboard-list"),
             new("Formulaires", Icon: "ti-forms"),
             new("GLPI Inventory", Icon: "ti-cloud-upload"),
         ]),
@@ -238,8 +241,8 @@
             new("Niveaux de services", Icon: "ti-clipboard-check"),
             new("Unicité des champs", Icon: "ti-fingerprint"),
             new("Actions automatiques", Icon: "ti-robot"),
-            new("Authentification", "/authentication", "ti-key"),
-            new("Clients OAuth", "/oauth-clients", "ti-lock-access"),
+            new("Authentification", "/config/auth", "ti-key"),
+            new("Clients OAuth", "/config/oauth-clients", "ti-lock-access"),
             new("Collecteurs", Icon: "ti-mail"),
             new("Liens externes", Icon: "ti-external-link"),
             new("Plugins", Icon: "ti-plug"),
@@ -414,45 +417,49 @@
             ("ti-home", "Accueil", "/")
         };
 
-        if (path.StartsWith("computers", StringComparison.OrdinalIgnoreCase))
+        if (path.StartsWith("parc/computer", StringComparison.OrdinalIgnoreCase))
         {
-            items.Add(("ti-device-desktop", "Ordinateurs", "/computers"));
+            items.Add(("ti-device-desktop", "Ordinateurs", "/parc/computer"));
         }
-        else if (path.StartsWith("software", StringComparison.OrdinalIgnoreCase))
+        else if (path.StartsWith("parc/software", StringComparison.OrdinalIgnoreCase))
         {
-            items.Add(("ti-apps", "Logiciels", "/software"));
+            items.Add(("ti-apps", "Logiciels", "/parc/software"));
         }
-        else if (path.StartsWith("monitors", StringComparison.OrdinalIgnoreCase))
+        else if (path.StartsWith("parc/monitors", StringComparison.OrdinalIgnoreCase))
         {
-            items.Add(("ti-device-tv", "Moniteurs", "/monitors"));
+            items.Add(("ti-device-tv", "Moniteurs", "/parc/monitors"));
         }
-        else if (path.StartsWith("agents", StringComparison.OrdinalIgnoreCase))
+        else if (path.StartsWith("parc/peripherals", StringComparison.OrdinalIgnoreCase))
         {
-            items.Add(("ti-cpu", "Agents", "/agents"));
+            items.Add(("ti-mouse", "Périphériques", "/parc/peripherals"));
         }
-        else if (path.StartsWith("groups", StringComparison.OrdinalIgnoreCase))
+        else if (path.StartsWith("tools/agents", StringComparison.OrdinalIgnoreCase))
         {
-            items.Add(("ti-users", "Groupes", "/groups"));
+            items.Add(("ti-cpu", "Agents", "/tools/agents"));
         }
-        else if (path.StartsWith("users", StringComparison.OrdinalIgnoreCase))
+        else if (path.StartsWith("admin/groups", StringComparison.OrdinalIgnoreCase))
         {
-            items.Add(("ti-user", "Utilisateurs", "/users"));
+            items.Add(("ti-users", "Groupes", "/admin/groups"));
+        }
+        else if (path.StartsWith("admin/users", StringComparison.OrdinalIgnoreCase))
+        {
+            items.Add(("ti-user", "Utilisateurs", "/admin/users"));
         }
         else if (path.StartsWith("deployments", StringComparison.OrdinalIgnoreCase))
         {
             items.Add(("ti-package", "Déploiements", "/deployments"));
         }
+        else if (path.StartsWith("config/auth", StringComparison.OrdinalIgnoreCase))
+        {
+            items.Add(("ti-key", "Authentification", "/config/auth"));
+        }
+        else if (path.StartsWith("config/oauth-clients", StringComparison.OrdinalIgnoreCase))
+        {
+            items.Add(("ti-lock-access", "Clients OAuth", "/config/oauth-clients"));
+        }
         else if (path.StartsWith("config", StringComparison.OrdinalIgnoreCase))
         {
             items.Add(("ti-settings", "Configuration", "/config"));
-        }
-        else if (path.StartsWith("authentication", StringComparison.OrdinalIgnoreCase))
-        {
-            items.Add(("ti-key", "Authentification", "/authentication"));
-        }
-        else if (path.StartsWith("oauth-clients", StringComparison.OrdinalIgnoreCase))
-        {
-            items.Add(("ti-lock-access", "Clients OAuth", "/oauth-clients"));
         }
 
         return items;

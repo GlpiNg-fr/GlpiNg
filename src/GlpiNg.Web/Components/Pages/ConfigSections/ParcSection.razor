@@ -3,6 +3,7 @@
 @using GlpiNg.Web.Components.Shared
 @inject AppSettingsFileStore SettingsStore
 @inject ConfigHistoryService History
+@inject ToastService ToastService
 
 @if (_modules is null || _model is null)
 {
@@ -82,11 +83,6 @@ else
             </select>
         </div>
 
-        @if (_statusMessage is not null)
-        {
-            <p class="status">@_statusMessage</p>
-        }
-
         <button type="submit" class="glpi-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
     </EditForm>
 }
@@ -118,7 +114,6 @@ else
     private ParcSettings? _model;
     private bool _moduleEnabled = true;
     private bool _isSaving;
-    private string? _statusMessage;
 
     protected override async Task OnInitializedAsync()
     {
@@ -163,18 +158,17 @@ else
         }
 
         _isSaving = true;
-        _statusMessage = null;
 
         try
         {
             var before = await SettingsStore.ReadSectionAsync<ParcSettings>(SectionName);
             await SettingsStore.SaveSectionAsync(SectionName, _model);
             await History.AppendAsync("Administrateur", SettingsDiff.Compare(before, _model));
-            _statusMessage = "Configuration enregistrée.";
+            ToastService.Notify(new ToastMessage(ToastType.Success, "Configuration enregistrée."));
         }
         catch (IOException ex)
         {
-            _statusMessage = $"Échec de l'enregistrement : {ex.Message}";
+            ToastService.Notify(new ToastMessage(ToastType.Danger, $"Échec de l'enregistrement : {ex.Message}"));
         }
         finally
         {

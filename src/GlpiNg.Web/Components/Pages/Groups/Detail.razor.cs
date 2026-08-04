@@ -1,3 +1,4 @@
+using BlazorBootstrap;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
 using Microsoft.AspNetCore.Components;
@@ -29,6 +30,9 @@ public partial class Detail : ComponentBase, IAsyncDisposable
     [Inject]
     private NavigationManager Nav { get; set; } = null!;
 
+    [Inject]
+    private ToastService ToastService { get; set; } = null!;
+
     [CascadingParameter]
     private Task<AuthenticationState>? AuthStateTask { get; set; }
 
@@ -41,7 +45,6 @@ public partial class Detail : ComponentBase, IAsyncDisposable
     private List<GlpiGroupHistoryEntry> _historyEntries = [];
     private List<FicheTab> _tabs = [];
     private string _activeTabKey = "groupe";
-    private string? _statusMessage;
     private bool _isSaving;
     private string _newSubgroupName = string.Empty;
     private string _newNoteContent = string.Empty;
@@ -196,7 +199,6 @@ public partial class Detail : ComponentBase, IAsyncDisposable
         }
 
         _isSaving = true;
-        _statusMessage = null;
 
         try
         {
@@ -221,7 +223,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
             _beforeEdit = after;
             await ReloadReferenceDataAsync();
             RebuildTabs();
-            _statusMessage = "Groupe enregistré.";
+            ToastService.Notify(new ToastMessage(ToastType.Success, "Groupe enregistré."));
         }
         finally
         {
@@ -238,7 +240,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
 
         if (_group.Children.Count > 0)
         {
-            _statusMessage = "Impossible de supprimer un groupe qui a des sous-groupes : détachez-les d'abord.";
+            ToastService.Notify(new ToastMessage(ToastType.Danger, "Impossible de supprimer un groupe qui a des sous-groupes : détachez-les d'abord."));
             return;
         }
 
@@ -246,7 +248,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
         _db.Groups.Remove(_group);
         await _db.SaveChangesAsync();
 
-        Nav.NavigateTo("/groups");
+        Nav.NavigateTo("/admin/groups");
     }
 
     private IEnumerable<GlpiGroup> ParentCandidates()

@@ -1,3 +1,4 @@
+using BlazorBootstrap;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
 using GlpiNg.Web.Services;
@@ -14,6 +15,9 @@ public partial class Login : ComponentBase
     [Inject]
     private IDbContextFactory<GlpiNgDbContext> DbFactory { get; set; } = null!;
 
+    [Inject]
+    private ToastService ToastService { get; set; } = null!;
+
     [SupplyParameterFromQuery(Name = "error")]
     private string? Error { get; set; }
 
@@ -22,8 +26,6 @@ public partial class Login : ComponentBase
 
     private GeneralSettings? _general;
     private List<AuthLdapServer> _ldapServers = [];
-
-    private bool HasError => Error == "1";
 
     private string ReturnUrl => string.IsNullOrWhiteSpace(ReturnUrlParam) ? "/" : ReturnUrlParam;
 
@@ -40,5 +42,18 @@ public partial class Login : ComponentBase
                 .ThenBy(s => s.Name)
                 .ToListAsync();
         }
+    }
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Notify() must run after the interactive circuit is attached (not during
+        // static prerendering, when no live Toasts component/SignalR connection
+        // exists yet) so the toast is actually visible to the user.
+        if (firstRender && Error == "1")
+        {
+            ToastService.Notify(new ToastMessage(ToastType.Danger, "Nom d'utilisateur ou mot de passe incorrect."));
+        }
+
+        return Task.CompletedTask;
     }
 }

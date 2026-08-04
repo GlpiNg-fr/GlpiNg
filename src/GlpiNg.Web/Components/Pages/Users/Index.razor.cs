@@ -1,3 +1,4 @@
+using BlazorBootstrap;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
 using Microsoft.AspNetCore.Components;
@@ -18,6 +19,9 @@ public partial class Index : ComponentBase
     [Inject]
     private IJSRuntime JS { get; set; } = null!;
 
+    [Inject]
+    private ToastService ToastService { get; set; } = null!;
+
     private List<GlpiUser> _users = [];
     private List<GlpiUser> _filteredUsers = [];
     private string _searchTerm = string.Empty;
@@ -25,7 +29,6 @@ public partial class Index : ComponentBase
     private GlpiUser _newUser = NewBlankUser();
     private string _newPassword = string.Empty;
     private string _newPasswordConfirm = string.Empty;
-    private string? _createError;
 
     private bool AllSelected => _filteredUsers.Count > 0 && _selectedIds.Count == _filteredUsers.Count;
 
@@ -123,7 +126,7 @@ public partial class Index : ComponentBase
         bool alreadyExists = await db.Users.AsNoTracking().AnyAsync(u => u.UserName == _newUser.UserName);
         if (alreadyExists)
         {
-            _createError = "Cet identifiant est déjà utilisé.";
+            ToastService.Notify(new ToastMessage(ToastType.Danger, "Cet identifiant est déjà utilisé."));
             return;
         }
 
@@ -135,7 +138,6 @@ public partial class Index : ComponentBase
         _newUser = NewBlankUser();
         _newPassword = string.Empty;
         _newPasswordConfirm = string.Empty;
-        _createError = null;
 
         await JS.InvokeVoidAsync("glpiNg.hideModal", "newUserModal");
         await LoadAsync();

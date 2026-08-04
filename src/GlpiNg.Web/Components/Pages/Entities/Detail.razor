@@ -1,4 +1,4 @@
-@page "/entities/{EntityId:int}"
+@page "/admin/entities/{EntityId:int}"
 @using GlpiNg.Web.Models
 @rendermode InteractiveServer
 
@@ -25,10 +25,10 @@ else
             @if (_total > 0)
             {
                 <span class="glpi-fiche-pager-count">@_position/@_total</span>
-                <a class="glpi-fiche-pager-btn @(_previousId is null ? "disabled" : "")" href="@(_previousId is { } prevId ? $"/entities/{prevId}" : "#")">
+                <a class="glpi-fiche-pager-btn @(_previousId is null ? "disabled" : "")" href="@(_previousId is { } prevId ? $"/admin/entities/{prevId}" : "#")">
                     <i class="ti ti-chevron-left"></i>
                 </a>
-                <a class="glpi-fiche-pager-btn @(_nextId is null ? "disabled" : "")" href="@(_nextId is { } nextId ? $"/entities/{nextId}" : "#")">
+                <a class="glpi-fiche-pager-btn @(_nextId is null ? "disabled" : "")" href="@(_nextId is { } nextId ? $"/admin/entities/{nextId}" : "#")">
                     <i class="ti ti-chevron-right"></i>
                 </a>
             }
@@ -57,11 +57,6 @@ else
                     <EditForm Model="_entity" OnValidSubmit="SaveAsync">
                         <EntityFormFields Entity="_entity" ParentCandidates="ParentCandidates().ToList()" FullNameOf="FullName" />
 
-                        @if (_statusMessage is not null)
-                        {
-                            <p class="status mt-2">@_statusMessage</p>
-                        }
-
                         <div class="d-flex justify-content-end gap-2 mt-3">
                             <button type="button" class="btn btn-outline-danger" @onclick="DeleteAsync">
                                 <i class="ti ti-trash me-1"></i>Supprimer définitivement
@@ -76,11 +71,6 @@ else
                 case "adresse":
                     <EditForm Model="_entity" OnValidSubmit="SaveAsync">
                         <EntityAddressFields Entity="_entity" />
-
-                        @if (_statusMessage is not null)
-                        {
-                            <p class="status mt-2">@_statusMessage</p>
-                        }
 
                         <div class="d-flex justify-content-end gap-2 mt-3">
                             <button type="submit" class="btn btn-primary" disabled="@_isSaving">
@@ -120,7 +110,7 @@ else
                                         {
                                             <tr>
                                                 <td>
-                                                    <a href="@($"/entities/{child.Id}")" class="text-reset">
+                                                    <a href="@($"/admin/entities/{child.Id}")" class="text-reset">
                                                         <i class="ti ti-sitemap me-1 text-secondary"></i>@child.Name
                                                     </a>
                                                 </td>
@@ -159,11 +149,6 @@ else
                         </div>
                         <p class="text-secondary small">GlpiNg n'a pas d'annuaire LDAP : ces champs ne sont pas encore exploités par l'import d'inventaire.</p>
 
-                        @if (_statusMessage is not null)
-                        {
-                            <p class="status mt-2">@_statusMessage</p>
-                        }
-
                         <div class="d-flex justify-content-end gap-2 mt-3">
                             <button type="submit" class="btn btn-primary" disabled="@_isSaving">
                                 <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
@@ -188,11 +173,6 @@ else
                             </div>
                         </div>
 
-                        @if (_statusMessage is not null)
-                        {
-                            <p class="status mt-2">@_statusMessage</p>
-                        }
-
                         <div class="d-flex justify-content-end gap-2 mt-3">
                             <button type="submit" class="btn btn-primary" disabled="@_isSaving">
                                 <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
@@ -213,11 +193,6 @@ else
                             </div>
                         </div>
                         <p class="text-secondary small">GlpiNg n'a pas de modules financiers/logiciels/transfert : les autres réglages GLPI de l'onglet Parc ne s'appliquent pas ici.</p>
-
-                        @if (_statusMessage is not null)
-                        {
-                            <p class="status mt-2">@_statusMessage</p>
-                        }
 
                         <div class="d-flex justify-content-end gap-2 mt-3">
                             <button type="submit" class="btn btn-primary" disabled="@_isSaving">
@@ -251,11 +226,6 @@ else
                         else
                         {
                             <p class="text-secondary small">Le CSS personnalisé est désactivé.</p>
-                        }
-
-                        @if (_statusMessage is not null)
-                        {
-                            <p class="status mt-2">@_statusMessage</p>
                         }
 
                         <div class="d-flex justify-content-end gap-2 mt-3">
@@ -340,7 +310,7 @@ else
                                         {
                                             <tr>
                                                 <td>
-                                                    <a href="@($"/users/{h.UserId}")" class="text-reset">
+                                                    <a href="@($"/admin/users/{h.UserId}")" class="text-reset">
                                                         <i class="ti ti-user me-1 text-secondary"></i>@(h.User?.DisplayName ?? h.User?.UserName ?? "Utilisateur inconnu")
                                                     </a>
                                                 </td>
@@ -457,7 +427,7 @@ else
                         <div class="glpi-fiche-block-title"><i class="ti ti-hierarchy"></i>Entités (@_entity.Children.Count)</div>
                         @foreach (GlpiEntity child in _entity.Children.OrderBy(c => c.Name))
                         {
-                            <p class="mb-1"><a href="@($"/entities/{child.Id}")">@child.Name</a></p>
+                            <p class="mb-1"><a href="@($"/admin/entities/{child.Id}")">@child.Name</a></p>
                         }
                     </div>
                     <div class="glpi-fiche-block">

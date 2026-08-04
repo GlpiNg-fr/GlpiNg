@@ -1,4 +1,4 @@
-@page "/authentication/mail"
+@page "/config/auth/mail"
 @using GlpiNg.Web.Models
 @rendermode InteractiveServer
 
@@ -89,7 +89,7 @@
                                        @onchange="@((ChangeEventArgs e) => ToggleSelect(server.Id, (bool)(e.Value ?? false)))" />
                             </td>
                             <td>
-                                <a href="@($"/authentication/mail/{server.Id}")" class="text-reset fw-semibold">
+                                <a href="@($"/config/auth/mail/{server.Id}")" class="text-reset fw-semibold">
                                     <i class="ti ti-mail me-1 text-secondary"></i>@server.Name
                                 </a>
                             </td>
@@ -106,7 +106,7 @@
 </div>
 
 <div class="modal fade" id="newMailServerModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title"><i class="ti ti-mail me-2"></i>Nouvel élément - Serveur mails</h5>
@@ -114,10 +114,6 @@
             </div>
             <div class="modal-body">
                 <MailServerFormFields Server="_newServer" OnChanged="StateHasChanged" />
-                @if (_createError is not null)
-                {
-                    <p class="status mt-2">@_createError</p>
-                }
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-warning" disabled="@(!CanCreate)" @onclick="CreateAsync">

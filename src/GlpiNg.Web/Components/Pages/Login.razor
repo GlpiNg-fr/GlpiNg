@@ -1,6 +1,7 @@
 @page "/login"
 @layout GlpiNg.Web.Components.Layout.BlankLayout
 @attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+@rendermode InteractiveServer
 @using GlpiNg.Web.Models
 
 <PageTitle>GlpiNg — Connexion</PageTitle>
@@ -11,14 +12,6 @@
             <i class="ti ti-server-2"></i>
             <span>GlpiNg</span>
         </div>
-
-        @if (HasError)
-        {
-            <div class="glpi-login-error">
-                <i class="ti ti-alert-circle"></i>
-                <span>Nom d'utilisateur ou mot de passe incorrect.</span>
-            </div>
-        }
 
         @if (!string.IsNullOrWhiteSpace(_general?.LoginPageMessage))
         {

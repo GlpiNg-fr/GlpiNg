@@ -11,7 +11,7 @@ public enum LdapUserPresenceAction
 }
 
 /// <summary>
-/// Modèle de l'onglet "Configuration" de la page /authentication (auth.settings.php côté
+/// Modèle de l'onglet "Configuration" de la page /config/auth (auth.settings.php côté
 /// GLPI). Stocké via AppSettingsFileStore (section "AuthSettings"), au même titre que les
 /// autres onglets de /config. Seul <see cref="AutoAddUsersFromExternalAuth"/> est
 /// aujourd'hui branché sur une vérification réelle (voir AccountController.Login) : les

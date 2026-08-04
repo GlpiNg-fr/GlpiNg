@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using BlazorBootstrap;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
 using Microsoft.AspNetCore.Components;
@@ -24,9 +25,11 @@ public partial class Detail : ComponentBase, IAsyncDisposable
     [Inject]
     private NavigationManager Nav { get; set; } = null!;
 
+    [Inject]
+    private ToastService ToastService { get; set; } = null!;
+
     private GlpiNgDbContext? _db;
     private OAuthClient? _client;
-    private string? _statusMessage;
     private string? _revealSecret;
     private bool _isSaving;
     private bool _isRegenerating;
@@ -45,13 +48,12 @@ public partial class Detail : ComponentBase, IAsyncDisposable
         }
 
         _isSaving = true;
-        _statusMessage = null;
 
         try
         {
             _client.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
-            _statusMessage = "Client enregistré.";
+            ToastService.Notify(new ToastMessage(ToastType.Success, "Client enregistré."));
         }
         finally
         {
@@ -67,7 +69,6 @@ public partial class Detail : ComponentBase, IAsyncDisposable
         }
 
         _isRegenerating = true;
-        _statusMessage = null;
 
         try
         {
@@ -77,7 +78,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
             await _db.SaveChangesAsync();
 
             _revealSecret = plainSecret;
-            _statusMessage = "Secret régénéré.";
+            ToastService.Notify(new ToastMessage(ToastType.Success, "Secret régénéré."));
         }
         finally
         {
@@ -111,7 +112,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
         _db.OAuthClients.Remove(_client);
         await _db.SaveChangesAsync();
 
-        Nav.NavigateTo("/oauth-clients");
+        Nav.NavigateTo("/config/oauth-clients");
     }
 
     public async ValueTask DisposeAsync()

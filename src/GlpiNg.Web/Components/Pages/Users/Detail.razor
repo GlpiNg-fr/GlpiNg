@@ -1,4 +1,4 @@
-@page "/users/{UserId:int}"
+@page "/admin/users/{UserId:int}"
 @using GlpiNg.Web.Models
 @rendermode InteractiveServer
 
@@ -25,10 +25,10 @@ else
             @if (_total > 0)
             {
                 <span class="glpi-fiche-pager-count">@_position/@_total</span>
-                <a class="glpi-fiche-pager-btn @(_previousId is null ? "disabled" : "")" href="@(_previousId is { } prevId ? $"/users/{prevId}" : "#")">
+                <a class="glpi-fiche-pager-btn @(_previousId is null ? "disabled" : "")" href="@(_previousId is { } prevId ? $"/admin/users/{prevId}" : "#")">
                     <i class="ti ti-chevron-left"></i>
                 </a>
-                <a class="glpi-fiche-pager-btn @(_nextId is null ? "disabled" : "")" href="@(_nextId is { } nextId ? $"/users/{nextId}" : "#")">
+                <a class="glpi-fiche-pager-btn @(_nextId is null ? "disabled" : "")" href="@(_nextId is { } nextId ? $"/admin/users/{nextId}" : "#")">
                     <i class="ti ti-chevron-right"></i>
                 </a>
             }
@@ -86,11 +86,6 @@ else
                             </div>
                         }
 
-                        @if (_statusMessage is not null)
-                        {
-                            <p class="status mt-2">@_statusMessage</p>
-                        }
-
                         <div class="d-flex justify-content-end gap-2 mt-3">
                             <button type="button" class="btn btn-outline-danger" @onclick="DeleteAsync">
                                 <i class="ti ti-trash me-1"></i>Supprimer définitivement
@@ -127,7 +122,7 @@ else
                                         {
                                             <tr>
                                                 <td>
-                                                    <a href="@($"/groups/{membership.GroupId}")" class="text-reset">
+                                                    <a href="@($"/admin/groups/{membership.GroupId}")" class="text-reset">
                                                         <i class="ti ti-users me-1 text-secondary"></i>@(membership.Group?.Name ?? "Groupe inconnu")
                                                     </a>
                                                 </td>
@@ -231,12 +226,12 @@ else
                                         {
                                             <tr>
                                                 <td>
-                                                    <a href="@($"/entities/{h.EntityId}")" class="text-reset">
+                                                    <a href="@($"/admin/entities/{h.EntityId}")" class="text-reset">
                                                         <i class="ti ti-sitemap me-1 text-secondary"></i>@(h.Entity is not null ? EntityFullName(h.Entity) : "Entité inconnue")
                                                     </a>
                                                 </td>
                                                 <td>
-                                                    <a href="@($"/profiles/{h.ProfileId}")" class="text-reset">@(h.Profile?.Name ?? "Profil inconnu")</a>
+                                                    <a href="@($"/admin/profiles/{h.ProfileId}")" class="text-reset">@(h.Profile?.Name ?? "Profil inconnu")</a>
                                                 </td>
                                                 <td>@(h.IsRecursive ? "Oui" : "Non")</td>
                                                 <td>
@@ -269,11 +264,6 @@ else
                             </div>
                         </div>
 
-                        @if (_statusMessage is not null)
-                        {
-                            <p class="status mt-2">@_statusMessage</p>
-                        }
-
                         <div class="d-flex justify-content-end gap-2 mt-3">
                             <button type="submit" class="btn btn-primary" disabled="@_isSaving">
                                 <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
@@ -298,11 +288,6 @@ else
                             </div>
                         </div>
 
-                        @if (_statusMessage is not null)
-                        {
-                            <p class="status mt-2">@_statusMessage</p>
-                        }
-
                         <div class="d-flex justify-content-end gap-2 mt-3">
                             <button type="submit" class="btn btn-primary" disabled="@_isSaving">
                                 <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
@@ -321,7 +306,7 @@ else
                                 <strong>Annuaire :</strong>
                                 @if (_user.LdapServerId is { } ldapServerId)
                                 {
-                                    <a href="@($"/authentication/ldap/{ldapServerId}")" class="text-reset">@(_user.LdapServer?.Name ?? $"Annuaire #{ldapServerId}")</a>
+                                    <a href="@($"/config/auth/ldap/{ldapServerId}")" class="text-reset">@(_user.LdapServer?.Name ?? $"Annuaire #{ldapServerId}")</a>
                                 }
                                 else
                                 {

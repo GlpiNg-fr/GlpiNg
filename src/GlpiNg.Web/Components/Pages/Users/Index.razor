@@ -1,4 +1,4 @@
-@page "/users"
+@page "/admin/users"
 @using GlpiNg.Web.Models
 @rendermode InteractiveServer
 
@@ -93,7 +93,7 @@
                                 <span style="display:inline-flex;align-items:center;justify-content:center;width:1.75rem;height:1.75rem;border-radius:50%;color:#fff;font-size:0.7rem;font-weight:600;background:@UserAvatar.Color(user)">@UserAvatar.Initials(user)</span>
                             </td>
                             <td>
-                                <a href="@($"/users/{user.Id}")" class="text-reset fw-semibold">@user.UserName</a>
+                                <a href="@($"/admin/users/{user.Id}")" class="text-reset fw-semibold">@user.UserName</a>
                             </td>
                             <td>@(user.LastName ?? "—")</td>
                             <td>@(user.FirstName ?? "—")</td>
@@ -135,10 +135,6 @@
                     </div>
                 </div>
 
-                @if (_createError is not null)
-                {
-                    <p class="status">@_createError</p>
-                }
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-warning" disabled="@(!CanCreate)" @onclick="CreateUserAsync">

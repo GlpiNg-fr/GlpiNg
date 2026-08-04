@@ -1,4 +1,4 @@
-@page "/authentication/ldap/{ServerId:int}"
+@page "/config/auth/ldap/{ServerId:int}"
 @using GlpiNg.Web.Models
 @rendermode InteractiveServer
 
@@ -24,17 +24,6 @@ else
             <EditForm Model="_server" OnValidSubmit="SaveAsync">
                 <LdapServerFormFields Server="_server" HasStoredPassword="@(_server.BindPasswordProtected is not null)"
                                        @bind-BindPasswordPlain="_bindPasswordPlain" />
-
-                @if (_statusMessage is not null)
-                {
-                    <p class="status mt-2">@_statusMessage</p>
-                }
-                @if (_testResult is not null)
-                {
-                    <p class="mt-2 mb-0 @(_testResult.Success ? "text-success" : "text-danger")">
-                        <i class="ti @(_testResult.Success ? "ti-circle-check" : "ti-circle-x") me-1"></i>@_testResult.Message
-                    </p>
-                }
 
                 <div class="d-flex justify-content-end gap-2 mt-3">
                     <button type="button" class="btn btn-outline-secondary" disabled="@_isTesting" @onclick="TestConnectionAsync">

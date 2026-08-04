@@ -197,6 +197,20 @@ body {
   }
 }
 
+@keyframes glpi-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.glpi-spin {
+  display: inline-block;
+  animation: glpi-spin 0.6s linear infinite;
+}
+
 .glpi-nav-subitem {
   display: flex;
   align-items: center;
@@ -306,8 +320,17 @@ body {
   display: block;
   position: absolute;
   top: 0;
-  left: calc(100% + 0.5rem);
+  left: 100%;
   z-index: 1030;
+  /* Pas de "left: calc(100% + Xrem)" ici : ça laisserait une zone morte entre
+     l'icône et le panneau où le survol est perdu avant d'atteindre le sous-menu.
+     Le décalage visuel est donc reporté en padding, qui reste dans la zone
+     survolée en continu. */
+  padding-left: 0.5rem;
+  padding-bottom: 1rem;
+}
+
+.glpi-nav-flyout-panel {
   min-width: 200px;
   max-width: 520px;
   background: #fff;
@@ -367,6 +390,7 @@ body {
   background: #fff;
   border-bottom: 1px solid #e6e7e9;
   padding: 0.6rem 1.5rem;
+  min-height: 60px;
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -526,6 +550,28 @@ body {
 
 .glpi-config-form {
   max-width: 960px;
+}
+
+/* Formulaires trop denses pour tenir en une colonne de 960px (ex. /admin/inventory,
+   dont l'écran GLPI équivalent répartit les options d'importation sur 2 colonnes). */
+.glpi-config-form.glpi-config-form-wide {
+  max-width: 1400px;
+}
+
+.glpi-config-field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 2rem;
+}
+
+.glpi-config-field-grid .glpi-config-field {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.glpi-config-field-grid .glpi-config-field label:not(.glpi-switch) {
+  display: flex;
+  align-items: center;
+  text-align: left;
 }
 
 .glpi-config-field {
@@ -798,6 +844,10 @@ body {
   transform: translateX(17px);
 }
 
+.glpi-switch.glpi-switch-danger input:checked + .glpi-switch-slider {
+  background: var(--tblr-danger, #d63939);
+}
+
 /* --- Tables denses (Purge de l'historique, Historique) --- */
 .glpi-config-table-wrap {
   max-width: 720px;
@@ -972,6 +1022,137 @@ body {
   color: #fff;
   font-size: 0.65rem;
   line-height: 1rem;
+}
+
+/* --- Menu "Exporter" (page Ordinateurs) --- */
+.glpi-export-menu {
+  min-width: 260px;
+}
+
+.glpi-export-menu-heading {
+  padding: 0.6rem 1rem 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tblr-secondary, #6c757d);
+}
+
+.glpi-export-menu .dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.glpi-export-menu .dropdown-item i {
+  width: 1.1rem;
+  text-align: center;
+  color: var(--tblr-secondary, #6c757d);
+}
+
+/* --- Panneau "Recherches sauvegardées" (page Ordinateurs), calqué sur le panneau
+   latéral fixe de GLPI (.saved-searches-panel : position fixed, du bas de la topbar
+   jusqu'en bas du viewport, collé à droite de la sidebar) plutôt qu'un simple dropdown. */
+.glpi-saved-searches-panel {
+  position: fixed;
+  top: 60px;
+  bottom: 0;
+  left: 260px;
+  z-index: 1030;
+  width: 380px;
+  min-width: 320px;
+  max-width: 90vw;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-right: 1px solid var(--tblr-border-color, #e6e7e9);
+  box-shadow: 0.5rem 0 1.5rem rgba(0, 0, 0, 0.12);
+  transition: left var(--tblr-transition, 0.2s ease);
+}
+
+.glpi-app:has(.glpi-sidebar.collapsed) .glpi-saved-searches-panel:not(.pinned) {
+  left: 64px;
+}
+
+/* Épinglé : le panneau quitte le survol en position fixed pour rejoindre le flux normal
+   (flex-shrink: 0 dans .glpi-computers-layout), comme le panneau GLPI en mode "pinned"
+   qui repousse le contenu au lieu de le recouvrir. */
+.glpi-saved-searches-panel.pinned {
+  position: sticky;
+  top: 0;
+  left: auto;
+  flex-shrink: 0;
+  align-self: flex-start;
+  height: calc(100vh - 60px - 3rem);
+  border-left: 1px solid var(--tblr-border-color, #e6e7e9);
+  border-radius: var(--tblr-border-radius, 4px);
+  box-shadow: none;
+  transition: none;
+}
+
+.glpi-saved-searches-tabs {
+  flex-shrink: 0;
+  padding: 0 0.5rem;
+  margin-bottom: 0;
+}
+
+.glpi-saved-searches-tabs .nav-link {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  border: 0;
+  background: transparent;
+}
+
+.glpi-saved-searches-heading {
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--tblr-border-color, #e6e7e9);
+}
+
+.glpi-saved-searches-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.glpi-saved-searches-list .list-group-item {
+  padding: 0.5rem 1rem;
+  border-left: 0;
+  border-right: 0;
+}
+
+/* Poignée de glisser-déposer (réordonnancement des recherches sauvegardées, des colonnes du
+   tableau) : masquée par défaut, révélée au survol de la ligne. Largeur fixe conservée dans
+   les deux états pour ne pas décaler le titre au hover. */
+.glpi-draggable-row .glpi-drag-handle {
+  width: 1rem;
+  flex-shrink: 0;
+  text-align: center;
+  color: var(--tblr-secondary, #6c757d);
+  cursor: grab;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.glpi-draggable-row:hover .glpi-drag-handle {
+  opacity: 1;
+}
+
+/* --- Modale "Sélectionner les colonnes à afficher" (page Ordinateurs) --- */
+.glpi-columns-list .list-group-item {
+  padding: 0.6rem 0.75rem;
+}
+
+.glpi-columns-list .list-group-item:first-child {
+  color: var(--tblr-secondary, #6c757d);
+  background: var(--tblr-bg-surface-secondary, #f4f6fa);
+}
+
+.glpi-saved-searches-filter {
+  padding: 0.5rem;
+  flex-shrink: 0;
+  border-top: 1px solid var(--tblr-border-color, #e6e7e9);
 }
 
 /* --- Bouton "Se déconnecter" (formulaire dans le menu utilisateur, pas un <a>) --- */

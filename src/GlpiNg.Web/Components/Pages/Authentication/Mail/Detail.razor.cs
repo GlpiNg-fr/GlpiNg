@@ -1,3 +1,4 @@
+using BlazorBootstrap;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
 using Microsoft.AspNetCore.Components;
@@ -16,9 +17,11 @@ public partial class Detail : ComponentBase, IAsyncDisposable
     [Inject]
     private NavigationManager Nav { get; set; } = null!;
 
+    [Inject]
+    private ToastService ToastService { get; set; } = null!;
+
     private GlpiNgDbContext? _db;
     private AuthMailServer? _server;
-    private string? _statusMessage;
     private bool _isSaving;
 
     protected override async Task OnInitializedAsync()
@@ -35,13 +38,12 @@ public partial class Detail : ComponentBase, IAsyncDisposable
         }
 
         _isSaving = true;
-        _statusMessage = null;
 
         try
         {
             _server.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
-            _statusMessage = "Serveur enregistré.";
+            ToastService.Notify(new ToastMessage(ToastType.Success, "Serveur enregistré."));
         }
         finally
         {
@@ -59,7 +61,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
         _db.AuthMailServers.Remove(_server);
         await _db.SaveChangesAsync();
 
-        Nav.NavigateTo("/authentication/mail");
+        Nav.NavigateTo("/config/auth/mail");
     }
 
     public async ValueTask DisposeAsync()

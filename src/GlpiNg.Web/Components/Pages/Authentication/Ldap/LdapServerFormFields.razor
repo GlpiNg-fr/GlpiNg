@@ -18,19 +18,13 @@
             <label>Serveur</label>
             <input class="form-control" @bind="Server.Host" @bind:event="oninput" @bind:after="NotifyChangedAsync" placeholder="ldap.example.com" />
         </div>
-        <div class="row">
-            <div class="col-8">
-                <div class="glpi-fiche-field">
-                    <label>Port (par défaut 389)</label>
-                    <input type="number" class="form-control" @bind="Server.Port" />
-                </div>
-            </div>
-            <div class="col-4">
-                <div class="glpi-fiche-field">
-                    <label>SSL/TLS</label>
-                    @YesNoSelect(Server.UseSsl, v => Server.UseSsl = v)
-                </div>
-            </div>
+        <div class="glpi-fiche-field">
+            <label>Port (par défaut 389)</label>
+            <input type="number" class="form-control" @bind="Server.Port" />
+        </div>
+        <div class="glpi-fiche-field">
+            <label>SSL/TLS</label>
+            @YesNoSelect(Server.UseSsl, v => Server.UseSsl = v)
         </div>
         <div class="glpi-fiche-field">
             <label>Commentaires</label>

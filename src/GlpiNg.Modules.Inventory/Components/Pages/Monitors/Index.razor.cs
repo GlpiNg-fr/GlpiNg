@@ -1,17 +1,16 @@
 using GlpiNg.Modules.Inventory.Models;
-using GlpiNg.Web.Data;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
 
-namespace GlpiNg.Web.Components.Pages.Monitors;
+namespace GlpiNg.Modules.Inventory.Components.Pages.Monitors;
 
 public partial class Index : ComponentBase
 {
     private sealed record MonitorRow(int ComputerId, string ComputerName, string Designation, string? Manufacturer, string? Serial);
 
     [Inject]
-    private IDbContextFactory<GlpiNgDbContext> DbFactory { get; set; } = null!;
+    private IDbContextFactory<DbContext> DbFactory { get; set; } = null!;
 
     private List<MonitorRow> _monitors = [];
     private List<MonitorRow> _filteredMonitors = [];
@@ -19,12 +18,12 @@ public partial class Index : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        await using GlpiNgDbContext db = await DbFactory.CreateDbContextAsync();
+        await using DbContext db = await DbFactory.CreateDbContextAsync();
 
-        _monitors = await db.ComputerPeripherals
+        _monitors = await db.Set<ComputerPeripheral>()
             .AsNoTracking()
             .Where(peripheral => peripheral.Kind == PeripheralKind.Monitor)
-            .Join(db.Computers.AsNoTracking(),
+            .Join(db.Set<Computer>().AsNoTracking(),
                 peripheral => peripheral.ComputerId,
                 computer => computer.Id,
                 (peripheral, computer) => new { peripheral, computer })
