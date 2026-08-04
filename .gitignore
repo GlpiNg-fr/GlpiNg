@@ -1,6 +1,7 @@
 ## .NET
 bin/
 obj/
+obj_check/
 *.user
 *.suo
 
