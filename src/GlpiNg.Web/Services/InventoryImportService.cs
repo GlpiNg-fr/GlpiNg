@@ -1,5 +1,6 @@
 using GlpiNg.Modules.Inventory.Models;
 using GlpiNg.Web.Data;
+using GlpiNg.Web.Models;
 using GlpiNg.Web.Models.Agent;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,12 +10,15 @@ namespace GlpiNg.Web.Services;
 /// Importe le contenu d'une requête "inventory" du protocole GLPI-Agent
 /// dans les entités Computer / ComputerComponent, en le rattachant à l'agent fourni.
 /// </summary>
-public class InventoryImportService(GlpiNgDbContext db)
+public class InventoryImportService(GlpiNgDbContext db, AppSettingsFileStore settingsStore)
 {
     private const string HistoryUser = "inventory";
+    private const string SettingsSection = "InventorySettings";
 
     public async Task<Computer> ImportAsync(GlpiAgent agent, InventoryContent content, CancellationToken cancellationToken = default)
     {
+        InventorySettings settings = await settingsStore.ReadSectionAsync<InventorySettings>(SettingsSection, cancellationToken);
+
         Computer? computer = await db.Computers
             .Include(c => c.Components)
             .Include(c => c.Softwares)
@@ -60,11 +64,11 @@ public class InventoryImportService(GlpiNgDbContext db)
         ComputerSnapshot before = ComputerSnapshot.Capture(computer);
 
         ApplyHardware(computer, content);
-        ApplyComponents(computer, content);
-        ApplySoftwares(computer, content);
-        ApplyMonitors(computer, content);
-        ApplyVolumes(computer, content);
-        ApplyBatteries(computer, content);
+        ApplyComponents(computer, content, settings);
+        if (settings.ImportSoftwares) ApplySoftwares(computer, content);
+        if (settings.ImportMonitors) ApplyMonitors(computer, content);
+        ApplyVolumes(computer, content, settings);
+        if (settings.ImportBatteries) ApplyBatteries(computer, content);
         ApplyNetworkPorts(computer, content);
 
         computer.LastInventoryAt = DateTime.UtcNow;
@@ -88,6 +92,24 @@ public class InventoryImportService(GlpiNgDbContext db)
 
         await db.SaveChangesAsync(cancellationToken);
         return computer;
+    }
+
+    /// <summary>
+    /// Utilisé par l'import manuel de fichier (onglet "Importer depuis un fichier" de
+    /// /admin/inventory) : contrairement à AgentController.HandleInventoryAsync, il n'y
+    /// a pas d'en-tête GLPI-Agent-ID côté fichier, donc le "deviceid" du contenu importé sert
+    /// directement d'identité d'agent stable pour retrouver/créer l'ordinateur correspondant.
+    /// </summary>
+    public async Task<Computer> ImportFromDeviceIdAsync(string deviceId, InventoryContent content, CancellationToken cancellationToken = default)
+    {
+        GlpiAgent? agent = await db.Agents.FirstOrDefaultAsync(a => a.AgentUuid == deviceId, cancellationToken);
+        if (agent is null)
+        {
+            agent = new GlpiAgent { AgentUuid = deviceId, DeviceId = deviceId };
+            db.Agents.Add(agent);
+        }
+
+        return await ImportAsync(agent, content, cancellationToken);
     }
 
     private static void ApplyHardware(Computer computer, InventoryContent content)
@@ -122,55 +144,67 @@ public class InventoryImportService(GlpiNgDbContext db)
     /// Choix volontaire : un inventaire GLPI-Agent est toujours un instantané complet,
     /// donc "remplacer" reflète mieux la réalité qu'un merge incrémental fragile.
     /// </summary>
-    private static void ApplyComponents(Computer computer, InventoryContent content)
+    private static void ApplyComponents(Computer computer, InventoryContent content, InventorySettings settings)
     {
         computer.Components.Clear();
 
-        foreach (InventoryCpu cpu in content.Cpus)
+        if (settings.ImportCpus)
         {
-            computer.Components.Add(new ComputerComponent
+            foreach (InventoryCpu cpu in content.Cpus)
             {
-                Type = ComponentType.Cpu,
-                Designation = cpu.Name ?? cpu.Manufacturer ?? "CPU inconnu",
-                Capacity = cpu.SpeedMhz is { } mhz ? $"{mhz} MHz / {cpu.Cores ?? 0} coeurs" : null,
-                Serial = cpu.Serial
-            });
+                computer.Components.Add(new ComputerComponent
+                {
+                    Type = ComponentType.Cpu,
+                    Designation = cpu.Name ?? cpu.Manufacturer ?? "CPU inconnu",
+                    Capacity = cpu.SpeedMhz is { } mhz ? $"{mhz} MHz / {cpu.Cores ?? 0} coeurs" : null,
+                    Serial = cpu.Serial
+                });
+            }
         }
 
-        foreach (InventoryMemory memory in content.Memories)
+        if (settings.ImportMemories)
         {
-            // Un slot vide (pas de capacité) n'est pas un module physique installé — on l'ignore.
-            if (memory.CapacityMb is null or 0) continue;
-
-            computer.Components.Add(new ComputerComponent
+            foreach (InventoryMemory memory in content.Memories)
             {
-                Type = ComponentType.Ram,
-                Designation = memory.Description ?? memory.Caption ?? "Barrette mémoire",
-                Capacity = $"{memory.CapacityMb} Mo",
-                Serial = memory.Serial
-            });
+                // Un slot vide (pas de capacité) n'est pas un module physique installé — on l'ignore.
+                if (memory.CapacityMb is null or 0) continue;
+
+                computer.Components.Add(new ComputerComponent
+                {
+                    Type = ComponentType.Ram,
+                    Designation = memory.Description ?? memory.Caption ?? "Barrette mémoire",
+                    Capacity = $"{memory.CapacityMb} Mo",
+                    Serial = memory.Serial
+                });
+            }
         }
 
-        foreach (InventoryStorage storage in content.Storages)
+        if (settings.ImportDisks)
         {
-            computer.Components.Add(new ComputerComponent
+            foreach (InventoryStorage storage in content.Storages)
             {
-                Type = ComponentType.Disk,
-                Designation = storage.Model ?? storage.Name ?? "Disque inconnu",
-                Capacity = storage.DiskSizeMb is { } mb ? $"{mb} Mo" : null,
-                Serial = storage.Serial
-            });
+                computer.Components.Add(new ComputerComponent
+                {
+                    Type = ComponentType.Disk,
+                    Designation = storage.Model ?? storage.Name ?? "Disque inconnu",
+                    Capacity = storage.DiskSizeMb is { } mb ? $"{mb} Mo" : null,
+                    Serial = storage.Serial
+                });
+            }
         }
 
-        foreach (InventoryNetwork network in content.Networks)
+        if (settings.ImportNetworkCards)
         {
-            computer.Components.Add(new ComputerComponent
+            foreach (InventoryNetwork network in content.Networks)
             {
-                Type = ComponentType.NetworkCard,
-                Designation = network.Description ?? "Carte réseau",
-                Capacity = null,
-                Serial = network.MacAddress
-            });
+                computer.Components.Add(new ComputerComponent
+                {
+                    Type = ComponentType.NetworkCard,
+                    Designation = network.Description ?? "Carte réseau",
+                    Capacity = null,
+                    Serial = network.MacAddress
+                });
+            }
         }
     }
 
@@ -225,12 +259,14 @@ public class InventoryImportService(GlpiNgDbContext db)
     /// Remplace intégralement les volumes du poste par ceux de l'inventaire courant, même
     /// logique d'instantané complet que <see cref="ApplyComponents"/>.
     /// </summary>
-    private static void ApplyVolumes(Computer computer, InventoryContent content)
+    private static void ApplyVolumes(Computer computer, InventoryContent content, InventorySettings settings)
     {
         computer.Volumes.Clear();
 
         foreach (InventoryDrive drive in content.Drives)
         {
+            if (!ShouldImportDrive(drive, settings)) continue;
+
             string name = drive.Volume ?? drive.Label ?? drive.Letter ?? "Volume inconnu";
 
             computer.Volumes.Add(new ComputerVolume
@@ -244,6 +280,19 @@ public class InventoryImportService(GlpiNgDbContext db)
             });
         }
     }
+
+    /// <summary>
+    /// L'onglet Configuration de l'inventaire distingue "Volumes"/"Lecteurs réseaux"/"Lecteurs
+    /// amovibles" comme dans GLPI. L'agent Windows remonte "type" comme le code DriveType de
+    /// Win32_LogicalDisk (2 = amovible, 4 = réseau) ; les autres valeurs (3 = disque local, ou
+    /// absentes sur les agents non-Windows) sont traitées comme des volumes classiques.
+    /// </summary>
+    private static bool ShouldImportDrive(InventoryDrive drive, InventorySettings settings) => drive.Type switch
+    {
+        "2" => settings.ImportRemovableDrives,
+        "4" => settings.ImportNetworkDrives,
+        _ => settings.ImportVolumes
+    };
 
     /// <summary>
     /// Remplace intégralement les batteries du poste par celles de l'inventaire courant, même

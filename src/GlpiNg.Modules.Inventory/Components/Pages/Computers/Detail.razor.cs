@@ -1,9 +1,8 @@
 using GlpiNg.Modules.Inventory.Models;
-using GlpiNg.Web.Data;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 
-namespace GlpiNg.Web.Components.Pages.Computers;
+namespace GlpiNg.Modules.Inventory.Components.Pages.Computers;
 
 public partial class Detail : ComponentBase
 {
@@ -13,7 +12,7 @@ public partial class Detail : ComponentBase
     public int ComputerId { get; set; }
 
     [Inject]
-    private IDbContextFactory<GlpiNgDbContext> DbFactory { get; set; } = null!;
+    private IDbContextFactory<DbContext> DbFactory { get; set; } = null!;
 
     private Computer? _computer;
     private List<FicheTab> _tabs = [];
@@ -25,9 +24,9 @@ public partial class Detail : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        await using GlpiNgDbContext db = await DbFactory.CreateDbContextAsync();
+        await using DbContext db = await DbFactory.CreateDbContextAsync();
 
-        _computer = await db.Computers
+        _computer = await db.Set<Computer>()
             .AsNoTracking()
             .AsSplitQuery()
             .Include(computer => computer.Components)
@@ -50,14 +49,14 @@ public partial class Detail : ComponentBase
 
         // Requêtes séquentielles sur le même DbContext : EF Core ne supporte pas
         // plusieurs opérations concurrentes sur une même instance.
-        _total = await db.Computers.AsNoTracking().CountAsync();
-        _position = await db.Computers.AsNoTracking().CountAsync(c => c.Id <= ComputerId);
-        _previousId = await db.Computers.AsNoTracking()
+        _total = await db.Set<Computer>().AsNoTracking().CountAsync();
+        _position = await db.Set<Computer>().AsNoTracking().CountAsync(c => c.Id <= ComputerId);
+        _previousId = await db.Set<Computer>().AsNoTracking()
             .Where(c => c.Id < ComputerId)
             .OrderByDescending(c => c.Id)
             .Select(c => (int?)c.Id)
             .FirstOrDefaultAsync();
-        _nextId = await db.Computers.AsNoTracking()
+        _nextId = await db.Set<Computer>().AsNoTracking()
             .Where(c => c.Id > ComputerId)
             .OrderBy(c => c.Id)
             .Select(c => (int?)c.Id)

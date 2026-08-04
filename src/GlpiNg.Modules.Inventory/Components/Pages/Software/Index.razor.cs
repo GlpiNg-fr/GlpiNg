@@ -1,9 +1,9 @@
-using GlpiNg.Web.Data;
+using GlpiNg.Modules.Inventory.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
 
-namespace GlpiNg.Web.Components.Pages.Software;
+namespace GlpiNg.Modules.Inventory.Components.Pages.Software;
 
 public partial class Index : ComponentBase
 {
@@ -18,7 +18,7 @@ public partial class Index : ComponentBase
     }
 
     [Inject]
-    private IDbContextFactory<GlpiNgDbContext> DbFactory { get; set; } = null!;
+    private IDbContextFactory<DbContext> DbFactory { get; set; } = null!;
 
     private List<SoftwareGroup> _groups = [];
     private List<SoftwareGroup> _filteredGroups = [];
@@ -27,8 +27,8 @@ public partial class Index : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        await using GlpiNgDbContext db = await DbFactory.CreateDbContextAsync();
-        List<Modules.Inventory.Models.Computer> computers = await db.Computers
+        await using DbContext db = await DbFactory.CreateDbContextAsync();
+        List<Computer> computers = await db.Set<Computer>()
             .AsNoTracking()
             .Include(computer => computer.Softwares)
             .ToListAsync();

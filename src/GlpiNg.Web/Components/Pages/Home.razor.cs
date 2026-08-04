@@ -36,8 +36,8 @@ public partial class Home : ComponentBase
 
         _allCards =
         [
-            new("computers", "Postes inventoriés", "ti-device-desktop", "bg-primary", computerCount, "/computers"),
-            new("agents", "Agents enregistrés", "ti-cpu", "bg-azure", agentCount, "/agents"),
+            new("computers", "Postes inventoriés", "ti-device-desktop", "bg-primary", computerCount, "/parc/computer"),
+            new("agents", "Agents enregistrés", "ti-cpu", "bg-azure", agentCount, "/tools/agents"),
         ];
 
         if (AuthStateTask is not null)

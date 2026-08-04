@@ -1,4 +1,5 @@
 using AnthoDingo.Setup;
+using GlpiNg.Modules.Cron.Models;
 using GlpiNg.Modules.Inventory.Models;
 using GlpiNg.Web.Models;
 using GlpiNg.Web.Models.Agent;
@@ -21,6 +22,12 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<ComputerNetworkPort> ComputerNetworkPorts => Set<ComputerNetworkPort>();
     public DbSet<ComputerImportHistory> ComputerImportHistories => Set<ComputerImportHistory>();
     public DbSet<ComputerHistoryEntry> ComputerHistoryEntries => Set<ComputerHistoryEntry>();
+    public DbSet<SavedSearch> SavedSearches => Set<SavedSearch>();
+    public DbSet<SavedSearchOrder> SavedSearchOrders => Set<SavedSearchOrder>();
+    public DbSet<TableColumnPreference> TableColumnPreferences => Set<TableColumnPreference>();
+
+    public DbSet<Peripheral> Peripherals => Set<Peripheral>();
+    public DbSet<PeripheralHistoryEntry> PeripheralHistoryEntries => Set<PeripheralHistoryEntry>();
 
     public DbSet<GlpiAgent> Agents => Set<GlpiAgent>();
     public DbSet<DeploymentJob> DeploymentJobs => Set<DeploymentJob>();
@@ -49,6 +56,8 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
 
     public DbSet<OAuthClient> OAuthClients => Set<OAuthClient>();
 
+    public DbSet<CronSettings> CronSettings => Set<CronSettings>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<GlpiUser>()
@@ -72,6 +81,15 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
             .HasIndex(c => c.SourceGlpiId)
             .IsUnique()
             .HasFilter("\"SourceGlpiId\" IS NOT NULL");
+
+        // SetNull plutôt que le Cascade par défaut d'EF pour une FK optionnelle : détacher ou
+        // supprimer l'ordinateur connecté ne doit pas supprimer le périphérique lui-même, qui
+        // reste un actif géré indépendamment (voir Peripheral.ComputerId).
+        modelBuilder.Entity<Peripheral>()
+            .HasOne(p => p.Computer)
+            .WithMany()
+            .HasForeignKey(p => p.ComputerId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         // Pas de navigation GlpiAgent.DeploymentJobs : DeploymentJob (module Deploy,
         // dans GlpiNg.Web) référence l'agent (module Inventory) par sa seule clé
@@ -195,6 +213,14 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
 
         modelBuilder.Entity<OAuthClient>()
             .HasIndex(c => c.Name)
+            .IsUnique();
+
+        modelBuilder.Entity<SavedSearchOrder>()
+            .HasIndex(o => new { o.UserId, o.SavedSearchId })
+            .IsUnique();
+
+        modelBuilder.Entity<TableColumnPreference>()
+            .HasIndex(p => new { p.UserId, p.ItemType })
             .IsUnique();
     }
 

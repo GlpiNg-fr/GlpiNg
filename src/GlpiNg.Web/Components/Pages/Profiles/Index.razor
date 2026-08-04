@@ -1,4 +1,4 @@
-@page "/profiles"
+@page "/admin/profiles"
 @using GlpiNg.Web.Models
 @rendermode InteractiveServer
 
@@ -85,7 +85,7 @@
                                        @onchange="@((ChangeEventArgs e) => ToggleSelect(profile.Id, (bool)(e.Value ?? false)))" />
                             </td>
                             <td>
-                                <a href="@($"/profiles/{profile.Id}")" class="text-reset fw-semibold">
+                                <a href="@($"/admin/profiles/{profile.Id}")" class="text-reset fw-semibold">
                                     <i class="ti ti-id-badge me-1 text-secondary"></i>@profile.Name
                                 </a>
                             </td>

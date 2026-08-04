@@ -1,4 +1,4 @@
-@page "/authentication/mail/{ServerId:int}"
+@page "/config/auth/mail/{ServerId:int}"
 @using GlpiNg.Web.Models
 @rendermode InteractiveServer
 
@@ -23,11 +23,6 @@ else
         <div class="card-body">
             <EditForm Model="_server" OnValidSubmit="SaveAsync">
                 <MailServerFormFields Server="_server" />
-
-                @if (_statusMessage is not null)
-                {
-                    <p class="status mt-2">@_statusMessage</p>
-                }
 
                 <div class="d-flex justify-content-end gap-2 mt-3">
                     <button type="button" class="btn btn-outline-danger" @onclick="DeleteAsync">

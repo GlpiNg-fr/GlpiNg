@@ -1,3 +1,4 @@
+using BlazorBootstrap;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
 using Microsoft.AspNetCore.Components;
@@ -31,6 +32,9 @@ public partial class Detail : ComponentBase, IAsyncDisposable
     [Inject]
     private NavigationManager Nav { get; set; } = null!;
 
+    [Inject]
+    private ToastService ToastService { get; set; } = null!;
+
     [CascadingParameter]
     private Task<AuthenticationState>? AuthStateTask { get; set; }
 
@@ -45,7 +49,6 @@ public partial class Detail : ComponentBase, IAsyncDisposable
     private List<GlpiEntityHistoryEntry> _historyEntries = [];
     private List<FicheTab> _tabs = [];
     private string _activeTabKey = "entite";
-    private string? _statusMessage;
     private bool _isSaving;
     private string _newSubEntityName = string.Empty;
     private string _newNoteContent = string.Empty;
@@ -227,7 +230,6 @@ public partial class Detail : ComponentBase, IAsyncDisposable
         }
 
         _isSaving = true;
-        _statusMessage = null;
 
         try
         {
@@ -252,7 +254,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
             _beforeEdit = after;
             await ReloadReferenceDataAsync();
             RebuildTabs();
-            _statusMessage = "Entité enregistrée.";
+            ToastService.Notify(new ToastMessage(ToastType.Success, "Entité enregistrée."));
         }
         finally
         {
@@ -269,20 +271,20 @@ public partial class Detail : ComponentBase, IAsyncDisposable
 
         if (_entity.Children.Count > 0)
         {
-            _statusMessage = "Impossible de supprimer une entité qui a des sous-entités : détachez-les d'abord.";
+            ToastService.Notify(new ToastMessage(ToastType.Danger, "Impossible de supprimer une entité qui a des sous-entités : détachez-les d'abord."));
             return;
         }
 
         if (_entityHabilitations.Count > 0)
         {
-            _statusMessage = "Impossible de supprimer une entité à laquelle des utilisateurs sont rattachés : détachez-les d'abord.";
+            ToastService.Notify(new ToastMessage(ToastType.Danger, "Impossible de supprimer une entité à laquelle des utilisateurs sont rattachés : détachez-les d'abord."));
             return;
         }
 
         _db.Entities.Remove(_entity);
         await _db.SaveChangesAsync();
 
-        Nav.NavigateTo("/entities");
+        Nav.NavigateTo("/admin/entities");
     }
 
     private IEnumerable<GlpiEntity> ParentCandidates()

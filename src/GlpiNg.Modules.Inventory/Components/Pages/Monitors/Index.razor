@@ -1,4 +1,4 @@
-@page "/monitors"
+@page "/parc/monitors"
 @rendermode InteractiveServer
 
 <PageTitle>GlpiNg — Moniteurs</PageTitle>
@@ -47,7 +47,7 @@
                             <td>@(monitor.Manufacturer ?? "—")</td>
                             <td>@(monitor.Serial ?? "—")</td>
                             <td>
-                                <a href="@($"/computers/{monitor.ComputerId}")" class="text-reset">
+                                <a href="@($"/parc/computer/{monitor.ComputerId}")" class="text-reset">
                                     <i class="ti ti-device-desktop me-1 text-secondary"></i>@monitor.ComputerName
                                 </a>
                             </td>

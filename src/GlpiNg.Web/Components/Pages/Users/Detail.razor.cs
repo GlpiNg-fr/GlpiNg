@@ -1,3 +1,4 @@
+using BlazorBootstrap;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
 using Microsoft.AspNetCore.Components;
@@ -33,6 +34,9 @@ public partial class Detail : ComponentBase, IAsyncDisposable
     [Inject]
     private NavigationManager Nav { get; set; } = null!;
 
+    [Inject]
+    private ToastService ToastService { get; set; } = null!;
+
     [CascadingParameter]
     private Task<AuthenticationState>? AuthStateTask { get; set; }
 
@@ -47,7 +51,6 @@ public partial class Detail : ComponentBase, IAsyncDisposable
     private List<GlpiUserHistoryEntry> _historyEntries = [];
     private List<FicheTab> _tabs = [];
     private string _activeTabKey = "utilisateur";
-    private string? _statusMessage;
     private bool _isSaving;
     private bool _showPasswordFields;
     private string _newPassword = string.Empty;
@@ -234,7 +237,6 @@ public partial class Detail : ComponentBase, IAsyncDisposable
         }
 
         _isSaving = true;
-        _statusMessage = null;
 
         try
         {
@@ -243,7 +245,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
             {
                 if (_newPassword != _newPasswordConfirm)
                 {
-                    _statusMessage = "Les mots de passe ne correspondent pas.";
+                    ToastService.Notify(new ToastMessage(ToastType.Danger, "Les mots de passe ne correspondent pas."));
                     return;
                 }
 
@@ -289,7 +291,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
             _beforeEdit = after;
             await ReloadReferenceDataAsync();
             RebuildTabs();
-            _statusMessage = "Utilisateur enregistré.";
+            ToastService.Notify(new ToastMessage(ToastType.Success, "Utilisateur enregistré."));
         }
         finally
         {
@@ -321,7 +323,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
         _db.Users.Remove(_user);
         await _db.SaveChangesAsync();
 
-        Nav.NavigateTo("/users");
+        Nav.NavigateTo("/admin/users");
     }
 
     private IEnumerable<GlpiGroup> AvailableGroups()

@@ -1,3 +1,4 @@
+using BlazorBootstrap;
 using GlpiNg.Web.Data;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
@@ -12,9 +13,11 @@ public partial class Update : ComponentBase
     [Inject]
     private NavigationManager Nav { get; set; } = null!;
 
+    [Inject]
+    private ToastService ToastService { get; set; } = null!;
+
     private List<string> _pendingMigrations = [];
     private bool _applying;
-    private string? _error;
 
     protected override async Task OnInitializedAsync()
     {
@@ -25,7 +28,6 @@ public partial class Update : ComponentBase
     private async Task ApplyAsync()
     {
         _applying = true;
-        _error = null;
 
         try
         {
@@ -35,7 +37,7 @@ public partial class Update : ComponentBase
         }
         catch (Exception ex)
         {
-            _error = ex.Message;
+            ToastService.Notify(new ToastMessage(ToastType.Danger, ex.Message));
             _applying = false;
         }
     }

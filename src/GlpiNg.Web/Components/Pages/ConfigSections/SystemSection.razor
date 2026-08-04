@@ -1,4 +1,86 @@
+@using GlpiNg.Modules.Cron
+@using GlpiNg.Modules.Cron.Models
+@using GlpiNg.Web.Data
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<GlpiNgDbContext> DbFactory
+@inject CronIntervalState IntervalState
+@inject ToastService ToastService
+
 <p class="hint" style="margin-left:0;">
     Les adresses d'écoute du serveur ont été déplacées dans l'onglet
     "Configuration générale", et l'activation de Swagger dans l'onglet "API".
 </p>
+
+@if (_intervalMinutes is null)
+{
+    <p>Chargement…</p>
+}
+else
+{
+    <EditForm Model="this" OnValidSubmit="SaveAsync" class="glpi-config-form">
+        <div class="glpi-config-field">
+            <label for="cron-interval">Intervalle d'exécution du service cron (minutes)</label>
+            <input id="cron-interval" type="number" min="@CronIntervalState.MinMinutes" max="@CronIntervalState.MaxMinutes"
+                   class="glpi-config-input-sm" @bind="_intervalMinutes" />
+        </div>
+        <p class="hint">
+            Fréquence à laquelle le service principal exécute ses tâches planifiées (purge de
+            l'historique, nettoyage des agents inactifs, ...). Pris en compte immédiatement, sans
+            redémarrage.
+        </p>
+
+        <button type="submit" class="glpi-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+    </EditForm>
+}
+
+@code {
+    private int? _intervalMinutes;
+    private bool _isSaving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using GlpiNgDbContext db = await DbFactory.CreateDbContextAsync();
+        CronSettings? settings = await db.CronSettings.FirstOrDefaultAsync();
+        _intervalMinutes = settings?.IntervalMinutes ?? CronIntervalState.DefaultMinutes;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_intervalMinutes is null)
+        {
+            return;
+        }
+
+        _isSaving = true;
+
+        try
+        {
+            int clamped = CronIntervalState.Clamp(_intervalMinutes.Value);
+
+            await using GlpiNgDbContext db = await DbFactory.CreateDbContextAsync();
+            CronSettings? settings = await db.CronSettings.FirstOrDefaultAsync();
+            if (settings is null)
+            {
+                db.CronSettings.Add(new CronSettings { IntervalMinutes = clamped });
+            }
+            else
+            {
+                settings.IntervalMinutes = clamped;
+                settings.UpdatedAt = DateTime.UtcNow;
+            }
+
+            await db.SaveChangesAsync();
+
+            // Réveille immédiatement CronBackgroundService pour qu'il reprenne son attente
+            // avec le nouvel intervalle, sans attendre la fin du tick en cours.
+            IntervalState.UpdateInterval(clamped);
+
+            _intervalMinutes = clamped;
+            ToastService.Notify(new ToastMessage(ToastType.Success, "Configuration enregistrée."));
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+}

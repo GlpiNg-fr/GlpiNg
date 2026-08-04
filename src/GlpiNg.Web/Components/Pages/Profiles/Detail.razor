@@ -1,4 +1,4 @@
-@page "/profiles/{ProfileId:int}"
+@page "/admin/profiles/{ProfileId:int}"
 @using GlpiNg.Web.Models
 @rendermode InteractiveServer
 
@@ -25,10 +25,10 @@ else
             @if (_total > 0)
             {
                 <span class="glpi-fiche-pager-count">@_position/@_total</span>
-                <a class="glpi-fiche-pager-btn @(_previousId is null ? "disabled" : "")" href="@(_previousId is { } prevId ? $"/profiles/{prevId}" : "#")">
+                <a class="glpi-fiche-pager-btn @(_previousId is null ? "disabled" : "")" href="@(_previousId is { } prevId ? $"/admin/profiles/{prevId}" : "#")">
                     <i class="ti ti-chevron-left"></i>
                 </a>
-                <a class="glpi-fiche-pager-btn @(_nextId is null ? "disabled" : "")" href="@(_nextId is { } nextId ? $"/profiles/{nextId}" : "#")">
+                <a class="glpi-fiche-pager-btn @(_nextId is null ? "disabled" : "")" href="@(_nextId is { } nextId ? $"/admin/profiles/{nextId}" : "#")">
                     <i class="ti ti-chevron-right"></i>
                 </a>
             }
@@ -56,11 +56,6 @@ else
                 case "profil":
                     <EditForm Model="_profile" OnValidSubmit="SaveAsync">
                         <ProfileFormFields Profile="_profile" />
-
-                        @if (_statusMessage is not null)
-                        {
-                            <p class="status mt-2">@_statusMessage</p>
-                        }
 
                         <div class="d-flex justify-content-end gap-2 mt-3">
                             <button type="button" class="btn btn-outline-danger" @onclick="DeleteAsync">
@@ -136,11 +131,6 @@ else
                                 </div>
                             </div>
                         </div>
-
-                        @if (_statusMessage is not null)
-                        {
-                            <p class="status mt-2">@_statusMessage</p>
-                        }
 
                         <div class="d-flex justify-content-end gap-2 mt-3">
                             <button type="submit" class="btn btn-primary" disabled="@_isSaving">
@@ -224,7 +214,7 @@ else
                                         {
                                             <tr>
                                                 <td>
-                                                    <a href="@($"/users/{h.UserId}")" class="text-reset">
+                                                    <a href="@($"/admin/users/{h.UserId}")" class="text-reset">
                                                         <i class="ti ti-user me-1 text-secondary"></i>@(h.User?.DisplayName ?? h.User?.UserName ?? "Utilisateur inconnu")
                                                     </a>
                                                 </td>

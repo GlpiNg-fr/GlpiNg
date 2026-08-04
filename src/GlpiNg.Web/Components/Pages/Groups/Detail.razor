@@ -1,4 +1,4 @@
-@page "/groups/{GroupId:int}"
+@page "/admin/groups/{GroupId:int}"
 @using GlpiNg.Web.Models
 @rendermode InteractiveServer
 
@@ -25,10 +25,10 @@ else
             @if (_total > 0)
             {
                 <span class="glpi-fiche-pager-count">@_position/@_total</span>
-                <a class="glpi-fiche-pager-btn @(_previousId is null ? "disabled" : "")" href="@(_previousId is { } prevId ? $"/groups/{prevId}" : "#")">
+                <a class="glpi-fiche-pager-btn @(_previousId is null ? "disabled" : "")" href="@(_previousId is { } prevId ? $"/admin/groups/{prevId}" : "#")">
                     <i class="ti ti-chevron-left"></i>
                 </a>
-                <a class="glpi-fiche-pager-btn @(_nextId is null ? "disabled" : "")" href="@(_nextId is { } nextId ? $"/groups/{nextId}" : "#")">
+                <a class="glpi-fiche-pager-btn @(_nextId is null ? "disabled" : "")" href="@(_nextId is { } nextId ? $"/admin/groups/{nextId}" : "#")">
                     <i class="ti ti-chevron-right"></i>
                 </a>
             }
@@ -56,11 +56,6 @@ else
                 case "groupe":
                     <EditForm Model="_group" OnValidSubmit="SaveAsync">
                         <GroupFormFields Group="_group" ParentCandidates="ParentCandidates().ToList()" FullNameOf="FullName" />
-
-                        @if (_statusMessage is not null)
-                        {
-                            <p class="status mt-2">@_statusMessage</p>
-                        }
 
                         <div class="d-flex justify-content-end gap-2 mt-3">
                             <button type="button" class="btn btn-outline-danger" @onclick="DeleteAsync">
@@ -98,7 +93,7 @@ else
                                         {
                                             <tr>
                                                 <td>
-                                                    <a href="@($"/groups/{child.Id}")" class="text-reset">
+                                                    <a href="@($"/admin/groups/{child.Id}")" class="text-reset">
                                                         <i class="ti ti-users me-1 text-secondary"></i>@child.Name
                                                     </a>
                                                 </td>
@@ -184,11 +179,6 @@ else
                                 </div>
                             </div>
                         </div>
-
-                        @if (_statusMessage is not null)
-                        {
-                            <p class="status mt-2">@_statusMessage</p>
-                        }
 
                         <div class="d-flex justify-content-end gap-2 mt-3">
                             <button type="submit" class="btn btn-primary" disabled="@_isSaving">
@@ -289,7 +279,7 @@ else
                         <div class="glpi-fiche-block-title"><i class="ti ti-sitemap"></i>Sous-groupes (@_group.Children.Count)</div>
                         @foreach (GlpiGroup child in _group.Children.OrderBy(c => c.Name))
                         {
-                            <p class="mb-1"><a href="@($"/groups/{child.Id}")">@child.Name</a></p>
+                            <p class="mb-1"><a href="@($"/admin/groups/{child.Id}")">@child.Name</a></p>
                         }
                     </div>
                     <div class="glpi-fiche-block">

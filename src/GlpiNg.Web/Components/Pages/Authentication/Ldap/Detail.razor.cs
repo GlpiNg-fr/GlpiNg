@@ -1,3 +1,4 @@
+using BlazorBootstrap;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
 using GlpiNg.Web.Services;
@@ -23,13 +24,14 @@ public partial class Detail : ComponentBase, IAsyncDisposable
     [Inject]
     private NavigationManager Nav { get; set; } = null!;
 
+    [Inject]
+    private ToastService ToastService { get; set; } = null!;
+
     private GlpiNgDbContext? _db;
     private AuthLdapServer? _server;
     private string _bindPasswordPlain = string.Empty;
-    private string? _statusMessage;
     private bool _isSaving;
     private bool _isTesting;
-    private LdapConnectionTestResult? _testResult;
 
     protected override async Task OnInitializedAsync()
     {
@@ -45,7 +47,6 @@ public partial class Detail : ComponentBase, IAsyncDisposable
         }
 
         _isSaving = true;
-        _statusMessage = null;
 
         try
         {
@@ -57,7 +58,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
 
             _server.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
-            _statusMessage = "Annuaire enregistré.";
+            ToastService.Notify(new ToastMessage(ToastType.Success, "Annuaire enregistré."));
         }
         finally
         {
@@ -91,11 +92,11 @@ public partial class Detail : ComponentBase, IAsyncDisposable
         };
 
         _isTesting = true;
-        _testResult = null;
 
         try
         {
-            _testResult = await Task.Run(() => LdapAuth.TestServerConnection(probe));
+            LdapConnectionTestResult testResult = await Task.Run(() => LdapAuth.TestServerConnection(probe));
+            ToastService.Notify(new ToastMessage(testResult.Success ? ToastType.Success : ToastType.Danger, testResult.Message));
         }
         finally
         {
@@ -113,7 +114,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
         _db.AuthLdapServers.Remove(_server);
         await _db.SaveChangesAsync();
 
-        Nav.NavigateTo("/authentication/ldap");
+        Nav.NavigateTo("/config/auth/ldap");
     }
 
     public async ValueTask DisposeAsync()

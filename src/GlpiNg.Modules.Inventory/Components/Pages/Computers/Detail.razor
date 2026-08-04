@@ -1,4 +1,4 @@
-@page "/computers/{ComputerId:int}"
+@page "/parc/computer/{ComputerId:int}"
 @using GlpiNg.Modules.Inventory.Models
 @rendermode InteractiveServer
 
@@ -36,10 +36,10 @@ else
             @if (_total > 0)
             {
                 <span class="glpi-fiche-pager-count">@_position/@_total</span>
-                <a class="glpi-fiche-pager-btn @(_previousId is null ? "disabled" : "")" href="@(_previousId is { } prevId ? $"/computers/{prevId}" : "#")">
+                <a class="glpi-fiche-pager-btn @(_previousId is null ? "disabled" : "")" href="@(_previousId is { } prevId ? $"/parc/computer/{prevId}" : "#")">
                     <i class="ti ti-chevron-left"></i>
                 </a>
-                <a class="glpi-fiche-pager-btn @(_nextId is null ? "disabled" : "")" href="@(_nextId is { } nextId ? $"/computers/{nextId}" : "#")">
+                <a class="glpi-fiche-pager-btn @(_nextId is null ? "disabled" : "")" href="@(_nextId is { } nextId ? $"/parc/computer/{nextId}" : "#")">
                     <i class="ti ti-chevron-right"></i>
                 </a>
             }

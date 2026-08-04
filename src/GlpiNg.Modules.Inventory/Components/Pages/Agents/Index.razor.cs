@@ -1,15 +1,14 @@
 using GlpiNg.Modules.Inventory.Models;
-using GlpiNg.Web.Data;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
 
-namespace GlpiNg.Web.Components.Pages.Agents;
+namespace GlpiNg.Modules.Inventory.Components.Pages.Agents;
 
 public partial class Index : ComponentBase
 {
     [Inject]
-    private IDbContextFactory<GlpiNgDbContext> DbFactory { get; set; } = null!;
+    private IDbContextFactory<DbContext> DbFactory { get; set; } = null!;
 
     private List<GlpiAgent> _agents = [];
     private List<GlpiAgent> _filteredAgents = [];
@@ -17,8 +16,8 @@ public partial class Index : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        await using GlpiNgDbContext db = await DbFactory.CreateDbContextAsync();
-        _agents = await db.Agents
+        await using DbContext db = await DbFactory.CreateDbContextAsync();
+        _agents = await db.Set<GlpiAgent>()
             .AsNoTracking()
             .Include(agent => agent.Computer)
             .OrderByDescending(agent => agent.LastContactAt)

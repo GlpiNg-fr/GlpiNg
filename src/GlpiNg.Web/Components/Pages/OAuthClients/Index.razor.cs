@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using BlazorBootstrap;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
 using Microsoft.AspNetCore.Components;
@@ -19,12 +20,14 @@ public partial class Index : ComponentBase
     [Inject]
     private IJSRuntime JS { get; set; } = null!;
 
+    [Inject]
+    private ToastService ToastService { get; set; } = null!;
+
     private List<OAuthClient> _clients = [];
     private List<OAuthClient> _filteredClients = [];
     private string _searchTerm = string.Empty;
     private readonly HashSet<int> _selectedIds = [];
     private OAuthClient _newClient = NewBlankClient();
-    private string? _createError;
     private string? _revealSecret;
 
     private bool AllSelected => _filteredClients.Count > 0 && _selectedIds.Count == _filteredClients.Count;
@@ -115,7 +118,7 @@ public partial class Index : ComponentBase
         bool alreadyExists = await db.OAuthClients.AsNoTracking().AnyAsync(c => c.Name == _newClient.Name);
         if (alreadyExists)
         {
-            _createError = "Ce nom est déjà utilisé.";
+            ToastService.Notify(new ToastMessage(ToastType.Danger, "Ce nom est déjà utilisé."));
             return;
         }
 
@@ -127,7 +130,6 @@ public partial class Index : ComponentBase
         await db.SaveChangesAsync();
 
         _newClient = NewBlankClient();
-        _createError = null;
 
         await JS.InvokeVoidAsync("glpiNg.hideModal", "newOAuthClientModal");
         await LoadAsync();

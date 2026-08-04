@@ -1,7 +1,8 @@
-@page "/authentication/others"
+@page "/config/auth/others"
 @using GlpiNg.Web.Models
 @using GlpiNg.Web.Services
 @inject AppSettingsFileStore SettingsStore
+@inject ToastService ToastService
 @rendermode InteractiveServer
 
 <PageTitle>GlpiNg — Authentification</PageTitle>
@@ -104,11 +105,6 @@ else
                     de validation de certificat x509 client, ni de lecture d'en-tête SSO.
                 </p>
 
-                @if (_statusMessage is not null)
-                {
-                    <p class="status">@_statusMessage</p>
-                }
-
                 <button type="submit" class="glpi-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
             </EditForm>
         </div>
@@ -120,7 +116,6 @@ else
 
     private AuthOtherSettings? _model;
     private bool _isSaving;
-    private string? _statusMessage;
 
     protected override async Task OnInitializedAsync()
     {
@@ -135,12 +130,11 @@ else
         }
 
         _isSaving = true;
-        _statusMessage = null;
 
         try
         {
             await SettingsStore.SaveSectionAsync(SectionName, _model);
-            _statusMessage = "Configuration enregistrée.";
+            ToastService.Notify(new ToastMessage(ToastType.Success, "Configuration enregistrée."));
         }
         finally
         {

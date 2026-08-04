@@ -88,12 +88,12 @@ directement par le code hôte. Un futur module Tickets suivrait le même schéma
 - Connexion par cookie (`/login`), avec un profil admin créé par l'assistant
   d'installation.
 - Sources d'authentification externes : annuaires LDAP (CRUD sous
-  `/authentication`), avec bind LDAP au login et provisionnement automatique
+  `/config/auth`), avec bind LDAP au login et provisionnement automatique
   des comptes externes si activé (`AuthSettings.AutoAddUsersFromExternalAuth`).
   Un compte peut être forcé sur une source précise (local ou un annuaire donné)
   depuis le sélecteur de la page de login.
 - Émission de jetons OAuth2 (`POST /oauth2/token`) pour des clients gérés
-  depuis `/oauth-clients` — grants `client_credentials` et `password`,
+  depuis `/config/oauth-clients` — grants `client_credentials` et `password`,
   restriction par IP, scopes (`api`, `inventory`, ...).
 - `POST /admin/import/glpi` est protégé par la policy `OAuthApiAccess` (jeton
   Bearer avec le scope `api` ou `inventory`) plutôt que par la session cookie
@@ -109,9 +109,9 @@ directement par le code hôte. Un futur module Tickets suivrait le même schéma
   Colonnes d'affichage, Valeurs par défaut, ...), avec suivi d'historique des
   changements (`ConfigHistoryService`).
 - La sidebar reprend l'arborescence complète de menu de GLPI ; seules les
-  entrées avec une route (Ordinateurs, Moniteurs, Logiciels, Agents,
-  Utilisateurs, Groupes, Entités, Profils, Authentification, Générale, ...)
-  sont implémentées, les autres apparaissent en placeholder.
+  entrées avec une route (Ordinateurs, Moniteurs, Logiciels, Périphériques,
+  Agents, Utilisateurs, Groupes, Entités, Profils, Authentification,
+  Générale, ...) sont implémentées, les autres apparaissent en placeholder.
 
 ### Protocole GLPI-Agent (`/glpi-agent`)
 

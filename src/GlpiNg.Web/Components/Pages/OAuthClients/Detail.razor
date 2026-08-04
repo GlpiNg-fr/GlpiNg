@@ -1,4 +1,4 @@
-@page "/oauth-clients/{ClientId:int}"
+@page "/config/oauth-clients/{ClientId:int}"
 @using GlpiNg.Web.Models
 @rendermode InteractiveServer
 
@@ -32,10 +32,6 @@ else
             <EditForm Model="_client" OnValidSubmit="SaveAsync">
                 <OAuthClientFormFields Client="_client" />
 
-                @if (_statusMessage is not null)
-                {
-                    <p class="status mt-2">@_statusMessage</p>
-                }
                 @if (_revealSecret is not null)
                 {
                     <div class="mt-2">

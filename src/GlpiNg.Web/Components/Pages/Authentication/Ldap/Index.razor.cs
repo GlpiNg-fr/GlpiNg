@@ -1,3 +1,4 @@
+using BlazorBootstrap;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
 using GlpiNg.Web.Services;
@@ -19,13 +20,15 @@ public partial class Index : ComponentBase
     [Inject]
     private IJSRuntime JS { get; set; } = null!;
 
+    [Inject]
+    private ToastService ToastService { get; set; } = null!;
+
     private List<AuthLdapServer> _servers = [];
     private List<AuthLdapServer> _filteredServers = [];
     private string _searchTerm = string.Empty;
     private readonly HashSet<int> _selectedIds = [];
     private AuthLdapServer _newServer = NewBlankServer();
     private string _newBindPassword = string.Empty;
-    private string? _createError;
 
     private bool AllSelected => _filteredServers.Count > 0 && _selectedIds.Count == _filteredServers.Count;
 
@@ -117,7 +120,7 @@ public partial class Index : ComponentBase
         bool alreadyExists = await db.AuthLdapServers.AsNoTracking().AnyAsync(s => s.Name == _newServer.Name);
         if (alreadyExists)
         {
-            _createError = "Ce nom est déjà utilisé.";
+            ToastService.Notify(new ToastMessage(ToastType.Danger, "Ce nom est déjà utilisé."));
             return;
         }
 
@@ -127,7 +130,6 @@ public partial class Index : ComponentBase
 
         _newServer = NewBlankServer();
         _newBindPassword = string.Empty;
-        _createError = null;
 
         await JS.InvokeVoidAsync("glpiNg.hideModal", "newLdapServerModal");
         await LoadAsync();

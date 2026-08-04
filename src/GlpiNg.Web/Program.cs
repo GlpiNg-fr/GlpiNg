@@ -3,6 +3,8 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using AnthoDingo.Setup;
+using GlpiNg.Modules.Abstractions.Cron;
+using GlpiNg.Modules.Cron;
 using GlpiNg.Modules.Inventory;
 using GlpiNg.Web.Components;
 using GlpiNg.Web.Data;
@@ -34,6 +36,10 @@ public class Program
         // UI Blazor Server (rendu interactif)
         builder.Services.AddRazorComponents()
             .AddInteractiveServerComponents();
+
+        // Toasts BlazorBootstrap (confirmations/erreurs de formulaire, voir <Toasts> dans
+        // MainLayout.razor et BlankLayout.razor) : remplace les anciens messages inline "status".
+        builder.Services.AddBlazorBootstrap();
 
         // Authentification applicative par cookie : /login (GlpiUser + PasswordHasher, déjà
         // utilisé par l'admin créé au setup — voir GlpiNgSetupInitializer) et /Account/Logout
@@ -86,7 +92,7 @@ public class Program
             {
                 Title = "GlpiNg API",
                 Version = "v1",
-                Description = "Endpoints REST de GlpiNg : protocole GLPI-Agent (/glpi-agent) et import depuis une base GLPI MySQL (/admin/import/glpi, protégé par OAuth2 — voir /oauth-clients)."
+                Description = "Endpoints REST de GlpiNg : protocole GLPI-Agent (/glpi-agent) et import depuis une base GLPI MySQL (/admin/import/glpi, protégé par OAuth2 — voir /config/oauth-clients)."
             });
 
             foreach (Assembly assembly in new[] { Assembly.GetExecutingAssembly(), typeof(InventoryModuleServiceCollectionExtensions).Assembly })
@@ -99,7 +105,7 @@ public class Program
             }
 
             // Permet d'utiliser le bouton "Authorize" de Swagger UI pour obtenir un jeton via un
-            // client OAuth "client_credentials" (voir /oauth-clients) et l'attacher automatiquement
+            // client OAuth "client_credentials" (voir /config/oauth-clients) et l'attacher automatiquement
             // aux appels vers /admin/import/glpi.
             options.AddSecurityDefinition("OAuth2", new OpenApiSecurityScheme
             {
@@ -181,13 +187,20 @@ public class Program
             // à l'hôte de faire le lien vers son DbContext concret.
             builder.Services.AddScoped<DbContext>(sp => sp.GetRequiredService<GlpiNgDbContext>());
 
+            // Même lien pour les pages Razor des modules (ex. Components/Pages/Computers dans
+            // Inventory), qui ont besoin d'un IDbContextFactory<DbContext> — pas seulement d'un
+            // DbContext scoped — pour la même raison de concurrence au pré-rendu que
+            // IDbContextFactory<GlpiNgDbContext> ci-dessus. Voir DbContextFactoryAdapter.
+            builder.Services.AddSingleton<IDbContextFactory<DbContext>>(sp =>
+                new DbContextFactoryAdapter(sp.GetRequiredService<IDbContextFactory<GlpiNgDbContext>>()));
+
             // Services dépendant de GlpiNgDbContext : n'ont de sens qu'une fois l'installation
             // terminée, donc enregistrés ici plutôt que plus haut (sinon la validation des
             // services au build échoue en environnement Development, faute de DbContext).
             builder.Services.AddScoped<InventoryImportService>();
 
             // Authentification externe par bind LDAP (voir AccountController.Login et la page
-            // /authentication). AuthSecretProtector n'a pas de dépendance DbContext mais est
+            // /config/auth). AuthSecretProtector n'a pas de dépendance DbContext mais est
             // enregistré ici pour rester à proximité de son seul consommateur.
             builder.Services.AddDataProtection();
             builder.Services.AddSingleton<AuthSecretProtector>();
@@ -195,7 +208,7 @@ public class Program
             builder.Services.AddScoped<UserCredentialAuthenticator>();
 
             // Émission des jetons OAuth2 (voir /oauth2/token, Controllers.OAuthController) pour
-            // les clients gérés depuis /oauth-clients.
+            // les clients gérés depuis /config/oauth-clients.
             builder.Services.AddSingleton<OAuthTokenIssuer>();
 
             // Schéma d'authentification Bearer (jetons émis par /oauth2/token) : enregistré ici
@@ -228,6 +241,14 @@ public class Program
             // conséquence sur la disponibilité de /admin/import/glpi avant la fin de
             // l'installation : UseSetupMiddleware redirige de toute façon tout vers /setup.
             builder.Services.AddInventoryModule(builder.Configuration);
+
+            // Module Cron (voir GlpiNg.Modules.Cron.CronModuleServiceCollectionExtensions) :
+            // exécute à intervalle régulier (réglable à chaud depuis /config → "Configuration
+            // générale" → "Système", voir SystemSection.razor) les ICronTask contribués par les
+            // modules. Enregistré ici pour la même raison qu'AddInventoryModule ci-dessus : son
+            // service dépend du DbContext de base.
+            builder.Services.AddScoped<ICronTask, HistoryPurgeCronTask>();
+            builder.Services.AddCronModule();
         }
 
         WebApplication app = builder.Build();
@@ -279,9 +300,12 @@ public class Program
         app.MapControllers();
 
         // Toutes les pages Blazor exigent une session authentifiée, sauf celles marquées
-        // @attribute [AllowAnonymous] (Login.razor).
+        // @attribute [AllowAnonymous] (Login.razor). AddAdditionalAssemblies expose les pages
+        // @page définies dans les modules (ex. Components/Pages/Computers dans Inventory), dont
+        // l'assembly distincte du projet hôte ne serait sinon pas découverte.
         app.MapRazorComponents<App>()
             .AddInteractiveServerRenderMode()
+            .AddAdditionalAssemblies(typeof(InventoryModuleServiceCollectionExtensions).Assembly)
             .RequireAuthorization();
 
         app.Run();

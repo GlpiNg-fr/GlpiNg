@@ -24,22 +24,16 @@
             <label>Serveur</label>
             <input class="form-control" @bind="Server.Host" @bind:event="oninput" @bind:after="NotifyChangedAsync" placeholder="imap.example.com" />
         </div>
-        <div class="row">
-            <div class="col-6">
-                <div class="glpi-fiche-field">
-                    <label>Port (optionnel)</label>
-                    <input type="number" class="form-control" value="@Server.Port" @onchange="OnPortChanged" />
-                </div>
-            </div>
-            <div class="col-6">
-                <div class="glpi-fiche-field">
-                    <label>Protocole</label>
-                    <select class="form-select" @bind="Server.Protocol">
-                        <option value="@MailServerProtocol.Imap">IMAP</option>
-                        <option value="@MailServerProtocol.Pop">POP</option>
-                    </select>
-                </div>
-            </div>
+        <div class="glpi-fiche-field">
+            <label>Port (optionnel)</label>
+            <input type="number" class="form-control" value="@Server.Port" @onchange="OnPortChanged" />
+        </div>
+        <div class="glpi-fiche-field">
+            <label>Protocole</label>
+            <select class="form-select" @bind="Server.Protocol">
+                <option value="@MailServerProtocol.Imap">IMAP</option>
+                <option value="@MailServerProtocol.Pop">POP</option>
+            </select>
         </div>
         <div class="glpi-fiche-field">
             <label>Chiffrement</label>

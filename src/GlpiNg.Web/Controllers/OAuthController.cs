@@ -11,7 +11,7 @@ namespace GlpiNg.Web.Controllers;
 
 /// <summary>
 /// Endpoint de jetons OAuth2 (RFC 6749) pour les <see cref="OAuthClient"/> gérés depuis
-/// /oauth-clients. Seuls les grants "client_credentials" et "password" sont supportés :
+/// /config/oauth-clients. Seuls les grants "client_credentials" et "password" sont supportés :
 /// "authorization_code" resterait sélectionnable dans le formulaire de gestion pour la fidélité
 /// avec GLPI, mais nécessiterait un écran de consentement, un stockage de code d'autorisation et
 /// PKCE — hors périmètre ici (voir <see cref="OAuthGrantTypes"/>).

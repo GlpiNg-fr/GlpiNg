@@ -1,3 +1,4 @@
+using BlazorBootstrap;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
 using Microsoft.AspNetCore.Components;
@@ -15,12 +16,14 @@ public partial class Index : ComponentBase
     [Inject]
     private IJSRuntime JS { get; set; } = null!;
 
+    [Inject]
+    private ToastService ToastService { get; set; } = null!;
+
     private List<AuthMailServer> _servers = [];
     private List<AuthMailServer> _filteredServers = [];
     private string _searchTerm = string.Empty;
     private readonly HashSet<int> _selectedIds = [];
     private AuthMailServer _newServer = NewBlankServer();
-    private string? _createError;
 
     private bool AllSelected => _filteredServers.Count > 0 && _selectedIds.Count == _filteredServers.Count;
 
@@ -110,7 +113,7 @@ public partial class Index : ComponentBase
         bool alreadyExists = await db.AuthMailServers.AsNoTracking().AnyAsync(s => s.Name == _newServer.Name);
         if (alreadyExists)
         {
-            _createError = "Ce nom est déjà utilisé.";
+            ToastService.Notify(new ToastMessage(ToastType.Danger, "Ce nom est déjà utilisé."));
             return;
         }
 
@@ -118,7 +121,6 @@ public partial class Index : ComponentBase
         await db.SaveChangesAsync();
 
         _newServer = NewBlankServer();
-        _createError = null;
 
         await JS.InvokeVoidAsync("glpiNg.hideModal", "newMailServerModal");
         await LoadAsync();
