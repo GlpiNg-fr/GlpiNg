@@ -10,7 +10,7 @@ namespace GlpiNg.Web.Services;
 /// Importe le contenu d'une requête "inventory" du protocole GLPI-Agent
 /// dans les entités Computer / ComputerComponent, en le rattachant à l'agent fourni.
 /// </summary>
-public class InventoryImportService(GlpiNgDbContext db, AppSettingsFileStore settingsStore)
+public class InventoryImportService(GlpiNgDbContext db, SettingsCacheService settingsStore)
 {
     private const string HistoryUser = "inventory";
     private const string SettingsSection = "InventorySettings";
@@ -26,6 +26,7 @@ public class InventoryImportService(GlpiNgDbContext db, AppSettingsFileStore set
             .Include(c => c.Volumes)
             .Include(c => c.Batteries)
             .Include(c => c.NetworkPorts)
+            .Include(c => c.Antiviruses)
             .FirstOrDefaultAsync(c => c.AgentId == agent.Id, cancellationToken);
 
         string ruleName;
@@ -46,6 +47,7 @@ public class InventoryImportService(GlpiNgDbContext db, AppSettingsFileStore set
                      .Include(c => c.Volumes)
                      .Include(c => c.Batteries)
                      .Include(c => c.NetworkPorts)
+                     .Include(c => c.Antiviruses)
                      .FirstOrDefaultAsync(c => c.HardwareUuid == uuid, cancellationToken)) is not null)
         {
             ruleName = "Mise à jour de l'ordinateur (par UUID matériel)";
@@ -67,9 +69,11 @@ public class InventoryImportService(GlpiNgDbContext db, AppSettingsFileStore set
         ApplyComponents(computer, content, settings);
         if (settings.ImportSoftwares) ApplySoftwares(computer, content);
         if (settings.ImportMonitors) ApplyMonitors(computer, content);
+        if (settings.ImportPeripherals) await ApplyPeripheralsAsync(computer, content, cancellationToken);
         ApplyVolumes(computer, content, settings);
         if (settings.ImportBatteries) ApplyBatteries(computer, content);
         ApplyNetworkPorts(computer, content);
+        if (settings.ImportAntivirus) ApplyAntivirus(computer, content);
 
         computer.LastInventoryAt = DateTime.UtcNow;
         computer.Status = ComputerStatus.InProduction;
@@ -122,6 +126,7 @@ public class InventoryImportService(GlpiNgDbContext db, AppSettingsFileStore set
             computer.TotalMemoryMb = hardware.MemoryMb ?? computer.TotalMemoryMb;
             computer.LastLoggedUser = hardware.LastLoggedUser ?? computer.LastLoggedUser;
             computer.VmSystem = hardware.VmSystem ?? computer.VmSystem;
+            computer.Domain = hardware.Workgroup ?? computer.Domain;
         }
 
         if (content.Bios is { } bios)
@@ -256,6 +261,107 @@ public class InventoryImportService(GlpiNgDbContext db, AppSettingsFileStore set
     }
 
     /// <summary>
+    /// Crée ou met à jour les entités <see cref="Peripheral"/> autonomes à partir des
+    /// périphériques USB et d'entrée remontés par l'agent, et les rattache à l'ordinateur.
+    /// La corrélation se fait par numéro de série (quand disponible), sinon par
+    /// nom+fabricant sur le même ordinateur, pour éviter les doublons à chaque inventaire.
+    /// </summary>
+    private async Task ApplyPeripheralsAsync(Computer computer, InventoryContent content, CancellationToken cancellationToken)
+    {
+        List<Peripheral> existingPeripherals = await db.Set<Peripheral>()
+            .Where(p => p.ComputerId == computer.Id)
+            .ToListAsync(cancellationToken);
+
+        HashSet<int> seenIds = [];
+
+        foreach (InventoryUsbDevice usb in content.UsbDevices)
+        {
+            string name = usb.Name ?? "Périphérique USB inconnu";
+            if (string.IsNullOrWhiteSpace(name) || name == "usb") continue;
+
+            string type = ResolveUsbType(usb);
+
+            Peripheral? peripheral = FindExistingPeripheral(existingPeripherals, name, usb.Manufacturer, usb.Serial);
+
+            if (peripheral is null)
+            {
+                peripheral = new Peripheral { Name = name };
+                db.Set<Peripheral>().Add(peripheral);
+                existingPeripherals.Add(peripheral);
+            }
+
+            peripheral.Manufacturer = usb.Manufacturer ?? peripheral.Manufacturer;
+            peripheral.SerialNumber = usb.Serial ?? peripheral.SerialNumber;
+            peripheral.Type = type;
+            peripheral.ComputerId = computer.Id;
+            peripheral.Status = ComputerStatus.InProduction;
+            peripheral.UpdatedAt = DateTime.UtcNow;
+
+            if (peripheral.Id > 0) seenIds.Add(peripheral.Id);
+        }
+
+        foreach (InventoryInput input in content.Inputs)
+        {
+            string name = input.Name ?? input.Caption ?? input.Description ?? "Périphérique d'entrée inconnu";
+            if (string.IsNullOrWhiteSpace(name)) continue;
+
+            string type = ResolveInputType(input);
+
+            Peripheral? peripheral = FindExistingPeripheral(existingPeripherals, name, input.Manufacturer, serial: null);
+
+            if (peripheral is null)
+            {
+                peripheral = new Peripheral { Name = name };
+                db.Set<Peripheral>().Add(peripheral);
+                existingPeripherals.Add(peripheral);
+            }
+
+            peripheral.Manufacturer = input.Manufacturer ?? peripheral.Manufacturer;
+            peripheral.Type = type;
+            peripheral.ComputerId = computer.Id;
+            peripheral.Status = ComputerStatus.InProduction;
+            peripheral.UpdatedAt = DateTime.UtcNow;
+
+            if (peripheral.Id > 0) seenIds.Add(peripheral.Id);
+        }
+    }
+
+    private static Peripheral? FindExistingPeripheral(List<Peripheral> existingPeripherals, string name, string? manufacturer, string? serial)
+    {
+        if (!string.IsNullOrWhiteSpace(serial))
+        {
+            Peripheral? bySerial = existingPeripherals.FirstOrDefault(p =>
+                string.Equals(p.SerialNumber, serial, StringComparison.OrdinalIgnoreCase));
+            if (bySerial is not null) return bySerial;
+        }
+
+        return existingPeripherals.FirstOrDefault(p =>
+            string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(p.Manufacturer, manufacturer, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static string ResolveUsbType(InventoryUsbDevice usb)
+    {
+        if (usb.Class is "03" or "3") return "HID";
+        if (usb.Class is "08" or "8") return "Stockage USB";
+        if (usb.Class is "09" or "9") return "Hub USB";
+        if (usb.Class is "0e" or "14" or "0E") return "Webcam";
+        if (usb.Class is "01" or "1") return "Audio USB";
+        if (usb.Class is "07" or "7") return "Imprimante USB";
+        return "Périphérique USB";
+    }
+
+    private static string ResolveInputType(InventoryInput input)
+    {
+        if (input.PointingType is not null) return "Dispositif de pointage";
+        if (input.Type?.Contains("keyboard", StringComparison.OrdinalIgnoreCase) == true
+            || input.Layout is not null) return "Clavier";
+        if (input.Type?.Contains("mouse", StringComparison.OrdinalIgnoreCase) == true
+            || input.Type?.Contains("touchpad", StringComparison.OrdinalIgnoreCase) == true) return "Dispositif de pointage";
+        return "Périphérique d'entrée";
+    }
+
+    /// <summary>
     /// Remplace intégralement les volumes du poste par ceux de l'inventaire courant, même
     /// logique d'instantané complet que <see cref="ApplyComponents"/>.
     /// </summary>
@@ -312,6 +418,7 @@ public class InventoryImportService(GlpiNgDbContext db, AppSettingsFileStore set
                 Chemistry = battery.Chemistry,
                 VoltageMv = battery.VoltageMv,
                 CapacityMwh = battery.CapacityMwh,
+                RealCapacityMwh = battery.RealCapacityMwh,
                 ManufactureDate = battery.ManufactureDate
             });
         }
@@ -350,6 +457,33 @@ public class InventoryImportService(GlpiNgDbContext db, AppSettingsFileStore set
     }
 
     /// <summary>
+    /// Remplace intégralement les antivirus du poste par ceux de l'inventaire courant, même
+    /// logique d'instantané complet que <see cref="ApplyComponents"/>.
+    /// </summary>
+    private static void ApplyAntivirus(Computer computer, InventoryContent content)
+    {
+        computer.Antiviruses.Clear();
+
+        foreach (InventoryAntivirus antivirus in content.Antivirus)
+        {
+            if (string.IsNullOrWhiteSpace(antivirus.Name)) continue;
+
+            computer.Antiviruses.Add(new ComputerAntivirus
+            {
+                Name = antivirus.Name,
+                Company = antivirus.Company,
+                Guid = antivirus.Guid,
+                Version = antivirus.Version,
+                Enabled = antivirus.Enabled,
+                UpToDate = antivirus.UpToDate,
+                Expiration = antivirus.Expiration,
+                BaseCreationDate = antivirus.BaseCreationDate,
+                BaseVersion = antivirus.BaseVersion
+            });
+        }
+    }
+
+    /// <summary>
     /// Photo de l'état d'un ordinateur juste avant application d'un inventaire, utilisée pour
     /// produire les entrées de l'onglet "Historique" en comparant avant/après. Les listes sont
     /// des clés textuelles (pas les entités elles-mêmes) car Apply* vide et recrée les collections
@@ -359,21 +493,23 @@ public class InventoryImportService(GlpiNgDbContext db, AppSettingsFileStore set
         string? Name, string? SerialNumber, string? Manufacturer, string? Model,
         string? OperatingSystem, string? OsVersion, string? OsKernelVersion,
         string? HardwareUuid, string? ChassisType, int? TotalMemoryMb,
-        string? LastLoggedUser, string? VmSystem, ComputerStatus Status, DateTime? LastInventoryAt,
+        string? LastLoggedUser, string? VmSystem, string? Domain, ComputerStatus Status, DateTime? LastInventoryAt,
         HashSet<string> Components, HashSet<string> Softwares, HashSet<string> Monitors,
-        HashSet<string> Volumes, HashSet<string> Batteries, HashSet<string> NetworkPorts)
+        HashSet<string> Volumes, HashSet<string> Batteries, HashSet<string> NetworkPorts,
+        HashSet<string> Antiviruses)
     {
         public static ComputerSnapshot Capture(Computer c) => new(
             c.Name, c.SerialNumber, c.Manufacturer, c.Model,
             c.OperatingSystem, c.OsVersion, c.OsKernelVersion,
             c.HardwareUuid, c.ChassisType, c.TotalMemoryMb,
-            c.LastLoggedUser, c.VmSystem, c.Status, c.LastInventoryAt,
+            c.LastLoggedUser, c.VmSystem, c.Domain, c.Status, c.LastInventoryAt,
             c.Components.Select(ComponentKey).ToHashSet(),
             c.Softwares.Select(SoftwareKey).ToHashSet(),
             c.Peripherals.Where(p => p.Kind == PeripheralKind.Monitor).Select(PeripheralKey).ToHashSet(),
             c.Volumes.Select(VolumeKey).ToHashSet(),
             c.Batteries.Select(BatteryKey).ToHashSet(),
-            c.NetworkPorts.Select(NetworkPortKey).ToHashSet());
+            c.NetworkPorts.Select(NetworkPortKey).ToHashSet(),
+            c.Antiviruses.Select(AntivirusKey).ToHashSet());
     }
 
     private static string ComponentKey(ComputerComponent c) =>
@@ -388,6 +524,8 @@ public class InventoryImportService(GlpiNgDbContext db, AppSettingsFileStore set
     private static string BatteryKey(ComputerBattery b) => b.Serial is { Length: > 0 } s ? $"{b.Name} ({s})" : b.Name;
 
     private static string NetworkPortKey(ComputerNetworkPort p) => p.MacAddress is { Length: > 0 } mac ? $"{p.Designation} ({mac})" : p.Designation;
+
+    private static string AntivirusKey(ComputerAntivirus a) => a.Version is { Length: > 0 } v ? $"{a.Name} ({v})" : a.Name;
 
     private static string ComponentTypeLabel(ComponentType type) => type switch
     {
@@ -422,6 +560,7 @@ public class InventoryImportService(GlpiNgDbContext db, AppSettingsFileStore set
             if (before.TotalMemoryMb != computer.TotalMemoryMb) yield return FieldChange("Mémoire totale", FormatMemory(before.TotalMemoryMb), FormatMemory(computer.TotalMemoryMb));
             if (before.LastLoggedUser != computer.LastLoggedUser) yield return FieldChange("Dernier utilisateur connecté", before.LastLoggedUser, computer.LastLoggedUser);
             if (before.VmSystem != computer.VmSystem) yield return FieldChange("Virtualisation", before.VmSystem, computer.VmSystem);
+            if (before.Domain != computer.Domain) yield return FieldChange("Domaine", before.Domain, computer.Domain);
             if (before.LastInventoryAt != computer.LastInventoryAt) yield return FieldChange("Date de dernier inventaire", FormatDate(before.LastInventoryAt), FormatDate(computer.LastInventoryAt));
             if (before.Status != computer.Status) yield return FieldChange("Statut", StatusLabel(before.Status), StatusLabel(computer.Status));
         }
@@ -459,6 +598,12 @@ public class InventoryImportService(GlpiNgDbContext db, AppSettingsFileStore set
 
         foreach (ComputerHistoryEntry entry in DiffKeyedSet(before.NetworkPorts, computer.NetworkPorts.Select(NetworkPortKey).ToHashSet(),
                      "Ports réseau", "Ajouter un port réseau", "Supprimer un port réseau"))
+        {
+            yield return entry;
+        }
+
+        foreach (ComputerHistoryEntry entry in DiffKeyedSet(before.Antiviruses, computer.Antiviruses.Select(AntivirusKey).ToHashSet(),
+                     "Antivirus", "Ajouter un antivirus", "Supprimer un antivirus"))
         {
             yield return entry;
         }

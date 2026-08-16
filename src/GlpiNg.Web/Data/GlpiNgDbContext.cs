@@ -1,8 +1,8 @@
 using AnthoDingo.Setup;
 using GlpiNg.Modules.Cron.Models;
+using GlpiNg.Modules.Deployment.Models;
 using GlpiNg.Modules.Inventory.Models;
 using GlpiNg.Web.Models;
-using GlpiNg.Web.Models.Agent;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using MySqlConnector;
@@ -20,6 +20,7 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<ComputerVolume> ComputerVolumes => Set<ComputerVolume>();
     public DbSet<ComputerBattery> ComputerBatteries => Set<ComputerBattery>();
     public DbSet<ComputerNetworkPort> ComputerNetworkPorts => Set<ComputerNetworkPort>();
+    public DbSet<ComputerAntivirus> ComputerAntiviruses => Set<ComputerAntivirus>();
     public DbSet<ComputerImportHistory> ComputerImportHistories => Set<ComputerImportHistory>();
     public DbSet<ComputerHistoryEntry> ComputerHistoryEntries => Set<ComputerHistoryEntry>();
     public DbSet<SavedSearch> SavedSearches => Set<SavedSearch>();
@@ -33,6 +34,12 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<DeploymentJob> DeploymentJobs => Set<DeploymentJob>();
     public DbSet<DeploymentPackage> DeploymentPackages => Set<DeploymentPackage>();
     public DbSet<DeploymentPackageFile> DeploymentPackageFiles => Set<DeploymentPackageFile>();
+    public DbSet<DeploymentPackageFilePart> DeploymentPackageFileParts => Set<DeploymentPackageFilePart>();
+    public DbSet<DeploymentPackageTarget> DeploymentPackageTargets => Set<DeploymentPackageTarget>();
+
+    public DbSet<DeployComputerGroup> DeployComputerGroups => Set<DeployComputerGroup>();
+    public DbSet<DeployComputerGroupMember> DeployComputerGroupMembers => Set<DeployComputerGroupMember>();
+    public DbSet<DeployComputerGroupCriterion> DeployComputerGroupCriteria => Set<DeployComputerGroupCriterion>();
 
     public DbSet<GlpiUser> Users => Set<GlpiUser>();
     public DbSet<GlpiUserHistoryEntry> UserHistoryEntries => Set<GlpiUserHistoryEntry>();
@@ -57,6 +64,19 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<OAuthClient> OAuthClients => Set<OAuthClient>();
 
     public DbSet<CronSettings> CronSettings => Set<CronSettings>();
+
+    public DbSet<AppSetting> AppSettings => Set<AppSetting>();
+
+    public DbSet<TimeSlot> TimeSlots => Set<TimeSlot>();
+    public DbSet<TimeSlotEntry> TimeSlotEntries => Set<TimeSlotEntry>();
+
+    public DbSet<CollectDefinition> CollectDefinitions => Set<CollectDefinition>();
+    public DbSet<CollectRegistryEntry> CollectRegistryEntries => Set<CollectRegistryEntry>();
+    public DbSet<CollectWmiEntry> CollectWmiEntries => Set<CollectWmiEntry>();
+    public DbSet<CollectFileSearchEntry> CollectFileSearchEntries => Set<CollectFileSearchEntry>();
+
+    public DbSet<DeploymentMirrorServer> DeploymentMirrorServers => Set<DeploymentMirrorServer>();
+    public DbSet<DeploymentUserInteractionTemplate> DeploymentUserInteractionTemplates => Set<DeploymentUserInteractionTemplate>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -108,6 +128,44 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
             .HasMany(p => p.Files)
             .WithOne()
             .HasForeignKey(f => f.DeploymentPackageId);
+
+        modelBuilder.Entity<DeploymentPackageFile>()
+            .HasMany(f => f.Parts)
+            .WithOne()
+            .HasForeignKey(part => part.DeploymentPackageFileId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DeploymentPackageFilePart>()
+            .HasIndex(part => part.Sha512)
+            .IsUnique();
+
+        // SetNull : supprimer le groupe désactive juste le déploiement à la demande du paquet
+        // (retombe sur "-----", comme plugin_glpiinventory_deploygroups_id côté GLPI-Inventory
+        // d'origine) plutôt que de supprimer le paquet lui-même.
+        modelBuilder.Entity<DeploymentPackage>()
+            .HasOne(p => p.DeployComputerGroup)
+            .WithMany()
+            .HasForeignKey(p => p.DeployComputerGroupId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Cascade : une cible n'a de sens que rattachée à son paquet. Pas de contrainte FK vers
+        // Entities/Groups/Profiles/Users : DeploymentPackageTarget.ItemId est une référence
+        // polymorphe (Type + ItemId, comme itemtype/items_id côté GLPI) que EF Core ne peut pas
+        // contraindre vers plusieurs tables cibles — voir la doc de DeploymentPackageTarget.
+        modelBuilder.Entity<DeploymentPackage>()
+            .HasMany(p => p.Targets)
+            .WithOne()
+            .HasForeignKey(t => t.DeploymentPackageId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Restrict comme GlpiGroup.Parent plus bas : FK auto-référencée, donc pas de Cascade
+        // (non supporté par SQL Server sur une relation qui boucle sur la même table). Empêche
+        // aussi de supprimer un paquet remplaçant tant que d'autres paquets le référencent encore.
+        modelBuilder.Entity<DeploymentPackage>()
+            .HasOne(p => p.SupersededByPackage)
+            .WithMany()
+            .HasForeignKey(p => p.SupersededByPackageId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<GlpiGroup>()
             .HasOne(g => g.Parent)
@@ -222,6 +280,69 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
         modelBuilder.Entity<TableColumnPreference>()
             .HasIndex(p => new { p.UserId, p.ItemType })
             .IsUnique();
+
+        modelBuilder.Entity<TimeSlot>()
+            .HasMany(t => t.Entries)
+            .WithOne()
+            .HasForeignKey(e => e.TimeSlotId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<CollectDefinition>()
+            .HasMany(c => c.RegistryEntries)
+            .WithOne()
+            .HasForeignKey(e => e.CollectDefinitionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<CollectDefinition>()
+            .HasMany(c => c.WmiEntries)
+            .WithOne()
+            .HasForeignKey(e => e.CollectDefinitionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<CollectDefinition>()
+            .HasMany(c => c.FileSearchEntries)
+            .WithOne()
+            .HasForeignKey(e => e.CollectDefinitionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DeployComputerGroup>()
+            .HasMany(g => g.Members)
+            .WithOne()
+            .HasForeignKey(m => m.DeployComputerGroupId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DeployComputerGroupMember>()
+            .HasOne(m => m.Computer)
+            .WithMany()
+            .HasForeignKey(m => m.ComputerId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DeployComputerGroupMember>()
+            .HasIndex(m => new { m.DeployComputerGroupId, m.ComputerId })
+            .IsUnique();
+
+        modelBuilder.Entity<DeployComputerGroup>()
+            .HasMany(g => g.Criteria)
+            .WithOne()
+            .HasForeignKey(c => c.DeployComputerGroupId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DeploymentMirrorServer>()
+            .HasIndex(s => s.Name)
+            .IsUnique();
+
+        modelBuilder.Entity<DeploymentUserInteractionTemplate>()
+            .HasIndex(t => t.Name)
+            .IsUnique();
+
+        // Clé primaire textuelle (nom de section, ex. "ParcSettings") plutôt qu'un Id auto-incrémenté :
+        // longueur bornée nécessaire pour qu'une clé primaire soit indexable sous MySQL (utf8mb4).
+        modelBuilder.Entity<AppSetting>()
+            .HasKey(s => s.SectionName);
+
+        modelBuilder.Entity<AppSetting>()
+            .Property(s => s.SectionName)
+            .HasMaxLength(100);
     }
 
     /// <summary>

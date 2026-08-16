@@ -1,8 +1,7 @@
-using System.Text.Json;
 using System.Text.Json.Nodes;
-using GlpiNg.Web.Models.Agent;
+using GlpiNg.Modules.Deployment.Models;
 
-namespace GlpiNg.Web.Services;
+namespace GlpiNg.Modules.Deployment.Services;
 
 /// <summary>
 /// Construit la réponse JSON de la tâche "deploy" envoyée à GLPI-Agent.
@@ -19,7 +18,10 @@ namespace GlpiNg.Web.Services;
 ///     "userinteractions": []
 ///   },
 ///   "associatedFiles": {
-///     "&lt;sha512&gt;": { "name": "...", "p2p": "0", "p2p-retention-duration": "0" }
+///     "&lt;sha512&gt;": {
+///       "name": "...", "p2p": "0", "p2p-retention-duration": "0",
+///       "multiparts": [ { "sha512": "&lt;part sha512&gt;", "size": 5242880 }, ... ]
+///     }
 ///   }
 /// }
 /// </code>
@@ -28,7 +30,10 @@ namespace GlpiNg.Web.Services;
 /// <see cref="DeploymentJob"/>) — le protocole réel du plugin GlpiInventory utilise un
 /// endpoint séparé à base de query-string (action=getJobs/setStatus) que ce serveur
 /// choisit de ne pas reproduire tel quel : ce point est une adaptation, pas une donnée
-/// vérifiée du protocole d'origine.
+/// vérifiée du protocole d'origine. Le champ "multiparts" reprend l'esprit du découpage en
+/// fragments du protocole réel (téléchargement/vérification fragment par fragment par
+/// l'agent, voir <see cref="DeploymentPackageFilePart"/>) sans prétendre à une fidélité
+/// exacte de forme, faute de spécification de référence accessible pour ce point précis.
 /// </summary>
 public class DeployJobJsonBuilder
 {
@@ -38,29 +43,42 @@ public class DeployJobJsonBuilder
         ArgumentNullException.ThrowIfNull(package);
         ArgumentNullException.ThrowIfNull(jobUuid);
 
-        JsonArray actions = ParseActions(package.ActionsJson);
+        JsonArray checks = DeploymentPackageJsonConverter.ParseJsonArray(package.ChecksJson);
+        JsonArray actions = DeploymentPackageJsonConverter.ParseJsonArray(package.ActionsJson);
+        JsonArray userInteractions = DeploymentPackageJsonConverter.ParseJsonArray(package.UserInteractionsJson);
 
         JsonArray associatedFileHashes = [];
         JsonObject associatedFilesDetails = [];
 
         foreach (DeploymentPackageFile file in package.Files)
         {
+            JsonArray multiparts = [];
+            foreach (DeploymentPackageFilePart part in file.Parts.OrderBy(p => p.PartIndex))
+            {
+                multiparts.Add(new JsonObject
+                {
+                    ["sha512"] = part.Sha512,
+                    ["size"] = part.SizeBytes
+                });
+            }
+
             associatedFileHashes.Add(JsonValue.Create(file.Sha512));
             associatedFilesDetails[file.Sha512] = new JsonObject
             {
                 ["name"] = file.FileName,
                 ["p2p"] = "0",
-                ["p2p-retention-duration"] = "0"
+                ["p2p-retention-duration"] = "0",
+                ["multiparts"] = multiparts
             };
         }
 
         JsonObject jobs = new()
         {
             ["uuid"] = jobUuid,
-            ["checks"] = new JsonArray(),
+            ["checks"] = checks,
             ["associatedFiles"] = associatedFileHashes,
             ["actions"] = actions,
-            ["userinteractions"] = new JsonArray()
+            ["userinteractions"] = userInteractions
         };
 
         return new JsonObject
@@ -68,30 +86,5 @@ public class DeployJobJsonBuilder
             ["jobs"] = jobs,
             ["associatedFiles"] = associatedFilesDetails
         };
-    }
-
-    private static JsonArray ParseActions(string actionsJson)
-    {
-        if (string.IsNullOrWhiteSpace(actionsJson))
-        {
-            return [];
-        }
-
-        JsonNode? parsed;
-        try
-        {
-            parsed = JsonNode.Parse(actionsJson);
-        }
-        catch (JsonException)
-        {
-            return [];
-        }
-
-        if (parsed is JsonArray parsedArray)
-        {
-            return parsedArray;
-        }
-
-        return [];
     }
 }

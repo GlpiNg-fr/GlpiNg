@@ -3,7 +3,7 @@ namespace GlpiNg.Web.Models;
 /// <summary>
 /// Modèle de l'onglet "Autres méthodes d'authentification" de /config/auth
 /// (auth.others.php côté GLPI : CAS, certificat x509, en-tête HTTP/SSO). Stocké via
-/// AppSettingsFileStore (section "AuthOtherSettings"). Configuration/gestion uniquement :
+/// SettingsCacheService (section "AuthOtherSettings"). Configuration/gestion uniquement :
 /// aucune de ces méthodes n'est branchée sur le flux de connexion réel (AccountController),
 /// contrairement à <see cref="AuthLdapServer"/> — seul le bind LDAP est aujourd'hui une
 /// authentification externe fonctionnelle dans GlpiNg.

@@ -12,7 +12,7 @@ namespace GlpiNg.Web.Services;
 /// (<see cref="Controllers.OAuthController"/>), pour que les deux se comportent identiquement
 /// vis-à-vis d'un compte local, LDAP existant, ou LDAP à provisionner.
 /// </summary>
-public class UserCredentialAuthenticator(GlpiNgDbContext db, AppSettingsFileStore settingsStore, LdapAuthenticationService ldapAuth)
+public class UserCredentialAuthenticator(GlpiNgDbContext db, SettingsCacheService settingsStore, LdapAuthenticationService ldapAuth)
 {
     private static readonly PasswordHasher<GlpiUser> Hasher = new();
 

@@ -1,6 +1,7 @@
 @using GlpiNg.Web.Models
 @using GlpiNg.Web.Services
-@inject AppSettingsFileStore SettingsStore
+@inject SettingsCacheService SettingsStore
+@inject AppSettingsFileStore FileStore
 @inject ConfigHistoryService History
 @inject ToastService ToastService
 
@@ -65,6 +66,15 @@ else
                 <input id="anon-imports" type="checkbox" @bind="_general.AllowAnonymousFileImports" />
                 <span class="glpi-switch-slider"></span>
             </label>
+        </div>
+
+        <div class="glpi-config-field">
+            <label for="mac-format">Affichage adresse MAC</label>
+            <select id="mac-format" class="glpi-config-input" @bind="_general.MacAddressFormat">
+                <option value="Windows">Windows (AA-BB-CC-DD-EE-FF)</option>
+                <option value="HP">HP (AABBCC-DDEEFF)</option>
+                <option value="Cisco">Cisco (aabb.ccdd.eeff)</option>
+            </select>
         </div>
 
         <div class="glpi-config-divider">
@@ -185,14 +195,16 @@ else
         return durations;
     }
 
+    private const string SectionName = "GeneralSettings";
+
     private GeneralSettings? _general;
     private ServerSettings? _server;
     private bool _isSaving;
 
     protected override async Task OnInitializedAsync()
     {
-        _general = await SettingsStore.ReadGeneralAsync();
-        _server = await SettingsStore.ReadAsync();
+        _general = await SettingsStore.ReadSectionAsync<GeneralSettings>(SectionName);
+        _server = await FileStore.ReadAsync();
     }
 
     private async Task SaveAsync()
@@ -206,9 +218,9 @@ else
 
         try
         {
-            var before = await SettingsStore.ReadGeneralAsync();
-            await SettingsStore.SaveGeneralAsync(_general);
-            await SettingsStore.SaveAsync(_server);
+            var before = await SettingsStore.ReadSectionAsync<GeneralSettings>(SectionName);
+            await SettingsStore.SaveSectionAsync(SectionName, _general);
+            await FileStore.SaveAsync(_server);
             await History.AppendAsync("Administrateur", SettingsDiff.Compare(before, _general));
             ToastService.Notify(new ToastMessage(ToastType.Success, "Configuration enregistrée."));
         }

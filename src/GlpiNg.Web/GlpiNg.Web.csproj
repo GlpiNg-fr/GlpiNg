@@ -14,28 +14,25 @@
 
   <ItemGroup>
     <PackageReference Include="Blazor.Bootstrap" Version="3.5.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.10" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.18">
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.11">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.18" />
-	<PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
-    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0" />
-    <PackageReference Include="MySqlConnector" Version="2.6.1" />
-    <PackageReference Include="AnthoDingo.Setup" Version="2.0.0" />
-    <!-- Contournement de CVE-2025-6965 / GHSA-2m69-gcr7-jv3q : AnthoDingo.Setup dépend de
-         Microsoft.Data.Sqlite (pour tester une connexion SQLite dans son wizard), qui ramène
-         SQLitePCLRaw.lib.e_sqlite3 2.1.11 (vulnérable, non corrigé en amont — dotnet/efcore#38257). -->
-    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.53.3" />
-    <PackageReference Include="System.DirectoryServices.Protocols" Version="10.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.11" />
+	<PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    <PackageReference Include="Microting.EntityFrameworkCore.MySql" Version="10.0.10" />
+    <PackageReference Include="MySqlConnector" Version="2.6.2" />
+    <PackageReference Include="AnthoDingo.Setup" Version="2.0.1" />    
+    <PackageReference Include="System.DirectoryServices.Protocols" Version="10.0.11" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\GlpiNg.Modules.Inventory\GlpiNg.Modules.Inventory.csproj" />
     <ProjectReference Include="..\GlpiNg.Modules.Abstractions\GlpiNg.Modules.Abstractions.csproj" />
     <ProjectReference Include="..\GlpiNg.Modules.Cron\GlpiNg.Modules.Cron.csproj" />
+    <ProjectReference Include="..\GlpiNg.Modules.Deployment\GlpiNg.Modules.Deployment.csproj" />
   </ItemGroup>
 
 </Project>

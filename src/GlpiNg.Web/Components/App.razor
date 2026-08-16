@@ -14,7 +14,17 @@
 </head>
 <body>
     <Routes @rendermode="InteractiveServer" />
-    <script src="https://cdn.jsdelivr.net/npm/@@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
+    <!--
+        Uniquement le bundle Bootstrap "officiel" ici, pas le JS de @@tabler/core (qui embarque
+        sa propre copie interne des composants Bootstrap, dont Dropdown) : les deux enregistraient
+        chacun leur propre gestionnaire de clic délégué sur document pour [data-bs-toggle="dropdown"],
+        et s'entre-perturbaient — le clic ouvrait le menu via Bootstrap CDN, puis la copie de Tabler,
+        lisant le DOM déjà modifié, le croyait "déjà ouvert" et le refermait aussitôt (même clic,
+        même passage synchrone). Seul le CSS de Tabler est nécessaire (voir <link> ci-dessus) ; son
+        JS est redondant avec bootstrap.bundle.min.js, dont BlazorBootstrap (ToastService, etc.) a
+        justement besoin comme unique source du global window.bootstrap.
+    -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="@Assets["js/glpi-ng.js"]"></script>
     <script src="_framework/blazor.web.js"></script>
     <script src="_content/Blazor.Bootstrap/blazor.bootstrap.js"></script>
