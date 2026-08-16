@@ -15,6 +15,7 @@ using GlpiNg.Web.Data;
 using GlpiNg.Web.Middleware;
 using GlpiNg.Web.Options;
 using GlpiNg.Web.Services;
+using GlpiNg.Web.Services.Notifications;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -70,6 +71,11 @@ public class Program
         // Toasts BlazorBootstrap (confirmations/erreurs de formulaire, voir <Toasts> dans
         // MainLayout.razor et BlankLayout.razor) : remplace les anciens messages inline "status".
         builder.Services.AddBlazorBootstrap();
+
+        // Utilisé par InventoryImportService pour construire les liens ##computer.url##/##agent.url##
+        // des notifications (voir Services/Notifications) à partir de la requête HTTP courante —
+        // ce service n'est pas un contrôleur et n'a donc pas accès à HttpContext autrement.
+        builder.Services.AddHttpContextAccessor();
 
         // Authentification applicative par cookie : /login (GlpiUser + PasswordHasher, déjà
         // utilisé par l'admin créé au setup — voir GlpiNgSetupInitializer) et /Account/Logout
@@ -317,6 +323,17 @@ public class Program
             // modules. Enregistré ici pour la même raison qu'AddInventoryModule ci-dessus : son
             // service dépend du DbContext de base.
             builder.Services.AddScoped<ICronTask, HistoryPurgeCronTask>();
+
+            // Notifications (voir /config/notifications, Models/Notifications et
+            // Services/Notifications) : NotificationDispatchService dépose des QueuedNotification
+            // au fil des événements réels de GlpiNg (nouvel ordinateur, nouvel agent, fin de
+            // déploiement — voir ses points d'appel dans InventoryImportService/AgentController),
+            // QueuedNotificationSenderCronTask les expédie par SMTP (SmtpMailSender, MailKit) à
+            // chaque tick du même service cron que HistoryPurgeCronTask ci-dessus.
+            builder.Services.AddScoped<NotificationDispatchService>();
+            builder.Services.AddSingleton<SmtpMailSender>();
+            builder.Services.AddScoped<ICronTask, QueuedNotificationSenderCronTask>();
+
             builder.Services.AddCronModule();
         }
 

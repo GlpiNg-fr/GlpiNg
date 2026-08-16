@@ -1,0 +1,80 @@
+@page "/config/notifications/queue"
+@using GlpiNg.Web.Models.Notifications
+@rendermode InteractiveServer
+
+<PageTitle>GlpiNg — File d'attente des notifications</PageTitle>
+
+<NotificationsTabStrip Current="queue" />
+
+<div class="glpi-list-page">
+<div class="card">
+    <div class="card-header d-flex align-items-center justify-content-between glpi-list-toolbar">
+        <span class="fw-semibold">@_items.Count élément(s)</span>
+        <div class="btn-list align-items-center">
+            <button type="button" class="btn btn-icon" @onclick="LoadAsync" title="Rafraîchir">
+                <i class="ti ti-refresh"></i>
+            </button>
+            <button type="button" class="btn btn-outline-danger" disabled="@(SentOrFailedCount == 0)" @onclick="PurgeSentAndFailedAsync">
+                <i class="ti ti-trash me-1"></i>Purger envoyés/échoués
+            </button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th>Sujet</th>
+                    <th>Créé le</th>
+                    <th>Destinataire</th>
+                    <th>Notification</th>
+                    <th>Statut</th>
+                    <th>Tentatives</th>
+                    <th style="width: 8rem;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (_items.Count == 0)
+                {
+                    <tr>
+                        <td colspan="7" class="text-center text-secondary py-4">La file d'attente est vide.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (QueuedNotification item in _items)
+                    {
+                        <tr>
+                            <td>
+                                @item.Subject
+                                @if (!string.IsNullOrEmpty(item.LastError))
+                                {
+                                    <div class="text-danger small">@item.LastError</div>
+                                }
+                            </td>
+                            <td>@item.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@item.RecipientEmail</td>
+                            <td>@item.NotificationName</td>
+                            <td><span class="badge @StatusBadgeClass(item.Status)">@StatusLabel(item.Status)</span></td>
+                            <td>@item.Attempts</td>
+                            <td>
+                                <div class="btn-list">
+                                    @if (item.Status == QueuedNotificationStatus.Failed)
+                                    {
+                                        <button type="button" class="btn btn-icon btn-sm" title="Remettre en file" @onclick="() => RetryAsync(item.Id)">
+                                            <i class="ti ti-reload"></i>
+                                        </button>
+                                    }
+                                    <button type="button" class="btn btn-icon btn-sm text-danger" title="Supprimer" @onclick="() => DeleteAsync(item.Id)">
+                                        <i class="ti ti-x"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>

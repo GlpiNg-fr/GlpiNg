@@ -6,6 +6,11 @@
       "runtimeExecutable": "dotnet",
       "runtimeArgs": ["run", "--project", "src/GlpiNg.Web/GlpiNg.Web.csproj", "--urls", "http://localhost:65441"],
       "port": 65441
+    },
+    {
+      "name": "glping-web-attach",
+      "url": "http://localhost:65441",
+      "port": 65441
     }
   ]
 }

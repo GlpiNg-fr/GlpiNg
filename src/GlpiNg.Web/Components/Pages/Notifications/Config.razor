@@ -1,0 +1,197 @@
+@page "/config/notifications"
+@using GlpiNg.Web.Models.Notifications
+@using GlpiNg.Web.Services
+@using GlpiNg.Web.Services.Notifications
+@inject SettingsCacheService SettingsStore
+@inject AuthSecretProtector Protector
+@inject SmtpMailSender MailSender
+@inject ToastService ToastService
+@rendermode InteractiveServer
+
+<PageTitle>GlpiNg — Notifications</PageTitle>
+
+<NotificationsTabStrip Current="config" />
+
+@if (_model is null)
+{
+    <p>Chargement…</p>
+}
+else
+{
+    <div class="glpi-config">
+        <div class="glpi-config-body">
+            <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glpi-config-form">
+                <div class="glpi-config-field checkbox">
+                    <label for="notif-use">Activer les notifications</label>
+                    <label class="glpi-switch">
+                        <input id="notif-use" type="checkbox" @bind="_model.UseNotifications" />
+                        <span class="glpi-switch-slider"></span>
+                    </label>
+                </div>
+
+                <div class="glpi-config-field checkbox">
+                    <label for="notif-mailing">Activer l'envoi par e-mail</label>
+                    <label class="glpi-switch">
+                        <input id="notif-mailing" type="checkbox" @bind="_model.MailingEnabled" />
+                        <span class="glpi-switch-slider"></span>
+                    </label>
+                </div>
+
+                <div class="glpi-fiche-block-title mt-3"><i class="ti ti-server-2"></i>Serveur SMTP</div>
+
+                <div class="glpi-config-field">
+                    <label for="notif-host">Serveur</label>
+                    <input id="notif-host" class="glpi-config-input-sm" @bind="_model.SmtpHost" placeholder="smtp.example.com" />
+                </div>
+
+                <div class="glpi-config-field">
+                    <label for="notif-port">Port</label>
+                    <input id="notif-port" type="number" class="glpi-config-input-sm" @bind="_model.SmtpPort" />
+                </div>
+
+                <div class="glpi-config-field">
+                    <label for="notif-enc">Chiffrement</label>
+                    <select id="notif-enc" @bind="_model.Encryption">
+                        <option value="@SmtpEncryptionMode.None">Aucun</option>
+                        <option value="@SmtpEncryptionMode.StartTls">STARTTLS</option>
+                        <option value="@SmtpEncryptionMode.Ssl">SSL/TLS</option>
+                    </select>
+                </div>
+
+                <div class="glpi-config-field checkbox">
+                    <label for="notif-auth">Authentification requise</label>
+                    <label class="glpi-switch">
+                        <input id="notif-auth" type="checkbox" @bind="_model.RequiresAuthentication" />
+                        <span class="glpi-switch-slider"></span>
+                    </label>
+                </div>
+
+                @if (_model.RequiresAuthentication)
+                {
+                    <div class="glpi-config-field">
+                        <label for="notif-user">Utilisateur SMTP</label>
+                        <input id="notif-user" class="glpi-config-input-sm" @bind="_model.SmtpUsername" />
+                    </div>
+
+                    <div class="glpi-config-field">
+                        <label for="notif-pass">Mot de passe SMTP</label>
+                        <input id="notif-pass" type="password" class="glpi-config-input-sm" @bind="_smtpPasswordPlain"
+                               placeholder="@(string.IsNullOrEmpty(_model.SmtpPasswordProtected) ? "" : "Laisser vide pour conserver le mot de passe actuel")" />
+                    </div>
+                }
+
+                <div class="glpi-fiche-block-title mt-3"><i class="ti ti-send"></i>Expéditeur</div>
+
+                <div class="glpi-config-field">
+                    <label for="notif-sender-email">Adresse d'expédition</label>
+                    <input id="notif-sender-email" type="email" class="glpi-config-input-sm" @bind="_model.SenderEmail" placeholder="glpi@example.com" />
+                </div>
+
+                <div class="glpi-config-field">
+                    <label for="notif-sender-name">Nom d'expéditeur</label>
+                    <input id="notif-sender-name" class="glpi-config-input-sm" @bind="_model.SenderName" />
+                </div>
+
+                <div class="glpi-config-field">
+                    <label for="notif-reply-to">Adresse de réponse (optionnel)</label>
+                    <input id="notif-reply-to" type="email" class="glpi-config-input-sm" @bind="_model.ReplyToEmail" />
+                </div>
+
+                <button type="submit" class="glpi-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+            </EditForm>
+
+            <div class="glpi-fiche-block-title mt-4"><i class="ti ti-mail-forward"></i>Tester l'envoi</div>
+            <div class="glpi-config-field">
+                <label for="notif-test-email">Adresse de test</label>
+                <input id="notif-test-email" type="email" class="glpi-config-input-sm" @bind="_testEmail" placeholder="vous@example.com" />
+            </div>
+            <button type="button" class="btn btn-outline-primary" disabled="@(_isTesting || string.IsNullOrWhiteSpace(_testEmail))" @onclick="SendTestAsync">
+                <i class="ti ti-send me-1"></i>@(_isTesting ? "Envoi…" : "Envoyer un e-mail de test")
+            </button>
+        </div>
+    </div>
+}
+
+@code {
+    private const string SectionName = "NotificationSettings";
+
+    private NotificationSettings? _model;
+    private string _smtpPasswordPlain = string.Empty;
+    private string _testEmail = string.Empty;
+    private bool _isSaving;
+    private bool _isTesting;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _model = await SettingsStore.ReadSectionAsync<NotificationSettings>(SectionName);
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_model is null)
+        {
+            return;
+        }
+
+        _isSaving = true;
+
+        try
+        {
+            if (!string.IsNullOrEmpty(_smtpPasswordPlain))
+            {
+                _model.SmtpPasswordProtected = Protector.Protect(_smtpPasswordPlain);
+                _smtpPasswordPlain = string.Empty;
+            }
+
+            await SettingsStore.SaveSectionAsync(SectionName, _model);
+            ToastService.Notify(new ToastMessage(ToastType.Success, "Configuration enregistrée."));
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task SendTestAsync()
+    {
+        if (_model is null || string.IsNullOrWhiteSpace(_testEmail))
+        {
+            return;
+        }
+
+        _isTesting = true;
+
+        try
+        {
+            NotificationSettings probe = new()
+            {
+                UseNotifications = _model.UseNotifications,
+                MailingEnabled = _model.MailingEnabled,
+                SmtpHost = _model.SmtpHost,
+                SmtpPort = _model.SmtpPort,
+                Encryption = _model.Encryption,
+                RequiresAuthentication = _model.RequiresAuthentication,
+                SmtpUsername = _model.SmtpUsername,
+                SmtpPasswordProtected = string.IsNullOrEmpty(_smtpPasswordPlain)
+                    ? _model.SmtpPasswordProtected
+                    : Protector.Protect(_smtpPasswordPlain),
+                SenderEmail = _model.SenderEmail,
+                SenderName = _model.SenderName,
+                ReplyToEmail = _model.ReplyToEmail,
+            };
+
+            await MailSender.SendAsync(probe, _testEmail, "Test GlpiNg",
+                "Ceci est un e-mail de test envoyé depuis la configuration des notifications de GlpiNg.",
+                null);
+            ToastService.Notify(new ToastMessage(ToastType.Success, $"E-mail de test envoyé à {_testEmail}."));
+        }
+        catch (Exception ex)
+        {
+            ToastService.Notify(new ToastMessage(ToastType.Danger, $"Échec de l'envoi : {ex.Message}"));
+        }
+        finally
+        {
+            _isTesting = false;
+        }
+    }
+}

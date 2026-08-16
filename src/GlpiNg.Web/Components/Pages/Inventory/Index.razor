@@ -1,8 +1,11 @@
 @page "/admin/inventory"
 @using GlpiNg.Web.Models
 @using GlpiNg.Web.Services
+@using GlpiNg.Web.Services.Notifications
 @inject SettingsCacheService SettingsStore
 @inject ConfigHistoryService History
+@inject NotificationDispatchService NotificationDispatch
+@inject IHttpContextAccessor HttpContextAccessor
 @rendermode InteractiveServer
 
 <PageTitle>GlpiNg — Inventaire</PageTitle>
