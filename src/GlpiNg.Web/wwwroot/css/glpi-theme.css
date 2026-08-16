@@ -332,7 +332,8 @@ body {
 
 .glpi-nav-flyout-panel {
   min-width: 200px;
-  max-width: 520px;
+  max-width: none;
+  width: max-content;
   background: #fff;
   color: #1b2f62;
   border-radius: 0.75rem;
@@ -350,14 +351,17 @@ body {
 }
 
 .glpi-nav-flyout-items {
-  columns: 180px 3;
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(6, auto);
   column-gap: 1.5rem;
 }
 
 .glpi-nav-flyout-items .glpi-nav-subitem {
   padding: 0.35rem 0.25rem;
   color: #354052;
-  break-inside: avoid;
+  min-width: 180px;
+  white-space: nowrap;
   animation: none;
 }
 
@@ -490,6 +494,58 @@ body {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+}
+
+/* --- Pages de liste (tableau pleine hauteur, header/footer fixes) --- */
+.glpi-page-body:has(.glpi-list-page) {
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.glpi-list-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.glpi-list-page > .card,
+.glpi-list-page > .glpi-computers-layout > .card {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+/* --- Pages de fiche (ex. détail Ordinateur) : cadre central pleine hauteur --- */
+.glpi-page-body:has(.glpi-fiche-layout) {
+  display: flex;
+  flex-direction: column;
+  overflow-y: hidden;
+}
+
+.glpi-list-page .glpi-computers-layout {
+  flex: 1;
+  min-height: 0;
+}
+
+.glpi-list-page .card-header,
+.glpi-list-page .card-footer {
+  flex-shrink: 0;
+}
+
+.glpi-list-page .table-responsive {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.glpi-list-page .table-responsive thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--tblr-card-bg, #fff);
 }
 
 /* --- Page de configuration (/config), sous-menu + formulaire type GLPI --- */
@@ -1304,6 +1360,7 @@ body {
   gap: 1rem;
   flex-wrap: wrap;
   margin-bottom: 1rem;
+  flex-shrink: 0;
 }
 
 .glpi-fiche-crumb {
@@ -1377,6 +1434,8 @@ body {
   border: 1px solid #e6e7e9;
   border-radius: 8px;
   overflow: hidden;
+  flex: 1;
+  min-height: 0;
 }
 
 .glpi-fiche-sidebar {
@@ -1384,7 +1443,6 @@ body {
   flex-shrink: 0;
   border-right: 1px solid #e6e7e9;
   padding: 0.4rem 0;
-  max-height: calc(100vh - 220px);
   overflow-y: auto;
 }
 
@@ -1448,6 +1506,7 @@ body {
   flex: 1;
   min-width: 0;
   padding: 1.25rem 1.5rem;
+  overflow-y: auto;
 }
 
 /* Formulaire de lecture (ex. onglets "Ordinateur", "Systèmes d'exploitation") */
@@ -1499,12 +1558,38 @@ body {
 .glpi-fiche-inventory-panel .row {
   padding: 1rem;
   margin: 0;
+  row-gap: 1.25rem;
 }
 
 .glpi-fiche-inventory-label {
   font-size: 0.75rem;
   color: #8a919a;
-  margin-bottom: 0.15rem;
+  margin-bottom: 0.3rem;
+}
+
+.glpi-fiche-inventory-label .ti-refresh {
+  font-size: 0.75rem;
+  margin-left: 0.15rem;
+}
+
+.glpi-fiche-inventory-agent-link {
+  margin-left: 0.4rem;
+  color: #8a919a;
+}
+
+.glpi-fiche-inventory-agent-link:hover {
+  color: #2c5cc5;
+}
+
+.glpi-fiche-inventory-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  background: #f8f9fa;
+  border-top: 1px solid #e6e7e9;
+  font-size: 0.8rem;
+  color: #6c7580;
 }
 
 /* Blocs de champs (ex. groupes de "Composants", "Logiciels", "Connexions") */
@@ -1527,6 +1612,87 @@ body {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
+}
+
+/* Contenu d'un .glpi-fiche-block, en dessous du bandeau .glpi-fiche-block-title : marge
+   intérieure pour que tableaux/formulaires ne touchent pas les bords du bloc. */
+.glpi-fiche-block-body {
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+/* Sous-panneau "ajouter un élément" en bas d'un bloc à liste (audits, actions...) : fond
+   légèrement teinté + séparateur, pour le distinguer visuellement de la liste au-dessus. */
+.glpi-fiche-add-row {
+  margin: 0 -1.25rem -1.25rem;
+  padding: 0.9rem 1.25rem;
+  background: #f8f9fb;
+  border-top: 1px solid #eceef1;
+}
+
+/* Sélecteur multi-valeurs façon GLPI (ex. "Sélectionner les paquets à installer") : une zone
+   bordée listant les valeurs choisies sous forme de tags retirables, avec un <select> "furtif"
+   collé à la suite pour en ajouter d'autres — pas de dépendance JS, juste du HTML natif. */
+.glpi-tag-select {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: calc(1.4285714em + 0.7rem + 2px);
+  padding: 0.35rem 0.5rem;
+  background: #fff;
+  border: 1px solid #dbdfe6;
+  border-radius: 4px;
+}
+
+.glpi-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.55rem;
+  background: #eef1f8;
+  border: 1px solid #dde3f0;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  color: #1d2733;
+  white-space: nowrap;
+}
+
+.glpi-tag-remove {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #6c7580;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.glpi-tag-remove:hover {
+  color: var(--tblr-danger);
+}
+
+.glpi-tag-select-input {
+  flex: 0 0 auto;
+  max-width: 100%;
+  padding: 0.15rem 0.6rem;
+  background: #fff;
+  border: 1px dashed #c3c9d3;
+  border-radius: 999px;
+  color: #495363;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.glpi-tag-select-input:hover:not(:disabled) {
+  border-color: var(--tblr-primary);
+  color: var(--tblr-primary);
+}
+
+.glpi-tag-select-input:disabled {
+  color: #9aa2ad;
+  border-color: #eceef1;
+  cursor: default;
 }
 
 /* Barre de taux d'utilisation (onglet Volumes) */
@@ -1557,6 +1723,25 @@ body {
   font-weight: 600;
   color: #fff;
   text-shadow: 0 0 2px rgba(0, 0, 0, 0.35);
+}
+
+/* Barre de progression d'upload (bloc Fichiers d'un paquet de déploiement) */
+.glpi-upload-progress {
+  position: relative;
+  width: 100%;
+  height: 0.6rem;
+  background: #e9ecef;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.glpi-upload-progress-fill {
+  position: absolute;
+  inset: 0;
+  width: 0;
+  background: var(--tblr-primary);
+  border-radius: 999px;
+  transition: width 0.15s ease;
 }
 
 /* --- Cartes de tableau de bord réordonnables --- */

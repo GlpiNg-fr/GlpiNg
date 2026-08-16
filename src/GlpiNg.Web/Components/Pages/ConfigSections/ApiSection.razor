@@ -1,6 +1,7 @@
 @using GlpiNg.Web.Models
 @using GlpiNg.Web.Services
-@inject AppSettingsFileStore SettingsStore
+@inject SettingsCacheService SettingsStore
+@inject AppSettingsFileStore FileStore
 @inject ConfigHistoryService History
 @inject ToastService ToastService
 
@@ -76,7 +77,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         _model = await SettingsStore.ReadSectionAsync<ApiSettings>(SectionName);
-        _server = await SettingsStore.ReadAsync();
+        _server = await FileStore.ReadAsync();
     }
 
     private async Task SaveAsync()
@@ -92,7 +93,7 @@ else
         {
             var before = await SettingsStore.ReadSectionAsync<ApiSettings>(SectionName);
             await SettingsStore.SaveSectionAsync(SectionName, _model);
-            await SettingsStore.SaveAsync(_server);
+            await FileStore.SaveAsync(_server);
             await History.AppendAsync("Administrateur", SettingsDiff.Compare(before, _model));
             ToastService.Notify(new ToastMessage(ToastType.Success, "Configuration enregistrée."));
         }

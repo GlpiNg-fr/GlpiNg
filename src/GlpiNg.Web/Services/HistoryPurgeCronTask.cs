@@ -17,7 +17,7 @@ namespace GlpiNg.Web.Services;
 /// voir GlpiEntityHistoryEntry) : seul le réglage global "All" est donc appliqué,
 /// uniformément aux quatre tables.
 /// </summary>
-public sealed class HistoryPurgeCronTask(GlpiNgDbContext db, AppSettingsFileStore settingsStore) : ICronTask
+public sealed class HistoryPurgeCronTask(GlpiNgDbContext db, SettingsCacheService settingsStore) : ICronTask
 {
     private const string SectionName = "PurgeSettings";
 

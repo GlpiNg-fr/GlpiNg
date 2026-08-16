@@ -2,7 +2,11 @@
 @using Microsoft.AspNetCore.Components.Authorization
 
 <Router AppAssembly="@typeof(Program).Assembly"
-        AdditionalAssemblies="new[] { typeof(GlpiNg.Modules.Inventory.InventoryModuleServiceCollectionExtensions).Assembly }">
+        AdditionalAssemblies="new[]
+        {
+            typeof(GlpiNg.Modules.Inventory.InventoryModuleServiceCollectionExtensions).Assembly,
+            typeof(GlpiNg.Modules.Deployment.DeploymentModuleServiceCollectionExtensions).Assembly,
+        }">
     <Found Context="routeData">
         <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
             <NotAuthorized>

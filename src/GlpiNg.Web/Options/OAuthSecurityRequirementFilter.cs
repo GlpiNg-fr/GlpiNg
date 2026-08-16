@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace GlpiNg.Web.Options;
@@ -24,7 +24,7 @@ public class OAuthSecurityRequirementFilter : IOperationFilter
             return;
         }
 
-        OpenApiSecurityScheme scheme = new() { Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "OAuth2" } };
+        OpenApiSecuritySchemeReference scheme = new("OAuth2", context.Document);
         operation.Security = [new OpenApiSecurityRequirement { [scheme] = ["api", "inventory"] }];
     }
 }

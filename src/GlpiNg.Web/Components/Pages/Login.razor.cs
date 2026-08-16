@@ -10,7 +10,7 @@ namespace GlpiNg.Web.Components.Pages;
 public partial class Login : ComponentBase
 {
     [Inject]
-    private AppSettingsFileStore SettingsStore { get; set; } = null!;
+    private SettingsCacheService SettingsStore { get; set; } = null!;
 
     [Inject]
     private IDbContextFactory<GlpiNgDbContext> DbFactory { get; set; } = null!;
@@ -31,7 +31,7 @@ public partial class Login : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        _general = await SettingsStore.ReadGeneralAsync();
+        _general = await SettingsStore.ReadSectionAsync<GeneralSettings>("GeneralSettings");
 
         if (_general.ShowAuthSourcesOnLoginPage)
         {

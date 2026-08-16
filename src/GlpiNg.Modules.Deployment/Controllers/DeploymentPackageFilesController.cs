@@ -1,7 +1,6 @@
-using GlpiNg.Web.Data;
-using GlpiNg.Web.Filters;
-using GlpiNg.Web.Models.Agent;
-using GlpiNg.Web.Services;
+using GlpiNg.Modules.Deployment.Filters;
+using GlpiNg.Modules.Deployment.Models;
+using GlpiNg.Modules.Deployment.Services;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Server.Kestrel.Core.Features;
@@ -9,7 +8,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Net.Http.Headers;
 
-namespace GlpiNg.Web.Controllers;
+namespace GlpiNg.Modules.Deployment.Controllers;
 
 /// <summary>
 /// Upload de fichiers de paquet de déploiement, un fichier par requête (voir
@@ -41,7 +40,7 @@ namespace GlpiNg.Web.Controllers;
 [Route("deployment-packages")]
 [IgnoreAntiforgeryToken]
 public class DeploymentPackageFilesController(
-    GlpiNgDbContext db,
+    DbContext db,
     DeploymentPackageFileStorageService fileStorage) : ControllerBase
 {
     // Couvre les 4 Go annoncés par l'utilisateur avec de la marge.
@@ -80,7 +79,7 @@ public class DeploymentPackageFilesController(
             return BadRequest("Requête multipart attendue.");
         }
 
-        bool packageExists = await db.DeploymentPackages.AnyAsync(p => p.Id == packageId, cancellationToken);
+        bool packageExists = await db.Set<DeploymentPackage>().AnyAsync(p => p.Id == packageId, cancellationToken);
         if (!packageExists)
         {
             return NotFound();
@@ -122,7 +121,7 @@ public class DeploymentPackageFilesController(
                     });
                 }
 
-                db.DeploymentPackageFiles.Add(packageFile);
+                db.Set<DeploymentPackageFile>().Add(packageFile);
                 await db.SaveChangesAsync(cancellationToken);
 
                 return Ok(new { fileName, sha512 = fileSha512, sizeBytes, partCount = parts.Count });

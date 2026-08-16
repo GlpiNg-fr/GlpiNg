@@ -1,10 +1,14 @@
+using System.Net;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using AnthoDingo.Setup;
 using GlpiNg.Modules.Abstractions.Cron;
+using GlpiNg.Modules.Abstractions.Deployment;
 using GlpiNg.Modules.Cron;
+using GlpiNg.Modules.Deployment;
 using GlpiNg.Modules.Inventory;
 using GlpiNg.Web.Components;
 using GlpiNg.Web.Data;
@@ -15,10 +19,11 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 
 namespace GlpiNg.Web;
 
@@ -28,6 +33,23 @@ public class Program
     {
         WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
+        // Limite Kestrel par défaut (~28,6 Mo) sur la taille du corps d'une requête HTTP,
+        // rencontrée en pratique sur l'upload de gros paquets de déploiement (voir
+        // DeploymentPackageFilesController) malgré le relèvement par requête via
+        // IHttpMaxRequestBodySizeFeature dans le contrôleur : ce dernier ne fait effet que si
+        // rien n'a encore touché le corps de la requête (IsReadOnly), ce qui n'est pas garanti
+        // selon le contexte. Celle-ci s'applique dès l'ouverture de la connexion, donc sans ce
+        // risque — 8 Go de marge au-delà des 4 Go annoncés par l'utilisateur.
+        builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = 8L * 1024 * 1024 * 1024);
+
+        // Limite par défaut (128 Mo) du corps de chaque partie d'une requête multipart/form-data,
+        // utilisée par MVC dès qu'un formulaire est lu via ReadFormAsync()/IFormFile. Relevée
+        // globalement par prudence pour tout endpoint qui s'appuierait sur le binding de formulaire
+        // classique — l'upload de paquets de déploiement, lui, contourne complètement ce mécanisme
+        // via [DisableFormValueModelBinding] (voir DeploymentPackageFilesController), donc cette
+        // limite ne le concerne plus directement.
+        builder.Services.Configure<FormOptions>(options => options.MultipartBodyLengthLimit = 8L * 1024 * 1024 * 1024);
+
         // Fichier écrit par l'assistant d'installation (AnthoDingo.Setup) à la fin du wizard —
         // prioritaire sur appsettings.json une fois l'installation terminée. Ne doit jamais être
         // commité (voir .gitignore).
@@ -35,7 +57,15 @@ public class Program
 
         // UI Blazor Server (rendu interactif)
         builder.Services.AddRazorComponents()
-            .AddInteractiveServerComponents();
+            .AddInteractiveServerComponents()
+            // Défaut SignalR de 32 Ko facilement atteint par InputFile sur un gros fichier
+            // (paquets de déploiement, voir DeploymentPackageFileStorageService), au-delà
+            // duquel le circuit se déconnecte brutalement (NullReferenceException dans
+            // ClientProxyExtensions.SendAsync). Marge portée à 64 Ko comme recommandé par
+            // https://learn.microsoft.com/aspnet/core/blazor/fundamentals/signalr#maximum-receive-message-size ;
+            // le vrai correctif est côté lecture (voir la taille de buffer réduite là-bas),
+            // ceci n'est qu'un filet de sécurité supplémentaire.
+            .AddHubOptions(options => options.MaximumReceiveMessageSize = 64 * 1024);
 
         // Toasts BlazorBootstrap (confirmations/erreurs de formulaire, voir <Toasts> dans
         // MainLayout.razor et BlankLayout.razor) : remplace les anciens messages inline "status".
@@ -95,7 +125,12 @@ public class Program
                 Description = "Endpoints REST de GlpiNg : protocole GLPI-Agent (/glpi-agent) et import depuis une base GLPI MySQL (/admin/import/glpi, protégé par OAuth2 — voir /config/oauth-clients)."
             });
 
-            foreach (Assembly assembly in new[] { Assembly.GetExecutingAssembly(), typeof(InventoryModuleServiceCollectionExtensions).Assembly })
+            foreach (Assembly assembly in new[]
+                     {
+                         Assembly.GetExecutingAssembly(),
+                         typeof(InventoryModuleServiceCollectionExtensions).Assembly,
+                         typeof(DeploymentModuleServiceCollectionExtensions).Assembly,
+                     })
             {
                 string xmlPath = Path.Combine(AppContext.BaseDirectory, $"{assembly.GetName().Name}.xml");
                 if (File.Exists(xmlPath))
@@ -129,8 +164,22 @@ public class Program
             options.OperationFilter<OAuthSecurityRequirementFilter>();
         });
 
-        // Construction du JSON de job de déploiement au format attendu par GLPI-Agent
-        builder.Services.AddSingleton<DeployJobJsonBuilder>();
+        // Client HTTP utilisé pour interroger l'interface web locale de GLPI-Agent
+        // (httpd-trust, ex. /status, /now) depuis la fiche ordinateur. UseProxy = false : sans
+        // ça, une requête vers une machine du LAN peut rester bloquée jusqu'au HttpClient.Timeout
+        // si le process essaie de passer par le proxy système configuré sur le serveur (le
+        // navigateur, lui, bypass le proxy pour les adresses locales). ConnectCallback personnalisé
+        // car un hostname NetBIOS/LLMNR résout ici vers 5 adresses IPv6 injoignables (link-local
+        // d'interfaces virtuelles) en plus des IPv4 valides — la résolution de connexion par défaut
+        // de .NET les essaie séquentiellement et épuise largement le timeout avant d'atteindre
+        // l'IPv4 qui fonctionne. On ignore l'IPv6 et on course toutes les adresses IPv4 en parallèle.
+        builder.Services.AddHttpClient("GlpiAgent", client => client.Timeout = TimeSpan.FromSeconds(10))
+            .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+            {
+                UseProxy = false,
+                ConnectTimeout = TimeSpan.FromSeconds(5),
+                ConnectCallback = ConnectToGlpiAgentAsync,
+            });
 
         // Activation de Swagger pilotée par la config (section "Swagger:Enabled",
         // modifiable depuis la page /config) : IOptionsMonitor permet une bascule à chaud,
@@ -211,6 +260,12 @@ public class Program
             // les clients gérés depuis /config/oauth-clients.
             builder.Services.AddSingleton<OAuthTokenIssuer>();
 
+            // Cache mémoire des sections de réglages /config (Valeurs par défaut, Parc, Assistance,
+            // Modules, ...), lues/écrites dans la table AppSettings plutôt que dans appsettings.json
+            // (voir AppSettingsFileStore, qui ne garde plus que Urls/Swagger). Enregistré ici comme
+            // AddCronModule ci-dessous, pour la même raison : dépend de IDbContextFactory<GlpiNgDbContext>.
+            builder.Services.AddSingleton<SettingsCacheService>();
+
             // Schéma d'authentification Bearer (jetons émis par /oauth2/token) : enregistré ici
             // plutôt qu'avec AddCookie plus haut, car EnsureOAuthSigningKey persiste la clé de
             // signature dans appsettings.local.json — sûr à cet endroit précis, puisque
@@ -241,6 +296,20 @@ public class Program
             // conséquence sur la disponibilité de /admin/import/glpi avant la fin de
             // l'installation : UseSetupMiddleware redirige de toute façon tout vers /setup.
             builder.Services.AddInventoryModule(builder.Configuration);
+
+            // Alimente les sélecteurs de cibles (Entité/Groupe/Profil/Utilisateur) de l'onglet
+            // "Cibles pour le déploiement à la demande" de la fiche Paquet (module Deployment)
+            // sans que celui-ci dépende de ces types (GlpiNg.Web.Models, domaine utilisateurs/
+            // groupes/entités/profils non extrait en module) — voir IDeploymentTargetDirectory
+            // (GlpiNg.Modules.Abstractions).
+            builder.Services.AddScoped<IDeploymentTargetDirectory, DeploymentTargetDirectory>();
+
+            // Module Deployment (voir GlpiNg.Modules.Deployment.DeploymentModuleServiceCollectionExtensions) :
+            // agents GLPI, paquets/jobs de déploiement, groupes d'ordinateurs dynamiques, créneaux
+            // horaires, définitions de collecte. Enregistré ici pour la même raison qu'AddInventoryModule
+            // ci-dessus : ComputerDeploymentTasksProvider et ses contrôleurs/pages dépendent du DbContext
+            // de base.
+            builder.Services.AddDeploymentModule();
 
             // Module Cron (voir GlpiNg.Modules.Cron.CronModuleServiceCollectionExtensions) :
             // exécute à intervalle régulier (réglable à chaud depuis /config → "Configuration
@@ -293,7 +362,19 @@ public class Program
         // session authentifiée même pour les fichiers statiques (CSS/JS), ce qui casserait entre
         // autres le style de la page de login elle-même, accessible avant authentification.
         app.MapStaticAssets().AllowAnonymous();
-        app.UseAntiforgery();
+
+        // Exclut l'upload de fichiers de paquet (DeploymentPackageFilesController) du middleware
+        // antiforgery, en plus de [IgnoreAntiforgeryToken] sur le contrôleur (qui suffirait déjà
+        // via les métadonnées d'endpoint) : ceinture et bretelles pour cette route jamais atteinte
+        // via un <form>/<AntiforgeryToken /> Blazor (appelée en XHR depuis glpi-ng.js) — protection
+        // CSRF assurée par SameSite=Lax des cookies d'authentification (voir la doc du contrôleur).
+        // La vraie cause de "Unexpected end of Stream, the content may have already been read by
+        // another component." sur les gros uploads n'était pas l'antiforgery mais le model binding
+        // MVC lui-même (FormValueProviderFactory) — voir [DisableFormValueModelBinding] sur
+        // DeploymentPackageFilesController.UploadAsync.
+        app.UseWhen(
+            context => !context.Request.Path.StartsWithSegments("/deployment-packages"),
+            branch => branch.UseAntiforgery());
 
         // Pas de RequireAuthorization() ici : les agents GLPI (glpi-agent, voir AgentController)
         // et /Account/Login|Logout ne portent pas de cookie de session applicative.
@@ -305,10 +386,65 @@ public class Program
         // l'assembly distincte du projet hôte ne serait sinon pas découverte.
         app.MapRazorComponents<App>()
             .AddInteractiveServerRenderMode()
-            .AddAdditionalAssemblies(typeof(InventoryModuleServiceCollectionExtensions).Assembly)
+            .AddAdditionalAssemblies(
+                typeof(InventoryModuleServiceCollectionExtensions).Assembly,
+                typeof(DeploymentModuleServiceCollectionExtensions).Assembly)
             .RequireAuthorization();
 
         app.Run();
+    }
+
+    /// <summary>
+    /// ConnectCallback du client HTTP "GlpiAgent" (voir son enregistrement plus haut) : résout
+    /// uniquement les adresses IPv4 de l'hôte et course une connexion TCP en parallèle vers
+    /// chacune, en retenant la première qui aboutit. Évite l'attente séquentielle sur des
+    /// adresses IPv6 injoignables que la résolution de connexion par défaut de .NET essaierait
+    /// avant l'IPv4.
+    /// </summary>
+    private static async ValueTask<Stream> ConnectToGlpiAgentAsync(SocketsHttpConnectionContext context, CancellationToken cancellationToken)
+    {
+        IPAddress[] addresses = await Dns.GetHostAddressesAsync(context.DnsEndPoint.Host, AddressFamily.InterNetwork, cancellationToken);
+        if (addresses.Length == 0)
+        {
+            throw new SocketException((int)SocketError.HostNotFound);
+        }
+
+        using var attemptsCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        List<Task<Socket>> attempts = addresses.Select(address => ConnectOneAsync(address, context.DnsEndPoint.Port, attemptsCts.Token)).ToList();
+
+        Exception? lastError = null;
+        while (attempts.Count > 0)
+        {
+            Task<Socket> finished = await Task.WhenAny(attempts);
+            attempts.Remove(finished);
+            try
+            {
+                Socket socket = await finished;
+                await attemptsCts.CancelAsync();
+                return new NetworkStream(socket, ownsSocket: true);
+            }
+            catch (Exception ex)
+            {
+                lastError = ex;
+            }
+        }
+
+        throw lastError ?? new SocketException((int)SocketError.HostUnreachable);
+
+        static async Task<Socket> ConnectOneAsync(IPAddress address, int port, CancellationToken ct)
+        {
+            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
+            try
+            {
+                await socket.ConnectAsync(address, port, ct);
+                return socket;
+            }
+            catch
+            {
+                socket.Dispose();
+                throw;
+            }
+        }
     }
 
     /// <summary>

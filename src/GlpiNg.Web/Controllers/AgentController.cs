@@ -2,6 +2,8 @@ using System.IO.Compression;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using GlpiNg.Modules.Deployment.Models;
+using GlpiNg.Modules.Deployment.Services;
 using GlpiNg.Modules.Inventory.Models;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
@@ -37,12 +39,42 @@ public class AgentController(
     GlpiNgDbContext db,
     InventoryImportService inventoryImport,
     DeployJobJsonBuilder deployJobJsonBuilder,
-    IConfiguration configuration,
-    AppSettingsFileStore settingsStore,
+    DeploymentPackageFileStorageService fileStorage,
+    SettingsCacheService settingsStore,
     ILogger<AgentController> logger) : ControllerBase
 {
     private const string AgentIdHeader = "GLPI-Agent-ID";
     private const string RequestIdHeader = "GLPI-Request-ID";
+
+    /// <summary>
+    /// L'agent GLPI envoie un GET ?action=getConfig en tout premier contact pour découvrir
+    /// les capacités du serveur et obtenir l'URL de soumission d'inventaire. Sans réponse JSON
+    /// valide ici, l'agent ne passera jamais au protocole POST (contact/inventory) et aucun
+    /// ordinateur ne sera créé.
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> HandleGet(CancellationToken cancellationToken)
+    {
+        string? action = Request.Query["action"];
+
+        if (string.Equals(action, "getConfig", StringComparison.OrdinalIgnoreCase))
+        {
+            string expiration = await GetExpirationAsync(cancellationToken);
+            string serverUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}/glpi-agent";
+
+            return Ok(new
+            {
+                status = "ok",
+                expiration,
+                schedule = new[]
+                {
+                    new { task = "inventory", remote = serverUrl }
+                }
+            });
+        }
+
+        return BadRequest(new ProtocolAnswer { Status = "error", Message = $"unsupported GET action '{action}'" });
+    }
 
     [HttpPost]
     public async Task<IActionResult> Handle(CancellationToken cancellationToken)
@@ -128,30 +160,63 @@ public class AgentController(
     }
 
     /// <summary>
-    /// Téléchargement d'un fichier de package référencé par son hash SHA512
-    /// (présent dans le tableau "associatedFiles" du job renvoyé par getJobs).
+    /// Téléchargement d'un fichier de package référencé par son hash SHA512 (présent dans le
+    /// tableau "associatedFiles" du job renvoyé par getJobs) : le fichier n'existe jamais comme
+    /// blob unique sur disque (voir <see cref="DeploymentPackageFileStorageService"/>), ses
+    /// fragments sont donc reconstitués à la volée dans l'ordre. Un agent capable d'exploiter le
+    /// champ "multiparts" de associatedFiles devrait préférer <see cref="GetDeployFilePart"/>,
+    /// fragment par fragment (plus léger, reprise possible sur échec réseau).
     /// </summary>
     [HttpGet("deploy/file/{sha512}")]
-    public async Task<IActionResult> GetDeployFile(string sha512)
+    public async Task<IActionResult> GetDeployFile(string sha512, CancellationToken cancellationToken)
     {
         DeploymentPackageFile? file = await db.DeploymentPackageFiles
-            .FirstOrDefaultAsync(f => f.Sha512 == sha512);
+            .Include(f => f.Parts)
+            .FirstOrDefaultAsync(f => f.Sha512 == sha512, cancellationToken);
 
         if (file is null)
         {
             return NotFound();
         }
 
-        string rootPath = configuration["PackageStorage:RootPath"] ?? "PackageStorage";
-        string fullPath = Path.Combine(rootPath, file.StoragePath);
+        List<string> orderedPartPaths = file.Parts.OrderBy(p => p.PartIndex).Select(p => p.StoragePath).ToList();
+        if (orderedPartPaths.Count == 0 || orderedPartPaths.Exists(path => !System.IO.File.Exists(fileStorage.GetFullPath(path))))
+        {
+            return NotFound();
+        }
 
+        Response.ContentType = "application/octet-stream";
+        Response.ContentLength = file.SizeBytes;
+        Response.Headers.ContentDisposition = $"attachment; filename=\"{file.FileName}\"";
+
+        await fileStorage.WriteReconstructedFileAsync(orderedPartPaths, Response.Body, cancellationToken);
+        return new EmptyResult();
+    }
+
+    /// <summary>
+    /// Téléchargement d'un fragment individuel d'un fichier de package (champ "multiparts" de
+    /// associatedFiles dans le job renvoyé par getJobs) — voir <see cref="GetDeployFile"/> pour
+    /// le téléchargement du fichier entier reconstitué.
+    /// </summary>
+    [HttpGet("deploy/file/part/{sha512}")]
+    public async Task<IActionResult> GetDeployFilePart(string sha512, CancellationToken cancellationToken)
+    {
+        DeploymentPackageFilePart? part = await db.DeploymentPackageFileParts
+            .FirstOrDefaultAsync(p => p.Sha512 == sha512, cancellationToken);
+
+        if (part is null)
+        {
+            return NotFound();
+        }
+
+        string fullPath = fileStorage.GetFullPath(part.StoragePath);
         if (!System.IO.File.Exists(fullPath))
         {
             return NotFound();
         }
 
         FileStream stream = System.IO.File.OpenRead(fullPath);
-        return File(stream, "application/octet-stream", file.FileName);
+        return File(stream, "application/octet-stream");
     }
 
     private async Task<IActionResult> HandleContactAsync(string agentUuid, JsonDocument document, CancellationToken cancellationToken)
@@ -180,12 +245,16 @@ public class AgentController(
         }
 
         agent.DeviceId = contactRequest.DeviceId;
-        agent.AgentName = contactRequest.Name;
+        // Le champ "name" du protocole COMMON vaut systématiquement "GLPI-Agent" côté
+        // agent réel (nom du logiciel, pas du poste) : on utilise le deviceid, qui contient
+        // le hostname, comme nom affiché par défaut.
+        agent.AgentName = contactRequest.DeviceId;
         agent.AgentVersion = contactRequest.Version;
         agent.Tag = contactRequest.Tag;
         agent.InstalledTasks = contactRequest.InstalledTasks ?? [];
         agent.EnabledTasks = contactRequest.EnabledTasks ?? agent.InstalledTasks;
         agent.LastContactAt = DateTime.UtcNow;
+        UpdateAgentRequestMetadata(agent);
 
         await db.SaveChangesAsync(cancellationToken);
 
@@ -247,6 +316,8 @@ public class AgentController(
             db.Agents.Add(agent);
         }
 
+        UpdateAgentRequestMetadata(agent);
+
         await inventoryImport.ImportAsync(agent, inventoryRequest.Content, cancellationToken);
 
         return Ok(new ProtocolAnswer { Status = "ok", Expiration = expiration });
@@ -263,6 +334,7 @@ public class AgentController(
         DeploymentJob? job = await db.DeploymentJobs
             .Include(j => j.Package)
             .ThenInclude(p => p!.Files)
+            .ThenInclude(f => f.Parts)
             .Where(j => j.AgentId == agent.Id && j.Status == DeploymentStatus.Pending)
             .OrderBy(j => j.CreatedAt)
             .FirstOrDefaultAsync(cancellationToken);
@@ -316,6 +388,17 @@ public class AgentController(
 
         await db.SaveChangesAsync(cancellationToken);
         return Ok(new ProtocolAnswer { Status = "ok" });
+    }
+
+    /// <summary>
+    /// Capture le header HTTP "User-Agent" et l'adresse IP distante de la requête courante,
+    /// affichés dans l'onglet "Informations d'inventaire" de la fiche ordinateur (champs
+    /// "UserAgent" et "Adresse publique de contact" de GLPI).
+    /// </summary>
+    private void UpdateAgentRequestMetadata(GlpiAgent agent)
+    {
+        agent.LastUserAgent = Request.Headers.UserAgent.ToString() is { Length: > 0 } ua ? ua : null;
+        agent.LastContactIp = HttpContext.Connection.RemoteIpAddress?.ToString();
     }
 
     /// <summary>

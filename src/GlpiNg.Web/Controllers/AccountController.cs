@@ -16,7 +16,7 @@ namespace GlpiNg.Web.Controllers;
 /// </summary>
 [AllowAnonymous]
 [Route("Account")]
-public class AccountController(UserCredentialAuthenticator credentialAuthenticator, AppSettingsFileStore settingsStore) : Controller
+public class AccountController(UserCredentialAuthenticator credentialAuthenticator, SettingsCacheService settingsStore) : Controller
 {
     [HttpPost("Login")]
     [ValidateAntiForgeryToken]
@@ -51,7 +51,7 @@ public class AccountController(UserCredentialAuthenticator credentialAuthenticat
         AuthenticationProperties authProperties = new() { IsPersistent = rememberMe };
         if (rememberMe)
         {
-            GeneralSettings general = await settingsStore.ReadGeneralAsync(ct);
+            GeneralSettings general = await settingsStore.ReadSectionAsync<GeneralSettings>("GeneralSettings", ct);
             if (general.RememberMeDuration > 0)
             {
                 authProperties.ExpiresUtc = DateTimeOffset.UtcNow.AddSeconds(general.RememberMeDuration);

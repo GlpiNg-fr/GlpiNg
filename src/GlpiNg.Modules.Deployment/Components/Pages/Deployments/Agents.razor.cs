@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
 
-namespace GlpiNg.Modules.Inventory.Components.Pages.Agents;
+namespace GlpiNg.Modules.Deployment.Components.Pages.Deployments;
 
-public partial class Index : ComponentBase
+public partial class Agents : ComponentBase
 {
     [Inject]
     private IDbContextFactory<DbContext> DbFactory { get; set; } = null!;

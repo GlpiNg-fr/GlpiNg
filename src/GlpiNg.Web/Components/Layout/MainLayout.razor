@@ -8,7 +8,7 @@
 @using Microsoft.EntityFrameworkCore
 @inject NavigationManager Nav
 @inject IEnumerable<IMenuProvider> MenuProviders
-@inject AppSettingsFileStore SettingsStore
+@inject SettingsCacheService SettingsStore
 @inject IDbContextFactory<GlpiNgDbContext> DbFactory
 
 <div class="glpi-app">
@@ -174,7 +174,7 @@
     </div>
 </div>
 
-<Toasts class="p-3" Placement="ToastsPlacement.TopRight" />
+<Toasts class="p-3" Placement="ToastsPlacement.TopRight" AutoHide="true" Delay="5000" />
 
 @code {
     private sealed record NavItem(string Label, string? Href = null, string? Icon = null);
@@ -255,6 +255,21 @@
     // futur module) sont ajoutés à la suite, dans l'ordre où les modules les déclarent.
     private static readonly string[] GroupOrder =
         ["parc", "assistance", "gestion", "outils", "administration", "configuration"];
+
+    // Onglets de "/tools/deployments" (voir DeploymentTopMenu) : ce ne sont pas des entrées de
+    // menu latéral, donc BuildBreadcrumb ne peut pas les retrouver via Groups. On ajoute leur
+    // libellé comme dernier segment du fil d'Ariane à la place du <h3> qu'affichait chaque page.
+    private static readonly Dictionary<string, (string Icon, string Label)> DeploymentSubPages = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["/tools/deployments/computer-groups"] = ("ti-devices", "Groupe d'ordinateurs"),
+        ["/tools/deployments/config"] = ("ti-settings", "Configuration générale"),
+        ["/tools/deployments/packages"] = ("ti-package", "Gestion de paquets"),
+        ["/tools/deployments/supervision"] = ("ti-activity", "Supervision / Logs"),
+        ["/tools/deployments/collects"] = ("ti-file-database", "Informations de collecte"),
+        ["/tools/deployments/timeslots"] = ("ti-calendar-time", "Créneau horaire"),
+        ["/tools/deployments/mirrors"] = ("ti-server-2", "Serveurs miroirs"),
+        ["/tools/deployments/interaction-templates"] = ("ti-message-2-question", "Gabarits d'interactions utilisateurs"),
+    };
 
     private List<NavGroup> Groups { get; set; } = [];
 
@@ -411,55 +426,46 @@
 
     private List<(string Icon, string Label, string? Href)> BuildBreadcrumb()
     {
-        var path = new Uri(Nav.Uri).AbsolutePath.Trim('/');
+        var path = "/" + new Uri(Nav.Uri).AbsolutePath.Trim('/');
         var items = new List<(string Icon, string Label, string? Href)>
         {
             ("ti-home", "Accueil", "/")
         };
 
-        if (path.StartsWith("parc/computer", StringComparison.OrdinalIgnoreCase))
+        if (path == "/") return items;
+
+        NavItem? bestMatch = null;
+        NavGroup? parentGroup = null;
+        int bestLen = 0;
+
+        foreach (var group in Groups)
         {
-            items.Add(("ti-device-desktop", "Ordinateurs", "/parc/computer"));
+            foreach (var item in group.Items)
+            {
+                if (item.Href is null) continue;
+                if (path.StartsWith(item.Href, StringComparison.OrdinalIgnoreCase)
+                    && item.Href.Length > bestLen)
+                {
+                    bestMatch = item;
+                    parentGroup = group;
+                    bestLen = item.Href.Length;
+                }
+            }
         }
-        else if (path.StartsWith("parc/software", StringComparison.OrdinalIgnoreCase))
+
+        if (parentGroup is not null)
         {
-            items.Add(("ti-apps", "Logiciels", "/parc/software"));
+            items.Add((parentGroup.Icon, parentGroup.Label, null));
         }
-        else if (path.StartsWith("parc/monitors", StringComparison.OrdinalIgnoreCase))
+
+        if (bestMatch is not null)
         {
-            items.Add(("ti-device-tv", "Moniteurs", "/parc/monitors"));
+            items.Add((bestMatch.Icon ?? "ti-point", bestMatch.Label, bestMatch.Href));
         }
-        else if (path.StartsWith("parc/peripherals", StringComparison.OrdinalIgnoreCase))
+
+        if (DeploymentSubPages.TryGetValue(path, out var subPage))
         {
-            items.Add(("ti-mouse", "Périphériques", "/parc/peripherals"));
-        }
-        else if (path.StartsWith("tools/agents", StringComparison.OrdinalIgnoreCase))
-        {
-            items.Add(("ti-cpu", "Agents", "/tools/agents"));
-        }
-        else if (path.StartsWith("admin/groups", StringComparison.OrdinalIgnoreCase))
-        {
-            items.Add(("ti-users", "Groupes", "/admin/groups"));
-        }
-        else if (path.StartsWith("admin/users", StringComparison.OrdinalIgnoreCase))
-        {
-            items.Add(("ti-user", "Utilisateurs", "/admin/users"));
-        }
-        else if (path.StartsWith("deployments", StringComparison.OrdinalIgnoreCase))
-        {
-            items.Add(("ti-package", "Déploiements", "/deployments"));
-        }
-        else if (path.StartsWith("config/auth", StringComparison.OrdinalIgnoreCase))
-        {
-            items.Add(("ti-key", "Authentification", "/config/auth"));
-        }
-        else if (path.StartsWith("config/oauth-clients", StringComparison.OrdinalIgnoreCase))
-        {
-            items.Add(("ti-lock-access", "Clients OAuth", "/config/oauth-clients"));
-        }
-        else if (path.StartsWith("config", StringComparison.OrdinalIgnoreCase))
-        {
-            items.Add(("ti-settings", "Configuration", "/config"));
+            items.Add((subPage.Icon, subPage.Label, null));
         }
 
         return items;

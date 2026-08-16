@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
-namespace GlpiNg.Web.Filters;
+namespace GlpiNg.Modules.Deployment.Filters;
 
 /// <summary>
 /// Empêche MVC de composer un <c>FormValueProviderFactory</c> (ni <c>FormFileValueProviderFactory</c>,

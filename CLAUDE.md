@@ -79,12 +79,21 @@ from the dictionary is treated as enabled.
 
 **Configuration**: `appsettings.local.json` is written by the AnthoDingo.Setup wizard
 post-install and takes priority over `appsettings.json`; it's gitignored and must
-never be committed. Runtime-editable settings (server listen addresses, Swagger
-enabled/disabled) are read/written through `AppSettingsFileStore` from the `/config`
-UI (see `ConfigSections/*.razor`), with changes tracked by `ConfigHistoryService`.
-Swagger's enabled state is read via `IOptionsMonitor<SwaggerOptions>` so toggling it
-from `/config` takes effect without a restart — it's `MapWhen`-mounted conditionally
-rather than statically registered.
+never be committed. Most `/config` settings sections (see `ConfigSections/*.razor`) are
+stored in the `AppSettings` table (one row per section, JSON-serialized) and read/written
+through `SettingsCacheService` — a singleton that keeps every section in an in-memory
+cache, so reads never hit the database and a save updates the DB row and the cache
+together, making the new value visible to every other service/page immediately without a
+restart. On first read of a section not yet in the DB, it falls back to the matching
+`appsettings.json` section (if still present) rather than losing an already-customized
+value — see the fallback in `SettingsCacheService.ReadSectionAsync`. Only server listen
+addresses (`Urls`) and Swagger enabled/disabled stay in `appsettings.json` via
+`AppSettingsFileStore`: `Urls` is read by Kestrel at startup, before the app has DB
+access, and needs a restart anyway; Swagger's toggle relies on
+`IOptionsMonitor<SwaggerOptions>` + the file's `reloadOnChange` to flip without a
+restart — it's `MapWhen`-mounted conditionally rather than statically registered.
+Changes made from either store are tracked by `ConfigHistoryService`, called separately
+by each Razor page after a successful save.
 
 **GLPI MySQL import** (`GlpiMySqlImportService`, triggered via
 `POST /admin/import/glpi`): read-only, idempotent import from an existing GLPI MySQL

@@ -1,10 +1,9 @@
 namespace GlpiNg.Web.Models;
 
 /// <summary>
-/// Modèle de l'onglet "Configuration générale" de la page /config. Reflète la
-/// section "GeneralSettings" de appsettings.json, lue et écrite par
-/// <see cref="Services.AppSettingsFileStore"/>. Ces réglages sont pris en compte
-/// sans redémarrage (appsettings.json est rechargé automatiquement).
+/// Modèle de l'onglet "Configuration générale" de la page /config. Réglages "GeneralSettings",
+/// lus et écrits par <see cref="Services.SettingsCacheService"/> (table AppSettings + cache
+/// mémoire) — pris en compte immédiatement, sans redémarrage.
 /// </summary>
 public class GeneralSettings
 {
@@ -46,4 +45,7 @@ public class GeneralSettings
     public bool RememberMeDefaultChecked { get; set; } = true;
 
     public bool ShowAuthSourcesOnLoginPage { get; set; }
+
+    /// <summary>Format d'affichage des adresses MAC : "Windows" (AA-BB-CC-DD-EE-FF), "HP" (AABBCC-DDEEFF), "Cisco" (aabb.ccdd.eeff).</summary>
+    public string MacAddressFormat { get; set; } = "Windows";
 }
