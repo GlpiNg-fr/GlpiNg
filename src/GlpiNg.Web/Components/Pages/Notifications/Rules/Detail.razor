@@ -1,0 +1,141 @@
+@page "/config/notifications/rules/{RuleId:int}"
+@using GlpiNg.Web.Models
+@using GlpiNg.Web.Models.Notifications
+@rendermode InteractiveServer
+
+<PageTitle>GlpiNg — @(_rule?.Name ?? "Notification")</PageTitle>
+
+<NotificationsTabStrip Current="rules" />
+
+@if (_rule is null)
+{
+    <div class="text-center text-secondary py-5">
+        <i class="ti ti-bell-ringing fs-1"></i>
+        <p class="mt-2">Cette notification est introuvable.</p>
+    </div>
+}
+else
+{
+    <div class="card mb-3">
+        <div class="card-header">
+            <i class="ti ti-bell-ringing me-2"></i>
+            <span class="fw-semibold">Notification - @_rule.Name - ID @_rule.Id</span>
+        </div>
+        <div class="card-body">
+            <EditForm Model="_rule" OnValidSubmit="SaveAsync">
+                <RuleFormFields Rule="_rule" AllTemplates="_allTemplates" />
+
+                <div class="d-flex justify-content-end gap-2 mt-3">
+                    <button type="button" class="btn btn-outline-danger" @onclick="DeleteAsync">
+                        <i class="ti ti-trash me-1"></i>Supprimer définitivement
+                    </button>
+                    <button type="submit" class="btn btn-primary" disabled="@_isSaving">
+                        <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <i class="ti ti-users me-2"></i>
+            <span class="fw-semibold">Destinataires (@_recipients.Count)</span>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive mb-3">
+                <table class="table table-vcenter card-table mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 12rem;">Type</th>
+                            <th>Destinataire</th>
+                            <th style="width: 8rem;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <select class="form-select" @bind="_addType">
+                                    <option value="@NotificationRecipientType.FixedEmail">Adresse e-mail</option>
+                                    <option value="@NotificationRecipientType.User">Utilisateur</option>
+                                    <option value="@NotificationRecipientType.Group">Groupe</option>
+                                    <option value="@NotificationRecipientType.AllAdmins">Tous les administrateurs</option>
+                                </select>
+                            </td>
+                            <td>
+                                @switch (_addType)
+                                {
+                                    case NotificationRecipientType.FixedEmail:
+                                        <input type="email" class="form-control" @bind="_addEmail" placeholder="destinataire@example.com" />
+                                        break;
+                                    case NotificationRecipientType.User:
+                                        <select class="form-select" @bind="_addUserId">
+                                            <option value="0">-- Choisir --</option>
+                                            @foreach (GlpiUser user in _allUsers)
+                                            {
+                                                <option value="@user.Id">@(user.DisplayName ?? user.UserName) (@user.Email)</option>
+                                            }
+                                        </select>
+                                        break;
+                                    case NotificationRecipientType.Group:
+                                        <select class="form-select" @bind="_addGroupId">
+                                            <option value="0">-- Choisir --</option>
+                                            @foreach (GlpiGroup group in _allGroups)
+                                            {
+                                                <option value="@group.Id">@group.Name</option>
+                                            }
+                                        </select>
+                                        break;
+                                    default:
+                                        <span class="text-secondary">Tous les utilisateurs actifs marqués administrateur.</span>
+                                        break;
+                                }
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-primary w-100" disabled="@(!CanAddRecipient)" @onclick="AddRecipientAsync">
+                                    <i class="ti ti-plus me-1"></i>Ajouter
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            @if (_recipients.Count == 0)
+            {
+                <div class="glpi-config-placeholder">
+                    <i class="ti ti-users"></i>
+                    <p class="mb-0">Aucun destinataire.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-vcenter card-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Destinataire</th>
+                                <th style="width: 6rem;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (NotificationRecipient recipient in _recipients)
+                            {
+                                <tr>
+                                    <td>@RecipientTypeLabel(recipient.Type)</td>
+                                    <td>@RecipientTargetLabel(recipient)</td>
+                                    <td>
+                                        <button type="button" class="btn btn-icon btn-sm text-danger" title="Retirer" @onclick="() => RemoveRecipientAsync(recipient.Id)">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+}

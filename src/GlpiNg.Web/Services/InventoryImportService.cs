@@ -2,6 +2,8 @@ using GlpiNg.Modules.Inventory.Models;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
 using GlpiNg.Web.Models.Agent;
+using GlpiNg.Web.Models.Notifications;
+using GlpiNg.Web.Services.Notifications;
 using Microsoft.EntityFrameworkCore;
 
 namespace GlpiNg.Web.Services;
@@ -10,7 +12,11 @@ namespace GlpiNg.Web.Services;
 /// Importe le contenu d'une requête "inventory" du protocole GLPI-Agent
 /// dans les entités Computer / ComputerComponent, en le rattachant à l'agent fourni.
 /// </summary>
-public class InventoryImportService(GlpiNgDbContext db, SettingsCacheService settingsStore)
+public class InventoryImportService(
+    GlpiNgDbContext db,
+    SettingsCacheService settingsStore,
+    NotificationDispatchService notificationDispatch,
+    IHttpContextAccessor httpContextAccessor)
 {
     private const string HistoryUser = "inventory";
     private const string SettingsSection = "InventorySettings";
@@ -95,7 +101,43 @@ public class InventoryImportService(GlpiNgDbContext db, SettingsCacheService set
         agent.Computer = computer;
 
         await db.SaveChangesAsync(cancellationToken);
+
+        if (isNew)
+        {
+            await PublishNewComputerNotificationAsync(computer, cancellationToken);
+        }
+
         return computer;
+    }
+
+    /// <summary>Déclenche l'événement "Nouvel ordinateur découvert" (voir NotificationEventCatalog.InventoryComputer) après la création effective en base.</summary>
+    private async Task PublishNewComputerNotificationAsync(Computer computer, CancellationToken cancellationToken)
+    {
+        string? baseUrl = BuildBaseUrl();
+
+        Dictionary<string, string?> variables = new()
+        {
+            ["computer.name"] = computer.Name,
+            ["computer.serial"] = computer.SerialNumber,
+            ["computer.manufacturer"] = computer.Manufacturer,
+            ["computer.model"] = computer.Model,
+            ["computer.os"] = computer.OperatingSystem,
+            ["computer.url"] = baseUrl is null ? null : $"{baseUrl}/parc/computer/{computer.Id}",
+        };
+
+        await notificationDispatch.PublishAsync(
+            NotificationEventCatalog.InventoryComputer, NotificationEventCatalog.EventNew, computer.Id, variables, cancellationToken);
+    }
+
+    /// <summary>
+    /// Reconstruit l'origine (schéma+hôte) de la requête HTTP courante pour les balises ##...url##
+    /// des notifications. Null hors contexte de requête (ex. import depuis un fichier via une tâche
+    /// arrière-plan) : le lien est alors simplement omis plutôt que de pointer vers une URL fausse.
+    /// </summary>
+    private string? BuildBaseUrl()
+    {
+        HttpRequest? request = httpContextAccessor.HttpContext?.Request;
+        return request is null ? null : $"{request.Scheme}://{request.Host}";
     }
 
     /// <summary>

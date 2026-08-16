@@ -1,0 +1,38 @@
+@page "/config/notifications/templates/{TemplateId:int}"
+@using GlpiNg.Web.Models.Notifications
+@rendermode InteractiveServer
+
+<PageTitle>GlpiNg — @(_template?.Name ?? "Gabarit")</PageTitle>
+
+<NotificationsTabStrip Current="templates" />
+
+@if (_template is null)
+{
+    <div class="text-center text-secondary py-5">
+        <i class="ti ti-file-text fs-1"></i>
+        <p class="mt-2">Ce gabarit est introuvable.</p>
+    </div>
+}
+else
+{
+    <div class="card">
+        <div class="card-header">
+            <i class="ti ti-file-text me-2"></i>
+            <span class="fw-semibold">Gabarit - @_template.Name - ID @_template.Id</span>
+        </div>
+        <div class="card-body">
+            <EditForm Model="_template" OnValidSubmit="SaveAsync">
+                <TemplateFormFields Template="_template" />
+
+                <div class="d-flex justify-content-end gap-2 mt-3">
+                    <button type="button" class="btn btn-outline-danger" @onclick="DeleteAsync">
+                        <i class="ti ti-trash me-1"></i>Supprimer définitivement
+                    </button>
+                    <button type="submit" class="btn btn-primary" disabled="@_isSaving">
+                        <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}

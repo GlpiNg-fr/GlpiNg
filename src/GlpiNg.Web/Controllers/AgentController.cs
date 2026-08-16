@@ -8,7 +8,9 @@ using GlpiNg.Modules.Inventory.Models;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
 using GlpiNg.Web.Models.Agent;
+using GlpiNg.Web.Models.Notifications;
 using GlpiNg.Web.Services;
+using GlpiNg.Web.Services.Notifications;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -41,6 +43,7 @@ public class AgentController(
     DeployJobJsonBuilder deployJobJsonBuilder,
     DeploymentPackageFileStorageService fileStorage,
     SettingsCacheService settingsStore,
+    NotificationDispatchService notificationDispatch,
     ILogger<AgentController> logger) : ControllerBase
 {
     private const string AgentIdHeader = "GLPI-Agent-ID";
@@ -238,6 +241,7 @@ public class AgentController(
         }
 
         GlpiAgent? agent = await db.Agents.FirstOrDefaultAsync(a => a.AgentUuid == agentUuid, cancellationToken);
+        bool isNewAgent = agent is null;
         if (agent is null)
         {
             agent = new GlpiAgent { AgentUuid = agentUuid };
@@ -257,6 +261,22 @@ public class AgentController(
         UpdateAgentRequestMetadata(agent);
 
         await db.SaveChangesAsync(cancellationToken);
+
+        if (isNewAgent)
+        {
+            await notificationDispatch.PublishAsync(
+                NotificationEventCatalog.DeploymentAgent,
+                NotificationEventCatalog.EventNew,
+                agent.Id,
+                new Dictionary<string, string?>
+                {
+                    ["agent.name"] = agent.AgentName,
+                    ["agent.uuid"] = agent.AgentUuid,
+                    ["agent.version"] = agent.AgentVersion,
+                    ["agent.url"] = $"{Request.Scheme}://{Request.Host}/tools/deployments/agent/{agent.Id}",
+                },
+                cancellationToken);
+        }
 
         List<DeployJobRef> pendingDeployJobs = await db.DeploymentJobs
             .Where(j => j.AgentId == agent.Id && j.Status == DeploymentStatus.Pending)
@@ -354,40 +374,135 @@ public class AgentController(
         return Content(payload.ToJsonString(), "application/json");
     }
 
+    /// <summary>
+    /// Traite un rapport "setStatus" — l'agent en envoie un par étape (démarrage, chaque check,
+    /// chaque fichier téléchargé, préparation, chaque ligne de log d'action, fin de job), pas un
+    /// seul message final. Chaque appel est journalisé (affiché dans l'onglet "Journal" de
+    /// /tools/deployments/supervision, voir Supervision.razor) ; le job n'est marqué
+    /// Success/Error que sur un signal non ambigu :
+    ///  - "status":"ko" à n'importe quelle étape → échec (l'agent arrête le job après un ko, il
+    ///    n'enverra plus de message pour ce uuid, voir GLPI::Agent::Task::Deploy::processRemote) ;
+    ///  - "status":"ok" niveau job (part absent/"job") sans "currentStep" → seul le tout dernier
+    ///    message d'un job réussi n'a pas de currentStep (l'agent le vide avant de l'envoyer, voir
+    ///    Job::currentStep('end')) ; tous les "ok" intermédiaires (checks, téléchargement,
+    ///    préparation, chaque action) portent un currentStep renseigné et ne doivent donc pas
+    ///    clore le job prématurément.
+    /// </summary>
     private async Task<IActionResult> HandleSetStatusAsync(JsonDocument document, CancellationToken cancellationToken)
     {
-        SetStatusRequest? statusRequest = document.Deserialize<SetStatusRequest>(JsonOptions);
+        SetStatusRequest? statusRequest;
+        try
+        {
+            statusRequest = document.Deserialize<SetStatusRequest>(JsonOptions);
+        }
+        catch (JsonException ex)
+        {
+            logger.LogWarning(ex, "glpi-agent 400 (setStatus): échec de désérialisation. Corps: {Body}", document.RootElement.GetRawText());
+            return BadRequest(new ProtocolAnswer { Status = "error", Message = $"malformed json: {ex.Message}" });
+        }
+
         if (statusRequest is null || string.IsNullOrEmpty(statusRequest.Uuid) || !int.TryParse(statusRequest.Uuid, out int jobId))
         {
             return BadRequest(new ProtocolAnswer { Status = "error", Message = "bad-format" });
         }
 
-        DeploymentJob? job = await db.DeploymentJobs.FirstOrDefaultAsync(j => j.Id == jobId, cancellationToken);
+        DeploymentJob? job = await db.DeploymentJobs
+            .Include(j => j.Package)
+            .Include(j => j.Agent)
+            .ThenInclude(a => a!.Computer)
+            .FirstOrDefaultAsync(j => j.Id == jobId, cancellationToken);
         if (job is null)
         {
             return NotFound();
         }
 
-        if (string.Equals(statusRequest.Status, "success", StringComparison.OrdinalIgnoreCase))
-        {
-            job.Status = DeploymentStatus.Success;
-            job.CompletedAt = DateTime.UtcNow;
-        }
-        else if (string.Equals(statusRequest.Status, "error", StringComparison.OrdinalIgnoreCase))
+        string logLine = FormatStatusLogLine(statusRequest);
+        job.Log = string.IsNullOrEmpty(job.Log) ? logLine : job.Log + Environment.NewLine + logLine;
+
+        bool isJobLevel = string.IsNullOrEmpty(statusRequest.Part) || string.Equals(statusRequest.Part, "job", StringComparison.OrdinalIgnoreCase);
+        DeploymentStatus previousStatus = job.Status;
+
+        if (string.Equals(statusRequest.Status, "ko", StringComparison.OrdinalIgnoreCase))
         {
             job.Status = DeploymentStatus.Error;
             job.CompletedAt = DateTime.UtcNow;
         }
-
-        if (!string.IsNullOrEmpty(statusRequest.Message))
+        else if (isJobLevel
+            && string.IsNullOrEmpty(statusRequest.CurrentStep)
+            && string.Equals(statusRequest.Status, "ok", StringComparison.OrdinalIgnoreCase))
         {
-            job.Log = string.IsNullOrEmpty(job.Log)
-                ? statusRequest.Message
-                : job.Log + Environment.NewLine + statusRequest.Message;
+            job.Status = DeploymentStatus.Success;
+            job.CompletedAt = DateTime.UtcNow;
         }
 
         await db.SaveChangesAsync(cancellationToken);
+
+        if (previousStatus != job.Status && job.Status is DeploymentStatus.Success or DeploymentStatus.Error)
+        {
+            await PublishJobStatusNotificationAsync(job, cancellationToken);
+        }
+
         return Ok(new ProtocolAnswer { Status = "ok" });
+    }
+
+    /// <summary>Déclenche l'événement "Déploiement réussi/en échec" (voir NotificationEventCatalog.DeploymentJob) sur transition finale du job.</summary>
+    private async Task PublishJobStatusNotificationAsync(DeploymentJob job, CancellationToken cancellationToken)
+    {
+        string eventKey = job.Status == DeploymentStatus.Success
+            ? NotificationEventCatalog.EventSuccess
+            : NotificationEventCatalog.EventError;
+
+        Dictionary<string, string?> variables = new()
+        {
+            ["job.package"] = job.Package?.Name,
+            ["job.agent"] = job.Agent?.AgentName ?? job.Agent?.DeviceId,
+            ["job.computer"] = job.Agent?.Computer?.Name,
+            ["job.status"] = job.Status == DeploymentStatus.Success ? "Réussi" : "En erreur",
+            ["job.log"] = job.Log,
+            ["job.url"] = $"{Request.Scheme}://{Request.Host}/tools/deployments/supervision",
+        };
+
+        await notificationDispatch.PublishAsync(NotificationEventCatalog.DeploymentJob, eventKey, job.Id, variables, cancellationToken);
+    }
+
+    /// <summary>Formate un rapport "setStatus" en une ligne de journal lisible (affichée telle quelle dans Supervision.razor).</summary>
+    private static string FormatStatusLogLine(SetStatusRequest request)
+    {
+        List<string> tags = [$"[{DateTime.Now:HH:mm:ss}]"];
+
+        if (!string.IsNullOrEmpty(request.CurrentStep))
+        {
+            tags.Add($"[{request.CurrentStep}]");
+        }
+
+        if (request.CheckNum is { } checkNum)
+        {
+            tags.Add($"check#{checkNum + 1}");
+        }
+
+        if (request.ActionNum is { } actionNum)
+        {
+            tags.Add($"action#{actionNum + 1}");
+        }
+
+        if (!string.IsNullOrEmpty(request.Sha512))
+        {
+            tags.Add($"file:{request.Sha512[..Math.Min(12, request.Sha512.Length)]}");
+        }
+
+        string line = string.Join(" ", tags);
+
+        if (!string.IsNullOrEmpty(request.Msg))
+        {
+            line += $" {request.Msg}";
+        }
+
+        if (!string.IsNullOrEmpty(request.Status))
+        {
+            line += $" ({request.Status})";
+        }
+
+        return line;
     }
 
     /// <summary>
@@ -487,12 +602,42 @@ public class ContactRequest
     public string? Tag { get; set; }
 }
 
-/// <summary>Corps attendu pour l'action "setStatus" (rapport d'exécution d'un job de déploiement).</summary>
+/// <summary>
+/// Corps attendu pour l'action "setStatus" — GLPI-Agent en envoie plusieurs par job (démarrage,
+/// résultat de chaque check, progression de chaque téléchargement, préparation, log de chaque
+/// action, fin de job), pas un seul rapport final. Noms de champs et sémantique vérifiés dans
+/// les sources de glpi-agent (GLPI::Agent::Task::Deploy::Job::setStatus) : "status" ne vaut
+/// jamais "success"/"error" mais "ok"/"ko" (parfois "warning"/"info" pour un check non bloquant),
+/// et le message est porté par "msg", pas "message".
+/// </summary>
 public class SetStatusRequest
 {
     public string? Uuid { get; set; }
+
+    /// <summary>"job" (déclaration par défaut côté agent) ou "file" (progression d'un téléchargement, voir <see cref="Sha512"/>).</summary>
+    public string? Part { get; set; }
+
+    /// <summary>Hash du fichier concerné, uniquement quand <see cref="Part"/> vaut "file".</summary>
+    public string? Sha512 { get; set; }
+
     public string? Status { get; set; }
-    public string? Message { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("actionnum")]
+    public int? ActionNum { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("checknum")]
+    public int? CheckNum { get; set; }
+
+    public string? Msg { get; set; }
+
+    /// <summary>
+    /// Phase en cours ("checking"/"downloading"/"prepare"/"processing"). Absent uniquement sur
+    /// le tout dernier message d'un job réussi (l'agent vide currentStep avant de l'envoyer,
+    /// voir Job::currentStep('end')) — c'est le seul signal fiable de fin de job côté agent,
+    /// utilisé par <see cref="AgentController.HandleSetStatusAsync"/> pour distinguer ce message
+    /// des nombreux "status: ok" intermédiaires (qui portent tous un currentStep renseigné).
+    /// </summary>
+    public string? CurrentStep { get; set; }
 }
 
 public class DeployJobRef

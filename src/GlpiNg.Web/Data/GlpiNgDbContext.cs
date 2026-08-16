@@ -3,6 +3,7 @@ using GlpiNg.Modules.Cron.Models;
 using GlpiNg.Modules.Deployment.Models;
 using GlpiNg.Modules.Inventory.Models;
 using GlpiNg.Web.Models;
+using GlpiNg.Web.Models.Notifications;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using MySqlConnector;
@@ -77,6 +78,11 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
 
     public DbSet<DeploymentMirrorServer> DeploymentMirrorServers => Set<DeploymentMirrorServer>();
     public DbSet<DeploymentUserInteractionTemplate> DeploymentUserInteractionTemplates => Set<DeploymentUserInteractionTemplate>();
+
+    public DbSet<NotificationTemplate> NotificationTemplates => Set<NotificationTemplate>();
+    public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<NotificationRecipient> NotificationRecipients => Set<NotificationRecipient>();
+    public DbSet<QueuedNotification> QueuedNotifications => Set<QueuedNotification>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -334,6 +340,45 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
         modelBuilder.Entity<DeploymentUserInteractionTemplate>()
             .HasIndex(t => t.Name)
             .IsUnique();
+
+        // Restrict : un gabarit encore référencé par une notification ne doit pas pouvoir être
+        // supprimé silencieusement (la notification se retrouverait sans contenu à envoyer) —
+        // l'admin doit d'abord réassigner ou supprimer la notification elle-même.
+        modelBuilder.Entity<Notification>()
+            .HasOne(n => n.Template)
+            .WithMany()
+            .HasForeignKey(n => n.NotificationTemplateId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Notification>()
+            .HasMany(n => n.Recipients)
+            .WithOne(r => r.Notification)
+            .HasForeignKey(r => r.NotificationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // SetNull : supprimer l'utilisateur/le groupe ciblé par un destinataire ne doit pas
+        // supprimer la notification elle-même (comme GlpiUser.LdapServerId plus haut) — la ligne
+        // de destinataire reste, simplement sans cible résolue tant qu'elle n'est pas corrigée.
+        modelBuilder.Entity<NotificationRecipient>()
+            .HasOne(r => r.User)
+            .WithMany()
+            .HasForeignKey(r => r.UserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<NotificationRecipient>()
+            .HasOne(r => r.Group)
+            .WithMany()
+            .HasForeignKey(r => r.GroupId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // SetNull : une notification supprimée ne doit pas emporter l'historique déjà envoyé/en
+        // attente dans la file — voir QueuedNotification.NotificationName, qui garde le nom même
+        // une fois la référence perdue.
+        modelBuilder.Entity<QueuedNotification>()
+            .HasOne(q => q.Notification)
+            .WithMany()
+            .HasForeignKey(q => q.NotificationId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         // Clé primaire textuelle (nom de section, ex. "ParcSettings") plutôt qu'un Id auto-incrémenté :
         // longueur bornée nécessaire pour qu'une clé primaire soit indexable sous MySQL (utf8mb4).
