@@ -37,6 +37,7 @@
     <ProjectReference Include="..\GlpiNg.Modules.Abstractions\GlpiNg.Modules.Abstractions.csproj" />
     <ProjectReference Include="..\GlpiNg.Modules.Cron\GlpiNg.Modules.Cron.csproj" />
     <ProjectReference Include="..\GlpiNg.Modules.Deployment\GlpiNg.Modules.Deployment.csproj" />
+    <ProjectReference Include="..\GlpiNg.Modules.Scheduler\GlpiNg.Modules.Scheduler.csproj" />
   </ItemGroup>
 
 </Project>

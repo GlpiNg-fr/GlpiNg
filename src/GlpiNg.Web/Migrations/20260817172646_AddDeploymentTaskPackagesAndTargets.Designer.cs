@@ -4,6 +4,7 @@ using GlpiNg.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GlpiNg.Web.Migrations
 {
     [DbContext(typeof(GlpiNgDbContext))]
-    partial class GlpiNgDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260817172646_AddDeploymentTaskPackagesAndTargets")]
+    partial class AddDeploymentTaskPackagesAndTargets
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -462,12 +465,6 @@ namespace GlpiNg.Web.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AgentWakeUpCount")
-                        .HasColumnType("int");
-
-                    b.Property<int>("AgentWakeUpIntervalMinutes")
-                        .HasColumnType("int");
-
                     b.Property<bool>("AllowRePreparation")
                         .HasColumnType("bit");
 
@@ -476,9 +473,6 @@ namespace GlpiNg.Web.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<int?>("ExecutionTimeSlotId")
-                        .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -490,20 +484,7 @@ namespace GlpiNg.Web.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("PreparationTimeSlotId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("ScheduledEndTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("ScheduledStartTime")
-                        .HasColumnType("datetime2");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("ExecutionTimeSlotId");
-
-                    b.HasIndex("PreparationTimeSlotId");
 
                     b.ToTable("DeploymentTasks");
                 });
@@ -2370,23 +2351,6 @@ namespace GlpiNg.Web.Migrations
                         .HasForeignKey("DeploymentPackageId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentTask", b =>
-                {
-                    b.HasOne("GlpiNg.Modules.Deployment.Models.TimeSlot", "ExecutionTimeSlot")
-                        .WithMany()
-                        .HasForeignKey("ExecutionTimeSlotId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("GlpiNg.Modules.Deployment.Models.TimeSlot", "PreparationTimeSlot")
-                        .WithMany()
-                        .HasForeignKey("PreparationTimeSlotId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("ExecutionTimeSlot");
-
-                    b.Navigation("PreparationTimeSlot");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentTaskPackage", b =>

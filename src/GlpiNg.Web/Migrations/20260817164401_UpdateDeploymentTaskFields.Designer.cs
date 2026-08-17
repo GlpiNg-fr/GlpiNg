@@ -4,6 +4,7 @@ using GlpiNg.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GlpiNg.Web.Migrations
 {
     [DbContext(typeof(GlpiNgDbContext))]
-    partial class GlpiNgDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260817164401_UpdateDeploymentTaskFields")]
+    partial class UpdateDeploymentTaskFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -462,12 +465,6 @@ namespace GlpiNg.Web.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AgentWakeUpCount")
-                        .HasColumnType("int");
-
-                    b.Property<int>("AgentWakeUpIntervalMinutes")
-                        .HasColumnType("int");
-
                     b.Property<bool>("AllowRePreparation")
                         .HasColumnType("bit");
 
@@ -476,9 +473,6 @@ namespace GlpiNg.Web.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<int?>("ExecutionTimeSlotId")
-                        .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -490,77 +484,19 @@ namespace GlpiNg.Web.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("PreparationTimeSlotId")
+                    b.Property<int?>("PackageId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("ScheduledEndTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("ScheduledStartTime")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ExecutionTimeSlotId");
-
-                    b.HasIndex("PreparationTimeSlotId");
-
-                    b.ToTable("DeploymentTasks");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentTaskPackage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("DeploymentTaskId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PackageId")
+                    b.Property<int?>("TargetGroupId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("PackageId");
 
-                    b.HasIndex("DeploymentTaskId", "PackageId")
-                        .IsUnique();
+                    b.HasIndex("TargetGroupId");
 
-                    b.ToTable("DeploymentTaskPackages");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentTaskTarget", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("ComputerId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("DeploymentTaskId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("GroupId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ComputerId");
-
-                    b.HasIndex("DeploymentTaskId");
-
-                    b.HasIndex("GroupId");
-
-                    b.ToTable("DeploymentTaskTargets");
+                    b.ToTable("DeploymentTasks");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentUserInteractionTemplate", b =>
@@ -2374,59 +2310,19 @@ namespace GlpiNg.Web.Migrations
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentTask", b =>
                 {
-                    b.HasOne("GlpiNg.Modules.Deployment.Models.TimeSlot", "ExecutionTimeSlot")
-                        .WithMany()
-                        .HasForeignKey("ExecutionTimeSlotId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("GlpiNg.Modules.Deployment.Models.TimeSlot", "PreparationTimeSlot")
-                        .WithMany()
-                        .HasForeignKey("PreparationTimeSlotId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("ExecutionTimeSlot");
-
-                    b.Navigation("PreparationTimeSlot");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentTaskPackage", b =>
-                {
-                    b.HasOne("GlpiNg.Modules.Deployment.Models.DeploymentTask", null)
-                        .WithMany("Packages")
-                        .HasForeignKey("DeploymentTaskId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("GlpiNg.Modules.Deployment.Models.DeploymentPackage", "Package")
                         .WithMany()
                         .HasForeignKey("PackageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("GlpiNg.Modules.Deployment.Models.DeployComputerGroup", "TargetGroup")
+                        .WithMany()
+                        .HasForeignKey("TargetGroupId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Package");
-                });
 
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentTaskTarget", b =>
-                {
-                    b.HasOne("GlpiNg.Modules.Inventory.Models.Computer", "Computer")
-                        .WithMany()
-                        .HasForeignKey("ComputerId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("GlpiNg.Modules.Deployment.Models.DeploymentTask", null)
-                        .WithMany("Targets")
-                        .HasForeignKey("DeploymentTaskId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GlpiNg.Modules.Deployment.Models.DeployComputerGroup", "Group")
-                        .WithMany()
-                        .HasForeignKey("GroupId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.Navigation("Computer");
-
-                    b.Navigation("Group");
+                    b.Navigation("TargetGroup");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.TimeSlotEntry", b =>
@@ -2758,10 +2654,6 @@ namespace GlpiNg.Web.Migrations
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentTask", b =>
                 {
                     b.Navigation("Jobs");
-
-                    b.Navigation("Packages");
-
-                    b.Navigation("Targets");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.TimeSlot", b =>

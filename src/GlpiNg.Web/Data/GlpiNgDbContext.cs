@@ -41,6 +41,9 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<DeployComputerGroup> DeployComputerGroups => Set<DeployComputerGroup>();
     public DbSet<DeployComputerGroupMember> DeployComputerGroupMembers => Set<DeployComputerGroupMember>();
     public DbSet<DeployComputerGroupCriterion> DeployComputerGroupCriteria => Set<DeployComputerGroupCriterion>();
+    public DbSet<DeploymentTask> DeploymentTasks => Set<DeploymentTask>();
+    public DbSet<DeploymentTaskPackage> DeploymentTaskPackages => Set<DeploymentTaskPackage>();
+    public DbSet<DeploymentTaskTarget> DeploymentTaskTargets => Set<DeploymentTaskTarget>();
 
     public DbSet<GlpiUser> Users => Set<GlpiUser>();
     public DbSet<GlpiUserHistoryEntry> UserHistoryEntries => Set<GlpiUserHistoryEntry>();
@@ -129,6 +132,75 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
             .HasOne(j => j.Package)
             .WithMany()
             .HasForeignKey(j => j.PackageId);
+
+        // Restrict (et non SetNull comme les autres références optionnelles de DeploymentTask
+        // juste en dessous) : SQL Server refuse deux chemins de cascade SET NULL depuis la même
+        // table vers la même table cible (ici DeploymentTasks -> TimeSlots via ces deux colonnes),
+        // "may cause cycles or multiple cascade paths" — il faut donc bloquer la suppression d'un
+        // créneau encore référencé plutôt que de la laisser mettre PreparationTimeSlotId/
+        // ExecutionTimeSlotId à null. L'admin doit d'abord retirer le créneau des tâches qui le
+        // référencent (champs purement déclaratifs pour l'instant, voir la doc de DeploymentTask).
+        modelBuilder.Entity<DeploymentTask>()
+            .HasOne(t => t.PreparationTimeSlot)
+            .WithMany()
+            .HasForeignKey(t => t.PreparationTimeSlotId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<DeploymentTask>()
+            .HasOne(t => t.ExecutionTimeSlot)
+            .WithMany()
+            .HasForeignKey(t => t.ExecutionTimeSlotId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Cascade sur les deux extrémités : une ligne DeploymentTaskPackage n'a de sens que
+        // rattachée à sa tâche ET à son paquet — supprimer l'un ou l'autre retire juste ce paquet
+        // de la liste de la tâche (qui peut retomber à zéro paquet, état normal juste après
+        // création, voir la doc de DeploymentTask) plutôt que de bloquer la suppression.
+        modelBuilder.Entity<DeploymentTask>()
+            .HasMany(t => t.Packages)
+            .WithOne()
+            .HasForeignKey(p => p.DeploymentTaskId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DeploymentTaskPackage>()
+            .HasOne(p => p.Package)
+            .WithMany()
+            .HasForeignKey(p => p.PackageId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DeploymentTaskPackage>()
+            .HasIndex(p => new { p.DeploymentTaskId, p.PackageId })
+            .IsUnique();
+
+        // Même principe que DeploymentTaskPackage ci-dessus, pour les acteurs (groupe ou
+        // ordinateur individuel, voir DeploymentTaskTarget) : supprimer le groupe/ordinateur ciblé
+        // retire juste cet acteur de la tâche plutôt que de bloquer sa suppression.
+        modelBuilder.Entity<DeploymentTask>()
+            .HasMany(t => t.Targets)
+            .WithOne()
+            .HasForeignKey(tg => tg.DeploymentTaskId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DeploymentTaskTarget>()
+            .HasOne(tg => tg.Group)
+            .WithMany()
+            .HasForeignKey(tg => tg.GroupId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DeploymentTaskTarget>()
+            .HasOne(tg => tg.Computer)
+            .WithMany()
+            .HasForeignKey(tg => tg.ComputerId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // SetNull : supprimer une tâche ne doit pas emporter l'historique des jobs qu'elle a créés
+        // (même principe que QueuedNotification.NotificationId plus bas) — le job reste, simplement
+        // sans tâche d'origine.
+        modelBuilder.Entity<DeploymentJob>()
+            .HasOne(j => j.Task)
+            .WithMany(t => t.Jobs)
+            .HasForeignKey(j => j.TaskId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         modelBuilder.Entity<DeploymentPackage>()
             .HasMany(p => p.Files)
