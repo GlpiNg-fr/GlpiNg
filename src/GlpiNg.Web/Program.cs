@@ -10,6 +10,7 @@ using GlpiNg.Modules.Abstractions.Deployment;
 using GlpiNg.Modules.Cron;
 using GlpiNg.Modules.Deployment;
 using GlpiNg.Modules.Inventory;
+using GlpiNg.Modules.Scheduler;
 using GlpiNg.Web.Components;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Middleware;
@@ -310,12 +311,25 @@ public class Program
             // (GlpiNg.Modules.Abstractions).
             builder.Services.AddScoped<IDeploymentTargetDirectory, DeploymentTargetDirectory>();
 
+            // Donne au module Déploiement de quoi évaluer l'éligibilité de l'utilisateur connecté
+            // au libre-service (page /self-service, voir SelfServiceDeploymentService) sans qu'il
+            // dépende de GlpiUser/GlpiUserProfile/GlpiGroupUser — même principe
+            // qu'IDeploymentTargetDirectory ci-dessus, dans le sens inverse.
+            builder.Services.AddScoped<ICurrentUserDeploymentContextProvider, CurrentUserDeploymentContextProvider>();
+
             // Module Deployment (voir GlpiNg.Modules.Deployment.DeploymentModuleServiceCollectionExtensions) :
             // agents GLPI, paquets/jobs de déploiement, groupes d'ordinateurs dynamiques, créneaux
             // horaires, définitions de collecte. Enregistré ici pour la même raison qu'AddInventoryModule
             // ci-dessus : ComputerDeploymentTasksProvider et ses contrôleurs/pages dépendent du DbContext
             // de base.
             builder.Services.AddDeploymentModule();
+
+            // Module Scheduler (voir GlpiNg.Modules.Scheduler.SchedulerModuleServiceCollectionExtensions) :
+            // contribue un ICronTask qui lance automatiquement les DeploymentTask dont la fenêtre
+            // planifiée (ScheduledStartTime/ScheduledEndTime/ExecutionTimeSlotId, voir leur doc) est
+            // ouverte — jusqu'ici purement déclaratifs, sans moteur pour les consommer. Enregistré
+            // après AddDeploymentModule ci-dessus, dont il dépend (DeploymentTaskLaunchService).
+            builder.Services.AddSchedulerModule();
 
             // Module Cron (voir GlpiNg.Modules.Cron.CronModuleServiceCollectionExtensions) :
             // exécute à intervalle régulier (réglable à chaud depuis /config → "Configuration
