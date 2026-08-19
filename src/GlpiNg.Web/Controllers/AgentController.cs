@@ -44,6 +44,7 @@ public class AgentController(
     DeploymentPackageFileStorageService fileStorage,
     SettingsCacheService settingsStore,
     NotificationDispatchService notificationDispatch,
+    EventLogService eventLog,
     ILogger<AgentController> logger) : ControllerBase
 {
     private const string AgentIdHeader = "GLPI-Agent-ID";
@@ -54,6 +55,27 @@ public class AgentController(
     /// les capacités du serveur et obtenir l'URL de soumission d'inventaire. Sans réponse JSON
     /// valide ici, l'agent ne passera jamais au protocole POST (contact/inventory) et aucun
     /// ordinateur ne sera créé.
+    ///
+    /// Le thread de tâche Deploy de l'agent (GLPI::Agent::Task::Deploy::run, indépendant du cycle
+    /// contact/inventory) envoie lui aussi un GET ?action=getConfig&amp;task[Deploy]=&lt;version&gt;
+    /// juste avant de vérifier s'il y a un job à traiter, et n'appellera JAMAIS "getJobs" si le
+    /// tableau "schedule" de cette réponse ne contient pas une entrée dont "task" vaut exactement
+    /// "Deploy" (majuscule — comparaison stricte côté agent, voir Task/Deploy.pm : recherche
+    /// "No Deploy job found in server jobs list." dans le module) — même si un DeploymentJob est
+    /// bien en attente et déjà annoncé dans la réponse "contact" (POST). Sans cette entrée, un
+    /// agent réel n'ira jamais chercher ses jobs de déploiement, quel que soit leur nombre en
+    /// base — bug constaté en conditions réelles (agent GLPI-Agent 1.18) : "contact" annonce
+    /// correctement le job en attente et réveille bien la tâche Deploy de l'agent, qui abandonne
+    /// aussitôt après ce planning "Deploy" absent.
+    ///
+    /// Une fois "Deploy" annoncé, cette même tâche de l'agent envoie aussi "getJobs" et
+    /// "setStatus" en GET avec des paramètres de requête plutôt qu'en POST avec un corps JSON —
+    /// contrairement à contact/inventory. C'est GLPI::Agent::HTTP::Client::Fusion (protocole
+    /// "Fusion", voir sa doc : "JSON messages sent through GET requests") qui porte ces trois
+    /// actions pour la tâche Deploy, à la différence du client HTTP utilisé pour contact/inventory
+    /// — constaté en conditions réelles : un vrai agent envoyant getJobs en GET recevait
+    /// jusqu'ici un 400 "unsupported GET action 'getJobs'" de ce contrôleur, qui ne traitait ces
+    /// deux actions que côté POST (voir <see cref="Handle"/>).
     /// </summary>
     [HttpGet]
     public async Task<IActionResult> HandleGet(CancellationToken cancellationToken)
@@ -71,9 +93,40 @@ public class AgentController(
                 expiration,
                 schedule = new[]
                 {
-                    new { task = "inventory", remote = serverUrl }
+                    new { task = "inventory", remote = serverUrl },
+                    new { task = "Deploy", remote = serverUrl }
                 }
             });
+        }
+
+        if (string.Equals(action, "getJobs", StringComparison.OrdinalIgnoreCase))
+        {
+            string? machineId = Request.Query["machineid"];
+            GlpiAgent? agent = string.IsNullOrEmpty(machineId)
+                ? null
+                : await db.Agents.FirstOrDefaultAsync(a => a.DeviceId == machineId, cancellationToken);
+
+            return await HandleGetJobsCoreAsync(agent, cancellationToken);
+        }
+
+        if (string.Equals(action, "setStatus", StringComparison.OrdinalIgnoreCase))
+        {
+            int? actionNum = int.TryParse(Request.Query["actionnum"], out int an) ? an : null;
+            int? checkNum = int.TryParse(Request.Query["checknum"], out int cn) ? cn : null;
+
+            SetStatusRequest statusRequest = new()
+            {
+                Uuid = Request.Query["uuid"],
+                Part = Request.Query["part"],
+                Sha512 = Request.Query["sha512"],
+                Status = Request.Query["status"],
+                ActionNum = actionNum,
+                CheckNum = checkNum,
+                Msg = Request.Query["msg"],
+                CurrentStep = Request.Query["currentStep"]
+            };
+
+            return await HandleSetStatusCoreAsync(statusRequest, cancellationToken);
         }
 
         return BadRequest(new ProtocolAnswer { Status = "error", Message = $"unsupported GET action '{action}'" });
@@ -276,6 +329,10 @@ public class AgentController(
                     ["agent.url"] = $"{Request.Scheme}://{Request.Host}/tools/deployments/agent/{agent.Id}",
                 },
                 cancellationToken);
+
+            await eventLog.LogAsync("inventory", EventLogLevel.Info, "Nouvel agent GLPI-Agent enregistré.",
+                itemType: nameof(GlpiAgent), itemId: agent.Id, itemLabel: agent.AgentName ?? agent.AgentUuid,
+                cancellationToken: cancellationToken);
         }
 
         List<DeployJobRef> pendingDeployJobs = await db.DeploymentJobs
@@ -346,6 +403,14 @@ public class AgentController(
     private async Task<IActionResult> HandleGetJobsAsync(string agentUuid, CancellationToken cancellationToken)
     {
         GlpiAgent? agent = await db.Agents.FirstOrDefaultAsync(a => a.AgentUuid == agentUuid, cancellationToken);
+        return await HandleGetJobsCoreAsync(agent, cancellationToken);
+    }
+
+    /// <summary>Cœur commun aux deux façons dont un agent peut demander ses jobs de déploiement :
+    /// "getJobs" en POST (identifié par l'en-tête GLPI-Agent-ID, voir <see cref="HandleGetJobsAsync"/>)
+    /// et "getJobs" en GET (identifié par le paramètre "machineid", voir <see cref="HandleGet"/>).</summary>
+    private async Task<IActionResult> HandleGetJobsCoreAsync(GlpiAgent? agent, CancellationToken cancellationToken)
+    {
         if (agent is null)
         {
             return Ok(new JsonObject { ["jobs"] = new JsonArray() });
@@ -401,7 +466,20 @@ public class AgentController(
             return BadRequest(new ProtocolAnswer { Status = "error", Message = $"malformed json: {ex.Message}" });
         }
 
-        if (statusRequest is null || string.IsNullOrEmpty(statusRequest.Uuid) || !int.TryParse(statusRequest.Uuid, out int jobId))
+        if (statusRequest is null)
+        {
+            return BadRequest(new ProtocolAnswer { Status = "error", Message = "bad-format" });
+        }
+
+        return await HandleSetStatusCoreAsync(statusRequest, cancellationToken);
+    }
+
+    /// <summary>Cœur commun aux deux façons dont un agent peut rapporter le statut d'un job :
+    /// "setStatus" en POST avec un corps JSON (voir <see cref="HandleSetStatusAsync"/>) et
+    /// "setStatus" en GET avec des paramètres de requête (voir <see cref="HandleGet"/>).</summary>
+    private async Task<IActionResult> HandleSetStatusCoreAsync(SetStatusRequest statusRequest, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(statusRequest.Uuid) || !int.TryParse(statusRequest.Uuid, out int jobId))
         {
             return BadRequest(new ProtocolAnswer { Status = "error", Message = "bad-format" });
         }

@@ -16,7 +16,10 @@ namespace GlpiNg.Web.Controllers;
 /// </summary>
 [AllowAnonymous]
 [Route("Account")]
-public class AccountController(UserCredentialAuthenticator credentialAuthenticator, SettingsCacheService settingsStore) : Controller
+public class AccountController(
+    UserCredentialAuthenticator credentialAuthenticator,
+    SettingsCacheService settingsStore,
+    EventLogService eventLog) : Controller
 {
     [HttpPost("Login")]
     [ValidateAntiForgeryToken]
@@ -36,8 +39,12 @@ public class AccountController(UserCredentialAuthenticator credentialAuthenticat
 
         if (user is null)
         {
+            await eventLog.LogAsync("login", EventLogLevel.Warning, $"Échec de connexion pour « {userName} ».", cancellationToken: ct);
             return Redirect($"/login?error=1&returnUrl={Uri.EscapeDataString(returnUrl ?? "/")}");
         }
+
+        await eventLog.LogAsync("login", EventLogLevel.Info, "Connexion réussie.",
+            itemType: nameof(GlpiUser), itemId: user.Id, itemLabel: user.DisplayName ?? user.UserName, cancellationToken: ct);
 
         List<Claim> claims =
         [
@@ -67,7 +74,14 @@ public class AccountController(UserCredentialAuthenticator credentialAuthenticat
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
     {
+        string? userName = User.Identity?.Name;
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+        if (!string.IsNullOrEmpty(userName))
+        {
+            await eventLog.LogAsync("login", EventLogLevel.Info, "Déconnexion.", itemLabel: userName);
+        }
+
         return Redirect("/login");
     }
 }

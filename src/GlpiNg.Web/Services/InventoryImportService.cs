@@ -1,4 +1,5 @@
 using GlpiNg.Modules.Inventory.Models;
+using GlpiNg.Modules.Inventory.Services;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
 using GlpiNg.Web.Models.Agent;
@@ -71,9 +72,11 @@ public class InventoryImportService(
 
         ComputerSnapshot before = ComputerSnapshot.Capture(computer);
 
-        ApplyHardware(computer, content);
+        Dictionary<DictionaryRuleType, List<DictionaryRule>> dictionaries = await LoadActiveDictionaryRulesAsync(cancellationToken);
+
+        ApplyHardware(computer, content, dictionaries);
         ApplyComponents(computer, content, settings);
-        if (settings.ImportSoftwares) ApplySoftwares(computer, content);
+        if (settings.ImportSoftwares) ApplySoftwares(computer, content, dictionaries);
         if (settings.ImportMonitors) ApplyMonitors(computer, content);
         if (settings.ImportPeripherals) await ApplyPeripheralsAsync(computer, content, cancellationToken);
         ApplyVolumes(computer, content, settings);
@@ -158,7 +161,7 @@ public class InventoryImportService(
         return await ImportAsync(agent, content, cancellationToken);
     }
 
-    private static void ApplyHardware(Computer computer, InventoryContent content)
+    private static void ApplyHardware(Computer computer, InventoryContent content, IReadOnlyDictionary<DictionaryRuleType, List<DictionaryRule>> dictionaries)
     {
         if (content.Hardware is { } hardware)
         {
@@ -173,17 +176,42 @@ public class InventoryImportService(
 
         if (content.Bios is { } bios)
         {
-            computer.Manufacturer = bios.SystemManufacturer ?? computer.Manufacturer;
-            computer.Model = bios.SystemModel ?? computer.Model;
+            DictionaryRuleEngine.Result manufacturer = DictionaryRuleEngine.Apply(bios.SystemManufacturer, GetRules(dictionaries, DictionaryRuleType.Manufacturer));
+            if (!manufacturer.Ignore) computer.Manufacturer = manufacturer.Value ?? computer.Manufacturer;
+
+            DictionaryRuleEngine.Result model = DictionaryRuleEngine.Apply(bios.SystemModel, GetRules(dictionaries, DictionaryRuleType.ComputerModel));
+            if (!model.Ignore) computer.Model = model.Value ?? computer.Model;
+
             computer.SerialNumber = bios.SystemSerial ?? computer.SerialNumber;
         }
 
         if (content.OperatingSystem is { } os)
         {
-            computer.OperatingSystem = os.FullName ?? os.Name ?? computer.OperatingSystem;
-            computer.OsVersion = os.Version ?? computer.OsVersion;
+            DictionaryRuleEngine.Result osName = DictionaryRuleEngine.Apply(os.FullName ?? os.Name, GetRules(dictionaries, DictionaryRuleType.OperatingSystem));
+            if (!osName.Ignore) computer.OperatingSystem = osName.Value ?? computer.OperatingSystem;
+
+            DictionaryRuleEngine.Result osVersion = DictionaryRuleEngine.Apply(os.Version, GetRules(dictionaries, DictionaryRuleType.OperatingSystemVersion));
+            if (!osVersion.Ignore) computer.OsVersion = osVersion.Value ?? computer.OsVersion;
+
             computer.OsKernelVersion = os.KernelVersion ?? computer.OsKernelVersion;
         }
+    }
+
+    private static readonly List<DictionaryRule> EmptyDictionaryRules = [];
+
+    private static List<DictionaryRule> GetRules(IReadOnlyDictionary<DictionaryRuleType, List<DictionaryRule>> dictionaries, DictionaryRuleType type) =>
+        dictionaries.TryGetValue(type, out List<DictionaryRule>? rules) ? rules : EmptyDictionaryRules;
+
+    private async Task<Dictionary<DictionaryRuleType, List<DictionaryRule>>> LoadActiveDictionaryRulesAsync(CancellationToken cancellationToken)
+    {
+        List<DictionaryRule> rules = await db.Set<DictionaryRule>()
+            .AsNoTracking()
+            .Include(r => r.Criteria)
+            .Where(r => r.IsActive)
+            .OrderBy(r => r.SortOrder)
+            .ToListAsync(cancellationToken);
+
+        return rules.GroupBy(r => r.Type).ToDictionary(g => g.Key, g => g.ToList());
     }
 
     /// <summary>
@@ -260,17 +288,22 @@ public class InventoryImportService(
     /// la même raison que <see cref="ApplyComponents"/> : un inventaire GLPI-Agent est un
     /// instantané complet des logiciels installés.
     /// </summary>
-    private static void ApplySoftwares(Computer computer, InventoryContent content)
+    private static void ApplySoftwares(Computer computer, InventoryContent content, IReadOnlyDictionary<DictionaryRuleType, List<DictionaryRule>> dictionaries)
     {
         computer.Softwares.Clear();
+
+        List<DictionaryRule> rules = GetRules(dictionaries, DictionaryRuleType.Software);
 
         foreach (InventorySoftware software in content.Softwares)
         {
             if (string.IsNullOrWhiteSpace(software.Name)) continue;
 
+            DictionaryRuleEngine.Result result = DictionaryRuleEngine.Apply(software.Name, software.Publisher, rules);
+            if (result.Ignore) continue;
+
             computer.Softwares.Add(new ComputerSoftware
             {
-                Name = software.Name,
+                Name = result.Value ?? software.Name,
                 Version = software.Version,
                 Publisher = software.Publisher,
                 InstallDate = software.InstallDate

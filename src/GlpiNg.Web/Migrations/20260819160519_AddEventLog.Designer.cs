@@ -4,6 +4,7 @@ using GlpiNg.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GlpiNg.Web.Migrations
 {
     [DbContext(typeof(GlpiNgDbContext))]
-    partial class GlpiNgDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260819160519_AddEventLog")]
+    partial class AddEventLog
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1148,32 +1151,6 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("DictionaryRuleId");
 
                     b.ToTable("DictionaryRuleCriteria");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.DropdownItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Comment")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Type", "Name")
-                        .IsUnique();
-
-                    b.ToTable("DropdownItems");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.GlpiAgent", b =>

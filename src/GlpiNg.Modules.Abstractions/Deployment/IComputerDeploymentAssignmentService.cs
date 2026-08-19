@@ -16,6 +16,10 @@ public interface IComputerDeploymentAssignmentService
     Task<DeploymentAssignmentResult> AssignPackagesAsync(int computerId, IReadOnlyCollection<int> packageIds, CancellationToken cancellationToken = default);
 
     Task<bool> CancelAssignmentAsync(int jobId, CancellationToken cancellationToken = default);
+
+    /// <summary>Remet un job terminé (Réussi/En erreur) en attente, pour le relancer — voir la
+    /// doc de <see cref="ComputerDeploymentAssignment.CanRetry"/>.</summary>
+    Task<bool> RetryAssignmentAsync(int jobId, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Un paquet de déploiement pouvant être assigné (non remplacé par un autre paquet).</summary>
@@ -31,9 +35,17 @@ public sealed class ComputerDeploymentAssignment
     public int JobId { get; set; }
     public int PackageId { get; set; }
     public required string PackageName { get; set; }
+    /// <summary>Tâche "à la demande" ayant créé ce job (voir ComputerDeploymentAssignmentService),
+    /// nul pour un job d'assignation antérieur à son introduction.</summary>
+    public int? TaskId { get; set; }
+    /// <summary>Journal brut renvoyé par l'agent en fin d'exécution (voir DeploymentJob.Log).</summary>
+    public string? Log { get; set; }
     public required string StatusLabel { get; set; }
     public required string StatusBadgeCssClass { get; set; }
     public bool CanCancel { get; set; }
+    /// <summary>Vrai quand le job est terminé (Réussi/En erreur) : peut être relancé (remis en
+    /// attente) via <see cref="IComputerDeploymentAssignmentService.RetryAssignmentAsync"/>.</summary>
+    public bool CanRetry { get; set; }
     public DateTime CreatedAtUtc { get; set; }
     public DateTime? StartedAtUtc { get; set; }
     public DateTime? CompletedAtUtc { get; set; }

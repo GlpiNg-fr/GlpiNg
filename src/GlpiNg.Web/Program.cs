@@ -348,6 +348,10 @@ public class Program
             builder.Services.AddSingleton<SmtpMailSender>();
             builder.Services.AddScoped<ICronTask, QueuedNotificationSenderCronTask>();
 
+            // Journal des évènements système consulté sur /admin/logs (voir Administration →
+            // "Journaux", EventLogEntry) : connexions, contacts d'agent GLPI-Agent, ...
+            builder.Services.AddScoped<EventLogService>();
+
             builder.Services.AddCronModule();
         }
 
