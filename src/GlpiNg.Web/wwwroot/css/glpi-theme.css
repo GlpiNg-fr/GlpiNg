@@ -523,6 +523,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow-y: hidden;
+  padding-top: 0.6rem;
 }
 
 .glpi-list-page .glpi-computers-layout {
@@ -1359,7 +1360,7 @@ body {
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   flex-shrink: 0;
 }
 
@@ -1367,7 +1368,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.4rem 0.9rem;
+  padding: 0.3rem 0.75rem;
   border: 1px solid #e6e7e9;
   border-radius: 6px;
   background: #fff;
@@ -1409,8 +1410,8 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
+  width: 1.75rem;
+  height: 1.75rem;
   border: 1px solid #e6e7e9;
   border-radius: 6px;
   color: #495057;
@@ -1507,6 +1508,41 @@ body {
   min-width: 0;
   padding: 1.25rem 1.5rem;
   overflow-y: auto;
+}
+
+/* Variante d'un onglet de fiche dont le contenu doit occuper toute la hauteur du panneau
+   (ex. onglet "Logiciels") : le bloc s'étire, seul le corps du tableau défile, l'entête
+   et le pied (pagination) restent fixes. */
+.glpi-fiche-panel-fill {
+  display: flex;
+  flex-direction: column;
+  overflow-y: hidden;
+}
+
+.glpi-fiche-panel-fill .glpi-fiche-block {
+  flex: 1;
+  min-height: 0;
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.glpi-fiche-panel-fill .glpi-fiche-block-title,
+.glpi-fiche-panel-fill .glpi-fiche-block > .card-footer {
+  flex-shrink: 0;
+}
+
+.glpi-fiche-panel-fill .glpi-fiche-block > .table-responsive {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.glpi-fiche-panel-fill .glpi-fiche-block > .table-responsive thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--tblr-card-bg, #fff);
 }
 
 /* Formulaire de lecture (ex. onglets "Ordinateur", "Systèmes d'exploitation") */
@@ -1614,6 +1650,41 @@ body {
   letter-spacing: 0.03em;
 }
 
+/* Champ de filtre optionnel dans l'entête d'un .glpi-fiche-block (ex. onglet "Logiciels") :
+   collé à droite du titre, normalisé (non gras/majuscule) car il ne fait pas partie du
+   libellé du bloc. */
+.glpi-fiche-block-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto;
+  padding: 0.25rem 0.6rem;
+  background: #fff;
+  border: 1px solid #dfe3e8;
+  border-radius: 6px;
+  color: #8a919a;
+}
+
+.glpi-fiche-block-filter .ti {
+  font-size: 0.9rem;
+}
+
+.glpi-fiche-block-filter input {
+  border: none;
+  outline: none;
+  background: transparent;
+  width: 200px;
+  font-size: 0.75rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  color: #232629;
+}
+
+.glpi-fiche-block-filter input::placeholder {
+  color: #b9bec5;
+}
+
 /* Contenu d'un .glpi-fiche-block, en dessous du bandeau .glpi-fiche-block-title : marge
    intérieure pour que tableaux/formulaires ne touchent pas les bords du bloc. */
 .glpi-fiche-block-body {
@@ -1682,6 +1753,54 @@ body {
   color: #495363;
   font-size: 0.8125rem;
   cursor: pointer;
+}
+
+/* Journal d'exécution d'un job de déploiement (onglet "Exécutions des jobs") : rendu façon
+   terminal (fond sombre, mono, contraste élevé) plutôt qu'un <pre> brut sur fond gris clair peu
+   lisible. Chaque ligne est un <div> distinct (voir RenderLog côté C#) pour pouvoir coder
+   visuellement le statut sans reconstruire le texte via des regex CSS. */
+.glpi-job-log {
+  max-height: 420px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0.85rem 1rem;
+  background: #1b1f27;
+  border-radius: 6px;
+  font-family: var(--tblr-font-monospace, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  font-size: 0.8125rem;
+  line-height: 1.65;
+  color: #d3d8e2;
+}
+
+.glpi-log-line {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.glpi-log-line:empty::before {
+  content: "\00a0";
+}
+
+.glpi-log-time {
+  color: #7d8698;
+}
+
+.glpi-log-tag {
+  color: #6cb6ff;
+  font-weight: 600;
+}
+
+.glpi-log-line.glpi-log-ok {
+  color: #7ee2a8;
+}
+
+.glpi-log-line.glpi-log-error {
+  color: #ff9494;
+  font-weight: 600;
+}
+
+.glpi-log-line.glpi-log-sep {
+  color: #454c5a;
 }
 
 .glpi-tag-select-input:hover:not(:disabled) {

@@ -1,0 +1,102 @@
+@page "/admin/logs"
+@using GlpiNg.Web.Models
+@rendermode InteractiveServer
+
+<PageTitle>GlpiNg — Journaux</PageTitle>
+
+<div class="glpi-list-page">
+<div class="card">
+    <div class="card-header d-flex align-items-center justify-content-between glpi-list-toolbar flex-wrap gap-2">
+        <div class="btn-list flex-wrap">
+            <div class="input-icon" style="min-width: 220px;">
+                <span class="input-icon-addon">
+                    <i class="ti ti-search"></i>
+                </span>
+                <input type="text" class="form-control" placeholder="Rechercher un message, un élément..."
+                       @bind="_searchTerm" @bind:event="oninput" @onkeyup="OnFilterChanged" />
+            </div>
+
+            <select class="form-select" style="width: auto;" @bind="_serviceFilter" @bind:after="ApplyFilter">
+                <option value="">Tous les services</option>
+                @foreach (string service in _services)
+                {
+                    <option value="@service">@service</option>
+                }
+            </select>
+
+            <select class="form-select" style="width: auto;" @bind="_levelFilter" @bind:after="ApplyFilter">
+                <option value="">Tous les niveaux</option>
+                @foreach (EventLogLevel level in Enum.GetValues<EventLogLevel>())
+                {
+                    <option value="@level">@LevelLabel(level)</option>
+                }
+            </select>
+        </div>
+
+        <div class="btn-list align-items-center">
+            <button type="button" class="btn btn-icon" @onclick="OnRefreshAsync" title="Rafraîchir">
+                <i class="ti ti-refresh"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Service</th>
+                    <th>Niveau</th>
+                    <th>Message</th>
+                    <th>Élément</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (_filteredEntries.Count == 0)
+                {
+                    <tr>
+                        <td colspan="5" class="text-center text-secondary py-4">Aucun évènement trouvé.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (EventLogEntry entry in _filteredEntries)
+                    {
+                        <tr>
+                            <td class="text-nowrap">@entry.OccurredAt.ToLocalTime().ToString("dd-MM-yyyy HH:mm:ss")</td>
+                            <td>@entry.Service</td>
+                            <td><span class="badge @LevelBadgeCss(entry.Level)">@LevelLabel(entry.Level)</span></td>
+                            <td>@entry.Message</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(entry.ItemLabel))
+                                {
+                                    string? url = ItemUrl(entry.ItemType, entry.ItemId);
+                                    if (url is not null)
+                                    {
+                                        <a href="@url" class="text-reset">@entry.ItemLabel</a>
+                                    }
+                                    else
+                                    {
+                                        @entry.ItemLabel
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-secondary">—</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (_entries.Count >= MaxEntries)
+    {
+        <div class="card-footer text-secondary">
+            Affichage des @MaxEntries évènements les plus récents.
+        </div>
+    }
+</div>
+</div>

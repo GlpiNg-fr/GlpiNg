@@ -24,6 +24,9 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<ComputerAntivirus> ComputerAntiviruses => Set<ComputerAntivirus>();
     public DbSet<ComputerImportHistory> ComputerImportHistories => Set<ComputerImportHistory>();
     public DbSet<ComputerHistoryEntry> ComputerHistoryEntries => Set<ComputerHistoryEntry>();
+    public DbSet<DictionaryRule> DictionaryRules => Set<DictionaryRule>();
+    public DbSet<DictionaryRuleCriterion> DictionaryRuleCriteria => Set<DictionaryRuleCriterion>();
+    public DbSet<DropdownItem> DropdownItems => Set<DropdownItem>();
     public DbSet<SavedSearch> SavedSearches => Set<SavedSearch>();
     public DbSet<SavedSearchOrder> SavedSearchOrders => Set<SavedSearchOrder>();
     public DbSet<TableColumnPreference> TableColumnPreferences => Set<TableColumnPreference>();
@@ -86,6 +89,8 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<NotificationRecipient> NotificationRecipients => Set<NotificationRecipient>();
     public DbSet<QueuedNotification> QueuedNotifications => Set<QueuedNotification>();
+
+    public DbSet<EventLogEntry> EventLogEntries => Set<EventLogEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -404,6 +409,19 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
             .WithOne()
             .HasForeignKey(c => c.DeployComputerGroupId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DictionaryRule>()
+            .HasMany(r => r.Criteria)
+            .WithOne()
+            .HasForeignKey(c => c.DictionaryRuleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Une même valeur (ex. "Dell") ne doit apparaître qu'une fois par catégorie d'Intitulé —
+        // c'est aussi ce qu'impose l'upsert "création à la volée" de Computers/Detail.razor.cs
+        // (SaveComputerFieldsAsync) quand une valeur saisie n'existe pas encore dans la liste.
+        modelBuilder.Entity<DropdownItem>()
+            .HasIndex(i => new { i.Type, i.Name })
+            .IsUnique();
 
         modelBuilder.Entity<DeploymentMirrorServer>()
             .HasIndex(s => s.Name)

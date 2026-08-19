@@ -7,7 +7,8 @@ namespace GlpiNg.Web.Services;
 
 /// <summary>
 /// Équivalent réduit de la tâche cron GLPI "purgelogs" : purge les entrées d'historique
-/// (Entités/Groupes/Utilisateurs/Profils) plus anciennes que le réglage "Purger toutes
+/// (Entités/Groupes/Utilisateurs/Profils) ainsi que le journal des évènements système
+/// (<see cref="EventLogEntry"/>, voir /admin/logs) plus anciens que le réglage "Purger toutes
 /// les entrées de l'historique" de l'onglet /config → "Purge de l'historique" (voir
 /// <see cref="PurgeSettings.RetentionMonths"/>, clé "All").
 ///
@@ -40,5 +41,6 @@ public sealed class HistoryPurgeCronTask(GlpiNgDbContext db, SettingsCacheServic
         await db.GroupHistoryEntries.Where(h => h.OccurredAt < threshold).ExecuteDeleteAsync(cancellationToken);
         await db.UserHistoryEntries.Where(h => h.OccurredAt < threshold).ExecuteDeleteAsync(cancellationToken);
         await db.ProfileHistoryEntries.Where(h => h.OccurredAt < threshold).ExecuteDeleteAsync(cancellationToken);
+        await db.EventLogEntries.Where(e => e.OccurredAt < threshold).ExecuteDeleteAsync(cancellationToken);
     }
 }
