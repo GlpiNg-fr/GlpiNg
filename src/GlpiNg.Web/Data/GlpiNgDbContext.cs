@@ -423,6 +423,15 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
             .HasIndex(i => new { i.Type, i.Name })
             .IsUnique();
 
+        // Restrict comme GlpiGroup.Parent plus bas : FK auto-référencée, donc pas de Cascade (non
+        // supporté par SQL Server sur une relation qui boucle sur la même table). Empêche aussi de
+        // supprimer un Lieu tant que des sous-lieux le référencent encore.
+        modelBuilder.Entity<DropdownItem>()
+            .HasOne(i => i.Parent)
+            .WithMany()
+            .HasForeignKey(i => i.ParentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         // SetNull sur les trois entités qui référencent un Intitulé de type Status (Computer,
         // Peripheral, ComputerPeripheral/"Moniteurs") : supprimer une valeur de statut depuis
         // /config/dropdowns ne doit pas empêcher sa suppression ni supprimer les actifs qui la
