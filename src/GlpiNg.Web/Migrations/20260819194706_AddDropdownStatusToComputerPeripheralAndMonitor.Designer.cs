@@ -4,6 +4,7 @@ using GlpiNg.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GlpiNg.Web.Migrations
 {
     [DbContext(typeof(GlpiNgDbContext))]
-    partial class GlpiNgDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260819194706_AddDropdownStatusToComputerPeripheralAndMonitor")]
+    partial class AddDropdownStatusToComputerPeripheralAndMonitor
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -684,9 +687,6 @@ namespace GlpiNg.Web.Migrations
                     b.Property<string>("LastLoggedUser")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("LocationId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Manufacturer")
                         .HasColumnType("nvarchar(max)");
 
@@ -732,8 +732,6 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("AgentId")
                         .IsUnique()
                         .HasFilter("[AgentId] IS NOT NULL");
-
-                    b.HasIndex("LocationId");
 
                     b.HasIndex("SourceGlpiId")
                         .IsUnique()
@@ -1169,9 +1167,6 @@ namespace GlpiNg.Web.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Color")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Comment")
                         .HasColumnType("nvarchar(max)");
@@ -2588,19 +2583,12 @@ namespace GlpiNg.Web.Migrations
                         .WithOne("Computer")
                         .HasForeignKey("GlpiNg.Modules.Inventory.Models.Computer", "AgentId");
 
-                    b.HasOne("GlpiNg.Modules.Inventory.Models.DropdownItem", "LocationItem")
-                        .WithMany()
-                        .HasForeignKey("LocationId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("GlpiNg.Modules.Inventory.Models.DropdownItem", "StatusItem")
                         .WithMany()
                         .HasForeignKey("StatusId")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Agent");
-
-                    b.Navigation("LocationItem");
 
                     b.Navigation("StatusItem");
                 });

@@ -423,6 +423,39 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
             .HasIndex(i => new { i.Type, i.Name })
             .IsUnique();
 
+        // SetNull sur les trois entités qui référencent un Intitulé de type Status (Computer,
+        // Peripheral, ComputerPeripheral/"Moniteurs") : supprimer une valeur de statut depuis
+        // /config/dropdowns ne doit pas empêcher sa suppression ni supprimer les actifs qui la
+        // référencent, ils retombent simplement sans statut.
+        modelBuilder.Entity<Computer>()
+            .HasOne(c => c.StatusItem)
+            .WithMany()
+            .HasForeignKey(c => c.StatusId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Peripheral>()
+            .HasOne(p => p.StatusItem)
+            .WithMany()
+            .HasForeignKey(p => p.StatusId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<ComputerPeripheral>()
+            .HasOne(p => p.StatusItem)
+            .WithMany()
+            .HasForeignKey(p => p.StatusId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Restrict (et non SetNull comme StatusId ci-dessus) : SQL Server refuse un deuxième chemin
+        // de cascade SET NULL depuis Computers vers DropdownItems (même limitation que
+        // DeploymentTask.PreparationTimeSlot/ExecutionTimeSlot plus haut, "may cause cycles or
+        // multiple cascade paths"). L'admin doit d'abord retirer ce Lieu des postes qui le
+        // référencent avant de le supprimer depuis /config/dropdowns.
+        modelBuilder.Entity<Computer>()
+            .HasOne(c => c.LocationItem)
+            .WithMany()
+            .HasForeignKey(c => c.LocationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         modelBuilder.Entity<DeploymentMirrorServer>()
             .HasIndex(s => s.Name)
             .IsUnique();

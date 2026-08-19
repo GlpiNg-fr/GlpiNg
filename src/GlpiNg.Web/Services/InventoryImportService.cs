@@ -84,8 +84,13 @@ public class InventoryImportService(
         ApplyNetworkPorts(computer, content);
         if (settings.ImportAntivirus) ApplyAntivirus(computer, content);
 
+        string? beforeStatusLabel = before.StatusId is { } beforeStatusId
+            ? await db.DropdownItems.AsNoTracking().Where(i => i.Id == beforeStatusId).Select(i => i.Name).FirstOrDefaultAsync(cancellationToken)
+            : null;
+
         computer.LastInventoryAt = DateTime.UtcNow;
-        computer.Status = ComputerStatus.InProduction;
+        const string afterStatusLabel = "En production";
+        computer.StatusId = await ResolveStatusIdAsync(afterStatusLabel, cancellationToken);
 
         computer.ImportHistories.Add(new ComputerImportHistory
         {
@@ -96,7 +101,7 @@ public class InventoryImportService(
             InputValue = inputValue
         });
 
-        foreach (ComputerHistoryEntry entry in BuildHistoryEntries(before, computer, isNew))
+        foreach (ComputerHistoryEntry entry in BuildHistoryEntries(before, computer, isNew, beforeStatusLabel, afterStatusLabel))
         {
             computer.HistoryEntries.Add(entry);
         }
@@ -369,7 +374,7 @@ public class InventoryImportService(
             peripheral.SerialNumber = usb.Serial ?? peripheral.SerialNumber;
             peripheral.Type = type;
             peripheral.ComputerId = computer.Id;
-            peripheral.Status = ComputerStatus.InProduction;
+            peripheral.StatusId = await ResolveStatusIdAsync("En production", cancellationToken);
             peripheral.UpdatedAt = DateTime.UtcNow;
 
             if (peripheral.Id > 0) seenIds.Add(peripheral.Id);
@@ -394,11 +399,27 @@ public class InventoryImportService(
             peripheral.Manufacturer = input.Manufacturer ?? peripheral.Manufacturer;
             peripheral.Type = type;
             peripheral.ComputerId = computer.Id;
-            peripheral.Status = ComputerStatus.InProduction;
+            peripheral.StatusId = await ResolveStatusIdAsync("En production", cancellationToken);
             peripheral.UpdatedAt = DateTime.UtcNow;
 
             if (peripheral.Id > 0) seenIds.Add(peripheral.Id);
         }
+    }
+
+    // Résout (ou crée à la volée) l'Id du DropdownItem de type Status portant ce nom — voir
+    // Models/DropdownItem.cs. Utilisé pour tous les statuts assignés automatiquement par cet
+    // import (toujours "En production", que ce soit pour un Computer ou un Peripheral détecté),
+    // plutôt que l'ancienne énumération fixe ComputerStatus.
+    private async Task<int?> ResolveStatusIdAsync(string name, CancellationToken cancellationToken)
+    {
+        DropdownItem? item = await db.DropdownItems
+            .FirstOrDefaultAsync(i => i.Type == DropdownType.Status && i.Name == name, cancellationToken);
+        if (item is not null) return item.Id;
+
+        item = new DropdownItem { Type = DropdownType.Status, Name = name };
+        db.DropdownItems.Add(item);
+        await db.SaveChangesAsync(cancellationToken);
+        return item.Id;
     }
 
     private static Peripheral? FindExistingPeripheral(List<Peripheral> existingPeripherals, string name, string? manufacturer, string? serial)
@@ -568,7 +589,7 @@ public class InventoryImportService(
         string? Name, string? SerialNumber, string? Manufacturer, string? Model,
         string? OperatingSystem, string? OsVersion, string? OsKernelVersion,
         string? HardwareUuid, string? ChassisType, int? TotalMemoryMb,
-        string? LastLoggedUser, string? VmSystem, string? Domain, ComputerStatus Status, DateTime? LastInventoryAt,
+        string? LastLoggedUser, string? VmSystem, string? Domain, int? StatusId, DateTime? LastInventoryAt,
         HashSet<string> Components, HashSet<string> Softwares, HashSet<string> Monitors,
         HashSet<string> Volumes, HashSet<string> Batteries, HashSet<string> NetworkPorts,
         HashSet<string> Antiviruses)
@@ -577,7 +598,7 @@ public class InventoryImportService(
             c.Name, c.SerialNumber, c.Manufacturer, c.Model,
             c.OperatingSystem, c.OsVersion, c.OsKernelVersion,
             c.HardwareUuid, c.ChassisType, c.TotalMemoryMb,
-            c.LastLoggedUser, c.VmSystem, c.Domain, c.Status, c.LastInventoryAt,
+            c.LastLoggedUser, c.VmSystem, c.Domain, c.StatusId, c.LastInventoryAt,
             c.Components.Select(ComponentKey).ToHashSet(),
             c.Softwares.Select(SoftwareKey).ToHashSet(),
             c.Peripherals.Where(p => p.Kind == PeripheralKind.Monitor).Select(PeripheralKey).ToHashSet(),
@@ -619,7 +640,8 @@ public class InventoryImportService(
     /// création (<paramref name="isNew"/>), on ne journalise que les ajouts de sous-éléments —
     /// pas les champs scalaires "null → valeur", qui ne correspondent à aucun changement observable.
     /// </summary>
-    private static IEnumerable<ComputerHistoryEntry> BuildHistoryEntries(ComputerSnapshot before, Computer computer, bool isNew)
+    private static IEnumerable<ComputerHistoryEntry> BuildHistoryEntries(
+        ComputerSnapshot before, Computer computer, bool isNew, string? beforeStatusLabel, string? afterStatusLabel)
     {
         if (!isNew)
         {
@@ -637,7 +659,7 @@ public class InventoryImportService(
             if (before.VmSystem != computer.VmSystem) yield return FieldChange("Virtualisation", before.VmSystem, computer.VmSystem);
             if (before.Domain != computer.Domain) yield return FieldChange("Domaine", before.Domain, computer.Domain);
             if (before.LastInventoryAt != computer.LastInventoryAt) yield return FieldChange("Date de dernier inventaire", FormatDate(before.LastInventoryAt), FormatDate(computer.LastInventoryAt));
-            if (before.Status != computer.Status) yield return FieldChange("Statut", StatusLabel(before.Status), StatusLabel(computer.Status));
+            if (before.StatusId != computer.StatusId) yield return FieldChange("Statut", beforeStatusLabel, afterStatusLabel);
         }
 
         foreach (ComputerHistoryEntry entry in DiffKeyedSet(before.Components, computer.Components.Select(ComponentKey).ToHashSet(),
@@ -708,12 +730,4 @@ public class InventoryImportService(
 
     private static string? FormatDate(DateTime? date) => date?.ToLocalTime().ToString("dd/MM/yyyy HH:mm");
 
-    private static string StatusLabel(ComputerStatus status) => status switch
-    {
-        ComputerStatus.InStock => "En stock",
-        ComputerStatus.InProduction => "En production",
-        ComputerStatus.Broken => "En panne",
-        ComputerStatus.Retired => "Réformé",
-        _ => status.ToString()
-    };
 }
