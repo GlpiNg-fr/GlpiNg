@@ -84,6 +84,11 @@ public class InventoryImportService(
         ApplyNetworkPorts(computer, content);
         if (settings.ImportAntivirus) ApplyAntivirus(computer, content);
 
+        // Règles métier pour les actifs (voir ComputerRuleEngine) : appliquées après tous les
+        // champs ci-dessus, une fois l'ordinateur entièrement renseigné par l'inventaire.
+        List<ComputerRule> computerRules = await LoadActiveComputerRulesAsync(cancellationToken);
+        ComputerRuleEngine.Apply(computer, isNew, computerRules);
+
         string? beforeStatusLabel = before.StatusId is { } beforeStatusId
             ? await db.DropdownItems.AsNoTracking().Where(i => i.Id == beforeStatusId).Select(i => i.Name).FirstOrDefaultAsync(cancellationToken)
             : null;
@@ -218,6 +223,16 @@ public class InventoryImportService(
 
         return rules.GroupBy(r => r.Type).ToDictionary(g => g.Key, g => g.ToList());
     }
+
+    /// <summary>Voir ComputerRuleEngine.Apply, invoqué depuis ImportAsync une fois tous les champs de l'ordinateur renseignés.</summary>
+    private async Task<List<ComputerRule>> LoadActiveComputerRulesAsync(CancellationToken cancellationToken) =>
+        await db.Set<ComputerRule>()
+            .AsNoTracking()
+            .Include(r => r.Criteria)
+            .Include(r => r.Actions)
+            .Where(r => r.IsActive)
+            .OrderBy(r => r.SortOrder)
+            .ToListAsync(cancellationToken);
 
     /// <summary>
     /// Remplace intégralement les composants du poste par ceux de l'inventaire courant.

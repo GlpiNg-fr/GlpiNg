@@ -72,6 +72,9 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
 
     public DbSet<CronSettings> CronSettings => Set<CronSettings>();
 
+    public DbSet<AutomaticActionState> AutomaticActionStates => Set<AutomaticActionState>();
+    public DbSet<AutomaticActionRunLog> AutomaticActionRunLogs => Set<AutomaticActionRunLog>();
+
     public DbSet<AppSetting> AppSettings => Set<AppSetting>();
 
     public DbSet<TimeSlot> TimeSlots => Set<TimeSlot>();
@@ -91,6 +94,8 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<QueuedNotification> QueuedNotifications => Set<QueuedNotification>();
 
     public DbSet<EventLogEntry> EventLogEntries => Set<EventLogEntry>();
+
+    public DbSet<ComputerRule> ComputerRules => Set<ComputerRule>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -364,6 +369,13 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
             .HasIndex(p => new { p.UserId, p.ItemType })
             .IsUnique();
 
+        modelBuilder.Entity<AutomaticActionState>()
+            .HasIndex(s => s.TaskKey)
+            .IsUnique();
+
+        modelBuilder.Entity<AutomaticActionRunLog>()
+            .HasIndex(l => new { l.TaskKey, l.RanAt });
+
         modelBuilder.Entity<TimeSlot>()
             .HasMany(t => t.Entries)
             .WithOne()
@@ -414,6 +426,18 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
             .HasMany(r => r.Criteria)
             .WithOne()
             .HasForeignKey(c => c.DictionaryRuleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ComputerRule>()
+            .HasMany(r => r.Criteria)
+            .WithOne()
+            .HasForeignKey(c => c.ComputerRuleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ComputerRule>()
+            .HasMany(r => r.Actions)
+            .WithOne()
+            .HasForeignKey(a => a.ComputerRuleId)
             .OnDelete(DeleteBehavior.Cascade);
 
         // Une même valeur (ex. "Dell") ne doit apparaître qu'une fois par catégorie d'Intitulé —

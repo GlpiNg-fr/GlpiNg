@@ -15,6 +15,8 @@ public static class CronModuleServiceCollectionExtensions
     {
         services.AddSingleton<CronIntervalState>();
         services.AddScoped<CronSettingsStore>();
+        services.AddScoped<AutomaticActionStore>();
+        services.AddScoped<AutomaticActionRunner>();
         services.AddHostedService<CronBackgroundService>();
 
         return services;

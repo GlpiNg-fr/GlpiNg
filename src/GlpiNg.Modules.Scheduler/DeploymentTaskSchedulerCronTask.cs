@@ -33,7 +33,15 @@ public sealed class DeploymentTaskSchedulerCronTask(
     DeploymentTaskLaunchService launchService,
     ILogger<DeploymentTaskSchedulerCronTask> logger) : ICronTask
 {
+    public string Key => "deployment_scheduler";
+
     public string Name => "Lancement automatique des tâches de déploiement planifiées";
+
+    public string Description =>
+        "Recherche les tâches de déploiement actives dont la fenêtre planifiée est ouverte et pas " +
+        "encore lancée pour cette fenêtre, et les lance.";
+
+    public int DefaultFrequencyMinutes => 5;
 
     public async Task RunAsync(CancellationToken cancellationToken)
     {

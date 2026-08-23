@@ -70,22 +70,34 @@ public sealed class CronBackgroundService(
         }
     }
 
+    /// <summary>
+    /// N'exécute une tâche que si elle est activée et que sa propre fréquence est échue depuis sa
+    /// dernière exécution (voir Models.AutomaticActionState) — avant l'ajout de cet état par tâche,
+    /// toutes les ICronTask s'exécutaient sans condition à chaque tick.
+    /// </summary>
     private async Task RunTasksAsync(CancellationToken stoppingToken)
     {
         await using AsyncServiceScope scope = scopeFactory.CreateAsyncScope();
         IEnumerable<ICronTask> tasks = scope.ServiceProvider.GetServices<ICronTask>();
+        AutomaticActionStore store = scope.ServiceProvider.GetRequiredService<AutomaticActionStore>();
+        AutomaticActionRunner runner = scope.ServiceProvider.GetRequiredService<AutomaticActionRunner>();
 
         foreach (ICronTask task in tasks)
         {
-            try
+            Models.AutomaticActionState state = await store.EnsureStateAsync(task.Key, task.DefaultFrequencyMinutes, stoppingToken);
+            if (!state.IsEnabled)
             {
-                logger.LogInformation("Cron : exécution de la tâche {TaskName}", task.Name);
-                await task.RunAsync(stoppingToken);
+                continue;
             }
-            catch (Exception ex) when (ex is not OperationCanceledException)
+
+            int frequencyMinutes = state.FrequencyMinutes ?? task.DefaultFrequencyMinutes;
+            if (state.LastRunAt is DateTime lastRunAt && DateTime.UtcNow - lastRunAt < TimeSpan.FromMinutes(frequencyMinutes))
             {
-                logger.LogError(ex, "Cron : échec de la tâche {TaskName}", task.Name);
+                continue;
             }
+
+            logger.LogInformation("Cron : exécution de la tâche {TaskName}", task.Name);
+            await runner.RunAsync(task, stoppingToken);
         }
     }
 }

@@ -201,7 +201,10 @@ public class Program
         // Assistant d'installation premier démarrage (page /setup intégrée). GlpiNg n'autorise
         // que les bases relationnelles serveur — SQLite n'est volontairement pas proposé.
         builder.Services.AddFileBasedSetup<GlpiNgSetupInitializer>(setupOptions =>
-            setupOptions.AllowedProviders = [DbProvider.SqlServer, DbProvider.MySql, DbProvider.Postgres]);
+        {
+            setupOptions.AllowedProviders = [DbProvider.SqlServer, DbProvider.MySql, DbProvider.Postgres];
+            setupOptions.AllowUsernameAdmin = true;
+        });
 
         // Le DbContext applicatif n'est enregistré qu'une fois l'installation terminée : tant que
         // ce n'est pas le cas, le middleware de setup redirige toute autre requête vers /setup, donc
