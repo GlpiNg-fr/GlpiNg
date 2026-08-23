@@ -34,6 +34,32 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<Peripheral> Peripherals => Set<Peripheral>();
     public DbSet<PeripheralHistoryEntry> PeripheralHistoryEntries => Set<PeripheralHistoryEntry>();
 
+    public DbSet<NetworkEquipment> NetworkEquipments => Set<NetworkEquipment>();
+    public DbSet<NetworkEquipmentHistoryEntry> NetworkEquipmentHistoryEntries => Set<NetworkEquipmentHistoryEntry>();
+    public DbSet<Printer> Printers => Set<Printer>();
+    public DbSet<PrinterHistoryEntry> PrinterHistoryEntries => Set<PrinterHistoryEntry>();
+    public DbSet<Phone> Phones => Set<Phone>();
+    public DbSet<PhoneHistoryEntry> PhoneHistoryEntries => Set<PhoneHistoryEntry>();
+    public DbSet<Rack> Racks => Set<Rack>();
+    public DbSet<RackHistoryEntry> RackHistoryEntries => Set<RackHistoryEntry>();
+    public DbSet<Enclosure> Enclosures => Set<Enclosure>();
+    public DbSet<EnclosureHistoryEntry> EnclosureHistoryEntries => Set<EnclosureHistoryEntry>();
+    public DbSet<Pdu> Pdus => Set<Pdu>();
+    public DbSet<PduHistoryEntry> PduHistoryEntries => Set<PduHistoryEntry>();
+    public DbSet<PassiveEquipment> PassiveEquipments => Set<PassiveEquipment>();
+    public DbSet<PassiveEquipmentHistoryEntry> PassiveEquipmentHistoryEntries => Set<PassiveEquipmentHistoryEntry>();
+
+    public DbSet<CartridgeItem> CartridgeItems => Set<CartridgeItem>();
+    public DbSet<Cartridge> Cartridges => Set<Cartridge>();
+    public DbSet<CartridgeItemHistoryEntry> CartridgeItemHistoryEntries => Set<CartridgeItemHistoryEntry>();
+
+    public DbSet<ConsumableItem> ConsumableItems => Set<ConsumableItem>();
+    public DbSet<Consumable> Consumables => Set<Consumable>();
+    public DbSet<ConsumableItemHistoryEntry> ConsumableItemHistoryEntries => Set<ConsumableItemHistoryEntry>();
+
+    public DbSet<Cable> Cables => Set<Cable>();
+    public DbSet<CableHistoryEntry> CableHistoryEntries => Set<CableHistoryEntry>();
+
     public DbSet<GlpiAgent> Agents => Set<GlpiAgent>();
     public DbSet<DeploymentJob> DeploymentJobs => Set<DeploymentJob>();
     public DbSet<DeploymentPackage> DeploymentPackages => Set<DeploymentPackage>();
@@ -488,6 +514,77 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
             .WithMany()
             .HasForeignKey(c => c.LocationId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Nouveaux types de parc (Matériel réseau, Imprimante, Téléphone, Baie, Châssis, PDU,
+        // Équipement passif) : même paire StatusId(SetNull)/LocationId(Restrict) que Computer
+        // ci-dessus, plutôt que les champs texte libres Site/Building/Room de Peripheral (qui
+        // datent d'avant l'introduction des Intitulés).
+        modelBuilder.Entity<NetworkEquipment>().HasOne(e => e.StatusItem).WithMany().HasForeignKey(e => e.StatusId).OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<NetworkEquipment>().HasOne(e => e.LocationItem).WithMany().HasForeignKey(e => e.LocationId).OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Printer>().HasOne(e => e.StatusItem).WithMany().HasForeignKey(e => e.StatusId).OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<Printer>().HasOne(e => e.LocationItem).WithMany().HasForeignKey(e => e.LocationId).OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Phone>().HasOne(e => e.StatusItem).WithMany().HasForeignKey(e => e.StatusId).OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<Phone>().HasOne(e => e.LocationItem).WithMany().HasForeignKey(e => e.LocationId).OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Rack>().HasOne(e => e.StatusItem).WithMany().HasForeignKey(e => e.StatusId).OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<Rack>().HasOne(e => e.LocationItem).WithMany().HasForeignKey(e => e.LocationId).OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Enclosure>().HasOne(e => e.StatusItem).WithMany().HasForeignKey(e => e.StatusId).OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<Enclosure>().HasOne(e => e.LocationItem).WithMany().HasForeignKey(e => e.LocationId).OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Pdu>().HasOne(e => e.StatusItem).WithMany().HasForeignKey(e => e.StatusId).OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<Pdu>().HasOne(e => e.LocationItem).WithMany().HasForeignKey(e => e.LocationId).OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<PassiveEquipment>().HasOne(e => e.StatusItem).WithMany().HasForeignKey(e => e.StatusId).OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<PassiveEquipment>().HasOne(e => e.LocationItem).WithMany().HasForeignKey(e => e.LocationId).OnDelete(DeleteBehavior.Restrict);
+
+        // Cartouches (CartridgeItem = modèle, Cartridge = exemplaire individuel suivi en stock,
+        // voir leur doc dans Models/CartridgeItem.cs) : Cascade pour Cartridges/HistoryEntries
+        // (n'ont de sens que rattachés à leur modèle), SetNull pour le lien optionnel vers
+        // l'imprimante dans laquelle une cartouche est en service (retirer/supprimer
+        // l'imprimante ne doit pas supprimer la cartouche, qui retombe simplement en stock).
+        modelBuilder.Entity<CartridgeItem>().HasOne(e => e.LocationItem).WithMany().HasForeignKey(e => e.LocationId).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<CartridgeItem>()
+            .HasMany(ci => ci.Cartridges)
+            .WithOne()
+            .HasForeignKey(c => c.CartridgeItemId)
+            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<CartridgeItem>()
+            .HasMany(ci => ci.HistoryEntries)
+            .WithOne()
+            .HasForeignKey(h => h.CartridgeItemId)
+            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<Cartridge>()
+            .HasOne(c => c.Printer)
+            .WithMany()
+            .HasForeignKey(c => c.PrinterId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Consommables (ConsumableItem/Consumable) : même principe que Cartouches ci-dessus, sans
+        // lien vers une imprimante.
+        modelBuilder.Entity<ConsumableItem>().HasOne(e => e.LocationItem).WithMany().HasForeignKey(e => e.LocationId).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<ConsumableItem>()
+            .HasMany(ci => ci.Consumables)
+            .WithOne()
+            .HasForeignKey(c => c.ConsumableItemId)
+            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<ConsumableItem>()
+            .HasMany(ci => ci.HistoryEntries)
+            .WithOne()
+            .HasForeignKey(h => h.ConsumableItemId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Câbles (Cable) : EndpointAType/EndpointAId et EndpointBType/EndpointBId sont une
+        // référence polymorphe non contrainte (voir doc dans Models/Cable.cs), donc aucune config
+        // de clé étrangère ici pour les extrémités — seulement StatusItem et HistoryEntries.
+        modelBuilder.Entity<Cable>().HasOne(e => e.StatusItem).WithMany().HasForeignKey(e => e.StatusId).OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<Cable>()
+            .HasMany(c => c.HistoryEntries)
+            .WithOne()
+            .HasForeignKey(h => h.CableId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<DeploymentMirrorServer>()
             .HasIndex(s => s.Name)

@@ -4,6 +4,7 @@ using GlpiNg.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GlpiNg.Web.Migrations
 {
     [DbContext(typeof(GlpiNgDbContext))]
-    partial class GlpiNgDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260823093808_AddParcAssetTypes")]
+    partial class AddParcAssetTypes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -713,88 +716,6 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("TimeSlotId");
 
                     b.ToTable("TimeSlotEntries");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.Cable", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Color")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Comment")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("EndpointAId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("EndpointAType")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("EndpointBId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("EndpointBType")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("StatusId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Type")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("StatusId");
-
-                    b.ToTable("Cables");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.CableHistoryEntry", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CableId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Field")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("OccurredAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("User")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CableId");
-
-                    b.ToTable("CableHistoryEntries");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.Cartridge", b =>
@@ -3697,25 +3618,6 @@ namespace GlpiNg.Web.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.Cable", b =>
-                {
-                    b.HasOne("GlpiNg.Modules.Inventory.Models.DropdownItem", "StatusItem")
-                        .WithMany()
-                        .HasForeignKey("StatusId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("StatusItem");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.CableHistoryEntry", b =>
-                {
-                    b.HasOne("GlpiNg.Modules.Inventory.Models.Cable", null)
-                        .WithMany("HistoryEntries")
-                        .HasForeignKey("CableId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.Cartridge", b =>
                 {
                     b.HasOne("GlpiNg.Modules.Inventory.Models.CartridgeItem", null)
@@ -4355,11 +4257,6 @@ namespace GlpiNg.Web.Migrations
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.TimeSlot", b =>
                 {
                     b.Navigation("Entries");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.Cable", b =>
-                {
-                    b.Navigation("HistoryEntries");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.CartridgeItem", b =>
