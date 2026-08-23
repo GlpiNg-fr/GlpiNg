@@ -24,7 +24,7 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
     <PackageReference Include="Microting.EntityFrameworkCore.MySql" Version="10.0.10" />
     <PackageReference Include="MySqlConnector" Version="2.6.2" />
-    <PackageReference Include="AnthoDingo.Setup" Version="2.0.1" />
+    <PackageReference Include="AnthoDingo.Setup" Version="2.0.3" />
     <PackageReference Include="System.DirectoryServices.Protocols" Version="10.0.11" />
     <!-- Envoi SMTP réel des notifications (voir Services/Notifications/SmtpMailSender.cs) :
          System.Net.Mail.SmtpClient est déconseillé par Microsoft pour du code neuf

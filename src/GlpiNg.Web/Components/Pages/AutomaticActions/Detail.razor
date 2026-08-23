@@ -1,0 +1,113 @@
+@page "/config/automatic-actions/{TaskKey}"
+@using GlpiNg.Modules.Cron
+@using GlpiNg.Modules.Cron.Models
+@rendermode InteractiveServer
+
+<PageTitle>GlpiNg — @(_task?.Name ?? "Action automatique")</PageTitle>
+
+@if (_task is null || _state is null)
+{
+    <p>Chargement…</p>
+}
+else
+{
+    <div class="card mb-3">
+        <div class="card-header d-flex align-items-center justify-content-between">
+            <span>
+                <i class="ti ti-robot me-2"></i>
+                <span class="fw-semibold">@_task.Name</span>
+            </span>
+            <a href="/config/automatic-actions" class="btn btn-sm">
+                <i class="ti ti-arrow-left me-1"></i>Retour à la liste
+            </a>
+        </div>
+        <div class="card-body">
+            <p class="text-secondary">@_task.Description</p>
+
+            <div class="glpi-config-field checkbox">
+                <label for="action-enabled">Activée</label>
+                <label class="glpi-switch">
+                    <input id="action-enabled" type="checkbox" checked="@_state.IsEnabled" @onchange="ToggleEnabledAsync" />
+                    <span class="glpi-switch-slider"></span>
+                </label>
+            </div>
+
+            <div class="glpi-config-field">
+                <label for="action-frequency">Fréquence d'exécution (minutes)</label>
+                <input id="action-frequency" type="number" min="@CronIntervalState.MinMinutes" max="@CronIntervalState.MaxMinutes"
+                       class="glpi-config-input-sm" @bind="_frequencyMinutes" />
+            </div>
+            <p class="hint">
+                Une exécution planifiée n'a lieu que si cette tâche est due <em>et</em> qu'un tick du
+                service cron se produit (voir l'intervalle global réglé dans /config →
+                "Configuration générale" → "Système") : la fréquence ici ne peut donc pas être plus
+                fine que cet intervalle.
+            </p>
+
+            <div class="d-flex align-items-center gap-2 mt-3">
+                <button type="button" class="btn btn-primary" disabled="@_isSaving" @onclick="SaveFrequencyAsync">
+                    <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Enregistrer")
+                </button>
+                <button type="button" class="btn btn-outline-primary" disabled="@_isRunning" @onclick="RunNowAsync">
+                    @if (_isRunning)
+                    {
+                        <span class="spinner-border spinner-border-sm me-1"></span>
+                    }
+                    else
+                    {
+                        <i class="ti ti-player-play me-1"></i>
+                    }
+                    Lancer maintenant
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <i class="ti ti-history me-2"></i>
+            <span class="fw-semibold">Historique d'exécution</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Statut</th>
+                        <th>Durée</th>
+                        <th>Détail</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (_runLog.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="4" class="text-center text-secondary py-4">Aucune exécution enregistrée.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (AutomaticActionRunLog entry in _runLog)
+                        {
+                            <tr>
+                                <td>@entry.RanAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</td>
+                                <td>
+                                    @if (entry.Success)
+                                    {
+                                        <span class="badge bg-success">Succès</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Échec</span>
+                                    }
+                                </td>
+                                <td>@entry.DurationMs ms</td>
+                                <td class="text-danger">@entry.Error</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

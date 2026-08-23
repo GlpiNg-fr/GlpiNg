@@ -4,6 +4,7 @@ using GlpiNg.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GlpiNg.Web.Migrations
 {
     [DbContext(typeof(GlpiNgDbContext))]
-    partial class GlpiNgDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260820173249_AddAutomaticActions")]
+    partial class AddAutomaticActions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1093,94 +1096,6 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("StatusId");
 
                     b.ToTable("ComputerPeripherals");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerRule", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AppliesTo")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Comment")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("LogicalOperator")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ComputerRules");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerRuleAction", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ActionType")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ComputerRuleId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Field")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Value")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ComputerRuleId");
-
-                    b.ToTable("ComputerRuleAction");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerRuleCriterion", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ComputerRuleId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Field")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Operator")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Value")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ComputerRuleId");
-
-                    b.ToTable("ComputerRuleCriterion");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerSoftware", b =>
@@ -2837,24 +2752,6 @@ namespace GlpiNg.Web.Migrations
                     b.Navigation("StatusItem");
                 });
 
-            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerRuleAction", b =>
-                {
-                    b.HasOne("GlpiNg.Modules.Inventory.Models.ComputerRule", null)
-                        .WithMany("Actions")
-                        .HasForeignKey("ComputerRuleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerRuleCriterion", b =>
-                {
-                    b.HasOne("GlpiNg.Modules.Inventory.Models.ComputerRule", null)
-                        .WithMany("Criteria")
-                        .HasForeignKey("ComputerRuleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerSoftware", b =>
                 {
                     b.HasOne("GlpiNg.Modules.Inventory.Models.Computer", null)
@@ -3159,13 +3056,6 @@ namespace GlpiNg.Web.Migrations
                     b.Navigation("Softwares");
 
                     b.Navigation("Volumes");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerRule", b =>
-                {
-                    b.Navigation("Actions");
-
-                    b.Navigation("Criteria");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.DictionaryRule", b =>

@@ -27,7 +27,15 @@ public sealed class QueuedNotificationSenderCronTask(
     /// <summary>Borne le nombre de lignes traitées par tick, pour ne pas monopoliser le tick cron partagé si la file s'accumule.</summary>
     private const int BatchSize = 100;
 
+    public string Key => "notification_queue_sender";
+
     public string Name => "Envoi des notifications en file d'attente";
+
+    public string Description =>
+        "Expédie par SMTP les notifications en attente (déploiement, inventaire, ...), par lots " +
+        $"de {BatchSize}, jusqu'à {MaxAttempts} tentatives avant échec définitif.";
+
+    public int DefaultFrequencyMinutes => 5;
 
     public async Task RunAsync(CancellationToken cancellationToken)
     {

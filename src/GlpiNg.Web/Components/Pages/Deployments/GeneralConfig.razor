@@ -1,5 +1,6 @@
 @page "/tools/deployments/config"
 @using GlpiNg.Modules.Deployment.Components.Pages.Deployments
+@using GlpiNg.Modules.Deployment.Models
 @rendermode InteractiveServer
 
 <PageTitle>GlpiNg — Déploiements</PageTitle>
@@ -40,6 +41,27 @@ else
                             <input id="cfg-debug" type="checkbox" @bind="_model.ExtraDebug" />
                             <span class="glpi-switch-slider"></span>
                         </label>
+                    </div>
+
+                    <div class="glpi-config-divider">
+                        <span><i class="ti ti-server-2"></i> Gestion de paquets</span>
+                    </div>
+
+                    <div class="glpi-config-field checkbox">
+                        <label for="cfg-mirror">Utiliser ce serveur GlpiNg comme un serveur miroir</label>
+                        <label class="glpi-switch">
+                            <input id="cfg-mirror" type="checkbox" @bind="_model.UseCentralServerAsMirror" />
+                            <span class="glpi-switch-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="glpi-config-field">
+                        <label for="cfg-mirror-match">Faire correspondre un miroir aux agents</label>
+                        <select id="cfg-mirror-match" class="glpi-config-input" @bind="_model.MirrorMatchMode">
+                            <option value="@DeploymentMirrorMatchMode.Location">en se basant sur le lieu</option>
+                            <option value="@DeploymentMirrorMatchMode.Entity">en se basant sur l'entité</option>
+                            <option value="@DeploymentMirrorMatchMode.Both">en se basant sur les deux</option>
+                        </select>
                     </div>
 
                     <button type="submit" class="glpi-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>

@@ -22,7 +22,15 @@ public sealed class HistoryPurgeCronTask(GlpiNgDbContext db, SettingsCacheServic
 {
     private const string SectionName = "PurgeSettings";
 
+    public string Key => "history_purge";
+
     public string Name => "Purge de l'historique";
+
+    public string Description =>
+        "Purge les entrées d'historique (Entités, Groupes, Utilisateurs, Profils) et le journal " +
+        "des évènements système plus anciennes que le délai réglé dans /config → \"Purge de l'historique\".";
+
+    public int DefaultFrequencyMinutes => 1440;
 
     public async Task RunAsync(CancellationToken cancellationToken)
     {
