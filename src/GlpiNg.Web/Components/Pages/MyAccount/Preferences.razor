@@ -1,0 +1,39 @@
+@page "/preferences"
+@rendermode InteractiveServer
+
+<PageTitle>GlpiNg — Préférences</PageTitle>
+
+<div class="glpi-fiche-topbar">
+    <div class="glpi-fiche-crumb">
+        <i class="ti ti-adjustments"></i>
+        <span>Préférences</span>
+    </div>
+</div>
+
+<div class="glpi-fiche-panel glpi-fiche-panel-fill">
+    <div class="glpi-fiche-block">
+        <div class="glpi-fiche-block-title"><i class="ti ti-layout-sidebar"></i>Affichage</div>
+        <p class="text-secondary small">
+            GlpiNg n'a pas (encore) les dizaines de préférences d'affichage de GLPI (langue,
+            thème, tableaux de bord...) : seul le repli du menu latéral est une vraie préférence
+            exploitée par l'application.
+        </p>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="glpi-fiche-field">
+                    <label>Réduire le menu latéral</label>
+                    <select class="form-select" value="@(_sidebarCollapsed ? "true" : "false")" @onchange="@(e => _sidebarCollapsed = e.Value?.ToString() == "true")">
+                        <option value="false">Non</option>
+                        <option value="true">Oui</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2 mt-3">
+        <button type="button" class="btn btn-primary" disabled="@_isSaving" @onclick="SaveAsync">
+            <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
+        </button>
+    </div>
+</div>
