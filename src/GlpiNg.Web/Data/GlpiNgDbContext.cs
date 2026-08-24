@@ -92,6 +92,8 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
 
     public DbSet<EventLogEntry> EventLogEntries => Set<EventLogEntry>();
 
+    public DbSet<ComputerRule> ComputerRules => Set<ComputerRule>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<GlpiUser>()
@@ -414,6 +416,18 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
             .HasMany(r => r.Criteria)
             .WithOne()
             .HasForeignKey(c => c.DictionaryRuleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ComputerRule>()
+            .HasMany(r => r.Criteria)
+            .WithOne()
+            .HasForeignKey(c => c.ComputerRuleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ComputerRule>()
+            .HasMany(r => r.Actions)
+            .WithOne()
+            .HasForeignKey(a => a.ComputerRuleId)
             .OnDelete(DeleteBehavior.Cascade);
 
         // Une même valeur (ex. "Dell") ne doit apparaître qu'une fois par catégorie d'Intitulé —

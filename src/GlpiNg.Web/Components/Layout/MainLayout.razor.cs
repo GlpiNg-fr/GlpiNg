@@ -67,7 +67,6 @@ public partial class MainLayout : IDisposable
             new("Utilisateurs", "/admin/users", "ti-user"),
             new("Groupes", "/admin/groups", "ti-users"),
             new("Entités", "/admin/entities", "ti-sitemap"),
-            new("Règles", Icon: "ti-adjustments"),
             new("Profils", "/admin/profiles", "ti-id-badge"),
             new("File d'attente des notifications", "/config/notifications/queue", "ti-bell"),
             new("Journaux", "/admin/logs", "ti-history"),
