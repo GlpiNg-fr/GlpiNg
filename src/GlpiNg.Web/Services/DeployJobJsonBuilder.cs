@@ -11,13 +11,15 @@ namespace GlpiNg.Web.Services;
 /// communauté GLPI-Project) :
 /// <code>
 /// {
-///   "jobs": {
-///     "uuid": "...",
-///     "checks": [ { "name": "...", "type": "fileExists", "path": "...", "value": "...", "return": "info" } ],
-///     "associatedFiles": [ "&lt;sha512&gt;", ... ],
-///     "actions": [ { "move": { "from": "...", "to": "...", "name": "..." } }, ... ],
-///     "userinteractions": []
-///   },
+///   "jobs": [
+///     {
+///       "uuid": "...",
+///       "checks": [ { "name": "...", "type": "fileExists", "path": "...", "value": "...", "return": "info" } ],
+///       "associatedFiles": [ "&lt;sha512&gt;", ... ],
+///       "actions": [ { "move": { "from": "...", "to": "...", "name": "..." } }, ... ],
+///       "userinteractions": []
+///     }
+///   ],
 ///   "associatedFiles": {
 ///     "&lt;sha512&gt;": { "name": "...", "p2p": "0", "p2p-retention-duration": "0" }
 ///   }
@@ -54,7 +56,7 @@ public class DeployJobJsonBuilder
             };
         }
 
-        JsonObject jobs = new()
+        JsonObject jobJson = new()
         {
             ["uuid"] = jobUuid,
             ["checks"] = new JsonArray(),
@@ -65,7 +67,7 @@ public class DeployJobJsonBuilder
 
         return new JsonObject
         {
-            ["jobs"] = jobs,
+            ["jobs"] = new JsonArray(jobJson),
             ["associatedFiles"] = associatedFilesDetails
         };
     }
