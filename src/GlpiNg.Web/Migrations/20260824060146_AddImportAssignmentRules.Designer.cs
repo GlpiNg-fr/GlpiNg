@@ -4,6 +4,7 @@ using GlpiNg.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GlpiNg.Web.Migrations
 {
     [DbContext(typeof(GlpiNgDbContext))]
-    partial class GlpiNgDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260824060146_AddImportAssignmentRules")]
+    partial class AddImportAssignmentRules
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -521,88 +524,6 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("DeploymentPackageId");
 
                     b.ToTable("DeploymentPackageTargets");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentRule", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Comment")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("DeploymentRules");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentRuleAction", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("DeploymentRuleId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PackageId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DeploymentRuleId");
-
-                    b.HasIndex("PackageId");
-
-                    b.ToTable("DeploymentRuleAction");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentRuleCriterion", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("DeploymentRuleId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Field")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Link")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Operator")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Value")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DeploymentRuleId");
-
-                    b.ToTable("DeploymentRuleCriterion");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentTask", b =>
@@ -3856,32 +3777,6 @@ namespace GlpiNg.Web.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentRuleAction", b =>
-                {
-                    b.HasOne("GlpiNg.Modules.Deployment.Models.DeploymentRule", null)
-                        .WithMany("Actions")
-                        .HasForeignKey("DeploymentRuleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GlpiNg.Modules.Deployment.Models.DeploymentPackage", "Package")
-                        .WithMany()
-                        .HasForeignKey("PackageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Package");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentRuleCriterion", b =>
-                {
-                    b.HasOne("GlpiNg.Modules.Deployment.Models.DeploymentRule", null)
-                        .WithMany("Criteria")
-                        .HasForeignKey("DeploymentRuleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentTask", b =>
                 {
                     b.HasOne("GlpiNg.Modules.Deployment.Models.TimeSlot", "ExecutionTimeSlot")
@@ -4610,13 +4505,6 @@ namespace GlpiNg.Web.Migrations
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentPackageFile", b =>
                 {
                     b.Navigation("Parts");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentRule", b =>
-                {
-                    b.Navigation("Actions");
-
-                    b.Navigation("Criteria");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentTask", b =>
