@@ -1,3 +1,6 @@
+using GlpiNg.Modules.Abstractions.Deployment;
+using GlpiNg.Modules.Deployment.Models;
+using GlpiNg.Modules.Deployment.Services;
 using GlpiNg.Modules.Inventory.Models;
 using GlpiNg.Modules.Inventory.Services;
 using GlpiNg.Web.Data;
@@ -17,14 +20,42 @@ public class InventoryImportService(
     GlpiNgDbContext db,
     SettingsCacheService settingsStore,
     NotificationDispatchService notificationDispatch,
+    IComputerDeploymentAssignmentService deploymentAssignmentService,
     IHttpContextAccessor httpContextAccessor)
 {
     private const string HistoryUser = "inventory";
     private const string SettingsSection = "InventorySettings";
 
-    public async Task<Computer> ImportAsync(GlpiAgent agent, InventoryContent content, CancellationToken cancellationToken = default)
+    /// <summary>Résultat null : l'inventaire a été rejeté par une règle d'affectation à l'import (action RefuseImport) — voir BuildImportAssignmentContext.</summary>
+    public async Task<Computer?> ImportAsync(GlpiAgent agent, InventoryContent content, CancellationToken cancellationToken = default)
     {
         InventorySettings settings = await settingsStore.ReadSectionAsync<InventorySettings>(SettingsSection, cancellationToken);
+
+        // Règles d'affectation à l'import (voir ImportAssignmentRuleEngine) : évaluées avant toute
+        // résolution/création du Computer, sur les seules informations brutes de la requête, pour
+        // pouvoir refuser l'import sans avoir touché la base. Équivalent de RuleImportEntity dans GLPI.
+        ImportAssignmentRuleContext importContext = BuildImportAssignmentContext(agent, content);
+        List<ImportAssignmentRule> importRules = await LoadActiveImportAssignmentRulesAsync(cancellationToken);
+        ImportAssignmentRuleResult importResult = ImportAssignmentRuleEngine.Evaluate(importContext, importRules);
+
+        if (importResult.Refuse)
+        {
+            db.Set<RefusedImportLog>().Add(new RefusedImportLog
+            {
+                RuleName = importResult.MatchedRuleName ?? "?",
+                ComputerName = importContext.ComputerName,
+                SerialNumber = importContext.SerialNumber,
+                Domain = importContext.Domain,
+                Tag = importContext.Tag,
+                IpAddress = importContext.IpAddresses.FirstOrDefault(ip => !string.IsNullOrWhiteSpace(ip)),
+                AgentIdentifier = agent.DeviceId ?? agent.Hostname ?? agent.AgentUuid
+            });
+
+            // Sauvegarde tout de même le contact agent (déjà renseigné sur agent par l'appelant,
+            // voir AgentController.UpdateAgentRequestMetadata) : seul le Computer est rejeté.
+            await db.SaveChangesAsync(cancellationToken);
+            return null;
+        }
 
         Computer? computer = await db.Computers
             .Include(c => c.Components)
@@ -70,18 +101,31 @@ public class InventoryImportService(
             inputValue = content.Hardware?.Uuid ?? agent.DeviceId;
         }
 
+        // Actions de la règle d'affectation à l'import correspondante (le cas échéant) : appliquées
+        // ici, avant Apply* ci-dessous, pour que les règles métier pour les actifs (ComputerRuleEngine,
+        // plus bas) restent la dernière étape à pouvoir modifier l'ordinateur — même ordre que GLPI.
+        if (importResult.LocationName is { Length: > 0 } locationName)
+        {
+            computer.LocationId = await ResolveLocationIdAsync(locationName, cancellationToken);
+        }
+        if (importResult.Technician is { Length: > 0 } technician)
+        {
+            computer.AssignedUser = technician;
+        }
+
         ComputerSnapshot before = ComputerSnapshot.Capture(computer);
 
         Dictionary<DictionaryRuleType, List<DictionaryRule>> dictionaries = await LoadActiveDictionaryRulesAsync(cancellationToken);
+        Dictionary<ImportBlacklistType, HashSet<string>> blacklist = await LoadBlacklistAsync(cancellationToken);
 
-        ApplyHardware(computer, content, dictionaries);
+        ApplyHardware(computer, content, dictionaries, blacklist);
         ApplyComponents(computer, content, settings);
         if (settings.ImportSoftwares) ApplySoftwares(computer, content, dictionaries);
         if (settings.ImportMonitors) ApplyMonitors(computer, content);
         if (settings.ImportPeripherals) await ApplyPeripheralsAsync(computer, content, cancellationToken);
         ApplyVolumes(computer, content, settings);
         if (settings.ImportBatteries) ApplyBatteries(computer, content);
-        ApplyNetworkPorts(computer, content);
+        ApplyNetworkPorts(computer, content, blacklist);
         if (settings.ImportAntivirus) ApplyAntivirus(computer, content);
 
         // Règles métier pour les actifs (voir ComputerRuleEngine) : appliquées après tous les
@@ -120,7 +164,36 @@ public class InventoryImportService(
             await PublishNewComputerNotificationAsync(computer, cancellationToken);
         }
 
+        // Règles de déploiement (voir DeploymentRuleEngine, module Deployment) : réévaluées à
+        // chaque inventaire, une fois l'ordinateur enregistré (computer.Id/agent.Id garantis
+        // renseignés). Assigne automatiquement les paquets correspondants, sans dupliquer ceux
+        // déjà assignés à cet agent (par cette règle ou manuellement).
+        await ApplyDeploymentRulesAsync(computer, agent.Id, cancellationToken);
+
         return computer;
+    }
+
+    private async Task ApplyDeploymentRulesAsync(Computer computer, int agentId, CancellationToken cancellationToken)
+    {
+        // Chargée après SaveChangesAsync : StatusId vient d'être résolu ci-dessus, mais l'affecter
+        // ne peuple pas automatiquement la navigation StatusItem qu'évalue un critère "Statut".
+        await db.Entry(computer).Reference(c => c.StatusItem).LoadAsync(cancellationToken);
+
+        List<DeploymentRule> rules = await db.Set<DeploymentRule>()
+            .AsNoTracking()
+            .Include(r => r.Criteria)
+            .Include(r => r.Actions)
+            .Where(r => r.IsActive)
+            .OrderBy(r => r.SortOrder)
+            .ToListAsync(cancellationToken);
+
+        List<int> newPackageIds = await DeploymentRuleEngine.ResolveNewPackageIdsAsync(db, computer, agentId, rules, cancellationToken);
+        if (newPackageIds.Count == 0)
+        {
+            return;
+        }
+
+        await deploymentAssignmentService.AssignPackagesAsync(computer.Id, newPackageIds, cancellationToken);
     }
 
     /// <summary>Déclenche l'événement "Nouvel ordinateur découvert" (voir NotificationEventCatalog.InventoryComputer) après la création effective en base.</summary>
@@ -159,7 +232,7 @@ public class InventoryImportService(
     /// a pas d'en-tête GLPI-Agent-ID côté fichier, donc le "deviceid" du contenu importé sert
     /// directement d'identité d'agent stable pour retrouver/créer l'ordinateur correspondant.
     /// </summary>
-    public async Task<Computer> ImportFromDeviceIdAsync(string deviceId, InventoryContent content, CancellationToken cancellationToken = default)
+    public async Task<Computer?> ImportFromDeviceIdAsync(string deviceId, InventoryContent content, CancellationToken cancellationToken = default)
     {
         GlpiAgent? agent = await db.Agents.FirstOrDefaultAsync(a => a.AgentUuid == deviceId, cancellationToken);
         if (agent is null)
@@ -171,7 +244,7 @@ public class InventoryImportService(
         return await ImportAsync(agent, content, cancellationToken);
     }
 
-    private static void ApplyHardware(Computer computer, InventoryContent content, IReadOnlyDictionary<DictionaryRuleType, List<DictionaryRule>> dictionaries)
+    private static void ApplyHardware(Computer computer, InventoryContent content, IReadOnlyDictionary<DictionaryRuleType, List<DictionaryRule>> dictionaries, IReadOnlyDictionary<ImportBlacklistType, HashSet<string>> blacklist)
     {
         if (content.Hardware is { } hardware)
         {
@@ -192,7 +265,10 @@ public class InventoryImportService(
             DictionaryRuleEngine.Result model = DictionaryRuleEngine.Apply(bios.SystemModel, GetRules(dictionaries, DictionaryRuleType.ComputerModel));
             if (!model.Ignore) computer.Model = model.Value ?? computer.Model;
 
-            computer.SerialNumber = bios.SystemSerial ?? computer.SerialNumber;
+            // Liste noire (voir ImportBlacklistEngine) : un numéro de série placeholder du
+            // constructeur ("SYS-1234567890", etc.) est traité comme absent plutôt qu'enregistré.
+            string? serial = ImportBlacklistEngine.IsBlacklisted(blacklist, ImportBlacklistType.SerialNumber, bios.SystemSerial) ? null : bios.SystemSerial;
+            computer.SerialNumber = serial ?? computer.SerialNumber;
         }
 
         if (content.OperatingSystem is { } os)
@@ -233,6 +309,50 @@ public class InventoryImportService(
             .Where(r => r.IsActive)
             .OrderBy(r => r.SortOrder)
             .ToListAsync(cancellationToken);
+
+    /// <summary>Voir ImportAssignmentRuleEngine.Evaluate, invoqué depuis ImportAsync avant toute résolution du Computer.</summary>
+    private async Task<List<ImportAssignmentRule>> LoadActiveImportAssignmentRulesAsync(CancellationToken cancellationToken) =>
+        await db.Set<ImportAssignmentRule>()
+            .AsNoTracking()
+            .Include(r => r.Criteria)
+            .Include(r => r.Actions)
+            .Where(r => r.IsActive)
+            .OrderBy(r => r.SortOrder)
+            .ToListAsync(cancellationToken);
+
+    private async Task<Dictionary<ImportBlacklistType, HashSet<string>>> LoadBlacklistAsync(CancellationToken cancellationToken)
+    {
+        List<ImportBlacklistEntry> entries = await db.Set<ImportBlacklistEntry>().AsNoTracking().ToListAsync(cancellationToken);
+        return ImportBlacklistEngine.Index(entries);
+    }
+
+    /// <summary>
+    /// Construit le contexte évalué par ImportAssignmentRuleEngine à partir des seules données
+    /// brutes de la requête (avant toute résolution/création du Computer) : nom, série et domaine
+    /// depuis le contenu de l'inventaire, tag depuis l'agent (renseigné par un contact préalable,
+    /// voir AgentController), adresses IP de toutes les interfaces réseau remontées.
+    /// </summary>
+    private static ImportAssignmentRuleContext BuildImportAssignmentContext(GlpiAgent agent, InventoryContent content) => new(
+        ComputerName: content.Hardware?.Name,
+        SerialNumber: content.Bios?.SystemSerial,
+        Domain: content.Hardware?.Workgroup,
+        Tag: agent.Tag,
+        IpAddresses: content.Networks.Select(n => n.IpAddress).Where(ip => !string.IsNullOrWhiteSpace(ip)).ToList());
+
+    // Résout (ou crée à la volée) l'Id du DropdownItem de type Location portant ce nom — même
+    // principe que ResolveStatusIdAsync ci-dessous, pour l'action AssignLocation d'une
+    // ImportAssignmentRule.
+    private async Task<int?> ResolveLocationIdAsync(string name, CancellationToken cancellationToken)
+    {
+        DropdownItem? item = await db.DropdownItems
+            .FirstOrDefaultAsync(i => i.Type == DropdownType.Location && i.Name == name, cancellationToken);
+        if (item is not null) return item.Id;
+
+        item = new DropdownItem { Type = DropdownType.Location, Name = name };
+        db.DropdownItems.Add(item);
+        await db.SaveChangesAsync(cancellationToken);
+        return item.Id;
+    }
 
     /// <summary>
     /// Remplace intégralement les composants du poste par ceux de l'inventaire courant.
@@ -542,19 +662,24 @@ public class InventoryImportService(
     /// ici on conserve la configuration IP/logique de chaque interface, à l'instar de l'onglet
     /// "Ports réseau" de GLPI.
     /// </summary>
-    private static void ApplyNetworkPorts(Computer computer, InventoryContent content)
+    private static void ApplyNetworkPorts(Computer computer, InventoryContent content, IReadOnlyDictionary<ImportBlacklistType, HashSet<string>> blacklist)
     {
         computer.NetworkPorts.Clear();
 
         foreach (InventoryNetwork network in content.Networks)
         {
+            // Liste noire (voir ImportBlacklistEngine) : une IP/MAC placeholder connue
+            // ("127.0.0.1", "00:00:00:00:00:00", etc.) est traitée comme absente sur cette interface.
+            string? macAddress = ImportBlacklistEngine.IsBlacklisted(blacklist, ImportBlacklistType.MacAddress, network.MacAddress) ? null : network.MacAddress;
+            string? ipAddress = ImportBlacklistEngine.IsBlacklisted(blacklist, ImportBlacklistType.IpAddress, network.IpAddress) ? null : network.IpAddress;
+
             computer.NetworkPorts.Add(new ComputerNetworkPort
             {
                 Designation = network.Description ?? "Interface réseau",
                 Type = network.Type,
-                MacAddress = network.MacAddress,
+                MacAddress = macAddress,
                 Manufacturer = network.Manufacturer,
-                IpAddress = network.IpAddress,
+                IpAddress = ipAddress,
                 IpMask = network.IpMask,
                 IpGateway = network.IpGateway,
                 IpSubnet = network.IpSubnet,
