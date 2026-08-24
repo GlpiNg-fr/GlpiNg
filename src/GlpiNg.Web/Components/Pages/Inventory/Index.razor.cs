@@ -69,7 +69,7 @@ public partial class Index : ComponentBase
         try
         {
             await using GlpiNgDbContext db = await DbFactory.CreateDbContextAsync();
-            InventoryImportService importer = new(db, SettingsStore, NotificationDispatch, HttpContextAccessor);
+            InventoryImportService importer = new(db, SettingsStore, NotificationDispatch, DeploymentAssignmentService, HttpContextAccessor);
 
             foreach (IBrowserFile file in e.GetMultipleFiles(10))
             {
@@ -167,7 +167,13 @@ public partial class Index : ComponentBase
             return;
         }
 
-        Computer computer = await importer.ImportFromDeviceIdAsync(deviceId, content);
+        Computer? computer = await importer.ImportFromDeviceIdAsync(deviceId, content);
+        if (computer is null)
+        {
+            ToastService.Notify(new ToastMessage(ToastType.Danger, fileName, "Rejeté par une règle d'affectation à l'import (voir Administration > Règles d'import > Historique des refus)."));
+            return;
+        }
+
         ToastService.Notify(new ToastMessage(ToastType.Success, fileName, $"Importé : {computer.Name} (#{computer.Id})."));
     }
 }
