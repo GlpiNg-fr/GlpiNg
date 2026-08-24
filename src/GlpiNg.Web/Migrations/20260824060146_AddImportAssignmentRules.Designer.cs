@@ -4,6 +4,7 @@ using GlpiNg.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GlpiNg.Web.Migrations
 {
     [DbContext(typeof(GlpiNgDbContext))]
-    partial class GlpiNgDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260824060146_AddImportAssignmentRules")]
+    partial class AddImportAssignmentRules
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -523,88 +526,6 @@ namespace GlpiNg.Web.Migrations
                     b.ToTable("DeploymentPackageTargets");
                 });
 
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentRule", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Comment")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("DeploymentRules");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentRuleAction", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("DeploymentRuleId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PackageId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DeploymentRuleId");
-
-                    b.HasIndex("PackageId");
-
-                    b.ToTable("DeploymentRuleAction");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentRuleCriterion", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("DeploymentRuleId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Field")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Link")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Operator")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Value")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DeploymentRuleId");
-
-                    b.ToTable("DeploymentRuleCriterion");
-                });
-
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentTask", b =>
                 {
                     b.Property<int>("Id")
@@ -748,288 +669,6 @@ namespace GlpiNg.Web.Migrations
                         .IsUnique();
 
                     b.ToTable("DeploymentUserInteractionTemplates");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DiscoveredNetworkDevice", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("DiscoveredViaNetworkTaskId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("FirstSeenAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("GuessedType")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Hostname")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("IpAddress")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("LastSeenAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("MacAddress")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("PromotedNetworkEquipmentId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<string>("SysContact")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SysDescr")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SysLocation")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SysName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DiscoveredViaNetworkTaskId");
-
-                    b.HasIndex("PromotedNetworkEquipmentId");
-
-                    b.ToTable("DiscoveredNetworkDevices");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.IpRange", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Comment")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("EndIp")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("StartIp")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("IpRanges");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.NetworkTask", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Comment")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("ExecutionTimeSlotId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("LastLaunchedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("Method")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("ScheduledEndTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("ScheduledStartTime")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ExecutionTimeSlotId");
-
-                    b.ToTable("NetworkTasks");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.NetworkTaskActor", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AgentId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("NetworkTaskId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AgentId");
-
-                    b.HasIndex("NetworkTaskId", "AgentId")
-                        .IsUnique();
-
-                    b.ToTable("NetworkTaskActors");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.NetworkTaskCredential", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("NetworkTaskId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SnmpCredentialId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SnmpCredentialId");
-
-                    b.HasIndex("NetworkTaskId", "SnmpCredentialId")
-                        .IsUnique();
-
-                    b.ToTable("NetworkTaskCredentials");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.NetworkTaskIpRange", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("IpRangeId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("NetworkTaskId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("IpRangeId");
-
-                    b.HasIndex("NetworkTaskId", "IpRangeId")
-                        .IsUnique();
-
-                    b.ToTable("NetworkTaskIpRanges");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.NetworkTaskJob", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AgentId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Log")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("NetworkTaskId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("StartedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AgentId");
-
-                    b.HasIndex("NetworkTaskId");
-
-                    b.ToTable("NetworkTaskJobs");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.SnmpCredential", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AuthPassphrase")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("AuthProtocol")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Community")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PrivPassphrase")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("PrivProtocol")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Username")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Version")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("SnmpCredentials");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.TimeSlot", b =>
@@ -4138,32 +3777,6 @@ namespace GlpiNg.Web.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentRuleAction", b =>
-                {
-                    b.HasOne("GlpiNg.Modules.Deployment.Models.DeploymentRule", null)
-                        .WithMany("Actions")
-                        .HasForeignKey("DeploymentRuleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GlpiNg.Modules.Deployment.Models.DeploymentPackage", "Package")
-                        .WithMany()
-                        .HasForeignKey("PackageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Package");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentRuleCriterion", b =>
-                {
-                    b.HasOne("GlpiNg.Modules.Deployment.Models.DeploymentRule", null)
-                        .WithMany("Criteria")
-                        .HasForeignKey("DeploymentRuleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentTask", b =>
                 {
                     b.HasOne("GlpiNg.Modules.Deployment.Models.TimeSlot", "ExecutionTimeSlot")
@@ -4219,103 +3832,6 @@ namespace GlpiNg.Web.Migrations
                     b.Navigation("Computer");
 
                     b.Navigation("Group");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DiscoveredNetworkDevice", b =>
-                {
-                    b.HasOne("GlpiNg.Modules.Deployment.Models.NetworkTask", "DiscoveredViaNetworkTask")
-                        .WithMany()
-                        .HasForeignKey("DiscoveredViaNetworkTaskId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("GlpiNg.Modules.Inventory.Models.NetworkEquipment", "PromotedNetworkEquipment")
-                        .WithMany()
-                        .HasForeignKey("PromotedNetworkEquipmentId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("DiscoveredViaNetworkTask");
-
-                    b.Navigation("PromotedNetworkEquipment");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.NetworkTask", b =>
-                {
-                    b.HasOne("GlpiNg.Modules.Deployment.Models.TimeSlot", "ExecutionTimeSlot")
-                        .WithMany()
-                        .HasForeignKey("ExecutionTimeSlotId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("ExecutionTimeSlot");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.NetworkTaskActor", b =>
-                {
-                    b.HasOne("GlpiNg.Modules.Inventory.Models.GlpiAgent", "Agent")
-                        .WithMany()
-                        .HasForeignKey("AgentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GlpiNg.Modules.Deployment.Models.NetworkTask", null)
-                        .WithMany("Actors")
-                        .HasForeignKey("NetworkTaskId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Agent");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.NetworkTaskCredential", b =>
-                {
-                    b.HasOne("GlpiNg.Modules.Deployment.Models.NetworkTask", null)
-                        .WithMany("Credentials")
-                        .HasForeignKey("NetworkTaskId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GlpiNg.Modules.Deployment.Models.SnmpCredential", "SnmpCredential")
-                        .WithMany()
-                        .HasForeignKey("SnmpCredentialId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("SnmpCredential");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.NetworkTaskIpRange", b =>
-                {
-                    b.HasOne("GlpiNg.Modules.Deployment.Models.IpRange", "IpRange")
-                        .WithMany()
-                        .HasForeignKey("IpRangeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GlpiNg.Modules.Deployment.Models.NetworkTask", null)
-                        .WithMany("IpRanges")
-                        .HasForeignKey("NetworkTaskId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("IpRange");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.NetworkTaskJob", b =>
-                {
-                    b.HasOne("GlpiNg.Modules.Inventory.Models.GlpiAgent", "Agent")
-                        .WithMany()
-                        .HasForeignKey("AgentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GlpiNg.Modules.Deployment.Models.NetworkTask", "Task")
-                        .WithMany("Jobs")
-                        .HasForeignKey("NetworkTaskId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Agent");
-
-                    b.Navigation("Task");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.TimeSlotEntry", b =>
@@ -4991,13 +4507,6 @@ namespace GlpiNg.Web.Migrations
                     b.Navigation("Parts");
                 });
 
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentRule", b =>
-                {
-                    b.Navigation("Actions");
-
-                    b.Navigation("Criteria");
-                });
-
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentTask", b =>
                 {
                     b.Navigation("Jobs");
@@ -5005,17 +4514,6 @@ namespace GlpiNg.Web.Migrations
                     b.Navigation("Packages");
 
                     b.Navigation("Targets");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.NetworkTask", b =>
-                {
-                    b.Navigation("Actors");
-
-                    b.Navigation("Credentials");
-
-                    b.Navigation("IpRanges");
-
-                    b.Navigation("Jobs");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.TimeSlot", b =>

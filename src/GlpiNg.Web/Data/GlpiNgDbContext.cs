@@ -83,6 +83,8 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<NetworkTaskJob> NetworkTaskJobs => Set<NetworkTaskJob>();
     public DbSet<DiscoveredNetworkDevice> DiscoveredNetworkDevices => Set<DiscoveredNetworkDevice>();
 
+    public DbSet<DeploymentRule> DeploymentRules => Set<DeploymentRule>();
+
     public DbSet<GlpiUser> Users => Set<GlpiUser>();
     public DbSet<GlpiUserHistoryEntry> UserHistoryEntries => Set<GlpiUserHistoryEntry>();
     public DbSet<GlpiUserProfile> UserProfiles => Set<GlpiUserProfile>();
@@ -131,6 +133,10 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<EventLogEntry> EventLogEntries => Set<EventLogEntry>();
 
     public DbSet<ComputerRule> ComputerRules => Set<ComputerRule>();
+
+    public DbSet<ImportAssignmentRule> ImportAssignmentRules => Set<ImportAssignmentRule>();
+    public DbSet<ImportBlacklistEntry> ImportBlacklistEntries => Set<ImportBlacklistEntry>();
+    public DbSet<RefusedImportLog> RefusedImportLogs => Set<RefusedImportLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -549,6 +555,26 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
             .HasForeignKey(c => c.DeployComputerGroupId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        modelBuilder.Entity<DeploymentRule>()
+            .HasMany(r => r.Criteria)
+            .WithOne()
+            .HasForeignKey(c => c.DeploymentRuleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DeploymentRule>()
+            .HasMany(r => r.Actions)
+            .WithOne()
+            .HasForeignKey(a => a.DeploymentRuleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Même principe que DeploymentTaskPackage->DeploymentPackage (voir plus haut) : supprimer
+        // le paquet retire juste cette action de la règle plutôt que de bloquer sa suppression.
+        modelBuilder.Entity<DeploymentRuleAction>()
+            .HasOne(a => a.Package)
+            .WithMany()
+            .HasForeignKey(a => a.PackageId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         modelBuilder.Entity<DictionaryRule>()
             .HasMany(r => r.Criteria)
             .WithOne()
@@ -565,6 +591,18 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
             .HasMany(r => r.Actions)
             .WithOne()
             .HasForeignKey(a => a.ComputerRuleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ImportAssignmentRule>()
+            .HasMany(r => r.Criteria)
+            .WithOne()
+            .HasForeignKey(c => c.ImportAssignmentRuleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ImportAssignmentRule>()
+            .HasMany(r => r.Actions)
+            .WithOne()
+            .HasForeignKey(a => a.ImportAssignmentRuleId)
             .OnDelete(DeleteBehavior.Cascade);
 
         // Une même valeur (ex. "Dell") ne doit apparaître qu'une fois par catégorie d'Intitulé —
