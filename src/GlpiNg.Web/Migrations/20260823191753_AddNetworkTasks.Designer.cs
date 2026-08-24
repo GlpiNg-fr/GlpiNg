@@ -4,6 +4,7 @@ using GlpiNg.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GlpiNg.Web.Migrations
 {
     [DbContext(typeof(GlpiNgDbContext))]
-    partial class GlpiNgDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260823191753_AddNetworkTasks")]
+    partial class AddNetworkTasks
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -666,63 +669,6 @@ namespace GlpiNg.Web.Migrations
                         .IsUnique();
 
                     b.ToTable("DeploymentUserInteractionTemplates");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DiscoveredNetworkDevice", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("DiscoveredViaNetworkTaskId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("FirstSeenAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("GuessedType")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Hostname")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("IpAddress")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("LastSeenAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("MacAddress")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("PromotedNetworkEquipmentId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<string>("SysContact")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SysDescr")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SysLocation")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SysName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DiscoveredViaNetworkTaskId");
-
-                    b.HasIndex("PromotedNetworkEquipmentId");
-
-                    b.ToTable("DiscoveredNetworkDevices");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.IpRange", b =>
@@ -3968,23 +3914,6 @@ namespace GlpiNg.Web.Migrations
                     b.Navigation("Computer");
 
                     b.Navigation("Group");
-                });
-
-            modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DiscoveredNetworkDevice", b =>
-                {
-                    b.HasOne("GlpiNg.Modules.Deployment.Models.NetworkTask", "DiscoveredViaNetworkTask")
-                        .WithMany()
-                        .HasForeignKey("DiscoveredViaNetworkTaskId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("GlpiNg.Modules.Inventory.Models.NetworkEquipment", "PromotedNetworkEquipment")
-                        .WithMany()
-                        .HasForeignKey("PromotedNetworkEquipmentId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("DiscoveredViaNetworkTask");
-
-                    b.Navigation("PromotedNetworkEquipment");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.NetworkTask", b =>

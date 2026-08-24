@@ -27,6 +27,8 @@ public static class NotificationEventCatalog
     public const string InventoryComputer = "Inventory.Computer";
     public const string DeploymentAgent = "Deployment.Agent";
     public const string DeploymentJob = "Deployment.Job";
+    public const string NetworkTaskJob = "Deployment.NetworkTaskJob";
+    public const string DiscoveredNetworkDevice = "Deployment.DiscoveredNetworkDevice";
 
     public const string EventNew = "new";
     public const string EventSuccess = "success";
@@ -69,6 +71,29 @@ public static class NotificationEventCatalog
             new("job.status", "Statut"),
             new("job.log", "Dernière ligne du journal"),
             new("job.url", "Lien vers la supervision"),
+        ]),
+
+        new(NetworkTaskJob, "Tâche réseau (Découverte/Inventaire SNMP)", EventSuccess, "Tâche réseau réussie",
+        [
+            new("job.agent", "Agent exécutant"),
+            new("job.status", "Statut"),
+            new("job.url", "Lien vers les tâches réseau"),
+        ]),
+
+        new(NetworkTaskJob, "Tâche réseau (Découverte/Inventaire SNMP)", EventError, "Tâche réseau en échec",
+        [
+            new("job.agent", "Agent exécutant"),
+            new("job.status", "Statut"),
+            new("job.log", "Dernière ligne du journal"),
+            new("job.url", "Lien vers les tâches réseau"),
+        ]),
+
+        new(DiscoveredNetworkDevice, "Actif non géré (Découverte réseau)", EventNew, "Nouvel équipement réseau découvert",
+        [
+            new("device.ip", "Adresse IP"),
+            new("device.mac", "Adresse MAC"),
+            new("device.hostname", "Nom d'hôte"),
+            new("device.url", "Lien vers les actifs non gérés"),
         ]),
     ];
 

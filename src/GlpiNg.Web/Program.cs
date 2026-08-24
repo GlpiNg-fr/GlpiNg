@@ -258,6 +258,10 @@ public class Program
             // services au build échoue en environnement Development, faute de DbContext).
             builder.Services.AddScoped<InventoryImportService>();
 
+            // Import des résultats "netdiscovery"/"netinventory" (voir AgentController) —
+            // distinct d'InventoryImportService, voir sa doc.
+            builder.Services.AddScoped<NetworkDeviceImportService>();
+
             // Authentification externe par bind LDAP (voir AccountController.Login et la page
             // /config/auth). AuthSecretProtector n'a pas de dépendance DbContext mais est
             // enregistré ici pour rester à proximité de son seul consommateur.

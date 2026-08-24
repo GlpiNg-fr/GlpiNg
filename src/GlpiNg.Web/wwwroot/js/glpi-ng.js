@@ -1,4 +1,13 @@
 window.glpiNg = {
+    // Utilisé quand la modale doit être pré-remplie côté C# (état du composant mis à jour) avant
+    // ouverture — un simple data-bs-toggle="modal" sur le bouton déclencheur ne permet pas ça, car
+    // le contenu affiché serait celui du rendu précédent. bootstrap.Modal.getOrCreateInstance
+    // réutilise l'instance existante si la modale a déjà été ouverte via data-bs-toggle ailleurs.
+    showModal: function (id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        bootstrap.Modal.getOrCreateInstance(el).show();
+    },
     hideModal: function (id) {
         var el = document.getElementById(id);
         if (!el) return;

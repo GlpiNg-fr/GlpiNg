@@ -41,6 +41,8 @@ public class AgentController(
     GlpiNgDbContext db,
     InventoryImportService inventoryImport,
     DeployJobJsonBuilder deployJobJsonBuilder,
+    NetworkJobJsonBuilder networkJobJsonBuilder,
+    NetworkDeviceImportService networkDeviceImport,
     DeploymentPackageFileStorageService fileStorage,
     SettingsCacheService settingsStore,
     NotificationDispatchService notificationDispatch,
@@ -94,7 +96,13 @@ public class AgentController(
                 schedule = new[]
                 {
                     new { task = "inventory", remote = serverUrl },
-                    new { task = "Deploy", remote = serverUrl }
+                    new { task = "Deploy", remote = serverUrl },
+                    // Même mécanisme de gate que "Deploy" ci-dessus (voir le commentaire de
+                    // HandleGet) appliqué aux tâches NetDiscovery/NetInventory de GLPI-Agent —
+                    // adaptation non vérifiée en conditions réelles, voir le commentaire de classe
+                    // d'AgentController sur netdiscovery/netinventory.
+                    new { task = "NetDiscovery", remote = serverUrl },
+                    new { task = "NetInventory", remote = serverUrl }
                 }
             });
         }
@@ -107,6 +115,21 @@ public class AgentController(
                 : await db.Agents.FirstOrDefaultAsync(a => a.DeviceId == machineId, cancellationToken);
 
             return await HandleGetJobsCoreAsync(agent, cancellationToken);
+        }
+
+        if (string.Equals(action, "getNetDiscoveryJobs", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(action, "getNetInventoryJobs", StringComparison.OrdinalIgnoreCase))
+        {
+            string? machineId = Request.Query["machineid"];
+            GlpiAgent? agent = string.IsNullOrEmpty(machineId)
+                ? null
+                : await db.Agents.FirstOrDefaultAsync(a => a.DeviceId == machineId, cancellationToken);
+
+            NetworkTaskMethod method = string.Equals(action, "getNetDiscoveryJobs", StringComparison.OrdinalIgnoreCase)
+                ? NetworkTaskMethod.NetworkDiscovery
+                : NetworkTaskMethod.NetworkInventory;
+
+            return await HandleGetNetworkJobsCoreAsync(agent, method, cancellationToken);
         }
 
         if (string.Equals(action, "setStatus", StringComparison.OrdinalIgnoreCase))
@@ -194,6 +217,9 @@ public class AgentController(
                 "contact" => await HandleContactAsync(agentUuid, document, cancellationToken),
                 "inventory" => await HandleInventoryAsync(agentUuid, document, cancellationToken),
                 "getJobs" => await HandleGetJobsAsync(agentUuid, cancellationToken),
+                "getNetDiscoveryJobs" => await HandleGetNetworkJobsAsync(agentUuid, NetworkTaskMethod.NetworkDiscovery, cancellationToken),
+                "getNetInventoryJobs" => await HandleGetNetworkJobsAsync(agentUuid, NetworkTaskMethod.NetworkInventory, cancellationToken),
+                "netdiscovery" or "netinventory" => await HandleNetworkInventoryAsync(agentUuid, action, document, cancellationToken),
                 "setStatus" => await HandleSetStatusAsync(document, cancellationToken),
                 _ => BadRequest(new ProtocolAnswer { Status = "error", Message = $"unsupported action '{action}'" })
             };
@@ -340,13 +366,33 @@ public class AgentController(
             .Select(j => new DeployJobRef { Task = "deploy", JobId = j.Id.ToString() })
             .ToListAsync(cancellationToken);
 
+        // Même annonce que pendingDeployJobs ci-dessus pour les tâches réseau — uuid préfixé "net-"
+        // (voir la doc de NetworkTaskJob) pour rester distinguable d'un DeploymentJob dans setStatus.
+        List<NetworkTaskJob> pendingNetworkJobs = await db.NetworkTaskJobs
+            .Include(j => j.Task)
+            .Where(j => j.AgentId == agent.Id && j.Status == NetworkJobStatus.Pending)
+            .ToListAsync(cancellationToken);
+
+        List<DeployJobRef> pendingNetDiscoveryJobs = pendingNetworkJobs
+            .Where(j => j.Task?.Method == NetworkTaskMethod.NetworkDiscovery)
+            .Select(j => new DeployJobRef { Task = "netdiscovery", JobId = "net-" + j.Id.ToString("D8") })
+            .ToList();
+
+        List<DeployJobRef> pendingNetInventoryJobs = pendingNetworkJobs
+            .Where(j => j.Task?.Method == NetworkTaskMethod.NetworkInventory)
+            .Select(j => new DeployJobRef { Task = "netinventory", JobId = "net-" + j.Id.ToString("D8") })
+            .ToList();
+
+        Dictionary<string, List<DeployJobRef>> jobsByTask = [];
+        if (pendingDeployJobs.Count > 0) jobsByTask["deploy"] = pendingDeployJobs;
+        if (pendingNetDiscoveryJobs.Count > 0) jobsByTask["netdiscovery"] = pendingNetDiscoveryJobs;
+        if (pendingNetInventoryJobs.Count > 0) jobsByTask["netinventory"] = pendingNetInventoryJobs;
+
         var answer = new ContactAnswer
         {
             Status = "ok",
             Expiration = await GetExpirationAsync(cancellationToken),
-            Jobs = pendingDeployJobs.Count > 0
-                ? new Dictionary<string, List<DeployJobRef>> { ["deploy"] = pendingDeployJobs }
-                : null
+            Jobs = jobsByTask.Count > 0 ? jobsByTask : null
         };
 
         return Ok(answer);
@@ -400,6 +446,59 @@ public class AgentController(
         return Ok(new ProtocolAnswer { Status = "ok", Expiration = expiration });
     }
 
+    /// <summary>
+    /// Traite les résultats "netdiscovery"/"netinventory" — voir <see cref="NetworkInventoryRequest"/>
+    /// pour la forme attendue (auto-inventée, distincte du schéma "inventory" standard). Écrit
+    /// uniquement les <see cref="DiscoveredNetworkDevice"/> trouvés (via
+    /// <see cref="NetworkDeviceImportService"/>) ; la clôture du <see cref="NetworkTaskJob"/>
+    /// correspondant reste signalée par un "setStatus" séparé (uuid préfixé "net-"), comme pour
+    /// "deploy" — cohérence avec le protocole existant plutôt qu'un signal de fin ad hoc ici.
+    ///
+    /// Comme le job uuid n'est pas porté par ce résultat dans l'adaptation retenue ici (voir le
+    /// commentaire de classe), on rattache les équipements trouvés au NetworkTaskJob "Running" le
+    /// plus récent de cet agent pour la méthode concernée (best-effort — laisse
+    /// DiscoveredNetworkDevice.DiscoveredViaNetworkTaskId nul si aucun job en cours ne correspond).
+    /// </summary>
+    private async Task<IActionResult> HandleNetworkInventoryAsync(string agentUuid, string action, JsonDocument document, CancellationToken cancellationToken)
+    {
+        NetworkInventoryRequest? request;
+        try
+        {
+            request = document.Deserialize<NetworkInventoryRequest>(JsonOptions);
+        }
+        catch (JsonException ex)
+        {
+            logger.LogWarning(ex, "glpi-agent 400 ({Action}): échec de désérialisation. Corps: {Body}", action, document.RootElement.GetRawText());
+            return BadRequest(new ProtocolAnswer { Status = "error", Message = $"bad-format: {ex.Message}" });
+        }
+
+        if (request is null)
+        {
+            return BadRequest(new ProtocolAnswer { Status = "error", Message = "bad-format" });
+        }
+
+        GlpiAgent? agent = await db.Agents.FirstOrDefaultAsync(a => a.AgentUuid == agentUuid, cancellationToken);
+        NetworkTaskMethod method = string.Equals(action, "netdiscovery", StringComparison.OrdinalIgnoreCase)
+            ? NetworkTaskMethod.NetworkDiscovery
+            : NetworkTaskMethod.NetworkInventory;
+
+        int? networkTaskId = null;
+        if (agent is not null)
+        {
+            networkTaskId = await db.NetworkTaskJobs
+                .Where(j => j.AgentId == agent.Id && j.Status == NetworkJobStatus.Running && j.Task != null && j.Task.Method == method)
+                .OrderByDescending(j => j.StartedAt)
+                .Select(j => (int?)j.NetworkTaskId)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        int newDeviceCount = await networkDeviceImport.ImportAsync(networkTaskId, request.Content, cancellationToken);
+        logger.LogInformation("glpi-agent: {Action} de l'agent {AgentUuid} — {Count} équipement(s) découvert(s)/mis à jour, {NewCount} nouveau(x).",
+            action, agentUuid, request.Content.Devices.Count, newDeviceCount);
+
+        return Ok(new ProtocolAnswer { Status = "ok", Expiration = await GetExpirationAsync(cancellationToken) });
+    }
+
     private async Task<IActionResult> HandleGetJobsAsync(string agentUuid, CancellationToken cancellationToken)
     {
         GlpiAgent? agent = await db.Agents.FirstOrDefaultAsync(a => a.AgentUuid == agentUuid, cancellationToken);
@@ -433,6 +532,46 @@ public class AgentController(
         JsonObject payload = deployJobJsonBuilder.Build(job, job.Package, jobUuid);
 
         job.Status = DeploymentStatus.Running;
+        job.StartedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+
+        return Content(payload.ToJsonString(), "application/json");
+    }
+
+    private async Task<IActionResult> HandleGetNetworkJobsAsync(string agentUuid, NetworkTaskMethod method, CancellationToken cancellationToken)
+    {
+        GlpiAgent? agent = await db.Agents.FirstOrDefaultAsync(a => a.AgentUuid == agentUuid, cancellationToken);
+        return await HandleGetNetworkJobsCoreAsync(agent, method, cancellationToken);
+    }
+
+    /// <summary>Cœur commun aux deux façons dont un agent peut demander ses jobs "netdiscovery"/
+    /// "netinventory" — structurellement identique à <see cref="HandleGetJobsCoreAsync"/> pour
+    /// "deploy". L'uuid renvoyé est préfixé "net-" (voir la doc de NetworkTaskJob) pour rester
+    /// distinguable d'un DeploymentJob dans "setStatus" (voir <see cref="HandleSetStatusCoreAsync"/>).
+    /// </summary>
+    private async Task<IActionResult> HandleGetNetworkJobsCoreAsync(GlpiAgent? agent, NetworkTaskMethod method, CancellationToken cancellationToken)
+    {
+        if (agent is null)
+        {
+            return Ok(new JsonObject { ["jobs"] = new JsonArray() });
+        }
+
+        NetworkTaskJob? job = await db.NetworkTaskJobs
+            .Include(j => j.Task).ThenInclude(t => t!.IpRanges).ThenInclude(r => r.IpRange)
+            .Include(j => j.Task).ThenInclude(t => t!.Credentials).ThenInclude(c => c.SnmpCredential)
+            .Where(j => j.AgentId == agent.Id && j.Status == NetworkJobStatus.Pending && j.Task != null && j.Task.Method == method)
+            .OrderBy(j => j.CreatedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (job is null || job.Task is null)
+        {
+            return Ok(new JsonObject { ["jobs"] = new JsonArray() });
+        }
+
+        string jobUuid = "net-" + job.Id.ToString("D8");
+        JsonObject payload = networkJobJsonBuilder.Build(job, job.Task, jobUuid);
+
+        job.Status = NetworkJobStatus.Running;
         job.StartedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
 
@@ -477,9 +616,30 @@ public class AgentController(
     /// <summary>Cœur commun aux deux façons dont un agent peut rapporter le statut d'un job :
     /// "setStatus" en POST avec un corps JSON (voir <see cref="HandleSetStatusAsync"/>) et
     /// "setStatus" en GET avec des paramètres de requête (voir <see cref="HandleGet"/>).</summary>
+    private const string NetworkJobUuidPrefix = "net-";
+
     private async Task<IActionResult> HandleSetStatusCoreAsync(SetStatusRequest statusRequest, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrEmpty(statusRequest.Uuid) || !int.TryParse(statusRequest.Uuid, out int jobId))
+        if (string.IsNullOrEmpty(statusRequest.Uuid))
+        {
+            return BadRequest(new ProtocolAnswer { Status = "error", Message = "bad-format" });
+        }
+
+        // Les NetworkTaskJob sont exposés à l'agent sous un uuid préfixé "net-" (voir la doc de
+        // NetworkTaskJob) pour rester distinguables des DeploymentJob ici : les deux sont des
+        // entiers qui se chevauchent, "setStatus" reçoit le même uuid quel que soit le type de job.
+        if (statusRequest.Uuid.StartsWith(NetworkJobUuidPrefix, StringComparison.Ordinal))
+        {
+            string rawId = statusRequest.Uuid[NetworkJobUuidPrefix.Length..];
+            if (!int.TryParse(rawId, out int networkJobId))
+            {
+                return BadRequest(new ProtocolAnswer { Status = "error", Message = "bad-format" });
+            }
+
+            return await HandleSetNetworkJobStatusCoreAsync(networkJobId, statusRequest, cancellationToken);
+        }
+
+        if (!int.TryParse(statusRequest.Uuid, out int jobId))
         {
             return BadRequest(new ProtocolAnswer { Status = "error", Message = "bad-format" });
         }
@@ -521,6 +681,63 @@ public class AgentController(
         }
 
         return Ok(new ProtocolAnswer { Status = "ok" });
+    }
+
+    /// <summary>Même logique que <see cref="HandleSetStatusCoreAsync"/> pour un NetworkTaskJob
+    /// (uuid préfixé "net-") — pas de notion de "part"/"file" pour un job réseau (pas de fichier à
+    /// télécharger), donc tout "setStatus" reçu est de niveau job.</summary>
+    private async Task<IActionResult> HandleSetNetworkJobStatusCoreAsync(int jobId, SetStatusRequest statusRequest, CancellationToken cancellationToken)
+    {
+        NetworkTaskJob? job = await db.NetworkTaskJobs
+            .Include(j => j.Agent)
+            .FirstOrDefaultAsync(j => j.Id == jobId, cancellationToken);
+        if (job is null)
+        {
+            return NotFound();
+        }
+
+        string logLine = FormatStatusLogLine(statusRequest);
+        job.Log = string.IsNullOrEmpty(job.Log) ? logLine : job.Log + Environment.NewLine + logLine;
+
+        NetworkJobStatus previousStatus = job.Status;
+
+        if (string.Equals(statusRequest.Status, "ko", StringComparison.OrdinalIgnoreCase))
+        {
+            job.Status = NetworkJobStatus.Error;
+            job.CompletedAt = DateTime.UtcNow;
+        }
+        else if (string.IsNullOrEmpty(statusRequest.CurrentStep) && string.Equals(statusRequest.Status, "ok", StringComparison.OrdinalIgnoreCase))
+        {
+            job.Status = NetworkJobStatus.Success;
+            job.CompletedAt = DateTime.UtcNow;
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        if (previousStatus != job.Status && job.Status is NetworkJobStatus.Success or NetworkJobStatus.Error)
+        {
+            await PublishNetworkJobStatusNotificationAsync(job, cancellationToken);
+        }
+
+        return Ok(new ProtocolAnswer { Status = "ok" });
+    }
+
+    /// <summary>Déclenche l'événement "Tâche réseau réussie/en échec" sur transition finale du job — voir <see cref="PublishJobStatusNotificationAsync"/> pour l'équivalent Deploy.</summary>
+    private async Task PublishNetworkJobStatusNotificationAsync(NetworkTaskJob job, CancellationToken cancellationToken)
+    {
+        string eventKey = job.Status == NetworkJobStatus.Success
+            ? NotificationEventCatalog.EventSuccess
+            : NotificationEventCatalog.EventError;
+
+        Dictionary<string, string?> variables = new()
+        {
+            ["job.agent"] = job.Agent?.AgentName ?? job.Agent?.DeviceId,
+            ["job.status"] = job.Status == NetworkJobStatus.Success ? "Réussi" : "En erreur",
+            ["job.log"] = job.Log,
+            ["job.url"] = $"{Request.Scheme}://{Request.Host}/tools/deployments/networktasks",
+        };
+
+        await notificationDispatch.PublishAsync(NotificationEventCatalog.NetworkTaskJob, eventKey, job.Id, variables, cancellationToken);
     }
 
     /// <summary>Déclenche l'événement "Déploiement réussi/en échec" (voir NotificationEventCatalog.DeploymentJob) sur transition finale du job.</summary>
