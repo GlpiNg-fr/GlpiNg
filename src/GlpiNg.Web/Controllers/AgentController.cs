@@ -42,6 +42,7 @@ public class AgentController(
     InventoryImportService inventoryImport,
     DeployJobJsonBuilder deployJobJsonBuilder,
     NetworkJobJsonBuilder networkJobJsonBuilder,
+    WakeOnLanJobJsonBuilder wakeOnLanJobJsonBuilder,
     NetworkDeviceImportService networkDeviceImport,
     DeploymentPackageFileStorageService fileStorage,
     SettingsCacheService settingsStore,
@@ -102,7 +103,10 @@ public class AgentController(
                     // adaptation non vérifiée en conditions réelles, voir le commentaire de classe
                     // d'AgentController sur netdiscovery/netinventory.
                     new { task = "NetDiscovery", remote = serverUrl },
-                    new { task = "NetInventory", remote = serverUrl }
+                    new { task = "NetInventory", remote = serverUrl },
+                    // Même mécanisme de gate, adaptation non vérifiée en conditions réelles, pour
+                    // la tâche WakeOnLan de GLPI-Agent — voir la doc de WakeOnLanTask.
+                    new { task = "WakeOnLan", remote = serverUrl }
                 }
             });
         }
@@ -130,6 +134,16 @@ public class AgentController(
                 : NetworkTaskMethod.NetworkInventory;
 
             return await HandleGetNetworkJobsCoreAsync(agent, method, cancellationToken);
+        }
+
+        if (string.Equals(action, "getWakeOnLanJobs", StringComparison.OrdinalIgnoreCase))
+        {
+            string? machineId = Request.Query["machineid"];
+            GlpiAgent? agent = string.IsNullOrEmpty(machineId)
+                ? null
+                : await db.Agents.FirstOrDefaultAsync(a => a.DeviceId == machineId, cancellationToken);
+
+            return await HandleGetWakeOnLanJobsCoreAsync(agent, cancellationToken);
         }
 
         if (string.Equals(action, "setStatus", StringComparison.OrdinalIgnoreCase))
@@ -220,6 +234,7 @@ public class AgentController(
                 "getNetDiscoveryJobs" => await HandleGetNetworkJobsAsync(agentUuid, NetworkTaskMethod.NetworkDiscovery, cancellationToken),
                 "getNetInventoryJobs" => await HandleGetNetworkJobsAsync(agentUuid, NetworkTaskMethod.NetworkInventory, cancellationToken),
                 "netdiscovery" or "netinventory" => await HandleNetworkInventoryAsync(agentUuid, action, document, cancellationToken),
+                "getWakeOnLanJobs" => await HandleGetWakeOnLanJobsAsync(agentUuid, cancellationToken),
                 "setStatus" => await HandleSetStatusAsync(document, cancellationToken),
                 _ => BadRequest(new ProtocolAnswer { Status = "error", Message = $"unsupported action '{action}'" })
             };
@@ -383,10 +398,18 @@ public class AgentController(
             .Select(j => new DeployJobRef { Task = "netinventory", JobId = "net-" + j.Id.ToString("D8") })
             .ToList();
 
+        // Même annonce que pendingDeployJobs/pendingNetworkJobs ci-dessus pour la tâche WakeOnLan —
+        // uuid préfixé "wol-" (voir la doc de WakeOnLanTaskJob).
+        List<DeployJobRef> pendingWakeOnLanJobs = await db.WakeOnLanTaskJobs
+            .Where(j => j.AgentId == agent.Id && j.Status == WakeOnLanJobStatus.Pending)
+            .Select(j => new DeployJobRef { Task = "wakeonlan", JobId = "wol-" + j.Id.ToString("D8") })
+            .ToListAsync(cancellationToken);
+
         Dictionary<string, List<DeployJobRef>> jobsByTask = [];
         if (pendingDeployJobs.Count > 0) jobsByTask["deploy"] = pendingDeployJobs;
         if (pendingNetDiscoveryJobs.Count > 0) jobsByTask["netdiscovery"] = pendingNetDiscoveryJobs;
         if (pendingNetInventoryJobs.Count > 0) jobsByTask["netinventory"] = pendingNetInventoryJobs;
+        if (pendingWakeOnLanJobs.Count > 0) jobsByTask["wakeonlan"] = pendingWakeOnLanJobs;
 
         var answer = new ContactAnswer
         {
@@ -578,6 +601,44 @@ public class AgentController(
         return Content(payload.ToJsonString(), "application/json");
     }
 
+    private async Task<IActionResult> HandleGetWakeOnLanJobsAsync(string agentUuid, CancellationToken cancellationToken)
+    {
+        GlpiAgent? agent = await db.Agents.FirstOrDefaultAsync(a => a.AgentUuid == agentUuid, cancellationToken);
+        return await HandleGetWakeOnLanJobsCoreAsync(agent, cancellationToken);
+    }
+
+    /// <summary>Cœur commun aux deux façons dont un agent relais peut demander ses jobs
+    /// "wakeonlan" — structurellement identique à <see cref="HandleGetNetworkJobsCoreAsync"/>, sauf
+    /// que la spec (cibles/MAC) n'est pas lue en direct depuis la tâche mais depuis
+    /// <see cref="WakeOnLanTaskJob.TargetMacsJson"/> (voir sa doc). L'uuid renvoyé est préfixé
+    /// "wol-" pour rester distinguable d'un DeploymentJob/NetworkTaskJob dans "setStatus".</summary>
+    private async Task<IActionResult> HandleGetWakeOnLanJobsCoreAsync(GlpiAgent? agent, CancellationToken cancellationToken)
+    {
+        if (agent is null)
+        {
+            return Ok(new JsonObject { ["jobs"] = new JsonArray() });
+        }
+
+        WakeOnLanTaskJob? job = await db.WakeOnLanTaskJobs
+            .Where(j => j.AgentId == agent.Id && j.Status == WakeOnLanJobStatus.Pending)
+            .OrderBy(j => j.CreatedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (job is null)
+        {
+            return Ok(new JsonObject { ["jobs"] = new JsonArray() });
+        }
+
+        string jobUuid = "wol-" + job.Id.ToString("D8");
+        JsonObject payload = wakeOnLanJobJsonBuilder.Build(job, jobUuid);
+
+        job.Status = WakeOnLanJobStatus.Running;
+        job.StartedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+
+        return Content(payload.ToJsonString(), "application/json");
+    }
+
     /// <summary>
     /// Traite un rapport "setStatus" — l'agent en envoie un par étape (démarrage, chaque check,
     /// chaque fichier téléchargé, préparation, chaque ligne de log d'action, fin de job), pas un
@@ -617,6 +678,7 @@ public class AgentController(
     /// "setStatus" en POST avec un corps JSON (voir <see cref="HandleSetStatusAsync"/>) et
     /// "setStatus" en GET avec des paramètres de requête (voir <see cref="HandleGet"/>).</summary>
     private const string NetworkJobUuidPrefix = "net-";
+    private const string WakeOnLanJobUuidPrefix = "wol-";
 
     private async Task<IActionResult> HandleSetStatusCoreAsync(SetStatusRequest statusRequest, CancellationToken cancellationToken)
     {
@@ -637,6 +699,18 @@ public class AgentController(
             }
 
             return await HandleSetNetworkJobStatusCoreAsync(networkJobId, statusRequest, cancellationToken);
+        }
+
+        // Même principe pour les WakeOnLanTaskJob, préfixés "wol-".
+        if (statusRequest.Uuid.StartsWith(WakeOnLanJobUuidPrefix, StringComparison.Ordinal))
+        {
+            string rawId = statusRequest.Uuid[WakeOnLanJobUuidPrefix.Length..];
+            if (!int.TryParse(rawId, out int wakeOnLanJobId))
+            {
+                return BadRequest(new ProtocolAnswer { Status = "error", Message = "bad-format" });
+            }
+
+            return await HandleSetWakeOnLanJobStatusCoreAsync(wakeOnLanJobId, statusRequest, cancellationToken);
         }
 
         if (!int.TryParse(statusRequest.Uuid, out int jobId))
@@ -720,6 +794,64 @@ public class AgentController(
         }
 
         return Ok(new ProtocolAnswer { Status = "ok" });
+    }
+
+    /// <summary>Même logique que <see cref="HandleSetNetworkJobStatusCoreAsync"/> pour un
+    /// WakeOnLanTaskJob (uuid préfixé "wol-") — un "setStatus" reçu clôt le job de l'agent relais
+    /// lui-même (l'envoi effectif du/des magic packet(s)), pas les postes réveillés individuellement
+    /// (fire-and-forget, aucun accusé de réception WoL n'existe côté protocole).</summary>
+    private async Task<IActionResult> HandleSetWakeOnLanJobStatusCoreAsync(int jobId, SetStatusRequest statusRequest, CancellationToken cancellationToken)
+    {
+        WakeOnLanTaskJob? job = await db.WakeOnLanTaskJobs
+            .Include(j => j.Agent)
+            .FirstOrDefaultAsync(j => j.Id == jobId, cancellationToken);
+        if (job is null)
+        {
+            return NotFound();
+        }
+
+        string logLine = FormatStatusLogLine(statusRequest);
+        job.Log = string.IsNullOrEmpty(job.Log) ? logLine : job.Log + Environment.NewLine + logLine;
+
+        WakeOnLanJobStatus previousStatus = job.Status;
+
+        if (string.Equals(statusRequest.Status, "ko", StringComparison.OrdinalIgnoreCase))
+        {
+            job.Status = WakeOnLanJobStatus.Error;
+            job.CompletedAt = DateTime.UtcNow;
+        }
+        else if (string.IsNullOrEmpty(statusRequest.CurrentStep) && string.Equals(statusRequest.Status, "ok", StringComparison.OrdinalIgnoreCase))
+        {
+            job.Status = WakeOnLanJobStatus.Success;
+            job.CompletedAt = DateTime.UtcNow;
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        if (previousStatus != job.Status && job.Status is WakeOnLanJobStatus.Success or WakeOnLanJobStatus.Error)
+        {
+            await PublishWakeOnLanJobStatusNotificationAsync(job, cancellationToken);
+        }
+
+        return Ok(new ProtocolAnswer { Status = "ok" });
+    }
+
+    /// <summary>Déclenche l'événement "Réveil réseau réussi/en échec" sur transition finale du job — voir <see cref="PublishNetworkJobStatusNotificationAsync"/> pour l'équivalent réseau.</summary>
+    private async Task PublishWakeOnLanJobStatusNotificationAsync(WakeOnLanTaskJob job, CancellationToken cancellationToken)
+    {
+        string eventKey = job.Status == WakeOnLanJobStatus.Success
+            ? NotificationEventCatalog.EventSuccess
+            : NotificationEventCatalog.EventError;
+
+        Dictionary<string, string?> variables = new()
+        {
+            ["job.agent"] = job.Agent?.AgentName ?? job.Agent?.DeviceId,
+            ["job.status"] = job.Status == WakeOnLanJobStatus.Success ? "Réussi" : "En erreur",
+            ["job.log"] = job.Log,
+            ["job.url"] = $"{Request.Scheme}://{Request.Host}/tools/deployments/wakeonlan",
+        };
+
+        await notificationDispatch.PublishAsync(NotificationEventCatalog.WakeOnLanTaskJob, eventKey, job.Id, variables, cancellationToken);
     }
 
     /// <summary>Déclenche l'événement "Tâche réseau réussie/en échec" sur transition finale du job — voir <see cref="PublishJobStatusNotificationAsync"/> pour l'équivalent Deploy.</summary>

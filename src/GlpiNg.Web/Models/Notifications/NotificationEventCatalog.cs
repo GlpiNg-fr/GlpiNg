@@ -29,6 +29,7 @@ public static class NotificationEventCatalog
     public const string DeploymentJob = "Deployment.Job";
     public const string NetworkTaskJob = "Deployment.NetworkTaskJob";
     public const string DiscoveredNetworkDevice = "Deployment.DiscoveredNetworkDevice";
+    public const string WakeOnLanTaskJob = "Deployment.WakeOnLanTaskJob";
 
     public const string EventNew = "new";
     public const string EventSuccess = "success";
@@ -94,6 +95,21 @@ public static class NotificationEventCatalog
             new("device.mac", "Adresse MAC"),
             new("device.hostname", "Nom d'hôte"),
             new("device.url", "Lien vers les actifs non gérés"),
+        ]),
+
+        new(WakeOnLanTaskJob, "Réveil réseau (WakeOnLan)", EventSuccess, "Réveil réseau réussi",
+        [
+            new("job.agent", "Agent relais"),
+            new("job.status", "Statut"),
+            new("job.url", "Lien vers les tâches de réveil réseau"),
+        ]),
+
+        new(WakeOnLanTaskJob, "Réveil réseau (WakeOnLan)", EventError, "Réveil réseau en échec",
+        [
+            new("job.agent", "Agent relais"),
+            new("job.status", "Statut"),
+            new("job.log", "Dernière ligne du journal"),
+            new("job.url", "Lien vers les tâches de réveil réseau"),
         ]),
     ];
 

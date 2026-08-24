@@ -13,6 +13,9 @@ public class GlpiGroup
     public string? Comment { get; set; }
     public string? Code { get; set; }
 
+    /// <summary>Id du groupe GLPI d'origine (glpi_groups.id) — voir Import/GlpiAdminMySqlImportService, même principe que Computer.SourceGlpiId.</summary>
+    public int? SourceGlpiId { get; set; }
+
     public int? ParentId { get; set; }
     public GlpiGroup? Parent { get; set; }
     public List<GlpiGroup> Children { get; set; } = [];

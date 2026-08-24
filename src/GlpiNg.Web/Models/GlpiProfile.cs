@@ -24,6 +24,9 @@ public class GlpiProfile
     public string? Comment { get; set; }
     public bool IsDefault { get; set; }
 
+    /// <summary>Id du profil GLPI d'origine (glpi_profiles.id) — voir Import/GlpiAdminMySqlImportService, même principe que Computer.SourceGlpiId.</summary>
+    public int? SourceGlpiId { get; set; }
+
     public ProfileRightLevel ParcRight { get; set; }
     public ProfileRightLevel AssistanceRight { get; set; }
     public ProfileRightLevel GestionRight { get; set; }

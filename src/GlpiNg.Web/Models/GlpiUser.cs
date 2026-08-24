@@ -18,6 +18,9 @@ public class GlpiUser
     public bool SidebarCollapsed { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    /// <summary>Id de l'utilisateur GLPI d'origine (glpi_users.id) — voir Import/GlpiAdminMySqlImportService, même principe que Computer.SourceGlpiId.</summary>
+    public int? SourceGlpiId { get; set; }
+
     // Authentification externe (voir Services.LdapAuthenticationService) : un compte créé
     // localement reste AuthSource == Local pour toujours ; un compte provisionné (ou
     // reconnu) via un bind LDAP réussi bascule sur Ldap et ne vérifie plus jamais

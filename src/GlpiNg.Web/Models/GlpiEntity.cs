@@ -12,6 +12,9 @@ public class GlpiEntity
     public required string Name { get; set; }
     public string? Comment { get; set; }
 
+    /// <summary>Id de l'entité GLPI d'origine (glpi_entities.id) — voir Import/GlpiAdminMySqlImportService, même principe que Computer.SourceGlpiId.</summary>
+    public int? SourceGlpiId { get; set; }
+
     public int? ParentId { get; set; }
     public GlpiEntity? Parent { get; set; }
     public List<GlpiEntity> Children { get; set; } = [];
