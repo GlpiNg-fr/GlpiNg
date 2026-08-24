@@ -74,6 +74,15 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<DeploymentTaskPackage> DeploymentTaskPackages => Set<DeploymentTaskPackage>();
     public DbSet<DeploymentTaskTarget> DeploymentTaskTargets => Set<DeploymentTaskTarget>();
 
+    public DbSet<IpRange> IpRanges => Set<IpRange>();
+    public DbSet<SnmpCredential> SnmpCredentials => Set<SnmpCredential>();
+    public DbSet<NetworkTask> NetworkTasks => Set<NetworkTask>();
+    public DbSet<NetworkTaskIpRange> NetworkTaskIpRanges => Set<NetworkTaskIpRange>();
+    public DbSet<NetworkTaskCredential> NetworkTaskCredentials => Set<NetworkTaskCredential>();
+    public DbSet<NetworkTaskActor> NetworkTaskActors => Set<NetworkTaskActor>();
+    public DbSet<NetworkTaskJob> NetworkTaskJobs => Set<NetworkTaskJob>();
+    public DbSet<DiscoveredNetworkDevice> DiscoveredNetworkDevices => Set<DiscoveredNetworkDevice>();
+
     public DbSet<GlpiUser> Users => Set<GlpiUser>();
     public DbSet<GlpiUserHistoryEntry> UserHistoryEntries => Set<GlpiUserHistoryEntry>();
     public DbSet<GlpiUserProfile> UserProfiles => Set<GlpiUserProfile>();
@@ -236,6 +245,98 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
             .HasOne(j => j.Task)
             .WithMany(t => t.Jobs)
             .HasForeignKey(j => j.TaskId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Pas de navigation GlpiAgent.NetworkTaskJobs / .NetworkTaskActors : même raison que
+        // DeploymentJob.Agent plus haut (ne pas faire dépendre le module Inventory du module Deploy).
+        modelBuilder.Entity<NetworkTaskJob>()
+            .HasOne(j => j.Agent)
+            .WithMany()
+            .HasForeignKey(j => j.AgentId);
+
+        // Cascade (et non SetNull comme DeploymentJob.Task) : contrairement à un DeploymentJob, qui
+        // ne fait que référencer son paquet, la spec d'un NetworkTaskJob (plages IP + identifiants)
+        // est lue en direct depuis sa NetworkTask au moment de "getNetDiscoveryJobs"/
+        // "getNetInventoryJobs" (voir la doc de NetworkTaskJob) — un job sans tâche n'a plus de sens
+        // et perdre la tâche perd donc aussi l'historique des jobs qu'elle a créés.
+        modelBuilder.Entity<NetworkTaskJob>()
+            .HasOne(j => j.Task)
+            .WithMany(t => t.Jobs)
+            .HasForeignKey(j => j.NetworkTaskId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Restrict : même raison multi-chemin-cascade SQL Server que DeploymentTask.ExecutionTimeSlot
+        // plus haut ("may cause cycles or multiple cascade paths").
+        modelBuilder.Entity<NetworkTask>()
+            .HasOne(t => t.ExecutionTimeSlot)
+            .WithMany()
+            .HasForeignKey(t => t.ExecutionTimeSlotId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Cascade sur les deux extrémités, même principe que DeploymentTaskPackage/DeploymentTaskTarget
+        // plus haut : une ligne de jointure n'a de sens que rattachée à sa tâche ET à sa plage/son
+        // identifiant/son agent — supprimer l'un ou l'autre retire juste cette entrée de la liste de
+        // la tâche plutôt que de bloquer la suppression.
+        modelBuilder.Entity<NetworkTask>()
+            .HasMany(t => t.IpRanges)
+            .WithOne()
+            .HasForeignKey(r => r.NetworkTaskId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<NetworkTaskIpRange>()
+            .HasOne(r => r.IpRange)
+            .WithMany()
+            .HasForeignKey(r => r.IpRangeId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<NetworkTaskIpRange>()
+            .HasIndex(r => new { r.NetworkTaskId, r.IpRangeId })
+            .IsUnique();
+
+        modelBuilder.Entity<NetworkTask>()
+            .HasMany(t => t.Credentials)
+            .WithOne()
+            .HasForeignKey(c => c.NetworkTaskId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<NetworkTaskCredential>()
+            .HasOne(c => c.SnmpCredential)
+            .WithMany()
+            .HasForeignKey(c => c.SnmpCredentialId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<NetworkTaskCredential>()
+            .HasIndex(c => new { c.NetworkTaskId, c.SnmpCredentialId })
+            .IsUnique();
+
+        modelBuilder.Entity<NetworkTask>()
+            .HasMany(t => t.Actors)
+            .WithOne()
+            .HasForeignKey(a => a.NetworkTaskId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<NetworkTaskActor>()
+            .HasOne(a => a.Agent)
+            .WithMany()
+            .HasForeignKey(a => a.AgentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<NetworkTaskActor>()
+            .HasIndex(a => new { a.NetworkTaskId, a.AgentId })
+            .IsUnique();
+
+        // SetNull : l'historique de découverte (adresse/MAC/sysDescr...) reste utile même une fois
+        // la tâche qui l'a produit supprimée ou l'équipement promu vers un NetworkEquipment.
+        modelBuilder.Entity<DiscoveredNetworkDevice>()
+            .HasOne(d => d.DiscoveredViaNetworkTask)
+            .WithMany()
+            .HasForeignKey(d => d.DiscoveredViaNetworkTaskId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<DiscoveredNetworkDevice>()
+            .HasOne(d => d.PromotedNetworkEquipment)
+            .WithMany()
+            .HasForeignKey(d => d.PromotedNetworkEquipmentId)
             .OnDelete(DeleteBehavior.SetNull);
 
         modelBuilder.Entity<DeploymentPackage>()
