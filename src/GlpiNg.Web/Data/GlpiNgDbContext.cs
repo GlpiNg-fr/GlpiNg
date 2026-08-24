@@ -85,6 +85,11 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
 
     public DbSet<DeploymentRule> DeploymentRules => Set<DeploymentRule>();
 
+    public DbSet<WakeOnLanTask> WakeOnLanTasks => Set<WakeOnLanTask>();
+    public DbSet<WakeOnLanTaskTarget> WakeOnLanTaskTargets => Set<WakeOnLanTaskTarget>();
+    public DbSet<WakeOnLanTaskActor> WakeOnLanTaskActors => Set<WakeOnLanTaskActor>();
+    public DbSet<WakeOnLanTaskJob> WakeOnLanTaskJobs => Set<WakeOnLanTaskJob>();
+
     public DbSet<GlpiUser> Users => Set<GlpiUser>();
     public DbSet<GlpiUserHistoryEntry> UserHistoryEntries => Set<GlpiUserHistoryEntry>();
     public DbSet<GlpiUserProfile> UserProfiles => Set<GlpiUserProfile>();
@@ -345,6 +350,65 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
             .HasForeignKey(d => d.PromotedNetworkEquipmentId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        // WakeOnLanTask : même famille de configuration que DeploymentTask (cibles Group/Computer)
+        // et NetworkTask (agents relais, ExecutionTimeSlot Restrict) combinées — voir les
+        // commentaires détaillés sur ces deux blocs plus haut, non répétés ici.
+        modelBuilder.Entity<WakeOnLanTask>()
+            .HasOne(t => t.ExecutionTimeSlot)
+            .WithMany()
+            .HasForeignKey(t => t.ExecutionTimeSlotId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<WakeOnLanTask>()
+            .HasMany(t => t.Targets)
+            .WithOne()
+            .HasForeignKey(tg => tg.WakeOnLanTaskId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<WakeOnLanTaskTarget>()
+            .HasOne(tg => tg.Group)
+            .WithMany()
+            .HasForeignKey(tg => tg.GroupId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<WakeOnLanTaskTarget>()
+            .HasOne(tg => tg.Computer)
+            .WithMany()
+            .HasForeignKey(tg => tg.ComputerId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<WakeOnLanTask>()
+            .HasMany(t => t.RelayAgents)
+            .WithOne()
+            .HasForeignKey(a => a.WakeOnLanTaskId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<WakeOnLanTaskActor>()
+            .HasOne(a => a.Agent)
+            .WithMany()
+            .HasForeignKey(a => a.AgentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<WakeOnLanTaskActor>()
+            .HasIndex(a => new { a.WakeOnLanTaskId, a.AgentId })
+            .IsUnique();
+
+        // Pas de navigation GlpiAgent.WakeOnLanTaskJobs : même raison que DeploymentJob.Agent/
+        // NetworkTaskJob.Agent plus haut.
+        modelBuilder.Entity<WakeOnLanTaskJob>()
+            .HasOne(j => j.Agent)
+            .WithMany()
+            .HasForeignKey(j => j.AgentId);
+
+        // Cascade : les cibles sont figées dans TargetMacsJson au lancement (voir la doc de
+        // WakeOnLanTaskJob), mais un job n'a de sens que rattaché à la tâche qui l'a créé — même
+        // raisonnement que NetworkTaskJob.Task.
+        modelBuilder.Entity<WakeOnLanTaskJob>()
+            .HasOne(j => j.Task)
+            .WithMany(t => t.Jobs)
+            .HasForeignKey(j => j.WakeOnLanTaskId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         modelBuilder.Entity<DeploymentPackage>()
             .HasMany(p => p.Files)
             .WithOne()
@@ -413,6 +477,28 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
             .WithMany(e => e.Children)
             .HasForeignKey(e => e.ParentId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Idempotence de l'import GLPI "Administration" (voir Import/GlpiAdminMySqlImportService),
+        // même principe que Computer.SourceGlpiId plus haut.
+        modelBuilder.Entity<GlpiEntity>()
+            .HasIndex(e => e.SourceGlpiId)
+            .IsUnique()
+            .HasFilter("\"SourceGlpiId\" IS NOT NULL");
+
+        modelBuilder.Entity<GlpiGroup>()
+            .HasIndex(g => g.SourceGlpiId)
+            .IsUnique()
+            .HasFilter("\"SourceGlpiId\" IS NOT NULL");
+
+        modelBuilder.Entity<GlpiProfile>()
+            .HasIndex(p => p.SourceGlpiId)
+            .IsUnique()
+            .HasFilter("\"SourceGlpiId\" IS NOT NULL");
+
+        modelBuilder.Entity<GlpiUser>()
+            .HasIndex(u => u.SourceGlpiId)
+            .IsUnique()
+            .HasFilter("\"SourceGlpiId\" IS NOT NULL");
 
         modelBuilder.Entity<GlpiUserProfile>()
             .HasOne(up => up.User)

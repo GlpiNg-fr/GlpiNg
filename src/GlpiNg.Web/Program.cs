@@ -7,12 +7,14 @@ using System.Text.Json.Nodes;
 using AnthoDingo.Setup;
 using GlpiNg.Modules.Abstractions.Cron;
 using GlpiNg.Modules.Abstractions.Deployment;
+using GlpiNg.Modules.Abstractions.Import;
 using GlpiNg.Modules.Cron;
 using GlpiNg.Modules.Deployment;
 using GlpiNg.Modules.Inventory;
 using GlpiNg.Modules.Scheduler;
 using GlpiNg.Web.Components;
 using GlpiNg.Web.Data;
+using GlpiNg.Web.Import;
 using GlpiNg.Web.Middleware;
 using GlpiNg.Web.Options;
 using GlpiNg.Web.Services;
@@ -310,6 +312,12 @@ public class Program
             // conséquence sur la disponibilité de /admin/import/glpi avant la fin de
             // l'installation : UseSetupMiddleware redirige de toute façon tout vers /setup.
             builder.Services.AddInventoryModule(builder.Configuration);
+
+            // Permet à GlpiImportStateService (module Inventory, page /admin/import/glpi) de
+            // déclencher aussi l'import "Administration" (entités/groupes/profils/utilisateurs) et
+            // configuration générale, sans que ce module dépende de GlpiEntity/GlpiGroup/
+            // GlpiProfile/GlpiUser — même principe qu'ICurrentUserDeploymentContextProvider plus bas.
+            builder.Services.AddScoped<IGlpiAdminImportService, GlpiAdminMySqlImportService>();
 
             // Alimente les sélecteurs de cibles (Entité/Groupe/Profil/Utilisateur) de l'onglet
             // "Cibles pour le déploiement à la demande" de la fiche Paquet (module Deployment)
