@@ -13,6 +13,12 @@ internal sealed class DbContextFactoryAdapter(IDbContextFactory<GlpiNgDbContext>
 {
     public DbContext CreateDbContext() => inner.CreateDbContext();
 
-    public async ValueTask<DbContext> CreateDbContextAsync(CancellationToken cancellationToken = default) =>
+    // Implémentation explicite, et Task plutôt que ValueTask : la signature de l'interface est
+    // Task<TContext>: CreateDbContextAsync. Déclarée en ValueTask, la méthode n'implémentait pas
+    // le membre — les appels passaient par l'implémentation par défaut de l'interface. Sans
+    // conséquence tant que celle-ci délègue à CreateDbContext, mais c'est exactement le genre de
+    // méthode muette qui laisserait passer un contexte non estampillé (voir
+    // EntityScopedDbContextFactory).
+    async Task<DbContext> IDbContextFactory<DbContext>.CreateDbContextAsync(CancellationToken cancellationToken) =>
         await inner.CreateDbContextAsync(cancellationToken);
 }

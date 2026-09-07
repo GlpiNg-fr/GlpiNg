@@ -1,3 +1,5 @@
+using GlpiNg.Modules.Abstractions.Entities;
+
 namespace GlpiNg.Web.Models;
 
 /// <summary>
@@ -6,8 +8,11 @@ namespace GlpiNg.Web.Models;
 /// (visibilité dans un ticket/projet non exploitée tant que le module Assistance
 /// n'existe pas ici, mais conservée pour rester compatible avec un futur import GLPI).
 /// </summary>
-public class GlpiGroup
+public class GlpiGroup : IEntityScoped
 {
+    /// <inheritdoc />
+    public int? EntityId { get; set; }
+
     public int Id { get; set; }
     public required string Name { get; set; }
     public string? Comment { get; set; }

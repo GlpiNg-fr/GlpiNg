@@ -164,6 +164,35 @@ des modifications et historique d'import.
   déjà sur la fiche paquet, mais la page `/self-service` correspondante n'existe
   pas encore.
 
+### Cloisonnement par entité
+
+Reprend la règle de visibilité de GLPI : un objet est visible si son entité fait partie des
+entités visibles, ou s'il est marqué « visible dans les sous-entités » et rattaché à l'une de
+leurs entités parentes.
+
+- 35 types d'objets portent `EntityId` / `IsRecursive` via `IEntityScoped`
+  (`GlpiNg.Modules.Abstractions/Entities`) : les 14 types d'actifs, les agents, les
+  intitulés, les règles et dictionnaires, les recherches sauvegardées, l'ensemble
+  des objets de déploiement et réseau, les groupes et les notifications.
+- Le filtrage n'est pas écrit page par page : `GlpiNgDbContext` pose un filtre
+  global sur chaque type implémentant l'interface, paramétré par le
+  `EntityScope` dont la fabrique de contextes estampille chaque instance
+  (`EntityScopedDbContextFactory`). Les ~97 fichiers de pages sont donc
+  cloisonnés sans modification, et un accès direct par URL à un objet hors
+  périmètre se comporte comme un objet inexistant.
+- L'entité active est portée par le cookie d'authentification et se change
+  depuis le sélecteur du bandeau (`/Account/SwitchEntity`), avec l'option
+  « voir les sous-entités ». La cible est revalidée côté serveur contre les
+  habilitations de l'utilisateur.
+- Les objets créés sont rattachés automatiquement à l'entité active
+  (`GlpiNgDbContext.SaveChanges`). Les postes remontés par un agent, qui
+  arrivent hors session, vont dans l'entité racine.
+- Hors session applicative — protocole agent, tâches cron, import
+  machine-à-machine par jeton OAuth, services singleton via
+  `IRootDbContextFactory` — le cloisonnement est neutre : ces chemins voient
+  tout. Un compte administrateur (`GlpiUser.IsAdmin`) n'est pas cloisonné non
+  plus ; un utilisateur connecté sans aucune habilitation ne voit rien.
+
 ### Règles, dictionnaires et recherches
 
 - Règles ordinateurs (`/admin/rules`), dictionnaires (`/admin/dictionaries`,
@@ -294,10 +323,6 @@ manques suivants sont connus et assumés à ce stade.
   éditable et importé, mais aucune page ne porte `[Authorize(...)]` et rien ne
   le vérifie à l'exécution : tout utilisateur authentifié accède à tout. C'est
   le point le plus sensible de cette liste.
-- **Pas de cloisonnement par entité** — les actifs n'ont pas d'`EntityId` ;
-  seules quelques entités hôte y font référence. Ni isolation des données, ni
-  récursivité, ni sélecteur d'entité active : les entités ne sont pour l'instant
-  qu'un annuaire.
 - **Pas d'API REST générique** — rien d'équivalent à `apirest.php` (CRUD et
   recherche par itemtype). Les seuls endpoints exposés sont `/inventory`,
   `/oauth2/token`, `/admin/import/glpi` et l'upload de fichiers de paquet.
@@ -320,6 +345,14 @@ manques suivants sont connus et assumés à ce stade.
 ## À faire
 
 - [ ] Application effective des droits par profil (`ProfileRightLevel`)
+- [ ] Champ « Entité » dans les formulaires : le rattachement est aujourd'hui
+      automatique (entité active à la création) mais n'est ni affiché ni
+      modifiable depuis les fiches — réaffecter un objet demande de passer par la
+      base
+- [ ] Supprimer une entité encore rattachée à des objets remonte une violation de
+      clé étrangère brute (`DeleteBehavior.Restrict`) au lieu d'un message clair
+- [ ] Rattachement automatique des postes inventoriés à partir du TAG d'entité
+      (`GlpiEntity.AssignmentTag`), aujourd'hui dans l'entité racine
 - [ ] Parsing exhaustif du payload `inventory` (couverture complète
       hardware/software/réseau selon les versions d'agent)
 - [ ] Page `/self-service` (les cibles libre-service sont déjà configurables

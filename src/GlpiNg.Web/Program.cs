@@ -7,6 +7,7 @@ using System.Text.Json.Nodes;
 using AnthoDingo.Setup;
 using GlpiNg.Modules.Abstractions.Cron;
 using GlpiNg.Modules.Abstractions.Deployment;
+using GlpiNg.Modules.Abstractions.Entities;
 using GlpiNg.Modules.Abstractions.Import;
 using GlpiNg.Modules.Cron;
 using GlpiNg.Modules.Deployment;
@@ -241,6 +242,29 @@ public class Program
             // enregistrerait un second DbContextOptions<GlpiNgDbContext> scoped, ce que le
             // IDbContextFactory singleton ci-dessus ne peut pas consommer (conflit de durée de
             // vie au démarrage : "Cannot consume scoped service ... from singleton").
+            // Cloisonnement par entité. L'ordre de ces trois enregistrements compte :
+            //
+            // 1. IRootDbContextFactory (singleton) : accès délibérément NON cloisonné. Construit
+            //    le contexte depuis les DbContextOptions enregistrés juste au-dessus, sans passer
+            //    par IDbContextFactory<GlpiNgDbContext> — puisque ce service est justement
+            //    remplacé ci-dessous par une fabrique scoped, qu'un singleton ne peut pas
+            //    consommer. Réservé aux services singleton (SettingsCacheService,
+            //    LdapAuthenticationService) et au calcul du cloisonnement lui-même.
+            //
+            // 2. EntityScopedDbContextFactory remplace IDbContextFactory<GlpiNgDbContext> par une
+            //    version scoped qui estampille chaque contexte avec le EntityScope de
+            //    l'utilisateur. C'est ce qui rend cloisonnées, sans les modifier, les ~97 pages
+            //    qui font déjà DbFactory.CreateDbContextAsync().
+            //
+            // 3. IDbContextFactory<DbContext> (l'adaptateur utilisé par les pages des modules)
+            //    passe de Singleton à Scoped pour la même raison : il délègue désormais à une
+            //    fabrique scoped.
+            builder.Services.AddSingleton<IRootDbContextFactory, RootDbContextFactory>();
+            builder.Services.AddSingleton<EntityTreeCache>();
+            builder.Services.AddScoped<IEntityScopeProvider, EntityScopeProvider>();
+            builder.Services.AddScoped<UserEntityAccessService>();
+            builder.Services.AddScoped<IDbContextFactory<GlpiNgDbContext>, EntityScopedDbContextFactory>();
+
             builder.Services.AddScoped<GlpiNgDbContext>(sp =>
                 sp.GetRequiredService<IDbContextFactory<GlpiNgDbContext>>().CreateDbContext());
 
@@ -253,7 +277,7 @@ public class Program
             // Inventory), qui ont besoin d'un IDbContextFactory<DbContext> — pas seulement d'un
             // DbContext scoped — pour la même raison de concurrence au pré-rendu que
             // IDbContextFactory<GlpiNgDbContext> ci-dessus. Voir DbContextFactoryAdapter.
-            builder.Services.AddSingleton<IDbContextFactory<DbContext>>(sp =>
+            builder.Services.AddScoped<IDbContextFactory<DbContext>>(sp =>
                 new DbContextFactoryAdapter(sp.GetRequiredService<IDbContextFactory<GlpiNgDbContext>>()));
 
             // Services dépendant de GlpiNgDbContext : n'ont de sens qu'une fois l'installation

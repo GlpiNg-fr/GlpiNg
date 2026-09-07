@@ -446,6 +446,57 @@ body {
   flex-shrink: 0;
 }
 
+/* Sélecteur d'entité active (voir Components/Layout/EntitySelector.razor). */
+.glpi-topbar-entity {
+  flex-shrink: 0;
+}
+
+.glpi-entity-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid #e6e8ea;
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+  color: #232629;
+  text-decoration: none;
+}
+
+.glpi-entity-toggle:hover {
+  background: #f6f7f8;
+  color: #232629;
+}
+
+.glpi-entity-label {
+  /* Un nom d'entité peut être long : on le tronque plutôt que de laisser le bandeau s'étirer. */
+  max-width: 14rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.glpi-entity-menu {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+/* Les entrées du menu sont des <button> dans un <form> POST (réémission du cookie), pas des
+   liens : on leur redonne l'apparence d'un dropdown-item pleine largeur. */
+.glpi-entity-menu form {
+  margin: 0;
+}
+
+.glpi-entity-menu .dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  border: 0;
+  background: none;
+  text-align: left;
+}
+
 .glpi-user-toggle {
   display: flex;
   align-items: center;
