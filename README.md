@@ -193,6 +193,32 @@ leurs entités parentes.
   tout. Un compte administrateur (`GlpiUser.IsAdmin`) n'est pas cloisonné non
   plus ; un utilisateur connecté sans aucune habilitation ne voit rien.
 
+### Droits par profil
+
+Un profil porte un droit par grande section du menu (Parc, Assistance, Gestion, Outils,
+Administration, Configuration), à trois niveaux : aucun, lecture, écriture. C'est une
+simplification assumée de la matrice très fine de GLPI.
+
+- Les droits sont résolus **pour l'entité active** — une habilitation associe un
+  profil à une entité, donc changer d'entité active recalcule les droits — puis
+  portés par le cookie d'authentification (`ProfileRightsService`).
+- Trois points d'application, sur une table de correspondance unique
+  (`ProfileSectionMap`) : le menu masque les groupes non lisibles,
+  `SectionAccessMiddleware` refuse l'accès direct par URL, et `MainLayout` fait
+  de même pour la navigation interne au circuit Blazor, que le middleware ne
+  voit pas passer.
+- L'écriture est refusée au niveau du `GlpiNgDbContext`
+  (`EnforceWriteRights`) : la section est déduite du type d'objet, ce qui couvre
+  d'un coup les quelque 40 formulaires sans en modifier un seul. C'est un filet
+  de second rang — la protection de premier rang reste le garde-fou de routes.
+  Sont exemptés les objets écrits par le système au nom de l'utilisateur
+  (préférences d'affichage, journal d'événements, file de notifications), sans
+  quoi un utilisateur sans droit d'administration ne pourrait ni se déconnecter
+  ni réorganiser son tableau de bord.
+- Comme pour le cloisonnement, les chemins hors session applicative (protocole
+  agent, cron, import par jeton OAuth) et les comptes `IsAdmin` ne sont soumis à
+  aucun de ces contrôles.
+
 ### Règles, dictionnaires et recherches
 
 - Règles ordinateurs (`/admin/rules`), dictionnaires (`/admin/dictionaries`,
@@ -319,10 +345,6 @@ manques suivants sont connus et assumés à ce stade.
 
 ### Manques transverses
 
-- **Droits par profil non appliqués** — `ProfileRightLevel` est stocké,
-  éditable et importé, mais aucune page ne porte `[Authorize(...)]` et rien ne
-  le vérifie à l'exécution : tout utilisateur authentifié accède à tout. C'est
-  le point le plus sensible de cette liste.
 - **Pas d'API REST générique** — rien d'équivalent à `apirest.php` (CRUD et
   recherche par itemtype). Les seuls endpoints exposés sont `/inventory`,
   `/oauth2/token`, `/admin/import/glpi` et l'upload de fichiers de paquet.
@@ -344,7 +366,6 @@ manques suivants sont connus et assumés à ce stade.
 
 ## À faire
 
-- [ ] Application effective des droits par profil (`ProfileRightLevel`)
 - [ ] Champ « Entité » dans les formulaires : le rattachement est aujourd'hui
       automatique (entité active à la création) mais n'est ni affiché ni
       modifiable depuis les fiches — réaffecter un objet demande de passer par la

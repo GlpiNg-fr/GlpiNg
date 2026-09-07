@@ -57,11 +57,11 @@ public sealed class UserEntityAccessService(IRootDbContextFactory dbFactory)
     /// évite qu'une base sans habilitation cohérente (comptes importés d'une base GLPI, où les
     /// droits fins ne sont pas repris) ne laisse plus personne administrer l'application.
     /// </summary>
-    public async Task<List<Claim>> BuildScopeClaimsAsync(GlpiUser user, CancellationToken ct = default)
+    public async Task<(List<Claim> Claims, int? ActiveEntityId)> BuildScopeClaimsAsync(GlpiUser user, CancellationToken ct = default)
     {
         if (user.IsAdmin)
         {
-            return [new Claim(UnrestrictedClaim, "1")];
+            return ([new Claim(UnrestrictedClaim, "1")], null);
         }
 
         List<EntityHabilitation> habilitations = await GetHabilitationsAsync(user.Id, ct);
@@ -70,7 +70,7 @@ public sealed class UserEntityAccessService(IRootDbContextFactory dbFactory)
             // Pas d'habilitation : le marqueur seul, sans entité active. EntityScopeProvider en
             // déduit EntityScope.None — l'utilisateur est connecté mais ne voit rien, plutôt que
             // de voir tout le parc.
-            return [new Claim(UnrestrictedClaim, "0")];
+            return ([new Claim(UnrestrictedClaim, "0")], null);
         }
 
         // Entité par défaut : la plus « haute » habilitation récursive si elle existe (elle couvre
@@ -78,7 +78,7 @@ public sealed class UserEntityAccessService(IRootDbContextFactory dbFactory)
         // entité active de l'utilisateur ; ce n'est pas mémorisé ici.
         EntityHabilitation preferred = habilitations.FirstOrDefault(h => h.IsRecursive) ?? habilitations[0];
 
-        return BuildScopeClaims(preferred.EntityId, preferred.IsRecursive);
+        return (BuildScopeClaims(preferred.EntityId, preferred.IsRecursive), preferred.EntityId);
     }
 
     public static List<Claim> BuildScopeClaims(int activeEntityId, bool recursive) =>

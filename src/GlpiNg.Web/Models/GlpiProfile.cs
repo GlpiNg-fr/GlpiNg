@@ -1,4 +1,4 @@
-namespace GlpiNg.Web.Models;
+﻿namespace GlpiNg.Web.Models;
 
 /// <summary>Niveau d'accès d'un <see cref="GlpiProfile"/> sur une section du menu GlpiNg.</summary>
 public enum ProfileRightLevel
@@ -12,10 +12,14 @@ public enum ProfileRightLevel
 /// Profil GLPI (rôle nommé), simplifié par rapport à GLPI : au lieu de la matrice de droits très
 /// fine par module (Ticket, Ordinateur, Règle...) sur des dizaines d'onglets, un seul droit par
 /// grande section du menu GlpiNg (voir MainLayout.GroupOrder côté Web : parc, assistance,
-/// gestion, outils, administration, configuration). Ces droits ne sont pour l'instant
-/// pas branchés sur une vérification d'autorisation réelle : GlpiNg n'a aujourd'hui aucune
-/// application de permissions par page (seul <see cref="GlpiUser.IsAdmin"/> existe, et il n'est
-/// lui-même vérifié nulle part) — les stocker ici prépare le terrain sans prétendre les appliquer.
+/// gestion, outils, administration, configuration).
+///
+/// Ces droits sont appliqués à l'exécution : filtrage du menu et garde-fou de navigation dans
+/// MainLayout, refus d'accès direct par URL dans SectionAccessMiddleware, et refus d'écriture dans
+/// GlpiNgDbContext.EnforceWriteRights. Ils sont résolus pour l'entité active — une habilitation
+/// associe un profil à une entité — puis portés par le cookie d'authentification (voir
+/// ProfileRightsService). Un compte <see cref="GlpiUser.IsAdmin"/> n'est soumis à aucun de ces
+/// contrôles.
 /// </summary>
 public class GlpiProfile
 {

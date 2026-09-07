@@ -262,6 +262,8 @@ public class Program
             builder.Services.AddSingleton<IRootDbContextFactory, RootDbContextFactory>();
             builder.Services.AddSingleton<EntityTreeCache>();
             builder.Services.AddScoped<IEntityScopeProvider, EntityScopeProvider>();
+            builder.Services.AddScoped<IProfileRightsProvider, ProfileRightsProvider>();
+            builder.Services.AddScoped<ProfileRightsService>();
             builder.Services.AddScoped<UserEntityAccessService>();
             builder.Services.AddScoped<IDbContextFactory<GlpiNgDbContext>, EntityScopedDbContextFactory>();
 
@@ -432,6 +434,12 @@ public class Program
 
         app.UseAuthentication();
         app.UseAuthorization();
+
+        // Droits par profil : refuse l'accès direct par URL à une section que l'utilisateur n'a
+        // pas le droit de lire. Après UseAuthentication, qui lui fournit l'utilisateur. La
+        // navigation interne au circuit Blazor ne passe pas par ici — elle est gardée dans
+        // MainLayout, sur la même table de correspondance (voir ProfileSectionMap).
+        app.UseSectionAccess();
 
         // AllowAnonymous() explicite : sans lui, le FallbackPolicy (voir plus haut) exige une
         // session authentifiée même pour les fichiers statiques (CSS/JS), ce qui casserait entre
