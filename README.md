@@ -2,7 +2,7 @@
 
 Réimplémentation d'un serveur de gestion de parc informatique compatible avec le
 protocole **GLPI-Agent**, en .NET / Blazor Server. GlpiNg expose l'endpoint
-`/glpi-agent` afin que de vrais agents GLPI-Agent (contact, inventory, deploy)
+`/inventory` afin que de vrais agents GLPI-Agent (contact, inventory, deploy)
 puissent dialoguer avec lui, et fournit une UI Blazor Server pour administrer le
 parc — avec une sidebar qui reprend la structure de navigation de GLPI (Parc,
 Assistance, Gestion, Outils, Administration, Configuration).
@@ -48,7 +48,7 @@ src/
                                      #   Authentication (Ldap/Mail), Config(Sections), Notifications
                                      #   (Templates/Rules/Queue), AutomaticActions, OAuthClients,
                                      #   Logs, MyAccount, Login, Update, Home (tableau de bord)
-    Controllers/                    # AgentController (/glpi-agent), AccountController (login),
+    Controllers/                    # AgentController (/inventory), AccountController (login),
                                      #   OAuthController (/oauth2/token)
     Middleware/                     # MigrationsGateMiddleware (redirige vers /update)
     Data/                           # GlpiNgDbContext (composé à partir des modules)
@@ -190,7 +190,7 @@ des modifications et historique d'import.
 `user:enable`, `user:disable` — utile quand l'UI n'est pas accessible (base à
 initialiser, mot de passe admin perdu).
 
-### Protocole GLPI-Agent (`/glpi-agent`)
+### Protocole GLPI-Agent (`/inventory`)
 
 Endpoint POST unique dispatché sur un champ `action` :
 
@@ -201,7 +201,7 @@ Endpoint POST unique dispatché sur un champ `action` :
 - `getJobs` : renvoie le prochain job de déploiement au format JSON GLPI-Agent
   (`jobs.checks/associatedFiles/actions`, fichiers indexés par hash SHA512)
 - `setStatus` : rapport d'avancement/résultat d'un job par l'agent
-- `GET /glpi-agent/deploy/file/{sha512}` : téléchargement d'un fichier de
+- `GET /inventory/deploy/file/{sha512}` : téléchargement d'un fichier de
   package par son hash
 
 Le PROLOG XML historique (probe FusionInventory/OCS) est accepté en entrée et
@@ -210,7 +210,7 @@ compressés zlib/gzip (Content-Type ou Content-Encoding) sont décompressés
 automatiquement. Non couvert : brotli, chiffrement (`GLPI-CryptoKey-ID`), proxy
 agent (`GLPI-Proxy-ID`).
 
-Le routage (un seul POST `/glpi-agent` + champ `action`, plutôt que les
+Le routage (un seul POST `/inventory` + champ `action`, plutôt que les
 endpoints `?action=...` à base de query-string du plugin GlpiInventory) est une
 adaptation propre à ce projet, pas une reproduction certifiée du protocole
 d'origine — à valider face à un agent réel avant mise en production.
@@ -299,7 +299,7 @@ manques suivants sont connus et assumés à ce stade.
   récursivité, ni sélecteur d'entité active : les entités ne sont pour l'instant
   qu'un annuaire.
 - **Pas d'API REST générique** — rien d'équivalent à `apirest.php` (CRUD et
-  recherche par itemtype). Les seuls endpoints exposés sont `/glpi-agent`,
+  recherche par itemtype). Les seuls endpoints exposés sont `/inventory`,
   `/oauth2/token`, `/admin/import/glpi` et l'upload de fichiers de paquet.
 - **Pas de gestion documentaire** — aucune entité `Document`, donc pas de
   pièces jointes sur les fiches.

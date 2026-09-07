@@ -46,7 +46,7 @@ public class GlpiEntity
 
     // Onglet "Parc" de GLPI : le seul champ pertinent hors modules financiers/logiciels/transfert
     // (absents de GlpiNg) est l'URL de base utilisée par l'agent, directement liée au protocole
-    // /glpi-agent de ce projet.
+    // /inventory de ce projet.
     public string? AgentBaseUrl { get; set; }
 
     // Onglet "Personnalisation de l'interface" de GLPI (juste le CSS personnalisé sur l'instance

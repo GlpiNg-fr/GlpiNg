@@ -132,7 +132,7 @@ public class Program
             {
                 Title = "GlpiNg API",
                 Version = "v1",
-                Description = "Endpoints REST de GlpiNg : protocole GLPI-Agent (/glpi-agent) et import depuis une base GLPI MySQL (/admin/import/glpi, protégé par OAuth2 — voir /config/oauth-clients)."
+                Description = "Endpoints REST de GlpiNg : protocole GLPI-Agent (/inventory) et import depuis une base GLPI MySQL (/admin/import/glpi, protégé par OAuth2 — voir /config/oauth-clients)."
             });
 
             foreach (Assembly assembly in new[]
@@ -401,7 +401,7 @@ public class Program
         app.UseSetupMiddleware("GlpiNg");
 
         // Gate applicatif de migrations EF Core : tant que des migrations sont en attente,
-        // redirige toute requête navigateur (hors protocole glpi-agent) vers /update, qui
+        // redirige toute requête navigateur (hors protocole agent /inventory) vers /update, qui
         // permet à un administrateur de confirmer leur application. Placé après
         // UseSetupMiddleware pour la même raison que GlpiNgDbContext est garanti enregistré ici.
         app.UseMigrationsGate();
@@ -427,7 +427,7 @@ public class Program
             context => !context.Request.Path.StartsWithSegments("/deployment-packages"),
             branch => branch.UseAntiforgery());
 
-        // Pas de RequireAuthorization() ici : les agents GLPI (glpi-agent, voir AgentController)
+        // Pas de RequireAuthorization() ici : les agents GLPI (/inventory, voir AgentController)
         // et /Account/Login|Logout ne portent pas de cookie de session applicative.
         app.MapControllers();
 

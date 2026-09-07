@@ -34,7 +34,7 @@ namespace GlpiNg.Web.Controllers;
 /// en entrée mais toujours répondu en JSON.
 /// </summary>
 [ApiController]
-[Route("glpi-agent")]
+[Route("inventory")]
 [Produces("application/json")]
 [AllowAnonymous]
 public class AgentController(
@@ -88,7 +88,7 @@ public class AgentController(
         if (string.Equals(action, "getConfig", StringComparison.OrdinalIgnoreCase))
         {
             string expiration = await GetExpirationAsync(cancellationToken);
-            string serverUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}/glpi-agent";
+            string serverUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}/inventory";
 
             return Ok(new
             {
@@ -192,7 +192,7 @@ public class AgentController(
         if (trimmedBody.StartsWith("<?xml", StringComparison.OrdinalIgnoreCase)
             || trimmedBody.StartsWith("<REQUEST", StringComparison.OrdinalIgnoreCase))
         {
-            logger.LogInformation("glpi-agent: PROLOG XML historique reçu, réponse JSON pour basculer l'agent sur le protocole natif.");
+            logger.LogInformation("inventory: PROLOG XML historique reçu, réponse JSON pour basculer l'agent sur le protocole natif.");
             return Ok(new ProtocolAnswer { Status = "ok", Expiration = await GetExpirationAsync(cancellationToken) });
         }
 
@@ -200,7 +200,7 @@ public class AgentController(
         if (!Request.Headers.TryGetValue(AgentIdHeader, out Microsoft.Extensions.Primitives.StringValues agentIdValues)
             || string.IsNullOrWhiteSpace(agentIdValues.ToString()))
         {
-            logger.LogWarning("glpi-agent 400: missing {Header} header. Headers reçus: {Headers}",
+            logger.LogWarning("inventory 400: missing {Header} header. Headers reçus: {Headers}",
                 AgentIdHeader, string.Join(", ", Request.Headers.Select(h => h.Key)));
             return BadRequest(new ProtocolAnswer { Status = "error", Message = "missing GLPI-Agent-ID header" });
         }
@@ -218,7 +218,7 @@ public class AgentController(
         }
         catch (JsonException ex)
         {
-            logger.LogWarning(ex, "glpi-agent 400: corps non-JSON (Content-Type={ContentType}, Content-Encoding={ContentEncoding}, {Length} octets). Début du corps: {Preview}",
+            logger.LogWarning(ex, "inventory 400: corps non-JSON (Content-Type={ContentType}, Content-Encoding={ContentEncoding}, {Length} octets). Début du corps: {Preview}",
                 Request.ContentType, Request.Headers.ContentEncoding.ToString(), rawBody.Length,
                 rawBody.Length > 200 ? rawBody[..200] : rawBody);
             return BadRequest(new ProtocolAnswer { Status = "error", Message = "malformed json" });
@@ -241,7 +241,7 @@ public class AgentController(
 
             if (result is BadRequestObjectResult badRequest)
             {
-                logger.LogWarning("glpi-agent 400 sur action {Action}: {Answer}. Corps reçu: {Body}",
+                logger.LogWarning("inventory 400 sur action {Action}: {Answer}. Corps reçu: {Body}",
                     action, System.Text.Json.JsonSerializer.Serialize(badRequest.Value), rawBody);
             }
 
@@ -325,7 +325,7 @@ public class AgentController(
         }
         catch (JsonException ex)
         {
-            logger.LogWarning(ex, "glpi-agent 400 (contact): échec de désérialisation. Corps: {Body}", document.RootElement.GetRawText());
+            logger.LogWarning(ex, "inventory 400 (contact): échec de désérialisation. Corps: {Body}", document.RootElement.GetRawText());
             return BadRequest(new ProtocolAnswer { Status = "error", Message = $"malformed json: {ex.Message}" });
         }
 
@@ -430,7 +430,7 @@ public class AgentController(
         }
         catch (JsonException ex)
         {
-            logger.LogWarning(ex, "glpi-agent 400 (inventory): échec de désérialisation. Clés reçues à la racine: {Keys}",
+            logger.LogWarning(ex, "inventory 400 (inventory): échec de désérialisation. Clés reçues à la racine: {Keys}",
                 string.Join(", ", document.RootElement.EnumerateObject().Select(p => p.Name)));
             return BadRequest(new ProtocolAnswer { Status = "error", Message = $"bad-format: {ex.Message}" });
         }
@@ -449,7 +449,7 @@ public class AgentController(
 
         if (!inventorySettings.Enabled)
         {
-            logger.LogInformation("glpi-agent: inventaire désactivé dans /admin/inventory, requête ignorée pour l'agent {AgentUuid}.", agentUuid);
+            logger.LogInformation("inventory: inventaire désactivé dans /admin/inventory, requête ignorée pour l'agent {AgentUuid}.", agentUuid);
             return Ok(new ProtocolAnswer { Status = "ok", Expiration = expiration });
         }
 
@@ -491,7 +491,7 @@ public class AgentController(
         }
         catch (JsonException ex)
         {
-            logger.LogWarning(ex, "glpi-agent 400 ({Action}): échec de désérialisation. Corps: {Body}", action, document.RootElement.GetRawText());
+            logger.LogWarning(ex, "inventory 400 ({Action}): échec de désérialisation. Corps: {Body}", action, document.RootElement.GetRawText());
             return BadRequest(new ProtocolAnswer { Status = "error", Message = $"bad-format: {ex.Message}" });
         }
 
@@ -516,7 +516,7 @@ public class AgentController(
         }
 
         int newDeviceCount = await networkDeviceImport.ImportAsync(networkTaskId, request.Content, cancellationToken);
-        logger.LogInformation("glpi-agent: {Action} de l'agent {AgentUuid} — {Count} équipement(s) découvert(s)/mis à jour, {NewCount} nouveau(x).",
+        logger.LogInformation("inventory: {Action} de l'agent {AgentUuid} — {Count} équipement(s) découvert(s)/mis à jour, {NewCount} nouveau(x).",
             action, agentUuid, request.Content.Devices.Count, newDeviceCount);
 
         return Ok(new ProtocolAnswer { Status = "ok", Expiration = await GetExpirationAsync(cancellationToken) });
@@ -662,7 +662,7 @@ public class AgentController(
         }
         catch (JsonException ex)
         {
-            logger.LogWarning(ex, "glpi-agent 400 (setStatus): échec de désérialisation. Corps: {Body}", document.RootElement.GetRawText());
+            logger.LogWarning(ex, "inventory 400 (setStatus): échec de désérialisation. Corps: {Body}", document.RootElement.GetRawText());
             return BadRequest(new ProtocolAnswer { Status = "error", Message = $"malformed json: {ex.Message}" });
         }
 

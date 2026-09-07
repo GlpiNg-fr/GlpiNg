@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project
 
 GlpiNg is a reimplementation of a GLPI-Agent-compatible IT asset management server
-(.NET / Blazor Server). It exposes the `/glpi-agent` protocol so real GLPI-Agent
+(.NET / Blazor Server). It exposes the GLPI-Agent protocol at `/inventory` so real GLPI-Agent
 clients (contact, inventory, deploy) can talk to it, and provides a Blazor Server UI
 for managing the asset park. The README (in French) is the canonical project
 overview — read it for feature scope, current state, and known limitations.
@@ -43,7 +43,7 @@ a plain class library referenced only by the host — never the reverse.
   GlpiAgent), the GLPI MySQL import (`Import/GlpiMySqlImportService`), and its own
   controllers. It only depends on the base EF Core `DbContext`, never on the host's
   concrete `GlpiNgDbContext` — see the comment in `GlpiNg.Modules.Inventory.csproj`.
-- `GlpiNg.Web` — the host: Blazor UI, the `/glpi-agent` protocol controller, the
+- `GlpiNg.Web` — the host: Blazor UI, the `/inventory` protocol controller, the
   concrete `GlpiNgDbContext` (composed from module entities), auth, config, setup.
 
 **Module registration pattern**: each module exposes a single `AddXxxModule(...)`
@@ -68,13 +68,13 @@ from the dictionary is treated as enabled.
    `GlpiNgDbContext` is only registered in DI once `Setup:IsComplete == true`.
 2. `UseSetupMiddleware` — redirects everything to `/setup` until install completes.
 3. `UseMigrationsGate` (`Middleware/MigrationsGateMiddleware`) — once installed, blocks
-   all UI routes (except `/update`, `/glpi-agent`, and Blazor/static asset paths) and
+   all UI routes (except `/update`, `/inventory`, and Blazor/static asset paths) and
    redirects to `/update` while EF Core migrations are pending, so an admin can apply
    them explicitly rather than have them silently auto-applied.
 4. Auth (cookie-based, `/login`) and authorization — `MapRazorComponents` calls
    `.RequireAuthorization()` globally; anonymous pages must opt out with
    `@attribute [AllowAnonymous]` (see `Login.razor`). `AgentController`
-   (`/glpi-agent`) and `/Account/Login|Logout` are excluded from the authorization
+   (`/inventory`) and `/Account/Login|Logout` are excluded from the authorization
    requirement since GLPI-Agent clients don't carry an application session cookie.
 
 **Configuration**: `appsettings.local.json` is written by the AnthoDingo.Setup wizard
@@ -104,10 +104,10 @@ names vary across GLPI versions. See the README's "Import depuis une base GLPI
 MySQL" section for exact coverage/limits — this endpoint currently has no
 authentication guard.
 
-**Deploy protocol**: the `/glpi-agent` endpoint (`AgentController`) uses a single
+**Deploy protocol**: the `/inventory` endpoint (`AgentController`) uses a single
 POST route with an `action` field (`getJobs`, `setStatus`) rather than the
 `?action=...` query-string style of the original GlpiInventory plugin — a deliberate
 adaptation, not a certified reproduction of the wire protocol. `DeployJobJsonBuilder`
 constructs the job JSON (`jobs.checks/associatedFiles/actions`, files keyed by SHA512
-hash) served to agents; `GET /glpi-agent/deploy/file/{sha512}` serves package files
+hash) served to agents; `GET /inventory/deploy/file/{sha512}` serves package files
 by hash.
