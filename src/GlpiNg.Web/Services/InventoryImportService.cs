@@ -1,4 +1,4 @@
-using GlpiNg.Modules.Abstractions.Deployment;
+﻿using GlpiNg.Modules.Abstractions.Deployment;
 using GlpiNg.Modules.Deployment.Models;
 using GlpiNg.Modules.Deployment.Services;
 using GlpiNg.Modules.Inventory.Models;
@@ -97,14 +97,7 @@ public class InventoryImportService(
             computer = new Computer
             {
                 Name = content.Hardware?.Name ?? agent.Hostname ?? agent.DeviceId ?? "Inconnu",
-                // Un inventaire arrive hors session applicative : il n'y a pas d'entité active à
-                // reprendre (voir GlpiNgDbContext.StampActiveEntityOnNewEntries), et sans
-                // rattachement le poste resterait visible de toutes les entités. Il est donc
-                // déposé dans l'entité racine, comme l'existant repris par la migration
-                // AddEntityScoping, à charge pour un administrateur de le réaffecter.
-                // GlpiEntity.AssignmentTag existe pour automatiser ça un jour, mais n'est pas
-                // encore branché sur l'inventaire.
-                EntityId = entityTree.GetRootEntityId(),
+                EntityId = ResolveEntityId(agent, content),
             };
             db.Computers.Add(computer);
             isNew = true;
@@ -125,6 +118,17 @@ public class InventoryImportService(
             computer.AssignedUser = technician;
         }
 
+        // Rattrapage sur un poste déjà connu : un TAG posé après coup (ou une entité créée depuis)
+        // doit finir par ranger le poste au bon endroit. Uniquement s'il est encore dans l'entité
+        // racine, c'est-à-dire là où l'import le dépose faute de mieux — un rattachement décidé par
+        // un administrateur n'est jamais écrasé.
+        if (!isNew && computer.EntityId == entityTree.GetRootEntityId()
+            && ResolveEntityId(agent, content) is { } resolvedEntityId
+            && resolvedEntityId != computer.EntityId)
+        {
+            computer.EntityId = resolvedEntityId;
+        }
+
         ComputerSnapshot before = ComputerSnapshot.Capture(computer);
 
         Dictionary<DictionaryRuleType, List<DictionaryRule>> dictionaries = await LoadActiveDictionaryRulesAsync(cancellationToken);
@@ -139,6 +143,7 @@ public class InventoryImportService(
         if (settings.ImportBatteries) ApplyBatteries(computer, content);
         ApplyNetworkPorts(computer, content, blacklist);
         if (settings.ImportAntivirus) ApplyAntivirus(computer, content);
+        await ApplySimCardsAsync(computer, content, cancellationToken);
 
         // Règles métier pour les actifs (voir ComputerRuleEngine) : appliquées après tous les
         // champs ci-dessus, une fois l'ordinateur entièrement renseigné par l'inventaire.
@@ -269,6 +274,16 @@ public class InventoryImportService(
             computer.Domain = hardware.Workgroup ?? computer.Domain;
         }
 
+        // Prise en main à distance : l'agent peut en remonter plusieurs (TeamViewer et AnyDesk
+        // installés côte à côte). On garde la première entrée exploitable — le modèle n'en porte
+        // qu'une, et c'est l'information « comment joindre ce poste » qui compte, pas l'inventaire
+        // exhaustif des outils installés (les logiciels s'en chargent).
+        if (content.RemoteManagement.FirstOrDefault(remote => !string.IsNullOrWhiteSpace(remote.Id)) is { } remoteManagement)
+        {
+            computer.RemoteManagementId = remoteManagement.Id;
+            computer.RemoteManagementType = remoteManagement.Type;
+        }
+
         if (content.Bios is { } bios)
         {
             DictionaryRuleEngine.Result manufacturer = DictionaryRuleEngine.Apply(bios.SystemManufacturer, GetRules(dictionaries, DictionaryRuleType.Manufacturer));
@@ -339,6 +354,23 @@ public class InventoryImportService(
     }
 
     /// <summary>
+    /// Entité de rattachement d'un poste inventorié. Un inventaire arrive hors session applicative,
+    /// il n'y a donc pas d'entité active à reprendre (voir
+    /// <c>GlpiNgDbContext.StampActiveEntityOnNewEntries</c>), et un poste non rattaché resterait
+    /// visible de toutes les entités.
+    ///
+    /// Le TAG de l'agent est confronté au TAG d'affectation des entités (onglet « Informations
+    /// avancées » de la fiche Entité) — équivalent réduit de RuleImportEntity côté GLPI. Le TAG
+    /// remonté dans le corps de l'inventaire (section <c>accountinfo</c>) prime sur celui retenu du
+    /// dernier contact de l'agent : c'est le plus frais des deux.
+    ///
+    /// Sans correspondance, le poste va dans l'entité racine, comme l'existant repris par la
+    /// migration AddEntityScoping, à charge pour un administrateur de le réaffecter.
+    /// </summary>
+    private int? ResolveEntityId(GlpiAgent agent, InventoryContent content)
+        => entityTree.GetEntityIdByAssignmentTag(content.Tag ?? agent.Tag) ?? entityTree.GetRootEntityId();
+
+    /// <summary>
     /// Construit le contexte évalué par ImportAssignmentRuleEngine à partir des seules données
     /// brutes de la requête (avant toute résolution/création du Computer) : nom, série et domaine
     /// depuis le contenu de l'inventaire, tag depuis l'agent (renseigné par un contact préalable,
@@ -348,7 +380,7 @@ public class InventoryImportService(
         ComputerName: content.Hardware?.Name,
         SerialNumber: content.Bios?.SystemSerial,
         Domain: content.Hardware?.Workgroup,
-        Tag: agent.Tag,
+        Tag: content.Tag ?? agent.Tag,
         IpAddresses: content.Networks.Select(n => n.IpAddress).Where(ip => !string.IsNullOrWhiteSpace(ip)).ToList());
 
     // Résout (ou crée à la volée) l'Id du DropdownItem de type Location portant ce nom — même
@@ -432,6 +464,76 @@ public class InventoryImportService(
                     Serial = network.MacAddress
                 });
             }
+        }
+
+        // Cartes graphiques, contrôleurs, cartes son et modems : sections du protocole que GlpiNg
+        // ne lisait pas, alors que ComponentType.Gpu existait déjà sans jamais être alimenté. Pas
+        // de réglage dédié dans InventorySettings — ce sont des composants matériels au même titre
+        // que les précédents, et en ajouter un par section multiplierait les cases pour rien.
+        AddGenericComponents(computer, content.Videos, ComponentType.Gpu, "Carte graphique");
+        AddGenericComponents(computer, content.Controllers, ComponentType.Controller, "Contrôleur");
+        AddGenericComponents(computer, content.Sounds, ComponentType.SoundCard, "Carte son");
+        AddGenericComponents(computer, content.Modems, ComponentType.Modem, "Modem");
+    }
+
+    /// <summary>
+    /// Reprend les cartes SIM remontées par l'agent (section "simcards") dans les actifs Carte SIM.
+    ///
+    /// Corrélation par ICCID, qui est l'identifiant gravé sur la carte : une carte déplacée d'un
+    /// poste à l'autre reste le même actif. Une carte inconnue est créée dans l'entité du poste ;
+    /// une carte déjà connue voit ses seules informations réseau rafraîchies — pas son nom, son
+    /// statut ni son lieu, qui relèvent de la gestion manuelle et ne doivent pas être écrasés à
+    /// chaque inventaire.
+    ///
+    /// Les codes PIN/PUK ne sont jamais touchés : l'agent ne les remonte pas, et un champ vide ne
+    /// doit pas effacer ce qu'un administrateur a saisi.
+    /// </summary>
+    private async Task ApplySimCardsAsync(Computer computer, InventoryContent content, CancellationToken cancellationToken)
+    {
+        foreach (InventorySimCard reported in content.SimCards)
+        {
+            if (string.IsNullOrWhiteSpace(reported.Iccid))
+            {
+                continue;
+            }
+
+            string iccid = reported.Iccid.Trim();
+            SimCard? existing = await db.Set<SimCard>().FirstOrDefaultAsync(card => card.SerialNumber == iccid, cancellationToken);
+
+            if (existing is null)
+            {
+                existing = new SimCard
+                {
+                    Name = iccid,
+                    SerialNumber = iccid,
+                    EntityId = computer.EntityId,
+                };
+                db.Set<SimCard>().Add(existing);
+            }
+
+            existing.Operator = reported.OperatorName ?? existing.Operator;
+            existing.PhoneNumber = reported.PhoneNumber ?? existing.PhoneNumber;
+            existing.Country = reported.Country ?? existing.Country;
+            existing.Msin = reported.Imsi ?? existing.Msin;
+            existing.UpdatedAt = DateTime.UtcNow;
+        }
+    }
+
+    /// <summary>
+    /// Ajoute les composants d'une section à forme générique. La capacité ne vaut que pour les
+    /// cartes graphiques, seule section à remonter une mémoire.
+    /// </summary>
+    private static void AddGenericComponents(Computer computer, List<InventoryGenericDevice> devices, ComponentType type, string fallbackDesignation)
+    {
+        foreach (InventoryGenericDevice device in devices)
+        {
+            computer.Components.Add(new ComputerComponent
+            {
+                Type = type,
+                Designation = device.Designation ?? fallbackDesignation,
+                Capacity = device.Memory is { } memoryMb and > 0 ? $"{memoryMb} Mo" : null,
+                Serial = null,
+            });
         }
     }
 

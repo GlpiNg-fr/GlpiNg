@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace GlpiNg.Web.Models.Agent;
@@ -83,8 +83,10 @@ public class InventoryRequest
 
 /// <summary>
 /// Sous-ensemble du contenu d'inventaire réellement exploité par GlpiNg pour l'instant.
-/// Le schéma officiel couvre bien plus de sections (antivirus, printers, virtualmachines...)
-/// — celles-ci sont ignorées silencieusement par le (dé)sérialiseur tant qu'elles ne sont pas mappées ici.
+/// Sections volontairement non reprises, faute d'équivalent dans le modèle GlpiNg : machines
+/// virtuelles, processus, variables d'environnement, règles de pare-feu, comptes et groupes
+/// locaux, licences logicielles, journal de connexions. Elles sont ignorées silencieusement par le
+/// (dé)sérialiseur, comme toute section non mappée.
 /// </summary>
 public class InventoryContent
 {
@@ -130,8 +132,116 @@ public class InventoryContent
     [JsonPropertyName("antivirus")]
     public List<InventoryAntivirus> Antivirus { get; set; } = [];
 
+    [JsonPropertyName("controllers")]
+    public List<InventoryGenericDevice> Controllers { get; set; } = [];
+
+    [JsonPropertyName("videos")]
+    public List<InventoryGenericDevice> Videos { get; set; } = [];
+
+    [JsonPropertyName("sounds")]
+    public List<InventoryGenericDevice> Sounds { get; set; } = [];
+
+    [JsonPropertyName("modems")]
+    public List<InventoryGenericDevice> Modems { get; set; } = [];
+
+    [JsonPropertyName("simcards")]
+    public List<InventorySimCard> SimCards { get; set; } = [];
+
+    /// <summary>Outil de prise en main à distance déclaré par l'agent (TeamViewer, AnyDesk, ...).</summary>
+    [JsonPropertyName("remote_mgmt")]
+    public List<InventoryRemoteManagement> RemoteManagement { get; set; } = [];
+
+    /// <summary>Couples clé/valeur libres de l'agent. Porte le TAG, d'où l'entité de rattachement est déduite.</summary>
+    [JsonPropertyName("accountinfo")]
+    public List<InventoryAccountInfo> AccountInfo { get; set; } = [];
+
     [JsonPropertyName("versionclient")]
     public string? VersionClient { get; set; }
+
+    /// <summary>
+    /// TAG déclaré par l'agent dans le corps de l'inventaire. GLPI-Agent l'expose comme une entrée
+    /// « accountinfo » de clé TAG plutôt que comme un champ dédié.
+    /// </summary>
+    [JsonIgnore]
+    public string? Tag => AccountInfo
+        .FirstOrDefault(entry => string.Equals(entry.KeyName, "TAG", StringComparison.OrdinalIgnoreCase))?
+        .KeyValue;
+}
+
+/// <summary>Couple clé/valeur de la section "accountinfo".</summary>
+public class InventoryAccountInfo
+{
+    [JsonPropertyName("keyname")]
+    public string? KeyName { get; set; }
+
+    [JsonPropertyName("keyvalue")]
+    public string? KeyValue { get; set; }
+}
+
+/// <summary>
+/// Forme commune aux sections "controllers", "videos", "sounds" et "modems" : GLPI-Agent y remonte
+/// les mêmes champs, à quelques colonnes spécifiques près (mémoire d'une carte graphique,
+/// résolution) qui ne sont pas reprises ici — le modèle ComputerComponent n'a que désignation,
+/// capacité et numéro de série.
+/// </summary>
+public class InventoryGenericDevice
+{
+    [JsonPropertyName("name")]
+    public string? Name { get; set; }
+
+    [JsonPropertyName("caption")]
+    public string? Caption { get; set; }
+
+    [JsonPropertyName("description")]
+    public string? Description { get; set; }
+
+    [JsonPropertyName("manufacturer")]
+    public string? Manufacturer { get; set; }
+
+    [JsonPropertyName("type")]
+    public string? Type { get; set; }
+
+    /// <summary>Mémoire vidéo en Mo, renseignée seulement par la section "videos".</summary>
+    [JsonPropertyName("memory")]
+    public int? Memory { get; set; }
+
+    /// <summary>Libellé retenu pour le composant : le premier champ non vide, du plus précis au plus vague.</summary>
+    [JsonIgnore]
+    public string? Designation =>
+        new[] { Name, Caption, Description, Manufacturer }.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
+}
+
+/// <summary>Carte SIM remontée par l'agent (section "simcards").</summary>
+public class InventorySimCard
+{
+    /// <summary>Identifiant gravé sur la carte : c'est la clé de corrélation avec un actif Carte SIM existant.</summary>
+    [JsonPropertyName("iccid")]
+    public string? Iccid { get; set; }
+
+    [JsonPropertyName("imsi")]
+    public string? Imsi { get; set; }
+
+    [JsonPropertyName("operator_name")]
+    public string? OperatorName { get; set; }
+
+    [JsonPropertyName("phone_number")]
+    public string? PhoneNumber { get; set; }
+
+    [JsonPropertyName("country")]
+    public string? Country { get; set; }
+
+    [JsonPropertyName("state")]
+    public string? State { get; set; }
+}
+
+/// <summary>Outil de prise en main à distance (section "remote_mgmt").</summary>
+public class InventoryRemoteManagement
+{
+    [JsonPropertyName("id")]
+    public string? Id { get; set; }
+
+    [JsonPropertyName("type")]
+    public string? Type { get; set; }
 }
 
 public class InventoryHardware
