@@ -10,7 +10,7 @@ Assistance, Gestion, Outils, Administration, Configuration).
 ## Objectifs
 
 - Inventaire de parc (postes, composants, statuts, affectations) alimenté par de
-  vrais agents GLPI-Agent, étendu à 14 types d'actifs
+  vrais agents GLPI-Agent, étendu à 15 types d'actifs
 - Compatibilité protocole GLPI-Agent : `contact`, `inventory`, `getJobs`/`setStatus`
   (déploiement de paquets)
 - Déploiement de paquets, découverte/inventaire réseau SNMP et Wake-on-LAN,
@@ -146,7 +146,10 @@ directement par le code hôte. Un futur module Tickets suivrait le même schéma
 Fiches liste + détail pour : ordinateurs (`/parc/computer`), moniteurs,
 logiciels, matériels réseau, périphériques, imprimantes, cartouches,
 consommables, téléphones, baies, châssis, PDU, équipements passifs, câbles,
-plus une vue globale (`/parc/allassets`). Les fiches ordinateurs exposent
+cartes SIM (ICCID, ligne, PIN/PUK, opérateur), plus une vue globale
+(`/parc/allassets`). Les actifs non gérés (`/parc/unmanaged`) exposent côté parc
+les équipements remontés par la découverte réseau, avec conversion en matériel
+réseau, imprimante ou téléphone. Les fiches ordinateurs exposent
 composants, logiciels, volumes, batteries, ports réseau, antivirus, historique
 des modifications et historique d'import.
 
@@ -171,7 +174,7 @@ entités visibles, ou s'il est marqué « visible dans les sous-entités » et r
 leurs entités parentes.
 
 - 35 types d'objets portent `EntityId` / `IsRecursive` via `IEntityScoped`
-  (`GlpiNg.Modules.Abstractions/Entities`) : les 14 types d'actifs, les agents, les
+  (`GlpiNg.Modules.Abstractions/Entities`) : les 15 types d'actifs, les agents, les
   intitulés, les règles et dictionnaires, les recherches sauvegardées, l'ensemble
   des objets de déploiement et réseau, les groupes et les notifications.
 - Le filtrage n'est pas écrit page par page : `GlpiNgDbContext` pose un filtre
@@ -335,7 +338,6 @@ manques suivants sont connus et assumés à ce stade.
   clusters, domaines, applicatifs, bases de données.
 - **Outils** : réservations, rapports, base de connaissances (et, absents même
   de la sidebar : projets, rappels, flux RSS).
-- **Parc** : actifs non gérés, cartes SIM.
 - **Administration** : formulaires.
 - **Configuration** : actifs personnalisés, webhooks, niveaux de services
   (SLA/OLA), unicité des champs, collecteurs, liens externes, plugins.

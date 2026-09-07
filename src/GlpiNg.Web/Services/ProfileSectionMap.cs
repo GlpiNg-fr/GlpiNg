@@ -102,7 +102,14 @@ public static class ProfileSectionMap
 
         if (ns.StartsWith("GlpiNg.Modules.Deployment", StringComparison.Ordinal))
         {
-            return ProfileSection.Outils;
+            // L'actif non géré est un objet de parc, même si c'est la découverte réseau qui
+            // l'alimente : il est listé dans le Parc (/parc/unmanaged) et sa conversion crée un
+            // actif de parc. Le rattacher à Outils empêcherait un gestionnaire de parc de le
+            // traiter — au prix inverse qu'un utilisateur qui n'a qu'Outils ne peut plus le
+            // convertir depuis la page de supervision de la découverte.
+            return type.Name == nameof(Modules.Deployment.Models.DiscoveredNetworkDevice)
+                ? ProfileSection.Parc
+                : ProfileSection.Outils;
         }
 
         if (ns.StartsWith("GlpiNg.Modules.Inventory", StringComparison.Ordinal))
