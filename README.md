@@ -227,6 +227,10 @@ simplification assumée de la matrice très fine de GLPI.
 - Règles ordinateurs (`/admin/rules`), dictionnaires (`/admin/dictionaries`,
   `DictionaryRuleEngine`), règles d'import/affectation avec liste noire et
   journal des imports refusés (`/admin/import-rules`).
+- Recherche multi-critères sur toutes les listes du parc : critères enchaînés par
+  ET/OU, opérateurs par type de champ (texte, nombre, date), tris multiples.
+  Moteur et panneaux partagés (`Search/SearchEngine`, `Components/Search`) —
+  une liste n'a qu'à déclarer ses champs interrogeables.
 - Recherches sauvegardées (`/tools/saved-searches`) et préférences de colonnes
   par table (`TableColumnPreference`).
 
@@ -363,8 +367,10 @@ manques suivants sont connus et assumés à ce stade.
   et compilée, sans chargement à chaud ni marketplace.
 - **Moteur de règles partiel** — absents : règles d'habilitations LDAP, règles
   métier tickets, règles d'affectation d'entité, règles de localisation.
-- **Recherche** — les recherches sauvegardées existent, mais pas le moteur de
-  recherche multi-critères générique qui les alimente dans GLPI.
+- **Recherche** — le moteur multi-critères est en place sur toutes les listes du
+  parc, mais l'enregistrement/rappel d'une recherche n'est branché que sur
+  Ordinateurs et Moniteurs : `SavedSearchItemTypes` annonce les autres types,
+  sans que leur liste sache encore appliquer une recherche sauvegardée.
 
 ## À faire
 
