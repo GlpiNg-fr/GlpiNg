@@ -1,4 +1,4 @@
-using GlpiNg.Web.Data;
+﻿using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,6 +26,7 @@ public sealed class EntityTreeCache(IRootDbContextFactory dbFactory)
 
     private readonly Lock _gate = new();
     private Dictionary<int, int?>? _parentByEntityId;
+    private Dictionary<string, int>? _entityIdByAssignmentTag;
     private DateTimeOffset _loadedAt;
 
     /// <summary>Force la relecture de l'arbre au prochain accès.</summary>
@@ -34,6 +35,7 @@ public sealed class EntityTreeCache(IRootDbContextFactory dbFactory)
         lock (_gate)
         {
             _parentByEntityId = null;
+            _entityIdByAssignmentTag = null;
         }
     }
 
@@ -112,18 +114,51 @@ public sealed class EntityTreeCache(IRootDbContextFactory dbFactory)
         // au pire deux lectures identiques, ce qui est préférable à sérialiser tous les appels
         // derrière une requête base.
         using GlpiNgDbContext db = dbFactory.CreateDbContext();
-        Dictionary<int, int?> loaded = db.Entities
+        var rows = db.Entities
             .AsNoTracking()
-            .Select(e => new { e.Id, e.ParentId })
-            .ToDictionary(e => e.Id, e => e.ParentId);
+            .Select(e => new { e.Id, e.ParentId, e.AssignmentTag })
+            .ToList();
+
+        Dictionary<int, int?> loaded = rows.ToDictionary(e => e.Id, e => e.ParentId);
+
+        // Le TAG d'affectation est chargé dans la même passe : c'est la seule autre colonne dont
+        // l'import d'inventaire a besoin, et elle change au même rythme que l'arbre.
+        // Premier arrivé en cas de doublon : un TAG est censé désigner une entité et une seule,
+        // et l'écran Entités ne l'impose pas.
+        Dictionary<string, int> byTag = [];
+        foreach (var row in rows.Where(e => !string.IsNullOrWhiteSpace(e.AssignmentTag)).OrderBy(e => e.Id))
+        {
+            byTag.TryAdd(row.AssignmentTag!.Trim(), row.Id);
+        }
 
         lock (_gate)
         {
             _parentByEntityId = loaded;
+            _entityIdByAssignmentTag = new Dictionary<string, int>(byTag, StringComparer.OrdinalIgnoreCase);
             _loadedAt = now;
         }
 
         return loaded;
+    }
+
+    /// <summary>
+    /// Entité dont le TAG d'affectation (onglet « Informations avancées » de la fiche Entité)
+    /// correspond, ou <c>null</c>. C'est ce qui permet à un inventaire d'atterrir directement dans
+    /// la bonne entité — équivalent réduit de RuleImportEntity côté GLPI, qui sait en plus jouer
+    /// sur le domaine ou le sous-réseau.
+    /// </summary>
+    public int? GetEntityIdByAssignmentTag(string? tag)
+    {
+        if (string.IsNullOrWhiteSpace(tag))
+        {
+            return null;
+        }
+
+        // Force le chargement/rafraîchissement : les deux caches sont peuplés ensemble.
+        GetParents();
+
+        Dictionary<string, int>? byTag = _entityIdByAssignmentTag;
+        return byTag is not null && byTag.TryGetValue(tag.Trim(), out int entityId) ? entityId : null;
     }
 
     /// <summary>Entité racine (la première sans parent), utilisée comme entité active par défaut.</summary>

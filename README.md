@@ -188,8 +188,16 @@ leurs entités parentes.
   « voir les sous-entités ». La cible est revalidée côté serveur contre les
   habilitations de l'utilisateur.
 - Les objets créés sont rattachés automatiquement à l'entité active
-  (`GlpiNgDbContext.SaveChanges`). Les postes remontés par un agent, qui
-  arrivent hors session, vont dans l'entité racine.
+  (`GlpiNgDbContext.SaveChanges`), et le rattachement est affiché et modifiable
+  sur les fiches d'actifs (`EntityScopeFields`), dans la limite des entités
+  visibles par l'utilisateur.
+- Les postes remontés par un agent, qui arrivent hors session, sont rattachés par
+  correspondance entre le TAG de l'agent et le TAG d'affectation d'une entité
+  (`GlpiEntity.AssignmentTag`), et déposés dans l'entité racine à défaut. Un
+  poste resté dans la racine est repris automatiquement si un TAG correspond
+  plus tard ; un rattachement décidé manuellement n'est jamais écrasé.
+- Supprimer une entité encore occupée est refusé avec le détail de ce qui bloque
+  (`EntityDeletionGuard`) plutôt qu'avec une violation de clé étrangère brute.
 - Hors session applicative — protocole agent, tâches cron, import
   machine-à-machine par jeton OAuth, services singleton via
   `IRootDbContextFactory` — le cloisonnement est neutre : ces chemins voient
@@ -258,8 +266,11 @@ Endpoint POST unique dispatché sur un champ `action` :
 
 - `contact` : enregistre/rafraîchit l'agent et lui signale les jobs de
   déploiement en attente
-- `inventory` : importe le payload d'inventaire (hardware/composants/logiciels/
-  réseau) envoyé par l'agent
+- `inventory` : importe le payload d'inventaire envoyé par l'agent — matériel,
+  BIOS, système, processeurs, mémoire, disques, volumes, cartes réseau,
+  logiciels, écrans, batteries, périphériques USB, périphériques d'entrée,
+  antivirus, cartes graphiques, contrôleurs, cartes son, modems, cartes SIM,
+  prise en main à distance et TAG d'entité (`accountinfo`)
 - `getJobs` : renvoie le prochain job de déploiement au format JSON GLPI-Agent
   (`jobs.checks/associatedFiles/actions`, fichiers indexés par hash SHA512)
 - `setStatus` : rapport d'avancement/résultat d'un job par l'agent
@@ -374,16 +385,11 @@ manques suivants sont connus et assumés à ce stade.
 
 ## À faire
 
-- [ ] Champ « Entité » dans les formulaires : le rattachement est aujourd'hui
-      automatique (entité active à la création) mais n'est ni affiché ni
-      modifiable depuis les fiches — réaffecter un objet demande de passer par la
-      base
-- [ ] Supprimer une entité encore rattachée à des objets remonte une violation de
-      clé étrangère brute (`DeleteBehavior.Restrict`) au lieu d'un message clair
-- [ ] Rattachement automatique des postes inventoriés à partir du TAG d'entité
-      (`GlpiEntity.AssignmentTag`), aujourd'hui dans l'entité racine
-- [ ] Parsing exhaustif du payload `inventory` (couverture complète
-      hardware/software/réseau selon les versions d'agent)
+- [ ] Champ « Entité » sur les fiches hors parc (déploiement, notifications,
+      groupes) : seules les fiches d'actifs l'exposent
+- [ ] Sections d'inventaire encore non reprises, faute d'équivalent dans le
+      modèle : machines virtuelles, processus, variables d'environnement, règles
+      de pare-feu, comptes et groupes locaux, licences logicielles
 - [ ] Page `/self-service` (les cibles libre-service sont déjà configurables
       sur la fiche paquet)
 - [ ] Migrations EF Core dédiées pour MySQL/PostgreSQL (l'installation utilise

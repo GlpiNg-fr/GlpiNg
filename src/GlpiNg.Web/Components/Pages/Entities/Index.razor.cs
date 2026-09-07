@@ -1,5 +1,7 @@
+﻿using BlazorBootstrap;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
+using GlpiNg.Web.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +16,12 @@ public partial class Index : ComponentBase
 
     [Inject]
     private IJSRuntime JS { get; set; } = null!;
+
+    [Inject]
+    private ToastService ToastService { get; set; } = null!;
+
+    [Inject]
+    private EntityDeletionGuard DeletionGuard { get; set; } = null!;
 
     private List<GlpiEntity> _entities = [];
     private List<GlpiEntity> _filteredEntities = [];
@@ -96,6 +104,18 @@ public partial class Index : ComponentBase
         List<GlpiEntity> toDelete = await db.Entities
             .Where(entity => _selectedIds.Contains(entity.Id))
             .ToListAsync();
+
+        // Même contrôle préalable que sur la fiche : on refuse la sélection entière dès qu'une
+        // entité est encore occupée, plutôt que d'en supprimer une partie puis d'échouer au milieu
+        // sur une violation de clé étrangère.
+        foreach (GlpiEntity entity in toDelete)
+        {
+            if (await DeletionGuard.DescribeBlockersAsync(entity) is { } blockers)
+            {
+                ToastService.Notify(new ToastMessage(ToastType.Danger, blockers));
+                return;
+            }
+        }
 
         db.Entities.RemoveRange(toDelete);
         await db.SaveChangesAsync();

@@ -1,4 +1,5 @@
-using BlazorBootstrap;
+﻿using BlazorBootstrap;
+using GlpiNg.Web.Services;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
 using Microsoft.AspNetCore.Components;
@@ -34,6 +35,9 @@ public partial class Detail : ComponentBase, IAsyncDisposable
 
     [Inject]
     private ToastService ToastService { get; set; } = null!;
+
+    [Inject]
+    private EntityDeletionGuard DeletionGuard { get; set; } = null!;
 
     [CascadingParameter]
     private Task<AuthenticationState>? AuthStateTask { get; set; }
@@ -269,15 +273,19 @@ public partial class Detail : ComponentBase, IAsyncDisposable
             return;
         }
 
-        if (_entity.Children.Count > 0)
-        {
-            ToastService.Notify(new ToastMessage(ToastType.Danger, "Impossible de supprimer une entité qui a des sous-entités : détachez-les d'abord."));
-            return;
-        }
-
         if (_entityHabilitations.Count > 0)
         {
             ToastService.Notify(new ToastMessage(ToastType.Danger, "Impossible de supprimer une entité à laquelle des utilisateurs sont rattachés : détachez-les d'abord."));
+            return;
+        }
+
+        // Contrôle avant suppression plutôt qu'après échec : la FK vers Entities est en Restrict
+        // (voir GlpiNgDbContext.ApplyEntityScoping), donc sans ça le SGBD renvoie une violation de
+        // contrainte brute, qui ne dit ni combien d'objets bloquent ni lesquels. Couvre aussi les
+        // sous-entités, qui bloquaient déjà mais sans en donner le nombre.
+        if (await DeletionGuard.DescribeBlockersAsync(_entity) is { } blockers)
+        {
+            ToastService.Notify(new ToastMessage(ToastType.Danger, blockers));
             return;
         }
 

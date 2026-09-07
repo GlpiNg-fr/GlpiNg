@@ -264,6 +264,8 @@ public class Program
             builder.Services.AddScoped<IEntityScopeProvider, EntityScopeProvider>();
             builder.Services.AddScoped<IProfileRightsProvider, ProfileRightsProvider>();
             builder.Services.AddScoped<ProfileRightsService>();
+            builder.Services.AddScoped<EntityDeletionGuard>();
+            builder.Services.AddScoped<IEntityOptionsProvider, EntityOptionsProvider>();
             builder.Services.AddScoped<UserEntityAccessService>();
             builder.Services.AddScoped<IDbContextFactory<GlpiNgDbContext>, EntityScopedDbContextFactory>();
 
