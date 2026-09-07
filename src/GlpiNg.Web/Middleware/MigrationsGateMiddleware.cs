@@ -6,7 +6,7 @@ namespace GlpiNg.Web.Middleware;
 /// <summary>
 /// Bloque l'accès aux pages tant que des migrations EF Core sont en attente, en redirigeant
 /// vers /update (qui permet à un administrateur de confirmer leur application). Le protocole
-/// glpi-agent (utilisé par les postes clients) et les ressources nécessaires au fonctionnement
+/// agent /inventory (utilisé par les postes clients) et les ressources nécessaires au fonctionnement
 /// de /update lui-même (circuit Blazor, fichiers statiques) restent accessibles.
 ///
 /// Doit être branché après <c>UseSetupMiddleware</c> : tant que l'installation n'est pas
@@ -18,7 +18,7 @@ public sealed class MigrationsGateMiddleware(RequestDelegate next)
     private static readonly string[] ExemptPathPrefixes =
     [
         "/update",
-        "/glpi-agent",
+        "/inventory",
         "/_blazor",
         "/_framework",
         "/_content",
