@@ -159,7 +159,34 @@
         </header>
 
         <main class="glpi-page-body">
-            @Body
+            @* Droits par profil : pendant, côté circuit Blazor, du SectionAccessMiddleware, qui ne
+               voit passer que les entrées par l'URL. Sans ça, un lien interne mènerait quand même
+               à la page. *@
+            @* Renvoi du SectionAccessMiddleware après un accès direct refusé : sans ce message,
+               l'utilisateur se retrouverait sur le tableau de bord sans explication. *@
+            @if (DeniedSection is { } denied)
+            {
+                <div class="alert alert-warning alert-dismissible" role="alert">
+                    <i class="ti ti-lock"></i>
+                    Accès refusé à la section « @denied » : votre profil ne l'autorise pas pour l'entité active.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+                </div>
+            }
+
+            @if (!CanViewCurrentPage)
+            {
+                <div class="alert alert-warning" role="alert">
+                    <h4 class="alert-title"><i class="ti ti-lock"></i> Droits insuffisants</h4>
+                    <p class="mb-0">
+                        Votre profil ne donne pas accès à la section « @CurrentSection » pour l'entité active.
+                        Changez d'entité active depuis le bandeau, ou demandez une habilitation à un administrateur.
+                    </p>
+                </div>
+            }
+            else
+            {
+                @Body
+            }
         </main>
     </div>
 </div>

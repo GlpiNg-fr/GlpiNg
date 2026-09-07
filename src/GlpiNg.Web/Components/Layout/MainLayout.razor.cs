@@ -22,6 +22,24 @@ public partial class MainLayout : IDisposable
     [Inject]
     private IDbContextFactory<GlpiNgDbContext> DbFactory { get; set; } = null!;
 
+    [Inject]
+    private IProfileRightsProvider Rights { get; set; } = null!;
+
+    /// <summary>
+    /// Section de la page affichée, ou <c>null</c> si elle ne relève d'aucun droit. Recalculée à
+    /// chaque navigation : c'est ce qui garde la navigation interne au circuit, que le middleware
+    /// <c>SectionAccessMiddleware</c> ne voit pas passer.
+    /// </summary>
+    private ProfileSection? CurrentSection => ProfileSectionMap.ForPath("/" + Nav.ToBaseRelativePath(Nav.Uri).Split('?')[0]);
+
+    private bool CanViewCurrentPage => Rights.Current.CanRead(CurrentSection);
+
+    /// <summary>Section refusée par <c>SectionAccessMiddleware</c>, passée en query string lors du renvoi vers l'accueil.</summary>
+    private string? DeniedSection =>
+        Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(new Uri(Nav.Uri).Query).TryGetValue("denied", out var values)
+            ? values.FirstOrDefault()
+            : null;
+
     private sealed record NavItem(string Label, string? Href = null, string? Icon = null);
     private sealed record NavGroup(string Key, string Icon, string Label, List<NavItem> Items);
 
@@ -181,6 +199,14 @@ public partial class MainLayout : IDisposable
         foreach (var key in GroupOrder)
         {
             if (!modules.IsModuleEnabled(key))
+            {
+                continue;
+            }
+
+            // Droits par profil : un groupe dont l'utilisateur n'a pas au moins la lecture n'est
+            // pas affiché. Le masquer ne suffit pas à protéger la route — c'est le rôle du
+            // middleware et de CanViewCurrentPage — mais évite de proposer des liens en impasse.
+            if (!Rights.Current.CanRead(ProfileSectionMap.ForMenuGroupKey(key)))
             {
                 continue;
             }

@@ -22,6 +22,7 @@ public class AccountController(
     SettingsCacheService settingsStore,
     UserEntityAccessService entityAccess,
     EntityTreeCache entityTree,
+    ProfileRightsService profileRights,
     IRootDbContextFactory rootDbFactory,
     EventLogService eventLog) : Controller
 {
@@ -60,7 +61,12 @@ public class AccountController(
         // Cloisonnement par entité : l'entité active de la session est portée par le cookie.
         // Voir UserEntityAccessService — un administrateur reçoit à la place une revendication
         // « non cloisonné », un utilisateur sans habilitation n'en reçoit aucune et ne verra rien.
-        claims.AddRange(await entityAccess.BuildScopeClaimsAsync(user, ct));
+        (List<Claim> scopeClaims, int? activeEntityId) = await entityAccess.BuildScopeClaimsAsync(user, ct);
+        claims.AddRange(scopeClaims);
+
+        // Droits par profil, résolus pour cette entité active : un profil est habilité SUR une
+        // entité, donc les droits ne sont connus qu'une fois celle-ci choisie.
+        claims.AddRange(await profileRights.BuildRightClaimsAsync(user, activeEntityId, entityTree, ct));
 
         ClaimsIdentity identity = new(claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
@@ -125,11 +131,16 @@ public class AccountController(
         List<Claim> claims = [.. User.Claims.Where(c =>
             c.Type != UserEntityAccessService.UnrestrictedClaim
             && c.Type != UserEntityAccessService.ActiveEntityClaim
-            && c.Type != UserEntityAccessService.RecursiveClaim)];
+            && c.Type != UserEntityAccessService.RecursiveClaim
+            && !c.Type.StartsWith(ProfileRightsService.RightClaimPrefix, StringComparison.Ordinal))];
 
         claims.AddRange(user.IsAdmin
             ? [new Claim(UserEntityAccessService.UnrestrictedClaim, "1")]
             : UserEntityAccessService.BuildScopeClaims(entityId, recursive));
+
+        // Les droits sont recalculés, pas repris : ils dépendent de l'entité active, et
+        // l'utilisateur peut très bien être gestionnaire ici et simple lecteur là.
+        claims.AddRange(await profileRights.BuildRightClaimsAsync(user, entityId, entityTree, ct));
 
         ClaimsIdentity identity = new(claims, CookieAuthenticationDefaults.AuthenticationScheme);
 

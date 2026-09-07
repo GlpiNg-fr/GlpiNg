@@ -56,7 +56,7 @@ public sealed class GlpiNgSetupInitializer : ISetupInitializer
             superAdminProfile = new GlpiProfile
             {
                 Name = "Super-Admin",
-                Comment = "Accès complet à toutes les sections (droits non encore appliqués).",
+                Comment = "Accès complet à toutes les sections.",
                 ParcRight = ProfileRightLevel.Write,
                 AssistanceRight = ProfileRightLevel.Write,
                 GestionRight = ProfileRightLevel.Write,

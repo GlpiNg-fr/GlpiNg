@@ -5,6 +5,7 @@ using GlpiNg.Modules.Deployment.Models;
 using GlpiNg.Modules.Inventory.Models;
 using GlpiNg.Web.Models;
 using GlpiNg.Web.Models.Notifications;
+using GlpiNg.Web.Services;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -939,6 +940,41 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     /// l'application pour que la création soit correcte : un objet créé depuis l'entité active y
     /// est rattaché, ce qui est le comportement de GLPI.
     /// </summary>
+    /// <summary>
+    /// Droits applicables aux écritures de ce contexte. <see cref="ProfileRights.Full"/> par
+    /// défaut, comme <see cref="EntityScope"/> : un contexte obtenu autrement que par la fabrique
+    /// (protocole agent, cron, imports, <see cref="IRootDbContextFactory"/>) écrit sans contrôle.
+    /// </summary>
+    public ProfileRights ProfileRights { get; set; } = ProfileRights.Full;
+
+    /// <summary>
+    /// Refuse une écriture sur un type dont l'utilisateur n'a pas le droit en écriture. Filet de
+    /// sécurité de second rang : la protection de premier rang est le garde-fou de routes, qui
+    /// empêche d'atteindre l'écran. Il attrape ce que le garde-fou de routes ne peut pas voir —
+    /// une écriture déclenchée depuis une page d'une autre section, un composant partagé — et
+    /// couvre d'un coup les quelque 40 formulaires, dont aucun bouton n'a besoin d'être modifié.
+    ///
+    /// Lève plutôt que d'ignorer silencieusement : une écriture refusée doit se voir.
+    /// </summary>
+    private void EnforceWriteRights()
+    {
+        foreach (EntityEntry entry in ChangeTracker.Entries())
+        {
+            if (entry.State is not (EntityState.Added or EntityState.Modified or EntityState.Deleted))
+            {
+                continue;
+            }
+
+            ProfileSection? section = ProfileSectionMap.ForEntityType(entry.Entity.GetType());
+
+            if (section is not null && !ProfileRights.CanWrite(section.Value))
+            {
+                throw new UnauthorizedAccessException(
+                    $"Droits insuffisants pour modifier « {entry.Entity.GetType().Name} » : le profil n'a pas le droit d'écriture sur la section « {section} ».");
+            }
+        }
+    }
+
     private void StampActiveEntityOnNewEntries()
     {
         if (EntityScope.ActiveEntityId is not int activeEntityId)
@@ -957,12 +993,14 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
+        EnforceWriteRights();
         StampActiveEntityOnNewEntries();
         return base.SaveChanges(acceptAllChangesOnSuccess);
     }
 
     public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
     {
+        EnforceWriteRights();
         StampActiveEntityOnNewEntries();
         return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }

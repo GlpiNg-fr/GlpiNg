@@ -1,4 +1,5 @@
 using GlpiNg.Modules.Abstractions.Entities;
+using GlpiNg.Web.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace GlpiNg.Web.Data;
@@ -20,9 +21,17 @@ namespace GlpiNg.Web.Data;
 /// </summary>
 internal sealed class EntityScopedDbContextFactory(
     DbContextOptions<GlpiNgDbContext> options,
-    IEntityScopeProvider scopeProvider) : IDbContextFactory<GlpiNgDbContext>
+    IEntityScopeProvider scopeProvider,
+    IProfileRightsProvider rightsProvider) : IDbContextFactory<GlpiNgDbContext>
 {
-    public GlpiNgDbContext CreateDbContext() => new(options) { EntityScope = scopeProvider.Current };
+    // Estampille aussi les droits par profil : c'est le même besoin (une information portée par
+    // l'utilisateur, à faire parvenir à un contexte construit par une fabrique) et le même point
+    // de passage obligé. Voir GlpiNgDbContext.EnforceWriteRights.
+    public GlpiNgDbContext CreateDbContext() => new(options)
+    {
+        EntityScope = scopeProvider.Current,
+        ProfileRights = rightsProvider.Current,
+    };
 
     // Implémentation explicite : si la signature de l'interface changeait (Task/ValueTask), le
     // compilateur le signalerait ici, au lieu de laisser une surcharge muette à côté de
