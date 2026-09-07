@@ -1,4 +1,5 @@
 using AnthoDingo.Setup;
+using GlpiNg.Modules.Abstractions.Entities;
 using GlpiNg.Modules.Cron.Models;
 using GlpiNg.Modules.Deployment.Models;
 using GlpiNg.Modules.Inventory.Models;
@@ -6,9 +7,12 @@ using GlpiNg.Web.Models;
 using GlpiNg.Web.Models.Notifications;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Metadata;
 using MySqlConnector;
 using Npgsql;
 using System.Data.Common;
+using System.Reflection;
 
 namespace GlpiNg.Web.Data;
 
@@ -866,6 +870,101 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
         modelBuilder.Entity<AppSetting>()
             .Property(s => s.SectionName)
             .HasMaxLength(100);
+
+        ConfigureEntityScoping(modelBuilder);
+    }
+
+    /// <summary>
+    /// Cloisonnement par entité : pour chaque type implémentant <see cref="IEntityScoped"/>,
+    /// pose la FK optionnelle vers <see cref="GlpiEntity"/>, un index sur la colonne, et le
+    /// filtre global de visibilité.
+    ///
+    /// Fait par balayage du modèle plutôt qu'entité par entité : les 35 types concernés sont
+    /// répartis entre l'hôte et les modules Inventory/Deployment, et un type ajouté plus tard est
+    /// pris en compte du seul fait qu'il implémente l'interface — impossible d'oublier un filtre.
+    ///
+    /// <see cref="DeleteBehavior.Restrict"/> : supprimer une entité ne doit surtout pas emporter
+    /// en cascade les objets qui y sont rattachés.
+    /// </summary>
+    private void ConfigureEntityScoping(ModelBuilder modelBuilder)
+    {
+        MethodInfo apply = typeof(GlpiNgDbContext)
+            .GetMethod(nameof(ApplyEntityScoping), BindingFlags.Instance | BindingFlags.NonPublic)!;
+
+        foreach (IMutableEntityType entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            if (!typeof(IEntityScoped).IsAssignableFrom(entityType.ClrType))
+            {
+                continue;
+            }
+
+            apply.MakeGenericMethod(entityType.ClrType).Invoke(this, [modelBuilder]);
+        }
+    }
+
+    private void ApplyEntityScoping<TEntity>(ModelBuilder modelBuilder) where TEntity : class, IEntityScoped
+    {
+        modelBuilder.Entity<TEntity>()
+            .HasOne<GlpiEntity>()
+            .WithMany()
+            .HasForeignKey(e => e.EntityId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<TEntity>()
+            .HasIndex(e => e.EntityId);
+
+        // Règle de visibilité de GLPI, voir EntityScope. Le filtre lit EntityScope sur l'instance
+        // de contexte : il est donc re-paramétré à chaque requête (EF traite l'accès au membre
+        // comme une variable capturée), et c'est la fabrique de contextes qui l'a positionné —
+        // voir EntityScopedDbContextFactory. Un contexte non estampillé reste sur
+        // EntityScope.Unrestricted, ce qui neutralise le filtre : c'est le cas du protocole agent,
+        // des tâches cron et des imports.
+        modelBuilder.Entity<TEntity>().HasQueryFilter(e =>
+            EntityScope.IsUnrestricted
+            || e.EntityId == null
+            || EntityScope.VisibleEntityIds.Contains(e.EntityId.Value)
+            || (e.IsRecursive && EntityScope.AncestorEntityIds.Contains(e.EntityId.Value)));
+    }
+
+    /// <summary>
+    /// Cloisonnement applicable aux requêtes de ce contexte. <see cref="EntityScope.Unrestricted"/>
+    /// par défaut : un contexte obtenu autrement que par la fabrique cloisonnée (protocole agent,
+    /// cron, imports, services singleton via <c>IRootDbContextFactory</c>) voit tout.
+    /// </summary>
+    public EntityScope EntityScope { get; set; } = EntityScope.Unrestricted;
+
+    /// <summary>
+    /// Rattache tout nouvel objet cloisonné à l'entité active, quand le formulaire ne l'a pas fait
+    /// lui-même. Évite d'avoir à ajouter le champ « Entité » aux quelque 40 formulaires de
+    /// l'application pour que la création soit correcte : un objet créé depuis l'entité active y
+    /// est rattaché, ce qui est le comportement de GLPI.
+    /// </summary>
+    private void StampActiveEntityOnNewEntries()
+    {
+        if (EntityScope.ActiveEntityId is not int activeEntityId)
+        {
+            return;
+        }
+
+        foreach (EntityEntry entry in ChangeTracker.Entries())
+        {
+            if (entry.State == EntityState.Added && entry.Entity is IEntityScoped scoped && scoped.EntityId is null)
+            {
+                scoped.EntityId = activeEntityId;
+            }
+        }
+    }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        StampActiveEntityOnNewEntries();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        StampActiveEntityOnNewEntries();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }
 
     /// <summary>

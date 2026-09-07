@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
 using GlpiNg.Web.Services;
 using Microsoft.AspNetCore.Authentication;
@@ -19,6 +20,9 @@ namespace GlpiNg.Web.Controllers;
 public class AccountController(
     UserCredentialAuthenticator credentialAuthenticator,
     SettingsCacheService settingsStore,
+    UserEntityAccessService entityAccess,
+    EntityTreeCache entityTree,
+    IRootDbContextFactory rootDbFactory,
     EventLogService eventLog) : Controller
 {
     [HttpPost("Login")]
@@ -53,6 +57,11 @@ public class AccountController(
             new Claim(ClaimTypes.Role, user.IsAdmin ? "Admin" : "User"),
         ];
 
+        // Cloisonnement par entité : l'entité active de la session est portée par le cookie.
+        // Voir UserEntityAccessService — un administrateur reçoit à la place une revendication
+        // « non cloisonné », un utilisateur sans habilitation n'en reçoit aucune et ne verra rien.
+        claims.AddRange(await entityAccess.BuildScopeClaimsAsync(user, ct));
+
         ClaimsIdentity identity = new(claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
         AuthenticationProperties authProperties = new() { IsPersistent = rememberMe };
@@ -66,6 +75,70 @@ public class AccountController(
         }
 
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity), authProperties);
+
+        return LocalRedirect(!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl) ? returnUrl : "/");
+    }
+
+    /// <summary>
+    /// Change l'entité active de la session, à la façon du sélecteur d'entité de GLPI. Passe par
+    /// un POST de formulaire classique et non par le circuit Blazor, pour la même raison que
+    /// <see cref="Login"/> : réémettre le cookie exige un HttpContext dont les en-têtes ne sont
+    /// pas encore partis. La page est ensuite rechargée, ce qui reconstruit le circuit avec le
+    /// nouveau cloisonnement.
+    /// </summary>
+    [HttpPost("SwitchEntity")]
+    [ValidateAntiForgeryToken]
+    [Authorize]
+    public async Task<IActionResult> SwitchEntity(
+        [FromForm] int entityId,
+        [FromForm] bool recursive,
+        [FromForm] string? returnUrl,
+        CancellationToken ct)
+    {
+        if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
+        {
+            return Redirect("/login");
+        }
+
+        await using GlpiNgDbContext db = await rootDbFactory.CreateDbContextAsync(ct);
+        GlpiUser? user = await db.Users.FindAsync([userId], ct);
+
+        if (user is null)
+        {
+            return Redirect("/login");
+        }
+
+        // L'entité vient d'un formulaire : elle doit être revalidée contre les habilitations,
+        // sinon n'importe qui pourrait s'octroyer la visibilité d'une autre entité en rejouant
+        // le POST.
+        if (!await entityAccess.CanActivateAsync(user, entityId, entityTree, ct))
+        {
+            await eventLog.LogAsync("login", EventLogLevel.Warning,
+                $"Tentative d'activation d'une entité non habilitée (entité {entityId}).",
+                itemType: nameof(GlpiUser), itemId: user.Id, itemLabel: user.DisplayName ?? user.UserName, cancellationToken: ct);
+
+            return LocalRedirect(!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl) ? returnUrl : "/");
+        }
+
+        // Identité reconstruite à partir de l'actuelle, revendications de cloisonnement mises à
+        // jour : on ne repasse pas par l'authentification, l'utilisateur est déjà connecté.
+        List<Claim> claims = [.. User.Claims.Where(c =>
+            c.Type != UserEntityAccessService.UnrestrictedClaim
+            && c.Type != UserEntityAccessService.ActiveEntityClaim
+            && c.Type != UserEntityAccessService.RecursiveClaim)];
+
+        claims.AddRange(user.IsAdmin
+            ? [new Claim(UserEntityAccessService.UnrestrictedClaim, "1")]
+            : UserEntityAccessService.BuildScopeClaims(entityId, recursive));
+
+        ClaimsIdentity identity = new(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+        // Conserve la persistance et l'échéance du cookie courant : basculer d'entité ne doit pas
+        // transformer un "Se souvenir de moi" en session éphémère.
+        AuthenticationProperties properties = (await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme))
+            .Properties ?? new AuthenticationProperties();
+
+        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity), properties);
 
         return LocalRedirect(!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl) ? returnUrl : "/");
     }

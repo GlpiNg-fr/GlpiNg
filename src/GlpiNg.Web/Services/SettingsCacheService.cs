@@ -19,7 +19,7 @@ namespace GlpiNg.Web.Services;
 /// <see cref="ServerSettings"/> (adresses d'écoute Kestrel + activation de Swagger), qui
 /// reste dans appsettings.json — voir le commentaire de tête de AppSettingsFileStore.
 /// </summary>
-public sealed class SettingsCacheService(IDbContextFactory<GlpiNgDbContext> dbFactory, IConfiguration configuration)
+public sealed class SettingsCacheService(IRootDbContextFactory dbFactory, IConfiguration configuration)
 {
     private readonly ConcurrentDictionary<string, JsonNode> _cache = new();
     private readonly SemaphoreSlim _loadLock = new(1, 1);

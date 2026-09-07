@@ -24,7 +24,7 @@ public sealed record LdapConnectionTestResult(bool Success, string Message);
 /// LDAP.
 /// </summary>
 public class LdapAuthenticationService(
-    IDbContextFactory<GlpiNgDbContext> dbFactory,
+    IRootDbContextFactory dbFactory,
     AuthSecretProtector protector,
     ILogger<LdapAuthenticationService> logger)
 {

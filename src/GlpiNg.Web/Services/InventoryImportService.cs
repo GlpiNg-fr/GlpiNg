@@ -21,6 +21,7 @@ public class InventoryImportService(
     SettingsCacheService settingsStore,
     NotificationDispatchService notificationDispatch,
     IComputerDeploymentAssignmentService deploymentAssignmentService,
+    EntityTreeCache entityTree,
     IHttpContextAccessor httpContextAccessor)
 {
     private const string HistoryUser = "inventory";
@@ -93,7 +94,18 @@ public class InventoryImportService(
         }
         else
         {
-            computer = new Computer { Name = content.Hardware?.Name ?? agent.Hostname ?? agent.DeviceId ?? "Inconnu" };
+            computer = new Computer
+            {
+                Name = content.Hardware?.Name ?? agent.Hostname ?? agent.DeviceId ?? "Inconnu",
+                // Un inventaire arrive hors session applicative : il n'y a pas d'entité active à
+                // reprendre (voir GlpiNgDbContext.StampActiveEntityOnNewEntries), et sans
+                // rattachement le poste resterait visible de toutes les entités. Il est donc
+                // déposé dans l'entité racine, comme l'existant repris par la migration
+                // AddEntityScoping, à charge pour un administrateur de le réaffecter.
+                // GlpiEntity.AssignmentTag existe pour automatiser ça un jour, mais n'est pas
+                // encore branché sur l'inventaire.
+                EntityId = entityTree.GetRootEntityId(),
+            };
             db.Computers.Add(computer);
             isNew = true;
 

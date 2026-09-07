@@ -1,3 +1,5 @@
+using GlpiNg.Modules.Abstractions.Entities;
+
 namespace GlpiNg.Web.Models.Notifications;
 
 /// <summary>
@@ -9,8 +11,14 @@ namespace GlpiNg.Web.Models.Notifications;
 /// d'infrastructure de polling/push côté client), donc ce mode n'est volontairement pas exposé
 /// plutôt que d'offrir une option qui ne ferait jamais rien.
 /// </summary>
-public class Notification
+public class Notification : IEntityScoped
 {
+    /// <inheritdoc />
+    public int? EntityId { get; set; }
+
+    /// <inheritdoc />
+    public bool IsRecursive { get; set; }
+
     public int Id { get; set; }
     public required string Name { get; set; }
     public string? Comment { get; set; }
