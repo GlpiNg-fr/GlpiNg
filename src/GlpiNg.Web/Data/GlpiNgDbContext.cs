@@ -1,4 +1,4 @@
-using AnthoDingo.Setup;
+﻿using AnthoDingo.Setup;
 using GlpiNg.Modules.Abstractions.Entities;
 using GlpiNg.Modules.Cron.Models;
 using GlpiNg.Modules.Deployment.Models;
@@ -61,6 +61,9 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<ConsumableItem> ConsumableItems => Set<ConsumableItem>();
     public DbSet<Consumable> Consumables => Set<Consumable>();
     public DbSet<ConsumableItemHistoryEntry> ConsumableItemHistoryEntries => Set<ConsumableItemHistoryEntry>();
+
+    public DbSet<SimCard> SimCards => Set<SimCard>();
+    public DbSet<SimCardHistoryEntry> SimCardHistoryEntries => Set<SimCardHistoryEntry>();
 
     public DbSet<Cable> Cables => Set<Cable>();
     public DbSet<CableHistoryEntry> CableHistoryEntries => Set<CableHistoryEntry>();
@@ -769,6 +772,8 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
 
         modelBuilder.Entity<PassiveEquipment>().HasOne(e => e.StatusItem).WithMany().HasForeignKey(e => e.StatusId).OnDelete(DeleteBehavior.SetNull);
         modelBuilder.Entity<PassiveEquipment>().HasOne(e => e.LocationItem).WithMany().HasForeignKey(e => e.LocationId).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<SimCard>().HasOne(e => e.StatusItem).WithMany().HasForeignKey(e => e.StatusId).OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<SimCard>().HasOne(e => e.LocationItem).WithMany().HasForeignKey(e => e.LocationId).OnDelete(DeleteBehavior.Restrict);
 
         // Cartouches (CartridgeItem = modèle, Cartridge = exemplaire individuel suivi en stock,
         // voir leur doc dans Models/CartridgeItem.cs) : Cascade pour Cartridges/HistoryEntries
