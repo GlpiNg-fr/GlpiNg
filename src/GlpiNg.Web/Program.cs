@@ -24,6 +24,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -439,7 +440,29 @@ public class Program
             .AddAdditionalAssemblies(
                 typeof(InventoryModuleServiceCollectionExtensions).Assembly,
                 typeof(DeploymentModuleServiceCollectionExtensions).Assembly)
-            .RequireAuthorization();
+            .RequireAuthorization()
+            // Les conventions posées ici (RequireAuthorization ci-dessus) ne s'appliquent pas
+            // qu'aux pages : elles retombent aussi sur les endpoints du hub SignalR (/_blazor,
+            // /_blazor/negotiate, ...) montés par AddInteractiveServerRenderMode. Sans ce
+            // rattrapage, /_blazor/negotiate répond 401 à un visiteur non authentifié, le circuit
+            // interactif ne s'ouvre jamais, et une page [AllowAnonymous] interactive reste figée
+            // sur son rendu serveur — ses @onclick ne sont jamais câblés. C'est ce qui rendait le
+            // bouton « Confirmer la mise à niveau » de /update sans effet : cette page est
+            // justement atteinte avant toute connexion possible (UseMigrationsGate redirige aussi
+            // /login vers /update). Retirer RequireAuthorization ne suffirait pas : le
+            // FallbackPolicy (voir plus haut) provoquerait le même 401 sur un endpoint dépourvu
+            // de métadonnée d'autorisation.
+            // Ouvrir le hub aux anonymes ne rend aucune page accessible : dans le circuit,
+            // l'autorisation est assurée par AuthorizeRouteView (voir Routes.razor) adossé au
+            // FallbackPolicy — c'est le modèle de sécurité normal d'une Blazor Web App interactive.
+            .Add(endpointBuilder =>
+            {
+                if (endpointBuilder is RouteEndpointBuilder route
+                    && route.RoutePattern.RawText?.StartsWith("/_blazor", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    endpointBuilder.Metadata.Add(new AllowAnonymousAttribute());
+                }
+            });
 
         app.Run();
     }
