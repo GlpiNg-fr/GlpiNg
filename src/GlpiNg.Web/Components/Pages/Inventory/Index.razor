@@ -1,4 +1,4 @@
-@page "/admin/inventory"
+﻿@page "/admin/inventory"
 @using GlpiNg.Web.Models
 @using GlpiNg.Web.Services
 @using GlpiNg.Web.Services.Notifications
@@ -49,6 +49,25 @@ else
                         <label for="inv-entity">Entité par défaut</label>
                         <input id="inv-entity" type="text" @bind="_model.DefaultEntity" />
                     </div>
+
+                    @* Choisi dans la liste des intitulés plutôt que saisi : l'import rapproche la
+                       valeur d'un intitulé par son nom exact. Une saisie libre aurait fait créer un
+                       statut parasite à la première faute de frappe. *@
+                    <div class="glpi-config-field">
+                        <label for="inv-default-status">Statut par défaut d'un poste créé par un inventaire</label>
+                        <select id="inv-default-status" @bind="_model.DefaultComputerStatus">
+                            <option value="">— aucun statut —</option>
+                            @foreach (string status in _statusOptions)
+                            {
+                                <option value="@status">@status</option>
+                            }
+                        </select>
+                    </div>
+                    <p class="hint">
+                        Appliqué à la <strong>création</strong> du poste uniquement. Les inventaires
+                        suivants ne touchent plus à son statut : celui qu'un administrateur ou une règle
+                        aura posé depuis est conservé.
+                    </p>
 
                     <div class="glpi-fiche-block-title mt-3"><i class="ti ti-download"></i>Options d'importation</div>
 

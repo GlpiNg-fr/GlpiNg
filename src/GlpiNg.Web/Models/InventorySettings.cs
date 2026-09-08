@@ -1,4 +1,4 @@
-namespace GlpiNg.Web.Models;
+﻿namespace GlpiNg.Web.Models;
 
 /// <summary>
 /// Onglet "Administration &gt; Inventaire" (voir <c>Inventory/Index.razor</c>), calqué sur
@@ -11,6 +11,16 @@ public class InventorySettings
 {
     /// <summary>Coupe la prise en compte des inventaires envoyés par les agents (voir AgentController.HandleInventoryAsync).</summary>
     public bool Enabled { get; set; } = true;
+
+    /// <summary>
+    /// Statut affecté à un ordinateur créé par un premier inventaire, désigné par le nom de
+    /// l'intitulé (voir DropdownType.Status). Appliqué à la seule création : les inventaires
+    /// suivants ne touchent plus au statut, pour ne pas écraser celui qu'un administrateur ou une
+    /// règle aurait posé depuis.
+    ///
+    /// Vide : le poste est créé sans statut.
+    /// </summary>
+    public string? DefaultComputerStatus { get; set; } = "En production";
 
     public bool ImportVolumes { get; set; } = true;
     public bool ImportNetworkDrives { get; set; } = true;

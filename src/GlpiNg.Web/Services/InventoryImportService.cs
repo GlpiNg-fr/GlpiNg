@@ -166,16 +166,26 @@ public class InventoryImportService(
             }
         }
 
+        // Statut par défaut : à la création seulement, et avant les règles pour qu'une règle « à
+        // l'ajout » puisse le remplacer. Il était jusqu'ici affecté en dur à chaque inventaire,
+        // après les règles : un poste passé manuellement en maintenance repassait « En
+        // production » à sa remontée suivante, et une règle sur le statut était systématiquement
+        // écrasée.
+        if (isNew && settings.DefaultComputerStatus is { Length: > 0 } defaultStatusName)
+        {
+            computer.StatusId = await ResolveStatusIdAsync(defaultStatusName, cancellationToken);
+        }
+
         ComputerRuleEngine.Apply(computer, isNew, computerRules,
             statusName => ruleStatusIds.TryGetValue(statusName, out int id) ? id : null);
 
-        string? beforeStatusLabel = before.StatusId is { } beforeStatusId
-            ? await db.DropdownItems.AsNoTracking().Where(i => i.Id == beforeStatusId).Select(i => i.Name).FirstOrDefaultAsync(cancellationToken)
-            : null;
-
         computer.LastInventoryAt = DateTime.UtcNow;
-        const string afterStatusLabel = "En production";
-        computer.StatusId = await ResolveStatusIdAsync(afterStatusLabel, cancellationToken);
+
+        // Libellés lus après coup, depuis les identifiants réellement retenus : le statut final
+        // peut venir du défaut, d'une règle, ou d'aucun des deux. Une constante ne pouvait le
+        // décrire fidèlement.
+        string? beforeStatusLabel = await ResolveStatusLabelAsync(before.StatusId, cancellationToken);
+        string? afterStatusLabel = await ResolveStatusLabelAsync(computer.StatusId, cancellationToken);
 
         computer.ImportHistories.Add(new ComputerImportHistory
         {
@@ -682,6 +692,12 @@ public class InventoryImportService(
             if (peripheral.Id > 0) seenIds.Add(peripheral.Id);
         }
     }
+
+    /// <summary>Nom de l'intitulé de statut, pour l'historique. Ne crée rien, contrairement à ResolveStatusIdAsync.</summary>
+    private async Task<string?> ResolveStatusLabelAsync(int? statusId, CancellationToken cancellationToken)
+        => statusId is { } id
+            ? await db.DropdownItems.AsNoTracking().Where(i => i.Id == id).Select(i => i.Name).FirstOrDefaultAsync(cancellationToken)
+            : null;
 
     // Résout (ou crée à la volée) l'Id du DropdownItem de type Status portant ce nom — voir
     // Models/DropdownItem.cs. Utilisé pour tous les statuts assignés automatiquement par cet
