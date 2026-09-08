@@ -322,8 +322,18 @@ son état et le volume de ce qu'il contient (paquets de déploiement, tâches,
 agents, plages IP, identifiants SNMP, actifs non gérés). Croisement de
 `glpi_plugins` — qui donne nom et version mais survit à une désinstallation — et
 de la présence réelle des tables, découvertes par préfixe plutôt que listées en
-dur, leurs noms ayant changé d'une version à l'autre. Ces données ne sont pas
-reprises par l'import : GlpiNg réimplémente ce domaine en propre.
+dur, leurs noms ayant changé d'une version à l'autre.
+
+L'administrateur choisit ensuite ce qu'il souhaite reprendre parmi les plages IP,
+les identifiants SNMP, les paquets de déploiement et les actifs non gérés. Rien
+n'est coché par défaut : ces données doublonnent un domaine que GlpiNg gère en
+propre, donc la reprise se demande explicitement. Idempotent par `SourceGlpiId`,
+sauf les actifs non gérés, corrélés par adresse MAC puis IP comme le fait la
+découverte réseau. Non repris : les tâches du plugin, et ses agents — déjà
+couverts par la catégorie « Agents » (`glpi_agents`, table du cœur de GLPI).
+Deux limites signalées à l'exécution : un paquet n'est repris que par son nom et
+son commentaire (ses actions et fichiers vivent hors de la base GLPI), et les
+protocoles SNMPv3 restent à « Aucun » plutôt que d'être devinés.
 
 **Non couvert / limites connues** :
 - Un seul compte utilisateur MySQL en lecture seule est supposé ; aucune

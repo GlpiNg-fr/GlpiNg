@@ -348,6 +348,10 @@ public class Program
             // GlpiProfile/GlpiUser — même principe qu'ICurrentUserDeploymentContextProvider plus bas.
             builder.Services.AddScoped<IGlpiAdminImportService, GlpiAdminMySqlImportService>();
 
+            // Pendant du précédent pour le domaine réseau/déploiement : reprend les données du
+            // plugin GLPI Inventory détecté sur la base source (voir GlpiInventoryPluginInfo).
+            builder.Services.AddScoped<IGlpiInventoryPluginImportService, GlpiInventoryPluginImportService>();
+
             // Alimente les sélecteurs de cibles (Entité/Groupe/Profil/Utilisateur) de l'onglet
             // "Cibles pour le déploiement à la demande" de la fiche Paquet (module Deployment)
             // sans que celui-ci dépende de ces types (GlpiNg.Web.Models, domaine utilisateurs/
