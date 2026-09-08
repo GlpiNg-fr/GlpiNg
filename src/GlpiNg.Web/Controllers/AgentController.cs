@@ -1,4 +1,4 @@
-using System.IO.Compression;
+﻿using System.IO.Compression;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -449,8 +449,35 @@ public class AgentController(
 
         if (!inventorySettings.Enabled)
         {
-            logger.LogInformation("inventory: inventaire désactivé dans /admin/inventory, requête ignorée pour l'agent {AgentUuid}.", agentUuid);
+            // Warning et non Information : de l'extérieur, un inventaire ignoré est indiscernable
+            // d'un inventaire traité (l'agent reçoit "ok" dans les deux cas, pour ne pas boucler).
+            // Sans trace visible dans les Journaux, un réglage laissé à "désactivé" se diagnostique
+            // très mal — c'est exactement le symptôme "l'agent remonte mais aucun ordinateur
+            // n'apparaît".
+            logger.LogWarning("inventory: inventaire DÉSACTIVÉ dans /admin/inventory — requête ignorée pour l'agent {AgentUuid}, aucun ordinateur créé.", agentUuid);
+            await eventLog.LogAsync("inventory", EventLogLevel.Warning,
+                "Inventaire reçu mais ignoré : la prise en compte des inventaires est désactivée (Administration > Inventaire).",
+                itemLabel: agentUuid, cancellationToken: cancellationToken);
+
             return Ok(new ProtocolAnswer { Status = "ok", Expiration = expiration });
+        }
+
+        // Le protocole agent est volontairement exempté du gate de migrations (voir
+        // MigrationsGateMiddleware) pour qu'un parc ne cesse pas de remonter pendant qu'un
+        // administrateur applique une mise à jour. La contrepartie est que l'agent écrit alors
+        // contre un schéma qui ne correspond plus au modèle : l'échec se produit au fond d'EF, sur
+        // une colonne inconnue, et se lit très mal. On le dit clairement ici.
+        if (await db.Database.GetPendingMigrationsAsync(cancellationToken) is { } pending && pending.Any())
+        {
+            logger.LogError(
+                "inventory: {Count} migration(s) en attente ({Migrations}) — inventaire de l'agent {AgentUuid} non traité. Appliquez-les depuis /update.",
+                pending.Count(), string.Join(", ", pending), agentUuid);
+
+            await eventLog.LogAsync("inventory", EventLogLevel.Error,
+                $"Inventaire non traité : {pending.Count()} migration(s) de base de données en attente. Appliquez-les depuis /update.",
+                itemLabel: agentUuid, cancellationToken: cancellationToken);
+
+            return StatusCode(503, new ProtocolAnswer { Status = "error", Message = "server database upgrade pending" });
         }
 
         GlpiAgent? agent = await db.Agents.FirstOrDefaultAsync(a => a.AgentUuid == agentUuid, cancellationToken);
@@ -464,7 +491,45 @@ public class AgentController(
 
         UpdateAgentRequestMetadata(agent);
 
-        await inventoryImport.ImportAsync(agent, inventoryRequest.Content, cancellationToken);
+        // Le contact de l'agent est enregistré avant l'import, et non plus par le SaveChanges de
+        // celui-ci : les deux ne doivent pas être solidaires. Un import qui échoue faisait perdre
+        // la trace du contact, et donnait l'illusion inverse — un agent à jour (par un "contact"
+        // précédent) et un ordinateur jamais créé, sans rien pour relier les deux.
+        await db.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            Computer? computer = await inventoryImport.ImportAsync(agent, inventoryRequest.Content, cancellationToken);
+
+            if (computer is null)
+            {
+                // ImportAsync ne rend null que sur refus par une règle d'affectation à l'import.
+                // Le refus est déjà tracé dans RefusedImportLog (/admin/import-rules/refused),
+                // mais rien ne le signalait côté journal applicatif.
+                logger.LogWarning("inventory: inventaire de l'agent {AgentUuid} REFUSÉ par une règle d'affectation à l'import — aucun ordinateur créé.", agentUuid);
+                await eventLog.LogAsync("inventory", EventLogLevel.Warning,
+                    "Inventaire refusé par une règle d'affectation à l'import : voir Administration > Règles d'import > Imports refusés.",
+                    itemLabel: agent.DeviceId ?? agentUuid, cancellationToken: cancellationToken);
+            }
+            else
+            {
+                logger.LogInformation("inventory: agent {AgentUuid} — ordinateur « {Computer} » (#{ComputerId}) importé.",
+                    agentUuid, computer.Name, computer.Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Sans ce bloc, l'échec remontait en 500 nu : l'agent réessayait indéfiniment et rien
+            // n'indiquait quel agent ni quelle étape avait échoué. On trace, puis on répond une
+            // erreur explicite — le contact de l'agent, lui, est déjà enregistré.
+            logger.LogError(ex, "inventory: échec de l'import de l'inventaire de l'agent {AgentUuid} ({Device}).",
+                agentUuid, agent.DeviceId ?? agent.Hostname);
+            await eventLog.LogAsync("inventory", EventLogLevel.Error,
+                $"Échec de l'import de l'inventaire : {ex.Message}",
+                itemLabel: agent.DeviceId ?? agentUuid, cancellationToken: cancellationToken);
+
+            return StatusCode(500, new ProtocolAnswer { Status = "error", Message = $"inventory import failed: {ex.Message}" });
+        }
 
         return Ok(new ProtocolAnswer { Status = "ok", Expiration = expiration });
     }
