@@ -699,11 +699,21 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
             .HasForeignKey(a => a.ImportAssignmentRuleId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Une même valeur (ex. "Dell") ne doit apparaître qu'une fois par catégorie d'Intitulé —
-        // c'est aussi ce qu'impose l'upsert "création à la volée" de Computers/Detail.razor.cs
-        // (SaveComputerFieldsAsync) quand une valeur saisie n'existe pas encore dans la liste.
+        // Unicité d'une valeur d'Intitulé, dans son type, son entité et sous son parent.
+        //
+        // Le parent en fait partie parce que les Lieux sont hiérarchisés (Site > Bâtiment > Salle) :
+        // « Bureau » doit pouvoir exister sous deux bâtiments différents, comme dans GLPI, dont la
+        // clé d'unicité est (entities_id, locations_id, name). Un index sur (Type, Name) seul
+        // l'interdisait.
+        //
+        // L'entité en fait partie pour la même raison depuis le cloisonnement : deux entités
+        // tiennent chacune leur propre référentiel d'intitulés.
+        //
+        // Les types plats (Fabricant, Statut...) n'ont jamais de parent : pour eux, la contrainte
+        // reste équivalente à (Type, Name) au sein d'une entité, ce dont dépend l'upsert « création
+        // à la volée » de Computers/Detail.razor.cs (SaveComputerFieldsAsync).
         modelBuilder.Entity<DropdownItem>()
-            .HasIndex(i => new { i.Type, i.Name })
+            .HasIndex(i => new { i.Type, i.EntityId, i.ParentId, i.Name })
             .IsUnique();
 
         // Restrict comme GlpiGroup.Parent plus bas : FK auto-référencée, donc pas de Cascade (non
