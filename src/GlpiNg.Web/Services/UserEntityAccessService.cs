@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
 using Microsoft.EntityFrameworkCore;
@@ -42,13 +42,22 @@ public sealed class UserEntityAccessService(IRootDbContextFactory dbFactory)
     {
         await using GlpiNgDbContext db = dbFactory.CreateDbContext();
 
-        return await db.UserProfiles
+        // Distinct porte sur une projection de valeurs simples, puis le tri et la construction du
+        // record se font en mémoire. Un Distinct suivi d'un OrderBy sur un type projeté n'est pas
+        // traduisible par EF, et faisait échouer toute connexion d'un compte non administrateur —
+        // les administrateurs court-circuitent cet appel (voir BuildScopeClaimsAsync).
+        var rows = await db.UserProfiles
             .AsNoTracking()
             .Where(h => h.UserId == userId)
-            .Select(h => new EntityHabilitation(h.EntityId, h.Entity.Name, h.IsRecursive))
+            .Select(h => new { h.EntityId, EntityName = h.Entity.Name, h.IsRecursive })
             .Distinct()
-            .OrderBy(h => h.Name)
             .ToListAsync(ct);
+
+        // Tri en mémoire, et sensible à la culture : ce sont des noms d'entités affichés tels quels
+        // dans le sélecteur.
+        return [.. rows
+            .Select(row => new EntityHabilitation(row.EntityId, row.EntityName, row.IsRecursive))
+            .OrderBy(habilitation => habilitation.Name, StringComparer.CurrentCultureIgnoreCase)];
     }
 
     /// <summary>
@@ -107,10 +116,6 @@ public sealed class UserEntityAccessService(IRootDbContextFactory dbFactory)
     }
 
     /// <summary>
-    /// Entités que l'utilisateur peut activer : ses habilitations, plus les sous-entités de
-    /// celles qui sont récursives. C'est ce que liste le sélecteur d'entité.
-    /// </summary>
-    /// <summary>
     /// Surcharge par identifiant, pour les composants qui n'ont que la revendication
     /// <see cref="ClaimTypes.NameIdentifier"/> sous la main.
     /// </summary>
@@ -122,6 +127,10 @@ public sealed class UserEntityAccessService(IRootDbContextFactory dbFactory)
         return user is null ? [] : await GetActivatableAsync(user, tree, ct);
     }
 
+    /// <summary>
+    /// Entités que l'utilisateur peut activer : ses habilitations, plus les sous-entités de
+    /// celles qui sont récursives. C'est ce que liste le sélecteur d'entité.
+    /// </summary>
     public async Task<List<EntityHabilitation>> GetActivatableAsync(GlpiUser user, EntityTreeCache tree, CancellationToken ct = default)
     {
         Dictionary<int, string> names = await tree.GetNamesAsync(ct);
