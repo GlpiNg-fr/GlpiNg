@@ -99,7 +99,7 @@ public class LdapAuthenticationService(
 
             if (failureReason is not null)
             {
-                logger.LogInformation("Bind LDAP échoué sur {Server} pour {User} : {Reason}", server.Name, userName, failureReason);
+                logger.LogWarning("Bind LDAP échoué sur « {Server} » pour « {User} » : {Reason}", server.Name, userName, failureReason);
             }
         }
 
@@ -233,7 +233,13 @@ public class LdapAuthenticationService(
 
             if (searchResponse.Entries.Count == 0)
             {
-                return LdapBindOutcome.Failed("aucune entrée LDAP correspondante");
+                // Le filtre est reproduit dans le message : c'est la seule facon de voir d'un coup
+                // d'oeil que le champ d'identifiant ne correspond pas a ce que l'utilisateur saisit
+                // — typiquement "uid" (defaut du modele) la ou Active Directory attend
+                // "sAMAccountName", ou un identifiant saisi sous forme d'UPN.
+                return LdapBindOutcome.Failed(
+                    $"aucune entrée ne correspond au filtre {filter} sous {server.BaseDn} "
+                    + $"(champ d'identifiant : « {server.LoginField} »)");
             }
 
             SearchResultEntry entry = searchResponse.Entries[0];
@@ -242,7 +248,17 @@ public class LdapAuthenticationService(
             // Le bind d'authentification utilise le DN trouvé : c'est le serveur LDAP qui valide le
             // mot de passe, jamais GlpiNg.
             using LdapConnection authConnection = CreateConnection(server);
-            authConnection.Bind(new NetworkCredential(userDn, password));
+
+            try
+            {
+                authConnection.Bind(new NetworkCredential(userDn, password));
+            }
+            catch (LdapException ex)
+            {
+                // Etape distincte de la recherche : l'entree a bien ete trouvee, c'est le mot de
+                // passe qui est refuse. Sans cette distinction, les deux echecs se ressemblent.
+                return LdapBindOutcome.Failed($"entrée trouvée ({userDn}), mais le mot de passe a été refusé : {ex.Message}");
+            }
 
             Dictionary<string, string> attributes = ReadAttributes(entry);
             IReadOnlyList<string> groups = server.SynchronizeGroups

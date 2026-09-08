@@ -95,7 +95,7 @@ public class UserCredentialAuthenticator(
         LdapAuthResult result = await ldapAuth.TryAuthenticateAsync(userName, password, preferredServerId, ct);
         if (!result.Success || result.Server is null)
         {
-            logger.LogInformation("Aucun annuaire LDAP n'a authentifie « {User} ». Detail par annuaire ci-dessus ; si rien n'apparait, aucun annuaire actif ne correspondait.", userName);
+            logger.LogWarning("Aucun annuaire LDAP n'a authentifié « {User} ». La ligne « Bind LDAP échoué » qui précède en donne la raison ; si aucune n'apparaît, aucun annuaire actif n'a été essayé.", userName);
             return (false, existingUser);
         }
 
