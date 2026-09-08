@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -24,6 +24,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
@@ -298,7 +299,14 @@ public class Program
             // Authentification externe par bind LDAP (voir AccountController.Login et la page
             // /config/auth). AuthSecretProtector n'a pas de dépendance DbContext mais est
             // enregistré ici pour rester à proximité de son seul consommateur.
-            builder.Services.AddDataProtection();
+            // SetApplicationName explicite : sans lui, DataProtection dérive son discriminant du
+            // chemin de la racine de contenu. Déplacer ou renommer le dossier de l'application
+            // rend alors illisible tout ce qui a été chiffré avant — ici le mot de passe du compte
+            // de connexion LDAP, qui redevient silencieusement vide. Le bind dégénère en bind non
+            // authentifié et Active Directory refuse ensuite toute recherche, sans que la fiche de
+            // l'annuaire ne laisse rien paraître. Le nom fixé ici découple les secrets du chemin
+            // d'installation.
+            builder.Services.AddDataProtection().SetApplicationName("GlpiNg");
             builder.Services.AddSingleton<AuthSecretProtector>();
             builder.Services.AddSingleton<LdapAuthenticationService>();
             builder.Services.AddScoped<UserCredentialAuthenticator>();

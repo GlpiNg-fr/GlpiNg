@@ -63,6 +63,7 @@ else
 
                     default:
                         <LdapServerFormFields Server="_server" HasStoredPassword="@(_server.BindPasswordProtected is not null)"
+                                              StoredPasswordUnreadable="_storedPasswordUnreadable"
                                               @bind-BindPasswordPlain="_bindPasswordPlain" />
                         break;
                 }
