@@ -55,6 +55,32 @@
                 <label>Mot de passe du compte</label>
                 <input type="password" class="form-control" value="@BindPasswordPlain" @oninput="OnPasswordInput"
                        placeholder="@(HasStoredPassword ? "•••••••• (laisser vide pour conserver)" : "")" />
+                @* Un secret present mais indechiffrable affichait le meme « •••••••• » qu'un secret
+                   valide. Le bind degenerait alors en bind non authentifie, sans que rien ne le
+                   laisse voir sur cette fiche. *@
+                @if (StoredPasswordUnreadable)
+                {
+                    <div class="form-hint text-danger">
+                        <i class="ti ti-alert-triangle me-1"></i>
+                        Un mot de passe est enregistré mais ne peut plus être déchiffré : les clés de
+                        chiffrement ont changé, ou l'application a été déplacée ou lancée sous un autre
+                        compte. Ressaisissez-le — sans lui, la connexion à l'annuaire reste anonyme.
+                    </div>
+                }
+                else if (HasStoredPassword)
+                {
+                    <div class="form-hint text-success">
+                        <i class="ti ti-lock me-1"></i>Mot de passe enregistré et lisible.
+                    </div>
+                }
+                else
+                {
+                    <div class="form-hint text-warning">
+                        <i class="ti ti-alert-triangle me-1"></i>
+                        Aucun mot de passe enregistré : la connexion à l'annuaire restera anonyme, ce
+                        qu'Active Directory refuse.
+                    </div>
+                }
             </div>
         }
     </div>
@@ -66,6 +92,10 @@
 
     [Parameter]
     public bool HasStoredPassword { get; set; }
+
+    /// <summary>Un secret est stocké mais ne se déchiffre plus — voir AuthSecretProtector.Unprotect.</summary>
+    [Parameter]
+    public bool StoredPasswordUnreadable { get; set; }
 
     [Parameter]
     public string BindPasswordPlain { get; set; } = string.Empty;

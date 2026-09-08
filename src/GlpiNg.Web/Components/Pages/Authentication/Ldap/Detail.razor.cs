@@ -30,6 +30,9 @@ public partial class Detail : ComponentBase, IAsyncDisposable
     private GlpiNgDbContext? _db;
     private AuthLdapServer? _server;
     private string _bindPasswordPlain = string.Empty;
+
+    /// <summary>Vrai quand BindPasswordProtected est renseigné mais ne se déchiffre plus.</summary>
+    private bool _storedPasswordUnreadable;
     private string _activeTabKey = "main";
     private bool _isSaving;
     private bool _isTesting;
@@ -38,6 +41,11 @@ public partial class Detail : ComponentBase, IAsyncDisposable
     {
         _db = await DbFactory.CreateDbContextAsync();
         _server = await _db.AuthLdapServers.FirstOrDefaultAsync(s => s.Id == ServerId);
+
+        // Déchiffrement à blanc : la seule façon de distinguer un secret utilisable d'un secret
+        // devenu illisible, les deux étant présents en base.
+        _storedPasswordUnreadable = _server?.BindPasswordProtected is not null
+                                    && Protector.Unprotect(_server.BindPasswordProtected) is null;
     }
 
     private void SetTab(string key) => _activeTabKey = key;
