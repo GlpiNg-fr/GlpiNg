@@ -597,9 +597,11 @@ public class InventoryImportService(
     /// </summary>
     private async Task ApplyPeripheralsAsync(Computer computer, InventoryContent content, CancellationToken cancellationToken)
     {
-        List<Peripheral> existingPeripherals = await db.Set<Peripheral>()
-            .Where(p => p.ComputerId == computer.Id)
-            .ToListAsync(cancellationToken);
+        // Un ordinateur qui vient d'être créé n'a pas encore d'identifiant : inutile d'interroger
+        // la base, et surtout la comparaison porterait sur ComputerId == 0, qui ne désigne rien.
+        List<Peripheral> existingPeripherals = computer.Id > 0
+            ? await db.Set<Peripheral>().Where(p => p.ComputerId == computer.Id).ToListAsync(cancellationToken)
+            : [];
 
         HashSet<int> seenIds = [];
 
@@ -622,7 +624,13 @@ public class InventoryImportService(
             peripheral.Manufacturer = usb.Manufacturer ?? peripheral.Manufacturer;
             peripheral.SerialNumber = usb.Serial ?? peripheral.SerialNumber;
             peripheral.Type = type;
-            peripheral.ComputerId = computer.Id;
+            // Rattachement par la navigation et non par la clé étrangère : au premier inventaire,
+            // l'ordinateur n'est pas encore inséré et son Id vaut 0. Écrire ComputerId = 0
+            // envoyait les périphériques dans le même lot que l'INSERT du Computer, avec une
+            // valeur qui ne référence aucune ligne — d'où « The MERGE statement conflicted with
+            // the FOREIGN KEY constraint FK_Peripherals_Computers_ComputerId » et l'échec de tout
+            // l'inventaire. Par la navigation, EF ordonne les écritures et reporte l'Id généré.
+            peripheral.Computer = computer;
             peripheral.StatusId = await ResolveStatusIdAsync("En production", cancellationToken);
             peripheral.UpdatedAt = DateTime.UtcNow;
 
@@ -647,7 +655,8 @@ public class InventoryImportService(
 
             peripheral.Manufacturer = input.Manufacturer ?? peripheral.Manufacturer;
             peripheral.Type = type;
-            peripheral.ComputerId = computer.Id;
+            // Voir la remarque sur le rattachement par navigation plus haut.
+            peripheral.Computer = computer;
             peripheral.StatusId = await ResolveStatusIdAsync("En production", cancellationToken);
             peripheral.UpdatedAt = DateTime.UtcNow;
 
