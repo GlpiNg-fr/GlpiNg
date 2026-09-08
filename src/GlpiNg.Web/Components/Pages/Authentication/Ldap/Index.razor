@@ -1,10 +1,41 @@
-@page "/config/auth/ldap"
+﻿@page "/config/auth/ldap"
 @using GlpiNg.Web.Models
 @rendermode InteractiveServer
 
 <PageTitle>GlpiNg — Annuaires LDAP</PageTitle>
 
 <AuthTabStrip Current="ldap" />
+
+@* Un annuaire configure ne suffit pas a faire entrer quelqu'un : sans compte local correspondant,
+   le provisionnement automatique doit etre actif, sinon un bind reussi est refuse et l'ecran de
+   connexion affiche « Nom d'utilisateur ou mot de passe incorrect » — qui designe la mauvaise
+   cause. Le rappel est ici, la ou l'administrateur vient de creer son annuaire. *@
+@if (_servers.Count > 0 && !_autoAddExternalUsers)
+{
+    <div class="alert alert-warning" role="alert">
+        <h4 class="alert-title"><i class="ti ti-alert-triangle"></i> Les comptes de l'annuaire ne pourront pas se connecter</h4>
+        <p class="mb-2">
+            « Ajouter automatiquement les utilisateurs depuis une source externe » est désactivé.
+            Un utilisateur de l'annuaire qui n'a pas déjà un compte dans GlpiNg sera refusé, même si
+            son mot de passe est correct — et la page de connexion affichera « Nom d'utilisateur ou
+            mot de passe incorrect ».
+        </p>
+        <a class="btn btn-sm btn-warning" href="/config/auth/config">
+            <i class="ti ti-settings me-1"></i>Activer dans Configuration
+        </a>
+    </div>
+}
+
+@if (_servers.Count > 0 && !_showAuthSourcesOnLoginPage)
+{
+    <div class="alert alert-info" role="alert">
+        <i class="ti ti-info-circle me-1"></i>
+        Le sélecteur de source n'est pas affiché sur la page de connexion : la source est choisie
+        automatiquement (mot de passe local si le compte en a un, annuaire sinon). Pour laisser
+        l'utilisateur choisir, activez « Afficher les sources d'authentification sur la page de
+        connexion » dans <a href="/config">Configuration générale</a>.
+    </div>
+}
 
 <div class="glpi-list-page">
 <div class="card">

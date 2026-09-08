@@ -1,4 +1,4 @@
-using BlazorBootstrap;
+﻿using BlazorBootstrap;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
 using GlpiNg.Web.Services;
@@ -23,6 +23,9 @@ public partial class Index : ComponentBase
     [Inject]
     private ToastService ToastService { get; set; } = null!;
 
+    [Inject]
+    private SettingsCacheService SettingsStore { get; set; } = null!;
+
     private List<AuthLdapServer> _servers = [];
     private List<AuthLdapServer> _filteredServers = [];
     private string _searchTerm = string.Empty;
@@ -38,8 +41,18 @@ public partial class Index : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
+        AuthSettings authSettings = await SettingsStore.ReadSectionAsync<AuthSettings>("AuthSettings");
+        _autoAddExternalUsers = authSettings.AutoAddUsersFromExternalAuth;
+
+        GeneralSettings general = await SettingsStore.ReadSectionAsync<GeneralSettings>("GeneralSettings");
+        _showAuthSourcesOnLoginPage = general.ShowAuthSourcesOnLoginPage;
+
         await LoadAsync();
     }
+
+    /// <summary>Réglages dont dépend l'utilisabilité d'un annuaire, lus pour les rappels affichés en tête de page.</summary>
+    private bool _autoAddExternalUsers;
+    private bool _showAuthSourcesOnLoginPage;
 
     private async Task LoadAsync()
     {

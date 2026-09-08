@@ -16,7 +16,8 @@ public class UserCredentialAuthenticator(
     GlpiNgDbContext db,
     SettingsCacheService settingsStore,
     LdapAuthenticationService ldapAuth,
-    EntityTreeCache entityTree)
+    EntityTreeCache entityTree,
+    ILogger<UserCredentialAuthenticator> logger)
 {
     private static readonly PasswordHasher<GlpiUser> Hasher = new();
 
@@ -67,6 +68,7 @@ public class UserCredentialAuthenticator(
         LdapAuthResult result = await ldapAuth.TryAuthenticateAsync(userName, password, preferredServerId, ct);
         if (!result.Success || result.Server is null)
         {
+            logger.LogInformation("Aucun annuaire LDAP n'a authentifie « {User} ». Detail par annuaire ci-dessus ; si rien n'apparait, aucun annuaire actif ne correspondait.", userName);
             return (false, existingUser);
         }
 
@@ -89,8 +91,18 @@ public class UserCredentialAuthenticator(
         AuthSettings authSettings = await settingsStore.ReadSectionAsync<AuthSettings>("AuthSettings", ct);
         if (!authSettings.AutoAddUsersFromExternalAuth)
         {
+            // Le bind LDAP a REUSSI : l'identifiant et le mot de passe sont bons. Le refus vient
+            // uniquement de l'absence de compte local et du provisionnement desactive. Sans cette
+            // trace, l'ecran de connexion renvoie « Nom d'utilisateur ou mot de passe incorrect »,
+            // ce qui designe la mauvaise cause et laisse chercher du cote de l'annuaire.
+            logger.LogWarning(
+                "Connexion refusee pour « {User} » : le bind sur l'annuaire « {Server} » a pourtant reussi, mais aucun compte local ne correspond et « Ajouter automatiquement les utilisateurs depuis une source externe » est desactive (Configuration > Authentification).",
+                userName, result.Server.Name);
+
             return (false, null);
         }
+
+        logger.LogInformation("Compte « {User} » provisionne depuis l'annuaire « {Server} ».", userName, result.Server.Name);
 
         GlpiUser newUser = new()
         {
