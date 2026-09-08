@@ -270,6 +270,9 @@ simplification assumée de la matrice très fine de GLPI.
   (`NotificationEventCatalog` : inventaire, agent, job de déploiement, tâche
   réseau, équipement découvert, WoL), file d'attente consultable
   (`/config/notifications/queue`) et envoi SMTP (`SmtpMailSender`).
+- Statut par défaut d'un poste créé par un inventaire, choisi dans les intitulés
+  (`Administration > Inventaire`) : appliqué à la création seulement, les
+  inventaires suivants ne touchant plus au statut.
 - Cron applicatif (`GlpiNg.Modules.Cron`) piloté depuis
   `/config/automatic-actions` : purge d'historique, envoi de la file de
   notifications, nettoyage des agents, déclenchement des tâches de déploiement,

@@ -1,4 +1,4 @@
-using System.IO.Compression;
+﻿using System.IO.Compression;
 using System.Text.Json;
 using BlazorBootstrap;
 using GlpiNg.Modules.Inventory.Models;
@@ -26,6 +26,9 @@ public partial class Index : ComponentBase
     private ToastService ToastService { get; set; } = null!;
 
     private InventorySettings? _model;
+
+    /// <summary>Intitulés de statut proposés pour le statut par défaut, plus celui déjà enregistré s'il a disparu depuis.</summary>
+    private List<string> _statusOptions = [];
     private bool _isSaving;
 
     private bool _isImporting;
@@ -33,6 +36,21 @@ public partial class Index : ComponentBase
     protected override async Task OnInitializedAsync()
     {
         _model = await SettingsStore.ReadSectionAsync<InventorySettings>(SectionName);
+
+        await using GlpiNgDbContext db = await DbFactory.CreateDbContextAsync();
+        _statusOptions = await db.DropdownItems.AsNoTracking()
+            .Where(item => item.Type == DropdownType.Status)
+            .OrderBy(item => item.Name)
+            .Select(item => item.Name)
+            .ToListAsync();
+
+        // Un statut supprimé des intitulés depuis son enregistrement resterait sans option
+        // correspondante : la liste retomberait silencieusement sur « aucun statut » et la
+        // sauvegarde suivante effacerait le réglage sans que personne ne l'ait demandé.
+        if (_model.DefaultComputerStatus is { Length: > 0 } current && !_statusOptions.Contains(current))
+        {
+            _statusOptions.Insert(0, current);
+        }
     }
 
     private async Task SaveAsync()
