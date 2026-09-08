@@ -16,7 +16,7 @@ public class UserCredentialAuthenticator(
     GlpiNgDbContext db,
     SettingsCacheService settingsStore,
     LdapAuthenticationService ldapAuth,
-    EntityTreeCache entityTree,
+    LdapAccountProvisioner provisioner,
     ILogger<UserCredentialAuthenticator> logger)
 {
     private static readonly PasswordHasher<GlpiUser> Hasher = new();
@@ -108,7 +108,7 @@ public class UserCredentialAuthenticator(
             // La correspondance d'attributs est réappliquée à chaque connexion, pas seulement à la
             // création : c'est ce qui fait que l'annuaire reste la source de vérité pour ces
             // champs, sans tâche de synchronisation séparée.
-            ApplyLdapAttributes(existingUser, result);
+            provisioner.ApplyAttributes(existingUser, result.Server, result.Attributes);
             await SynchronizeGroupsAsync(existingUser, result, ct);
 
             await db.SaveChangesAsync(ct);
@@ -145,7 +145,7 @@ public class UserCredentialAuthenticator(
         };
         newUser.PasswordHash = Hasher.HashPassword(newUser, Guid.NewGuid().ToString("N"));
 
-        ApplyLdapAttributes(newUser, result);
+        provisioner.ApplyAttributes(newUser, result.Server, result.Attributes);
 
         db.Users.Add(newUser);
         await db.SaveChangesAsync(ct);
@@ -153,71 +153,10 @@ public class UserCredentialAuthenticator(
         // Après le premier SaveChangesAsync : appartenances et habilitation référencent
         // l'utilisateur par son identifiant, qui n'existe qu'une fois la ligne insérée.
         await SynchronizeGroupsAsync(newUser, result, ct);
-        await AssignEntityAsync(newUser, result, ct);
+        await provisioner.AssignDefaultHabilitationAsync(newUser, result.Server, ct);
         await db.SaveChangesAsync(ct);
 
         return (true, newUser);
-    }
-
-    /// <summary>
-    /// Reporte les attributs de l'annuaire sur le compte, selon la correspondance configurée dans
-    /// l'onglet « Utilisateurs » de la fiche annuaire. Un attribut non configuré ou absent laisse
-    /// le champ inchangé : l'annuaire complète le compte, il ne l'efface pas.
-    /// </summary>
-    private static void ApplyLdapAttributes(GlpiUser user, LdapAuthResult result)
-    {
-        AuthLdapServer server = result.Server!;
-
-        user.LastName = result.Value(server.LastNameField) ?? user.LastName;
-        user.FirstName = result.Value(server.FirstNameField) ?? user.FirstName;
-        user.Email = result.Value(server.EmailField) ?? user.Email;
-        user.Phone = result.Value(server.PhoneField) ?? result.Value(server.MobileField) ?? user.Phone;
-        user.Location = result.Value(server.LocationField) ?? user.Location;
-
-        // Nom affiché : l'attribut dédié s'il est renseigné, sinon reconstruit depuis prénom et nom
-        // — plutôt que de laisser l'identifiant, qui est ce que la création met par défaut.
-        string? displayName = result.Value(server.DisplayNameField);
-        if (string.IsNullOrWhiteSpace(displayName))
-        {
-            string composed = string.Join(' ', new[] { user.FirstName, user.LastName }.Where(part => !string.IsNullOrWhiteSpace(part)));
-            displayName = composed.Length > 0 ? composed : null;
-        }
-
-        user.DisplayName = displayName ?? user.DisplayName;
-    }
-
-    /// <summary>
-    /// Donne au compte provisionné une habilitation de départ, sur l'entité dont le TAG
-    /// d'affectation correspond à celui de l'annuaire (onglet « Informations avancées »), et sur
-    /// l'entité racine à défaut — même mécanisme de TAG que pour les postes inventoriés.
-    ///
-    /// Le profil retenu est celui marqué par défaut. Sans profil par défaut, aucune habilitation
-    /// n'est créée : le compte existe mais ne voit rien, ce qui est le comportement voulu pour un
-    /// utilisateur sans droits (voir EntityScope.None) et se corrige depuis la fiche utilisateur.
-    /// </summary>
-    private async Task AssignEntityAsync(GlpiUser user, LdapAuthResult result, CancellationToken ct)
-    {
-        int? entityId = entityTree.GetEntityIdByAssignmentTag(result.Server!.EntityAssignmentTag)
-                        ?? entityTree.GetRootEntityId();
-
-        if (entityId is not int targetEntityId)
-        {
-            return;
-        }
-
-        GlpiProfile? defaultProfile = await db.Profiles.FirstOrDefaultAsync(profile => profile.IsDefault, ct);
-        if (defaultProfile is null)
-        {
-            return;
-        }
-
-        db.UserProfiles.Add(new GlpiUserProfile
-        {
-            UserId = user.Id,
-            EntityId = targetEntityId,
-            ProfileId = defaultProfile.Id,
-            IsRecursive = false,
-        });
     }
 
     /// <summary>

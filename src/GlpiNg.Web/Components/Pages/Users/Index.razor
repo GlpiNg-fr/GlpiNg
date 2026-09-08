@@ -1,5 +1,6 @@
-@page "/admin/users"
+﻿@page "/admin/users"
 @using GlpiNg.Web.Models
+@using GlpiNg.Web.Services
 @rendermode InteractiveServer
 
 <PageTitle>GlpiNg — Utilisateurs</PageTitle>
@@ -48,9 +49,35 @@
                 <i class="ti ti-refresh"></i>
             </button>
 
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newUserModal">
-                <i class="ti ti-plus me-1"></i>Nouvel utilisateur
-            </button>
+            @* Bouton scinde : l'action courante reste accessible d'un clic, l'import depuis un
+               annuaire est dans le menu — meme disposition que GLPI. L'entree est desactivee, avec
+               son motif en infobulle, plutot que masquee : sinon l'absence de la fonction
+               ressemble a une fonction manquante. *@
+            <div class="btn-group">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newUserModal">
+                    <i class="ti ti-plus me-1"></i>Nouvel utilisateur
+                </button>
+                <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="visually-hidden">Autres actions d'ajout</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                        <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#newUserModal">
+                            <i class="ti ti-plus me-2"></i>Nouvel utilisateur
+                        </button>
+                    </li>
+                    <li><hr class="dropdown-divider" /></li>
+                    <li>
+                        <button type="button" class="dropdown-item @(_ldapServers.Count == 0 ? "disabled" : "")"
+                                disabled="@(_ldapServers.Count == 0)"
+                                title="@(_ldapServers.Count == 0 ? "Aucun annuaire LDAP actif : à configurer dans Configuration > Authentification." : null)"
+                                @onclick="OpenImportAsync">
+                            <i class="ti ti-address-book me-2"></i>Ajout depuis une source externe
+                        </button>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
 
@@ -136,6 +163,102 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-warning" disabled="@(!CanCreate)" @onclick="CreateUserAsync">
                     <i class="ti ti-plus me-1"></i>Ajouter
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@* Import depuis un annuaire — equivalent de front/ldap.import.php cote GLPI. Complete le
+   provisionnement a la connexion, qui ne cree un compte qu'au moment ou son titulaire se connecte
+   et seulement si le reglage correspondant est actif. *@
+<div class="modal fade" id="ldapImportModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="ti ti-address-book me-2"></i>Ajout depuis une source externe</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-2 align-items-end mb-3">
+                    <div class="col-md-5">
+                        <label class="form-label">Annuaire</label>
+                        <select class="form-select" value="@_importServerId"
+                                @onchange="@((ChangeEventArgs e) => _importServerId = int.Parse((string)e.Value!))">
+                            @foreach (AuthLdapServer server in _ldapServers)
+                            {
+                                <option value="@server.Id">@server.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label">Filtrer sur l'identifiant</label>
+                        <input class="form-control" @bind="_importTerm" @bind:event="oninput"
+                               placeholder="vide = tous les comptes" />
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-primary w-100" disabled="@_isSearchingLdap" @onclick="SearchLdapAsync">
+                            <i class="ti ti-search me-1"></i>@(_isSearchingLdap ? "…" : "Chercher")
+                        </button>
+                    </div>
+                </div>
+
+                @if (_ldapImportError is not null)
+                {
+                    <div class="alert alert-danger"><i class="ti ti-alert-circle me-1"></i>@_ldapImportError</div>
+                }
+
+                @if (_ldapCandidates.Count > 0)
+                {
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 2.5rem;"></th>
+                                    <th>Identifiant</th>
+                                    <th>Nom</th>
+                                    <th>Courriel</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (LdapImportCandidate candidate in _ldapCandidates)
+                                {
+                                    <tr class="@(candidate.AlreadyPresent ? "text-secondary" : "")">
+                                        <td>
+                                            <input class="form-check-input m-0" type="checkbox"
+                                                   disabled="@candidate.AlreadyPresent"
+                                                   checked="@_selectedLogins.Contains(candidate.Login)"
+                                                   @onchange="@((ChangeEventArgs e) => ToggleLogin(candidate.Login, (bool)(e.Value ?? false)))" />
+                                        </td>
+                                        <td class="fw-semibold">@candidate.Login</td>
+                                        <td>@(candidate.DisplayName ?? "—")</td>
+                                        <td>
+                                            @(candidate.Email ?? "—")
+                                            @if (candidate.AlreadyPresent)
+                                            {
+                                                <span class="badge bg-secondary-lt ms-2">déjà présent</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else if (_hasSearchedLdap && _ldapImportError is null)
+                {
+                    <div class="glpi-config-placeholder">
+                        <i class="ti ti-user-search"></i>
+                        <p class="mb-0">Aucun compte ne correspond dans cet annuaire.</p>
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <span class="text-secondary me-auto">@_selectedLogins.Count compte(s) sélectionné(s)</span>
+                <button type="button" class="btn btn-primary" disabled="@(_selectedLogins.Count == 0 || _isImportingLdap)"
+                        @onclick="ImportLdapUsersAsync">
+                    <i class="ti ti-download me-1"></i>@(_isImportingLdap ? "Import en cours…" : "Importer")
                 </button>
             </div>
         </div>
