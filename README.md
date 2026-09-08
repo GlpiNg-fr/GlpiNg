@@ -316,6 +316,15 @@ passes), profils, utilisateurs, habilitations (`glpi_profiles_users`),
 appartenances aux groupes (`glpi_groups_users`), et un sous-ensemble de la
 configuration générale (`glpi_configs`, contexte `core`).
 
+**Détection du plugin d'inventaire** : l'analyse signale la présence de GLPI
+Inventory (`glpiinventory`) ou de son ancêtre FusionInventory, avec sa version,
+son état et le volume de ce qu'il contient (paquets de déploiement, tâches,
+agents, plages IP, identifiants SNMP, actifs non gérés). Croisement de
+`glpi_plugins` — qui donne nom et version mais survit à une désinstallation — et
+de la présence réelle des tables, découvertes par préfixe plutôt que listées en
+dur, leurs noms ayant changé d'une version à l'autre. Ces données ne sont pas
+reprises par l'import : GlpiNg réimplémente ce domaine en propre.
+
 **Non couvert / limites connues** :
 - Un seul compte utilisateur MySQL en lecture seule est supposé ; aucune
   écriture n'est faite sur la base GLPI source.
