@@ -1,4 +1,9 @@
-@using GlpiNg.Web.Models
+﻿@using GlpiNg.Web.Models
+
+@* Connexion a l'annuaire : ce qu'il faut pour joindre le serveur et s'y authentifier. La
+   correspondance des attributs, les groupes et les reglages avances vivent dans les onglets
+   dedies de la fiche (voir Detail.razor) - ce composant sert aussi a la creation depuis la
+   liste, ou seuls ces champs-la sont demandes. *@
 
 <div class="row">
     <div class="col-md-6">
@@ -35,18 +40,6 @@
         <div class="glpi-fiche-field">
             <label>BaseDN</label>
             <input class="form-control" @bind="Server.BaseDn" @bind:event="oninput" @bind:after="NotifyChangedAsync" placeholder="dc=example,dc=com" />
-        </div>
-        <div class="glpi-fiche-field">
-            <label>Filtre de connexion (optionnel)</label>
-            <textarea class="form-control" rows="2" @bind="Server.LoginFilter" placeholder="(memberOf=cn=glpi-users,ou=groups,dc=example,dc=com)"></textarea>
-        </div>
-        <div class="glpi-fiche-field">
-            <label>Champ de l'identifiant</label>
-            <input class="form-control" @bind="Server.LoginField" />
-        </div>
-        <div class="glpi-fiche-field">
-            <label>Champ de synchronisation (optionnel)</label>
-            <input class="form-control" @bind="Server.SyncField" />
         </div>
         <div class="glpi-fiche-field">
             <label>Utiliser un compte de connexion (bind)</label>

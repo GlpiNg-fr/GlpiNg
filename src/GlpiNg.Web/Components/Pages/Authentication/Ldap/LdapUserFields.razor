@@ -1,0 +1,87 @@
+@using GlpiNg.Web.Models
+
+@* Onglet « Utilisateurs » de la fiche annuaire : correspondance entre les attributs LDAP et les
+   champs d'un compte GlpiNg. Ces valeurs ne sont pas décoratives — elles décident des attributs
+   demandés au serveur pendant la recherche, et sont réappliquées à chaque connexion (voir
+   UserCredentialAuthenticator.ApplyLdapAttributes). Un champ laissé vide n'est simplement pas lu. *@
+
+<p class="text-secondary">
+    Attributs de l'annuaire recopiés sur le compte à chaque connexion. Laisser un champ vide pour
+    ne pas reprendre l'information correspondante.
+</p>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="glpi-fiche-field">
+            <label>Champ de l'identifiant</label>
+            <input class="form-control" @bind="Server.LoginField" />
+        </div>
+        <div class="glpi-fiche-field">
+            <label>Filtre de connexion (optionnel)</label>
+            <textarea class="form-control" rows="2" @bind="Server.LoginFilter"
+                      placeholder="(memberOf=cn=glpi-users,ou=groups,dc=example,dc=com)"></textarea>
+        </div>
+        <div class="glpi-fiche-field">
+            <label>Champ de synchronisation (optionnel)</label>
+            <input class="form-control" @bind="Server.SyncField" placeholder="objectguid" />
+        </div>
+        <div class="glpi-fiche-field">
+            <label>Nom de famille</label>
+            <input class="form-control" @bind="Server.LastNameField" placeholder="sn" />
+        </div>
+        <div class="glpi-fiche-field">
+            <label>Prénom</label>
+            <input class="form-control" @bind="Server.FirstNameField" placeholder="givenname" />
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="glpi-fiche-field">
+            <label>Nom affiché</label>
+            <input class="form-control" @bind="Server.DisplayNameField" placeholder="displayname" />
+            <div class="form-hint">Vide : reconstitué à partir du prénom et du nom.</div>
+        </div>
+        <div class="glpi-fiche-field">
+            <label>Courriel</label>
+            <input class="form-control" @bind="Server.EmailField" placeholder="mail" />
+        </div>
+        <div class="glpi-fiche-field">
+            <label>Téléphone</label>
+            <input class="form-control" @bind="Server.PhoneField" placeholder="telephonenumber" />
+        </div>
+        <div class="glpi-fiche-field">
+            <label>Téléphone mobile</label>
+            <input class="form-control" @bind="Server.MobileField" placeholder="mobile" />
+            <div class="form-hint">Utilisé si le téléphone fixe est absent.</div>
+        </div>
+        <div class="glpi-fiche-field">
+            <label>Localisation</label>
+            <input class="form-control" @bind="Server.LocationField" placeholder="physicaldeliveryofficename" />
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="glpi-fiche-field">
+            <label>Titre</label>
+            <input class="form-control" @bind="Server.TitleField" placeholder="title" />
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="glpi-fiche-field">
+            <label>Commentaires</label>
+            <input class="form-control" @bind="Server.CommentField" placeholder="description" />
+        </div>
+    </div>
+</div>
+
+<p class="hint">
+    Titre et commentaires sont lus depuis l'annuaire mais n'ont pas encore de champ correspondant
+    sur la fiche utilisateur : ils sont conservés ici pour ne pas avoir à les ressaisir le jour où
+    ces champs existeront.
+</p>
+
+@code {
+    [Parameter, EditorRequired]
+    public AuthLdapServer Server { get; set; } = null!;
+}

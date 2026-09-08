@@ -116,6 +116,12 @@ directement par le code hôte. Un futur module Tickets suivrait le même schéma
   des comptes externes si activé (`AuthSettings.AutoAddUsersFromExternalAuth`).
   Un compte peut être forcé sur une source précise (local ou un annuaire donné)
   depuis le sélecteur de la page de login.
+- La fiche d'un annuaire a quatre onglets, calqués sur GLPI :
+  **Annuaire LDAP** (connexion), **Utilisateurs** (correspondance attribut LDAP →
+  champ du compte, recopiée à chaque connexion), **Groupes** (synchronisation des
+  appartenances, recherche dans les utilisateurs, dans les groupes ou les deux) et
+  **Informations avancées** (STARTTLS, délai d'attente, taille de page, nombre
+  maximum de résultats, TAG d'entité des comptes provisionnés).
 - Émission de jetons OAuth2 (`POST /oauth2/token`) pour des clients gérés
   depuis `/config/oauth-clients` — grants `client_credentials` et `password`,
   restriction par IP, scopes (`api`, `inventory`, ...).
