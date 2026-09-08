@@ -148,7 +148,26 @@ public class InventoryImportService(
         // Règles métier pour les actifs (voir ComputerRuleEngine) : appliquées après tous les
         // champs ci-dessus, une fois l'ordinateur entièrement renseigné par l'inventaire.
         List<ComputerRule> computerRules = await LoadActiveComputerRulesAsync(cancellationToken);
-        ComputerRuleEngine.Apply(computer, isNew, computerRules);
+
+        // Statuts pré-résolus pour les actions qui en affectent un : le moteur est synchrone et
+        // n'accède pas à la base. Ici, contrairement à la tâche périodique, un statut inconnu est
+        // créé à la volée — l'import crée déjà les intitulés dont il a besoin (voir
+        // ResolveStatusIdAsync), et une règle d'inventaire est jouée à chaque remontée.
+        Dictionary<string, int> ruleStatusIds = new(StringComparer.OrdinalIgnoreCase);
+        foreach (string statusName in computerRules
+                     .SelectMany(rule => rule.Actions)
+                     .Where(action => action.Field == "Status" && !string.IsNullOrWhiteSpace(action.Value))
+                     .Select(action => action.Value!.Trim())
+                     .Distinct(StringComparer.OrdinalIgnoreCase))
+        {
+            if (await ResolveStatusIdAsync(statusName, cancellationToken) is { } statusId)
+            {
+                ruleStatusIds[statusName] = statusId;
+            }
+        }
+
+        ComputerRuleEngine.Apply(computer, isNew, computerRules,
+            statusName => ruleStatusIds.TryGetValue(statusName, out int id) ? id : null);
 
         string? beforeStatusLabel = before.StatusId is { } beforeStatusId
             ? await db.DropdownItems.AsNoTracking().Where(i => i.Id == beforeStatusId).Select(i => i.Name).FirstOrDefaultAsync(cancellationToken)
