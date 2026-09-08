@@ -1,4 +1,4 @@
-namespace GlpiNg.Web.Models;
+﻿namespace GlpiNg.Web.Models;
 
 /// <summary>
 /// Modèle de la page de configuration (/config). Reflète des clés de
@@ -18,4 +18,11 @@ public class ServerSettings
     /// compte immédiatement, sans redémarrage.
     /// </summary>
     public bool SwaggerEnabled { get; set; }
+
+    /// <summary>
+    /// Racine du stockage des fichiers de GlpiNg (clé "Storage:RootPath") : paquets de
+    /// déploiement, clés de chiffrement. Vide = dossier <c>data</c> à la racine du programme.
+    /// Comme <see cref="Urls"/>, la valeur est lue au démarrage et un redémarrage est nécessaire.
+    /// </summary>
+    public string? StorageRootPath { get; set; }
 }

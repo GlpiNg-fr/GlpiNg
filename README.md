@@ -140,6 +140,12 @@ directement par le code hôte. Un futur module Tickets suivrait le même schéma
   profils (`/admin/profiles`) — avec historique des modifications par fiche.
 - Journaux applicatifs (`/admin/logs`) et préférences de compte
   (`/mon-profil`, `/preferences`).
+- Emplacement de stockage des fichiers (`/config`, onglet Système) : racine
+  unique sous laquelle vivent les paquets de déploiement et les clés de
+  chiffrement (secrets des annuaires LDAP). Vide = dossier `data` à la racine du
+  programme. Stocké dans `appsettings.json` et non en base, comme `Urls` : les
+  clés sont configurées au démarrage, avant tout accès à la base. Nécessite un
+  redémarrage ; les chemins effectivement retenus sont affichés dans l'écran.
 - Page `/config` : sections mirroir de la configuration générale GLPI
   (Général, Assistance, Gestion, Parc, Sécurité, API, Système, Purge,
   Colonnes d'affichage, Valeurs par défaut, ...), avec suivi d'historique des

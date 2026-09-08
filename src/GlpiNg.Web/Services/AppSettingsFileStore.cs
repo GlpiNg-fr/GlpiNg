@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Nodes;
 using GlpiNg.Web.Models;
 
@@ -7,8 +7,8 @@ namespace GlpiNg.Web.Services;
 /// <summary>
 /// Lit et modifie appsettings.json pour les seuls réglages qui doivent rester dans un fichier
 /// plutôt qu'en base (voir <see cref="Services.SettingsCacheService"/> pour tout le reste,
-/// onglet "Configuration générale" y compris) : adresses d'écoute du serveur et activation de
-/// Swagger.
+/// onglet "Configuration générale" y compris) : adresses d'écoute du serveur, activation de
+/// Swagger, et racine du stockage des fichiers.
 ///
 /// Ces deux réglages restent dans appsettings.json car ce sont des réglages de
 /// démarrage/hébergement plutôt que des données métier : "Urls" est lu par Kestrel à
@@ -16,7 +16,8 @@ namespace GlpiNg.Web.Services;
 /// toute façon un redémarrage pour être pris en compte ; l'activation de Swagger s'appuie sur
 /// IOptionsMonitor&lt;SwaggerOptions&gt; + le rechargement automatique du fichier
 /// (reloadOnChange) pour basculer à chaud, un mécanisme propre au fichier de config qui n'a
-/// pas d'équivalent direct côté base.
+/// pas d'équivalent direct côté base. La racine du stockage relève de la même contrainte que
+/// "Urls" : les clés de chiffrement sont configurées au démarrage, avant tout accès à la base.
 /// </summary>
 public class AppSettingsFileStore(IWebHostEnvironment environment)
 {
@@ -30,11 +31,13 @@ public class AppSettingsFileStore(IWebHostEnvironment environment)
 
         string urls = root["Urls"]?.GetValue<string>() ?? "http://0.0.0.0:5000";
         bool swaggerEnabled = root["Swagger"]?["Enabled"]?.GetValue<bool>() ?? false;
+        string? storageRootPath = root["Storage"]?["RootPath"]?.GetValue<string>();
 
         return new ServerSettings
         {
             Urls = urls,
-            SwaggerEnabled = swaggerEnabled
+            SwaggerEnabled = swaggerEnabled,
+            StorageRootPath = storageRootPath
         };
     }
 
@@ -47,6 +50,14 @@ public class AppSettingsFileStore(IWebHostEnvironment environment)
         JsonObject swaggerSection = root["Swagger"] as JsonObject ?? new JsonObject();
         swaggerSection["Enabled"] = settings.SwaggerEnabled;
         root["Swagger"] = swaggerSection;
+
+        // Un chemin vide est écrit comme null plutôt que comme chaîne vide : la clé absente et la
+        // clé vide doivent signifier la même chose — « emplacement par défaut ».
+        JsonObject storageSection = root["Storage"] as JsonObject ?? new JsonObject();
+        storageSection["RootPath"] = string.IsNullOrWhiteSpace(settings.StorageRootPath)
+            ? null
+            : settings.StorageRootPath.Trim();
+        root["Storage"] = storageSection;
 
         string json = root.ToJsonString(WriteOptions);
         await File.WriteAllTextAsync(SettingsFilePath, json, cancellationToken);
