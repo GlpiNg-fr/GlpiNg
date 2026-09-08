@@ -1,4 +1,4 @@
-using BlazorBootstrap;
+﻿using BlazorBootstrap;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
 using GlpiNg.Web.Services;
@@ -30,6 +30,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
     private GlpiNgDbContext? _db;
     private AuthLdapServer? _server;
     private string _bindPasswordPlain = string.Empty;
+    private string _activeTabKey = "main";
     private bool _isSaving;
     private bool _isTesting;
 
@@ -38,6 +39,8 @@ public partial class Detail : ComponentBase, IAsyncDisposable
         _db = await DbFactory.CreateDbContextAsync();
         _server = await _db.AuthLdapServers.FirstOrDefaultAsync(s => s.Id == ServerId);
     }
+
+    private void SetTab(string key) => _activeTabKey = key;
 
     private async Task SaveAsync()
     {

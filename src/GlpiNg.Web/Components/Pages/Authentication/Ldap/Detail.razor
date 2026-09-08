@@ -1,4 +1,4 @@
-@page "/config/auth/ldap/{ServerId:int}"
+﻿@page "/config/auth/ldap/{ServerId:int}"
 @using GlpiNg.Web.Models
 @rendermode InteractiveServer
 
@@ -15,15 +15,57 @@
 }
 else
 {
-    <div class="card">
-        <div class="card-header">
-            <i class="ti ti-address-book me-2"></i>
-            <span class="fw-semibold">Annuaire LDAP - @_server.Name - ID @_server.Id</span>
+    <div class="glpi-fiche-topbar">
+        <div class="glpi-fiche-crumb">
+            <i class="ti ti-address-book"></i>
+            <span>Annuaire LDAP - @_server.Name - ID @_server.Id</span>
         </div>
-        <div class="card-body">
+    </div>
+
+    <div class="glpi-fiche-layout">
+        <aside class="glpi-fiche-sidebar">
+            <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "main" ? "active" : "")" @onclick='() => SetTab("main")'>
+                <i class="ti ti-address-book"></i>
+                <span>Annuaire LDAP</span>
+            </button>
+            <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "users" ? "active" : "")" @onclick='() => SetTab("users")'>
+                <i class="ti ti-user"></i>
+                <span>Utilisateurs</span>
+            </button>
+            <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "groups" ? "active" : "")" @onclick='() => SetTab("groups")'>
+                <i class="ti ti-users"></i>
+                <span>Groupes</span>
+            </button>
+            <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "advanced" ? "active" : "")" @onclick='() => SetTab("advanced")'>
+                <i class="ti ti-adjustments"></i>
+                <span>Informations avancées</span>
+            </button>
+        </aside>
+
+        <div class="glpi-fiche-panel">
+            @* Un seul EditForm pour les quatre onglets : ils éditent le même annuaire, et changer
+               d'onglet ne doit pas obliger à enregistrer entre-temps. Les boutons restent donc
+               visibles quel que soit l'onglet affiché. *@
             <EditForm Model="_server" OnValidSubmit="SaveAsync">
-                <LdapServerFormFields Server="_server" HasStoredPassword="@(_server.BindPasswordProtected is not null)"
-                                       @bind-BindPasswordPlain="_bindPasswordPlain" />
+                @switch (_activeTabKey)
+                {
+                    case "users":
+                        <LdapUserFields Server="_server" />
+                        break;
+
+                    case "groups":
+                        <LdapGroupFields Server="_server" />
+                        break;
+
+                    case "advanced":
+                        <LdapAdvancedFields Server="_server" />
+                        break;
+
+                    default:
+                        <LdapServerFormFields Server="_server" HasStoredPassword="@(_server.BindPasswordProtected is not null)"
+                                              @bind-BindPasswordPlain="_bindPasswordPlain" />
+                        break;
+                }
 
                 <div class="d-flex justify-content-end gap-2 mt-3">
                     <button type="button" class="btn btn-outline-secondary" disabled="@_isTesting" @onclick="TestConnectionAsync">

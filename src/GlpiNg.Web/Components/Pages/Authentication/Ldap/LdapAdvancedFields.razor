@@ -1,0 +1,68 @@
+@using GlpiNg.Web.Models
+
+@* Onglet « Informations avancées » : réglages de transport et de volume des recherches, plus le
+   TAG qui décide de l'entité des comptes provisionnés depuis cet annuaire. *@
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="glpi-fiche-field">
+            <label>STARTTLS</label>
+            <select class="form-select" value="@(Server.UseStartTls ? "true" : "false")"
+                    @onchange="@(e => Server.UseStartTls = e.Value?.ToString() == "true")"
+                    disabled="@Server.UseSsl">
+                <option value="false">Non</option>
+                <option value="true">Oui</option>
+            </select>
+            <div class="form-hint">
+                @if (Server.UseSsl)
+                {
+                    <text>Sans objet : la connexion utilise déjà LDAPS, chiffré dès son ouverture.</text>
+                }
+                else
+                {
+                    <text>Élève une connexion en clair vers du chiffré. À distinguer de LDAPS, qui l'est dès l'ouverture sur un port dédié.</text>
+                }
+            </div>
+        </div>
+
+        <div class="glpi-fiche-field">
+            <label>Délai d'attente (secondes)</label>
+            <input type="number" min="1" class="form-control" @bind="Server.TimeoutSeconds" />
+        </div>
+
+        <div class="glpi-fiche-field">
+            <label>TAG d'entité</label>
+            <input class="form-control" @bind="Server.EntityAssignmentTag" />
+            <div class="form-hint">
+                Rapproché du TAG d'affectation d'une entité (fiche Entité, onglet « Informations
+                avancées ») pour décider de l'entité d'un compte créé depuis cet annuaire.
+                Vide ou sans correspondance : entité racine.
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="glpi-fiche-field">
+            <label>Taille de page des recherches</label>
+            <input type="number" min="0" class="form-control" @bind="Server.PageSize" />
+            <div class="form-hint">0 pour désactiver la pagination — tous les annuaires ne la gèrent pas.</div>
+        </div>
+
+        <div class="glpi-fiche-field">
+            <label>Nombre maximum de résultats</label>
+            <input type="number" min="0" class="form-control" @bind="Server.MaxResults" />
+            <div class="form-hint">0 pour ne pas limiter côté client.</div>
+        </div>
+    </div>
+</div>
+
+<p class="hint">
+    Taille de page et nombre maximum de résultats ne servent qu'aux recherches de masse : la
+    connexion d'un utilisateur ne ramène qu'une entrée. Ils prendront leur sens le jour où une
+    synchronisation périodique de l'annuaire existera.
+</p>
+
+@code {
+    [Parameter, EditorRequired]
+    public AuthLdapServer Server { get; set; } = null!;
+}
