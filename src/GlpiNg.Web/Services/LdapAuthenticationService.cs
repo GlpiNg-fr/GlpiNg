@@ -62,6 +62,14 @@ public class LdapAuthenticationService(
             .ThenBy(s => s.Id)
             .ToListAsync(ct);
 
+        if (servers.Count == 0)
+        {
+            logger.LogWarning(
+                "Aucun annuaire LDAP actif a essayer pour « {User} »{Filter}. Verifiez que l'annuaire est bien marque « Active » sur sa fiche.",
+                userName,
+                preferredServerId is { } id ? $" (source imposee : annuaire #{id})" : string.Empty);
+        }
+
         foreach (AuthLdapServer server in servers)
         {
             LdapBindOutcome outcome = TryBind(server, userName, password);
