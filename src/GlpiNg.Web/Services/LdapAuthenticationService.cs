@@ -29,6 +29,23 @@ public sealed record LdapAuthResult(
 public sealed record LdapConnectionTestResult(bool Success, string Message);
 
 /// <summary>
+/// Un compte tel que l'annuaire le décrit, avant tout import. <paramref name="Attributes"/> porte
+/// les valeurs brutes, indexées par nom d'attribut : c'est la correspondance configurée sur
+/// l'annuaire qui décide ensuite de ce qui va dans quel champ.
+/// </summary>
+public sealed record LdapDirectoryUser(string Login, string Dn, IReadOnlyDictionary<string, string> Attributes)
+{
+    public string? Value(string? fieldName)
+        => string.IsNullOrWhiteSpace(fieldName) ? null : Attributes.GetValueOrDefault(fieldName.Trim());
+}
+
+/// <summary>Résultat d'une recherche d'annuaire : les comptes trouvés, ou le message d'erreur.</summary>
+public sealed record LdapSearchOutcome(IReadOnlyList<LdapDirectoryUser> Users, string? Error)
+{
+    public bool Success => Error is null;
+}
+
+/// <summary>
 /// Authentifie un identifiant/mot de passe par bind LDAP contre les annuaires configurés
 /// (voir <see cref="AuthLdapServer"/>), utilisée par AccountController.Login en complément
 /// du mot de passe local. Suit le schéma standard "search-then-bind" de GLPI : un premier
@@ -87,6 +104,84 @@ public class LdapAuthenticationService(
         }
 
         return LdapAuthResult.Failed;
+    }
+
+
+    /// <summary>
+    /// Recherche des comptes dans un annuaire, pour l'import manuel depuis
+    /// Administration &gt; Utilisateurs. Contrairement à <see cref="TryAuthenticateAsync"/>, aucun
+    /// mot de passe n'est vérifié : seul le compte de service (ou le bind anonyme) est utilisé.
+    ///
+    /// C'est ici que « Taille de page » et « Nombre maximum de résultats » de l'onglet
+    /// « Informations avancées » prennent enfin leur sens : ce sont les seules recherches de masse
+    /// de l'application.
+    /// </summary>
+    public async Task<LdapSearchOutcome> SearchUsersAsync(int serverId, string? term, CancellationToken ct)
+    {
+        await using GlpiNgDbContext db = await dbFactory.CreateDbContextAsync(ct);
+        AuthLdapServer? server = await db.AuthLdapServers.AsNoTracking().FirstOrDefaultAsync(s => s.Id == serverId, ct);
+
+        if (server is null)
+        {
+            return new LdapSearchOutcome([], "Annuaire introuvable.");
+        }
+
+        try
+        {
+            using LdapConnection connection = CreateConnection(server);
+            BindService(connection, server);
+
+            string loginField = string.IsNullOrWhiteSpace(server.LoginField) ? "uid" : server.LoginField.Trim();
+
+            // Toutes les entrées qui portent l'attribut d'identifiant, restreintes au filtre de
+            // connexion de l'annuaire s'il y en a un — donc exactement la population qui pourrait
+            // se connecter, et pas l'annuaire entier.
+            string termFilter = string.IsNullOrWhiteSpace(term)
+                ? $"({loginField}=*)"
+                : $"({loginField}=*{EscapeLdapFilterValue(term.Trim())}*)";
+
+            string filter = string.IsNullOrWhiteSpace(server.LoginFilter)
+                ? termFilter
+                : $"(&{termFilter}{server.LoginFilter})";
+
+            string[] requested = [.. UserAttributeNames(server).Prepend(loginField)];
+
+            SearchRequest request = new(server.BaseDn, filter, System.DirectoryServices.Protocols.SearchScope.Subtree, requested);
+
+            if (server.MaxResults > 0)
+            {
+                request.SizeLimit = server.MaxResults;
+            }
+
+            if (server.PageSize > 0)
+            {
+                request.Controls.Add(new PageResultRequestControl(server.PageSize));
+            }
+
+            SearchResponse response = (SearchResponse)connection.SendRequest(request);
+
+            List<LdapDirectoryUser> users = [];
+            foreach (SearchResultEntry entry in response.Entries.OfType<SearchResultEntry>())
+            {
+                Dictionary<string, string> attributes = ReadAttributes(entry);
+
+                if (!attributes.TryGetValue(loginField, out string? login) || string.IsNullOrWhiteSpace(login))
+                {
+                    continue;
+                }
+
+                users.Add(new LdapDirectoryUser(login, entry.DistinguishedName, attributes));
+            }
+
+            return new LdapSearchOutcome(
+                [.. users.OrderBy(user => user.Login, StringComparer.CurrentCultureIgnoreCase)],
+                null);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Recherche LDAP échouée sur l'annuaire {Server}.", server.Name);
+            return new LdapSearchOutcome([], ex.Message);
+        }
     }
 
     /// <summary>Vérifie qu'un annuaire est joignable et que le bind de service (ou anonyme) fonctionne — sans authentifier d'utilisateur.</summary>

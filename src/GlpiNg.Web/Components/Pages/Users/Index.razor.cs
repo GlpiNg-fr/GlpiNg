@@ -1,6 +1,7 @@
-using BlazorBootstrap;
+﻿using BlazorBootstrap;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
+using GlpiNg.Web.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Identity;
@@ -22,6 +23,9 @@ public partial class Index : ComponentBase
     [Inject]
     private ToastService ToastService { get; set; } = null!;
 
+    [Inject]
+    private LdapUserImportService LdapImport { get; set; } = null!;
+
     private List<GlpiUser> _users = [];
     private List<GlpiUser> _filteredUsers = [];
     private string _searchTerm = string.Empty;
@@ -29,6 +33,17 @@ public partial class Index : ComponentBase
     private GlpiUser _newUser = NewBlankUser();
     private string _newPassword = string.Empty;
     private string _newPasswordConfirm = string.Empty;
+
+    // --- Ajout depuis une source externe (annuaire LDAP)
+    private List<AuthLdapServer> _ldapServers = [];
+    private int _importServerId;
+    private string _importTerm = string.Empty;
+    private List<LdapImportCandidate> _ldapCandidates = [];
+    private readonly HashSet<string> _selectedLogins = [];
+    private string? _ldapImportError;
+    private bool _isSearchingLdap;
+    private bool _isImportingLdap;
+    private bool _hasSearchedLdap;
 
     private bool AllSelected => _filteredUsers.Count > 0 && _selectedIds.Count == _filteredUsers.Count;
 
@@ -38,7 +53,101 @@ public partial class Index : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadLdapServersAsync();
         await LoadAsync();
+    }
+
+    /// <summary>
+    /// Annuaires proposés à l'import : uniquement les actifs, comme pour l'authentification. Un
+    /// annuaire désactivé ne doit pas servir de source.
+    /// </summary>
+    private async Task LoadLdapServersAsync()
+    {
+        await using GlpiNgDbContext db = await DbFactory.CreateDbContextAsync();
+        _ldapServers = await db.AuthLdapServers.AsNoTracking()
+            .Where(server => server.IsActive)
+            .OrderByDescending(server => server.IsDefault)
+            .ThenBy(server => server.Name)
+            .ToListAsync();
+
+        _importServerId = _ldapServers.FirstOrDefault()?.Id ?? 0;
+    }
+
+    private async Task OpenImportAsync()
+    {
+        _ldapCandidates = [];
+        _selectedLogins.Clear();
+        _ldapImportError = null;
+        _hasSearchedLdap = false;
+        _importTerm = string.Empty;
+
+        // Rechargé à l'ouverture : un annuaire a pu être ajouté ou désactivé depuis l'affichage
+        // de la page.
+        await LoadLdapServersAsync();
+        await JS.InvokeVoidAsync("glpiNg.showModal", "ldapImportModal");
+    }
+
+    private async Task SearchLdapAsync()
+    {
+        if (_importServerId == 0)
+        {
+            return;
+        }
+
+        _isSearchingLdap = true;
+        _ldapImportError = null;
+        _selectedLogins.Clear();
+
+        try
+        {
+            (IReadOnlyList<LdapImportCandidate> candidates, string? error) =
+                await LdapImport.SearchAsync(_importServerId, _importTerm);
+
+            _ldapCandidates = [.. candidates];
+            _ldapImportError = error;
+            _hasSearchedLdap = true;
+        }
+        finally
+        {
+            _isSearchingLdap = false;
+        }
+    }
+
+    private void ToggleLogin(string login, bool selected)
+    {
+        if (selected) _selectedLogins.Add(login);
+        else _selectedLogins.Remove(login);
+    }
+
+    private async Task ImportLdapUsersAsync()
+    {
+        if (_selectedLogins.Count == 0)
+        {
+            return;
+        }
+
+        _isImportingLdap = true;
+
+        try
+        {
+            LdapImportResult result = await LdapImport.ImportAsync(_importServerId, [.. _selectedLogins]);
+
+            ToastService.Notify(new ToastMessage(
+                result.Created > 0 ? ToastType.Success : ToastType.Warning,
+                $"{result.Created} compte(s) importé(s)" + (result.Skipped > 0 ? $", {result.Skipped} ignoré(s)." : ".")));
+
+            foreach (string warning in result.Warnings)
+            {
+                ToastService.Notify(new ToastMessage(ToastType.Warning, warning));
+            }
+
+            await JS.InvokeVoidAsync("glpiNg.hideModal", "ldapImportModal");
+            await LoadAsync();
+        }
+        finally
+        {
+            _isImportingLdap = false;
+        }
     }
 
     private async Task LoadAsync()

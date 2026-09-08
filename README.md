@@ -131,7 +131,11 @@ directement par le code hôte. Un futur module Tickets suivrait le même schéma
 
 ### Administration
 
-- Gestion CRUD des utilisateurs (`/admin/users`), groupes (`/admin/groups`,
+- Gestion CRUD des utilisateurs (`/admin/users`), avec « Ajout depuis une source
+  externe » dans le menu du bouton d'ajout : recherche dans un annuaire LDAP et
+  import des comptes choisis, sans attendre leur première connexion ni activer le
+  provisionnement automatique.
+- Gestion CRUD des groupes (`/admin/groups`,
   hiérarchie parent/enfants), entités (`/admin/entities`, hiérarchie + adresses),
   profils (`/admin/profiles`) — avec historique des modifications par fiche.
 - Journaux applicatifs (`/admin/logs`) et préférences de compte

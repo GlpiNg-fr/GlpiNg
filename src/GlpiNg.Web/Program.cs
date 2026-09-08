@@ -266,6 +266,8 @@ public class Program
             builder.Services.AddScoped<ProfileRightsService>();
             builder.Services.AddScoped<EntityDeletionGuard>();
             builder.Services.AddScoped<IEntityOptionsProvider, EntityOptionsProvider>();
+            builder.Services.AddScoped<LdapAccountProvisioner>();
+            builder.Services.AddScoped<LdapUserImportService>();
             builder.Services.AddScoped<UserEntityAccessService>();
             builder.Services.AddScoped<IDbContextFactory<GlpiNgDbContext>, EntityScopedDbContextFactory>();
 
