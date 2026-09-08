@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
 using Microsoft.EntityFrameworkCore;
@@ -41,15 +41,19 @@ public sealed class ProfileRightsService(IRootDbContextFactory dbFactory)
 
         await using GlpiNgDbContext db = dbFactory.CreateDbContext();
 
-        List<(int HabilitationEntityId, bool IsRecursive, GlpiProfile Profile)> habilitations = await db.UserProfiles
+        // Type anonyme plutôt qu'un ValueTuple construit explicitement : la projection est alors
+        // d'une forme qu'EF sait traduire à coup sûr. Cette requête s'exécute à chaque connexion
+        // d'un compte non administrateur, juste après celle des habilitations — elle n'a pas le
+        // droit d'échouer à la traduction.
+        var habilitations = await db.UserProfiles
             .AsNoTracking()
             .Where(h => h.UserId == user.Id)
-            .Select(h => new ValueTuple<int, bool, GlpiProfile>(h.EntityId, h.IsRecursive, h.Profile))
+            .Select(h => new { h.EntityId, h.IsRecursive, h.Profile })
             .ToListAsync(ct);
 
         List<GlpiProfile> applicable = [.. habilitations
-            .Where(h => h.HabilitationEntityId == entityId
-                        || (h.IsRecursive && tree.IsSelfOrDescendant(h.HabilitationEntityId, entityId)))
+            .Where(h => h.EntityId == entityId
+                        || (h.IsRecursive && tree.IsSelfOrDescendant(h.EntityId, entityId)))
             .Select(h => h.Profile)];
 
         if (applicable.Count == 0)
