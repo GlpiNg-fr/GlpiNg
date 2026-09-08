@@ -25,8 +25,9 @@ public class UserCredentialAuthenticator(
     /// Authentifie <paramref name="userName"/>/<paramref name="password"/>. Si
     /// <paramref name="forcedSource"/> vaut 0, seul le mot de passe local est vérifié ; s'il vaut
     /// un AuthLdapServer.Id, seul cet annuaire est essayé ; sinon (null), choix automatique :
-    /// mot de passe local si le compte en a un, bind LDAP sinon (annuaire déjà connu pour ce
-    /// compte en priorité, sinon tous les annuaires actifs, par défaut d'abord).
+    /// mot de passe local d'abord, puis bind LDAP si celui-ci échoue ou si le compte est déjà
+    /// rattaché à un annuaire (annuaire connu pour ce compte en priorité, sinon tous les annuaires
+    /// actifs, celui par défaut d'abord).
     /// </summary>
     public async Task<GlpiUser?> AuthenticateAsync(string userName, string password, int? forcedSource, CancellationToken ct)
     {
@@ -34,9 +35,19 @@ public class UserCredentialAuthenticator(
 
         if (forcedSource == 0)
         {
-            return user is not null && user.AuthSource == UserAuthSource.Local && VerifyLocalPassword(user, password)
-                ? user
-                : null;
+            // Source imposée à « Base GlpiNg (local) » depuis le sélecteur : aucun annuaire n'est
+            // essayé, même si le compte en a un. C'est voulu, mais c'est une cause d'échec très
+            // déroutante quand le sélecteur a été laissé sur sa valeur par défaut.
+            if (user is not null && user.AuthSource == UserAuthSource.Local && VerifyLocalPassword(user, password))
+            {
+                return user;
+            }
+
+            logger.LogInformation(
+                "Connexion refusée pour « {User} » : la source « Base GlpiNg (local) » a été imposée depuis la page de connexion, aucun annuaire LDAP n'a donc été essayé.",
+                userName);
+
+            return null;
         }
 
         if (forcedSource is { } ldapServerId)
@@ -45,9 +56,25 @@ public class UserCredentialAuthenticator(
             return authenticated ? result : null;
         }
 
+        // Compte marqué "local" : on vérifie d'abord son mot de passe local, mais un échec ne
+        // conclut pas — on enchaîne sur les annuaires. C'est indispensable pour le cas le plus
+        // courant de mise en place d'un annuaire : l'administrateur crée le compte à la main dans
+        // /admin/users (donc AuthSource = Local, le défaut) pour ne pas avoir à activer le
+        // provisionnement automatique, puis l'utilisateur se connecte avec son mot de passe
+        // d'annuaire. Un retour direct ici refusait cette connexion sans même interroger
+        // l'annuaire, et c'est aussi ce qui rendait inopérant le contournement « créez d'abord le
+        // compte ». Un bind LDAP réussi rebascule ensuite le compte sur AuthSource = Ldap (voir
+        // AuthenticateLdapAsync).
         if (user is not null && user.AuthSource == UserAuthSource.Local)
         {
-            return VerifyLocalPassword(user, password) ? user : null;
+            if (VerifyLocalPassword(user, password))
+            {
+                return user;
+            }
+
+            logger.LogInformation(
+                "Mot de passe local incorrect pour « {User} » : tentative sur les annuaires LDAP configurés.",
+                userName);
         }
 
         (bool ldapAuthenticated, GlpiUser? ldapUser) = await AuthenticateLdapAsync(user, userName, password, user?.LdapServerId, ct);

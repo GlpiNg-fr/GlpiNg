@@ -36,7 +36,13 @@
             {
                 <div class="glpi-login-field">
                     <label for="authSource">Source d'authentification</label>
+                    @* « Automatique » en premier, donc sélectionné par défaut : la valeur vide ne
+                       poste rien, et le serveur enchaîne mot de passe local puis annuaires. Avec
+                       « Base GlpiNg (local) » en tête, un utilisateur qui ne touchait pas au
+                       sélecteur imposait sans le savoir la source locale, et aucun annuaire
+                       n'était essayé — échec indistinguable d'un mauvais mot de passe. *@
                     <select id="authSource" name="authSource">
+                        <option value="">Automatique</option>
                         <option value="0">Base GlpiNg (local)</option>
                         @foreach (AuthLdapServer server in _ldapServers)
                         {
