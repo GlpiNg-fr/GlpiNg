@@ -522,11 +522,23 @@ public class AgentController(
             // Sans ce bloc, l'échec remontait en 500 nu : l'agent réessayait indéfiniment et rien
             // n'indiquait quel agent ni quelle étape avait échoué. On trace, puis on répond une
             // erreur explicite — le contact de l'agent, lui, est déjà enregistré.
+            // Journal applicatif (console/fichier) d'abord : il ne dépend pas de la base, donc il
+            // reste lisible même quand c'est précisément la base qui pose problème. Le journal
+            // consultable dans l'UI, lui, ne peut par construction rien dire d'une panne d'écriture.
             logger.LogError(ex, "inventory: échec de l'import de l'inventaire de l'agent {AgentUuid} ({Device}).",
                 agentUuid, agent.DeviceId ?? agent.Hostname);
-            await eventLog.LogAsync("inventory", EventLogLevel.Error,
-                $"Échec de l'import de l'inventaire : {ex.Message}",
-                itemLabel: agent.DeviceId ?? agentUuid, cancellationToken: cancellationToken);
+
+            try
+            {
+                await eventLog.LogAsync("inventory", EventLogLevel.Error,
+                    $"Échec de l'import de l'inventaire : {ex.Message}",
+                    itemLabel: agent.DeviceId ?? agentUuid, cancellationToken: cancellationToken);
+            }
+            catch (Exception logEx)
+            {
+                // Écrire la trace ne doit jamais masquer l'erreur d'origine par la sienne.
+                logger.LogError(logEx, "inventory: échec de l'écriture au journal de l'erreur ci-dessus.");
+            }
 
             return StatusCode(500, new ProtocolAnswer { Status = "error", Message = $"inventory import failed: {ex.Message}" });
         }
