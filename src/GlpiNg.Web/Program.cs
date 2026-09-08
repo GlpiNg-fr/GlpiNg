@@ -9,6 +9,7 @@ using GlpiNg.Modules.Abstractions.Cron;
 using GlpiNg.Modules.Abstractions.Deployment;
 using GlpiNg.Modules.Abstractions.Entities;
 using GlpiNg.Modules.Abstractions.Import;
+using GlpiNg.Modules.Abstractions.Storage;
 using GlpiNg.Modules.Cron;
 using GlpiNg.Modules.Deployment;
 using GlpiNg.Modules.Inventory;
@@ -61,6 +62,12 @@ public class Program
         // prioritaire sur appsettings.json une fois l'installation terminée. Ne doit jamais être
         // commité (voir .gitignore).
         builder.Configuration.AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true);
+
+        // Emplacements de stockage : résolus avant tout le reste, car la configuration de
+        // DataProtection en dépend et intervient au démarrage. Instancié à la main plutôt que
+        // résolu depuis le conteneur, qui n'est pas encore construit à ce stade.
+        StoragePaths storagePaths = new(builder.Configuration, builder.Environment);
+        builder.Services.AddSingleton<IStoragePaths>(storagePaths);
 
         // UI Blazor Server (rendu interactif)
         builder.Services.AddRazorComponents()
@@ -306,7 +313,14 @@ public class Program
             // authentifié et Active Directory refuse ensuite toute recherche, sans que la fiche de
             // l'annuaire ne laisse rien paraître. Le nom fixé ici découple les secrets du chemin
             // d'installation.
-            builder.Services.AddDataProtection().SetApplicationName("GlpiNg");
+            // Clés persistées sous la racine de stockage plutôt qu'à l'emplacement par défaut
+            // (%LOCALAPPDATA%\ASP.NET\DataProtection-Keys), qui est propre au compte Windows
+            // exécutant l'application : lancer le service sous un autre compte y rendait illisibles
+            // tous les secrets déjà chiffrés — dont le mot de passe du compte de connexion LDAP.
+            // Sous la racine, les clés suivent l'installation et se sauvegardent avec elle.
+            builder.Services.AddDataProtection()
+                .SetApplicationName("GlpiNg")
+                .PersistKeysToFileSystem(new DirectoryInfo(storagePaths.Ensure(storagePaths.Keys)));
             builder.Services.AddSingleton<AuthSecretProtector>();
             builder.Services.AddSingleton<LdapAuthenticationService>();
             builder.Services.AddScoped<UserCredentialAuthenticator>();

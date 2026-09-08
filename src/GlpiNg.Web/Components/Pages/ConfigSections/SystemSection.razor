@@ -1,9 +1,14 @@
+﻿@using GlpiNg.Modules.Abstractions.Storage
 @using GlpiNg.Modules.Cron
 @using GlpiNg.Modules.Cron.Models
 @using GlpiNg.Web.Data
+@using GlpiNg.Web.Models
+@using GlpiNg.Web.Services
 @using Microsoft.EntityFrameworkCore
 @inject IDbContextFactory<GlpiNgDbContext> DbFactory
 @inject CronIntervalState IntervalState
+@inject AppSettingsFileStore FileStore
+@inject IStoragePaths StoragePaths
 @inject ToastService ToastService
 
 <p class="hint" style="margin-left:0;">
@@ -29,6 +34,30 @@ else
             redémarrage.
         </p>
 
+        <div class="glpi-config-field">
+            <label for="storage-root">Emplacement de stockage des fichiers</label>
+            <input id="storage-root" class="glpi-config-input" @bind="_storageRootPath"
+                   placeholder="@_defaultRootHint" />
+        </div>
+        <p class="hint">
+            Racine des fichiers écrits par GlpiNg : paquets de déploiement et clés de chiffrement
+            (mots de passe des annuaires LDAP). Un chemin relatif est résolu depuis la racine du
+            programme. Laisser vide pour utiliser le dossier <code>data</code> à cet emplacement.
+            <strong>Un redémarrage est nécessaire</strong>, comme pour les adresses d'écoute.
+        </p>
+
+        @* Les chemins effectifs sont affichés parce que plusieurs sources peuvent les décider —
+           valeur configurée, défaut, et pour les paquets un éventuel PackageStorage:RootPath
+           hérité. Sans ça, « où sont mes fichiers » se répond en lisant le code. *@
+        <div class="glpi-config-field">
+            <label>Emplacements effectifs (au dernier démarrage)</label>
+            <ul class="mb-0">
+                <li><code>@StoragePaths.Root</code> — racine</li>
+                <li><code>@StoragePaths.Keys</code> — clés de chiffrement</li>
+                <li><code>@StoragePaths.Packages</code> — paquets de déploiement</li>
+            </ul>
+        </div>
+
         <button type="submit" class="glpi-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
     </EditForm>
 }
@@ -36,12 +65,20 @@ else
 @code {
     private int? _intervalMinutes;
     private bool _isSaving;
+    private string? _storageRootPath;
+    private string _defaultRootHint = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
         await using GlpiNgDbContext db = await DbFactory.CreateDbContextAsync();
         CronSettings? settings = await db.CronSettings.FirstOrDefaultAsync();
         _intervalMinutes = settings?.IntervalMinutes ?? CronIntervalState.DefaultMinutes;
+
+        ServerSettings serverSettings = await FileStore.ReadAsync();
+        _storageRootPath = serverSettings.StorageRootPath;
+
+        // Repère montré en filigrane du champ : l'emplacement retenu si on le laisse vide.
+        _defaultRootHint = Path.Combine(AppContext.BaseDirectory, GlpiNg.Web.Services.StoragePaths.DefaultFolderName);
     }
 
     private async Task SaveAsync()
@@ -71,12 +108,19 @@ else
 
             await db.SaveChangesAsync();
 
+            // Écrit dans appsettings.json, comme les adresses d'écoute : la racine de stockage est
+            // lue au démarrage, avant tout accès à la base.
+            ServerSettings serverSettings = await FileStore.ReadAsync();
+            serverSettings.StorageRootPath = _storageRootPath;
+            await FileStore.SaveAsync(serverSettings);
+
             // Réveille immédiatement CronBackgroundService pour qu'il reprenne son attente
             // avec le nouvel intervalle, sans attendre la fin du tick en cours.
             IntervalState.UpdateInterval(clamped);
 
             _intervalMinutes = clamped;
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Configuration enregistrée."));
+            ToastService.Notify(new ToastMessage(ToastType.Success,
+                "Configuration enregistrée. L'emplacement de stockage prendra effet au prochain redémarrage."));
         }
         finally
         {
