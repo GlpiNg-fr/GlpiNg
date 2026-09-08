@@ -248,7 +248,12 @@ simplification assumée de la matrice très fine de GLPI.
 
 ### Règles, dictionnaires et recherches
 
-- Règles ordinateurs (`/admin/rules`), dictionnaires (`/admin/dictionaries`,
+- Règles ordinateurs (`/admin/rules`) : critères sur les champs texte, sur
+  l'ancienneté du dernier inventaire (« remonte à plus de N heures ») et actions
+  sur le statut. Une règle peut s'appliquer à l'ajout, à la mise à jour et/ou à
+  l'exécution périodique — ce dernier moment est indispensable aux conditions
+  d'ancienneté, qu'un inventaire entrant ne peut jamais vérifier.
+- Dictionnaires (`/admin/dictionaries`,
   `DictionaryRuleEngine`), règles d'import/affectation avec liste noire et
   journal des imports refusés (`/admin/import-rules`).
 - Recherche multi-critères sur toutes les listes du parc : critères enchaînés par
