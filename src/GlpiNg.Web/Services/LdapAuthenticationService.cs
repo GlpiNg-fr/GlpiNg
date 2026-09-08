@@ -180,7 +180,7 @@ public class LdapAuthenticationService(
         catch (Exception ex)
         {
             logger.LogWarning(ex, "Recherche LDAP échouée sur l'annuaire {Server}.", server.Name);
-            return new LdapSearchOutcome([], ex.Message);
+            return new LdapSearchOutcome([], DescribeSearchFailure(server, ex));
         }
     }
 
@@ -197,13 +197,11 @@ public class LdapAuthenticationService(
 
             return new LdapConnectionTestResult(true, $"Connexion réussie à {server.Host}:{server.Port} (BaseDN accessible).");
         }
-        catch (LdapException ex)
-        {
-            return new LdapConnectionTestResult(false, $"Échec LDAP : {ex.Message}");
-        }
         catch (Exception ex)
         {
-            return new LdapConnectionTestResult(false, $"Échec de connexion : {ex.Message}");
+            // Même traduction que pour la recherche : c'est ce bouton que l'administrateur utilise
+            // pour diagnostiquer, il doit donc donner la cause et pas le code d'erreur brut.
+            return new LdapConnectionTestResult(false, $"Échec de connexion : {DescribeSearchFailure(server, ex)}");
         }
     }
 
@@ -379,17 +377,62 @@ public class LdapAuthenticationService(
         return raw.Contains('=') ? null : raw;
     }
 
+
+    /// <summary>
+    /// Traduit les échecs de recherche dont le message d'origine ne désigne pas la cause. Active
+    /// Directory renvoie « a successful bind must be completed » aussi bien pour un bind anonyme
+    /// que pour un bind non authentifié : dans les deux cas le vrai problème est le compte de
+    /// connexion, pas la recherche.
+    /// </summary>
+    private static string DescribeSearchFailure(AuthLdapServer server, Exception ex)
+    {
+        if (ex.Message.Contains("successful bind", StringComparison.OrdinalIgnoreCase)
+            || ex.Message.Contains("000004DC", StringComparison.OrdinalIgnoreCase))
+        {
+            return !server.UseBind || string.IsNullOrWhiteSpace(server.BindDn)
+                ? $"L'annuaire « {server.Name} » refuse les recherches sur une connexion anonyme. "
+                  + "Renseignez un compte de connexion (DN et mot de passe) sur sa fiche : c'est le cas d'Active Directory, "
+                  + "qui n'autorise pas la recherche anonyme."
+                : $"L'annuaire « {server.Name} » a refusé le compte de connexion « {server.BindDn} ». "
+                  + "Vérifiez le DN et le mot de passe — Active Directory accepte un DN complet, un UPN "
+                  + "(utilisateur@domaine) ou la forme DOMAINE\\utilisateur.";
+        }
+
+        return ex.Message;
+    }
+
+    /// <summary>
+    /// Bind du compte de service, préalable à toute recherche.
+    ///
+    /// Un bind portant un DN mais un mot de passe vide n'est pas une erreur au sens du protocole :
+    /// c'est le « bind non authentifié » de la RFC 4513, qu'Active Directory accepte tout en
+    /// laissant la session anonyme. La recherche qui suit échoue alors sur
+    /// <c>000004DC : In order to perform this operation a successful bind must be completed</c>,
+    /// message qui ne désigne pas la cause. On refuse donc ce cas explicitement plutôt que de le
+    /// laisser dégénérer.
+    /// </summary>
     private void BindService(LdapConnection connection, AuthLdapServer server)
     {
-        if (server.UseBind && !string.IsNullOrWhiteSpace(server.BindDn))
+        if (!server.UseBind || string.IsNullOrWhiteSpace(server.BindDn))
         {
-            string? bindPassword = protector.Unprotect(server.BindPasswordProtected);
-            connection.Bind(new NetworkCredential(server.BindDn, bindPassword ?? string.Empty));
-        }
-        else
-        {
+            // Bind anonyme : accepté par certains annuaires OpenLDAP, refusé par Active Directory,
+            // qui rejette ensuite toute recherche.
             connection.Bind(new NetworkCredential());
+            return;
         }
+
+        string? bindPassword = protector.Unprotect(server.BindPasswordProtected);
+
+        if (string.IsNullOrEmpty(bindPassword))
+        {
+            throw new InvalidOperationException(
+                $"Annuaire « {server.Name} » : un compte de connexion (« {server.BindDn} ») est configuré, "
+                + "mais aucun mot de passe utilisable n'est enregistré pour lui. "
+                + "Ressaisissez-le sur la fiche de l'annuaire. "
+                + "Sans mot de passe, la connexion resterait anonyme et Active Directory refuserait toute recherche.");
+        }
+
+        connection.Bind(new NetworkCredential(server.BindDn, bindPassword));
     }
 
     private static LdapConnection CreateConnection(AuthLdapServer server)
