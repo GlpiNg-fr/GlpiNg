@@ -113,6 +113,29 @@ public partial class Index : ComponentBase
         }
     }
 
+    /// <summary>Candidats que l'import peut effectivement traiter : ceux déjà présents dans GlpiNg
+    /// sont exclus, leur case étant désactivée dans le tableau.</summary>
+    private IEnumerable<LdapImportCandidate> ImportableCandidates =>
+        _ldapCandidates.Where(candidate => !candidate.AlreadyPresent);
+
+    private bool AllCandidatesSelected => ImportableCandidates.Any()
+        && _selectedLogins.IsSupersetOf(ImportableCandidates.Select(candidate => candidate.Login));
+
+    private void ToggleSelectAllCandidates(bool selectAll)
+    {
+        foreach (LdapImportCandidate candidate in ImportableCandidates)
+        {
+            if (selectAll)
+            {
+                _selectedLogins.Add(candidate.Login);
+            }
+            else
+            {
+                _selectedLogins.Remove(candidate.Login);
+            }
+        }
+    }
+
     private void ToggleLogin(string login, bool selected)
     {
         if (selected) _selectedLogins.Add(login);
