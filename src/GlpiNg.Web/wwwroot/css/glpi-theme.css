@@ -1999,3 +1999,17 @@ body {
   color: #232629;
   cursor: pointer;
 }
+
+/* Barre de progression sans pourcentage connu (import GLPI dont l'analyse n'a rien pu chiffrer).
+   Classe propre plutôt que celle de Tabler : elle vient d'un CDN, et une barre invisible parce
+   qu'une classe a changé de nom serait pire que pas de barre du tout. */
+.glpi-progress-indeterminate {
+  width: 40% !important;
+  animation: glpi-progress-slide 1.4s ease-in-out infinite;
+}
+
+@keyframes glpi-progress-slide {
+  0% { margin-left: 0; }
+  50% { margin-left: 60%; }
+  100% { margin-left: 0; }
+}

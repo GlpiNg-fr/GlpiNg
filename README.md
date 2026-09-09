@@ -371,6 +371,13 @@ passes), profils, utilisateurs, habilitations (`glpi_profiles_users`),
 appartenances aux groupes (`glpi_groups_users`), et un sous-ensemble de la
 configuration générale (`glpi_configs`, contexte `core`).
 
+L'import affiche une barre de progression : le plan est bâti au lancement depuis
+les volumes annoncés par l'analyse, si bien qu'une phase de dix mille ordinateurs
+et une de trois profils n'avancent pas d'autant. Les phases du parc rapportent
+élément par élément, celles de l'administration et du plugin à chaque entrée de
+phase (leur volume ne le justifie pas). Le rafraîchissement est étranglé à
+quelques images par seconde pour ne pas engorger le circuit Blazor.
+
 **Détection du plugin d'inventaire** : l'analyse signale la présence de GLPI
 Inventory (`glpiinventory`) ou de son ancêtre FusionInventory, avec sa version,
 son état et le volume de ce qu'il contient (paquets de déploiement, tâches,
