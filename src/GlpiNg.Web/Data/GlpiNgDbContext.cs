@@ -35,6 +35,7 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<SavedSearch> SavedSearches => Set<SavedSearch>();
     public DbSet<SavedSearchOrder> SavedSearchOrders => Set<SavedSearchOrder>();
     public DbSet<TableColumnPreference> TableColumnPreferences => Set<TableColumnPreference>();
+    public DbSet<LockedField> LockedFields => Set<LockedField>();
 
     public DbSet<Peripheral> Peripherals => Set<Peripheral>();
     public DbSet<PeripheralHistoryEntry> PeripheralHistoryEntries => Set<PeripheralHistoryEntry>();
@@ -886,6 +887,12 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
         modelBuilder.Entity<AppSetting>()
             .Property(s => s.SectionName)
             .HasMaxLength(100);
+
+        // Un verrou ne peut exister qu'une fois par champ et par élément — la pose est idempotente
+        // côté écran, cet index en fait une garantie.
+        modelBuilder.Entity<LockedField>()
+            .HasIndex(l => new { l.ItemType, l.ItemId, l.Field })
+            .IsUnique();
 
         ConfigureEntityScoping(modelBuilder);
     }

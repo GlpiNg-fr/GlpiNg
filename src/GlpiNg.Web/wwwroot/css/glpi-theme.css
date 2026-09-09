@@ -1952,3 +1952,28 @@ body {
   margin-right: 0.5rem;
   cursor: grab;
 }
+
+/* Cadenas de verrouillage d'un champ de fiche. Volontairement discret tant que le champ n'est pas
+   verrouillé : sa présence signale un champ alimenté par l'inventaire — donc réécrit à la prochaine
+   remontée si on ne le verrouille pas — sans encombrer la lecture de la fiche. */
+.glpi-fiche-field label:has(.glpi-field-lock) {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.2rem;
+}
+
+.glpi-field-lock {
+  border: 0;
+  background: none;
+  padding: 0 0.1rem;
+  line-height: 1;
+  opacity: 0.3;
+  transition: opacity 0.12s ease-in-out;
+}
+
+.glpi-fiche-field:hover .glpi-field-lock,
+.glpi-field-lock:focus-visible,
+.glpi-field-lock.text-warning {
+  opacity: 1;
+}

@@ -134,7 +134,17 @@ public class InventoryImportService(
         Dictionary<DictionaryRuleType, List<DictionaryRule>> dictionaries = await LoadActiveDictionaryRulesAsync(cancellationToken);
         Dictionary<ImportBlacklistType, HashSet<string>> blacklist = await LoadBlacklistAsync(cancellationToken);
 
-        ApplyHardware(computer, content, dictionaries, blacklist);
+        // Verrous du poste : chargés avant toute écriture. Un poste qui vient d'être créé n'en a
+        // aucun — son identifiant n'existe pas encore, et il n'y a rien à protéger.
+        IReadOnlySet<string> lockedFields = computer.Id > 0
+            ? (await db.Set<LockedField>()
+                .AsNoTracking()
+                .Where(lockedField => lockedField.ItemType == ComputerLockableFields.ItemType && lockedField.ItemId == computer.Id)
+                .Select(lockedField => lockedField.Field)
+                .ToListAsync(cancellationToken)).ToHashSet(StringComparer.Ordinal)
+            : new HashSet<string>(StringComparer.Ordinal);
+
+        ApplyHardware(computer, content, dictionaries, blacklist, lockedFields);
         ApplyComponents(computer, content, settings);
         if (settings.ImportSoftwares) ApplySoftwares(computer, content, dictionaries);
         if (settings.ImportMonitors) ApplyMonitors(computer, content);
@@ -290,24 +300,33 @@ public class InventoryImportService(
         return await ImportAsync(agent, content, cancellationToken);
     }
 
-    private static void ApplyHardware(Computer computer, InventoryContent content, IReadOnlyDictionary<DictionaryRuleType, List<DictionaryRule>> dictionaries, IReadOnlyDictionary<ImportBlacklistType, HashSet<string>> blacklist)
+    // « locked » : champs verrouillés sur ce poste (voir LockedField). L'inventaire ne les écrit
+    // pas — c'est le seul moyen de conserver une valeur corrigée à la main, qu'une remontée d'agent
+    // réécrirait sinon quelques heures plus tard.
+    private static void ApplyHardware(
+        Computer computer,
+        InventoryContent content,
+        IReadOnlyDictionary<DictionaryRuleType, List<DictionaryRule>> dictionaries,
+        IReadOnlyDictionary<ImportBlacklistType, HashSet<string>> blacklist,
+        IReadOnlySet<string> locked)
     {
         if (content.Hardware is { } hardware)
         {
-            computer.Name = string.IsNullOrWhiteSpace(hardware.Name) ? computer.Name : hardware.Name;
-            computer.HardwareUuid = hardware.Uuid ?? computer.HardwareUuid;
-            computer.ChassisType = hardware.ChassisType ?? computer.ChassisType;
-            computer.TotalMemoryMb = hardware.MemoryMb ?? computer.TotalMemoryMb;
-            computer.LastLoggedUser = hardware.LastLoggedUser ?? computer.LastLoggedUser;
-            computer.VmSystem = hardware.VmSystem ?? computer.VmSystem;
-            computer.Domain = hardware.Workgroup ?? computer.Domain;
+            if (!locked.Contains("Name")) computer.Name = string.IsNullOrWhiteSpace(hardware.Name) ? computer.Name : hardware.Name;
+            if (!locked.Contains("HardwareUuid")) computer.HardwareUuid = hardware.Uuid ?? computer.HardwareUuid;
+            if (!locked.Contains("ChassisType")) computer.ChassisType = hardware.ChassisType ?? computer.ChassisType;
+            if (!locked.Contains("TotalMemoryMb")) computer.TotalMemoryMb = hardware.MemoryMb ?? computer.TotalMemoryMb;
+            if (!locked.Contains("LastLoggedUser")) computer.LastLoggedUser = hardware.LastLoggedUser ?? computer.LastLoggedUser;
+            if (!locked.Contains("VmSystem")) computer.VmSystem = hardware.VmSystem ?? computer.VmSystem;
+            if (!locked.Contains("Domain")) computer.Domain = hardware.Workgroup ?? computer.Domain;
         }
 
         // Prise en main à distance : l'agent peut en remonter plusieurs (TeamViewer et AnyDesk
         // installés côte à côte). On garde la première entrée exploitable — le modèle n'en porte
         // qu'une, et c'est l'information « comment joindre ce poste » qui compte, pas l'inventaire
         // exhaustif des outils installés (les logiciels s'en chargent).
-        if (content.RemoteManagement.FirstOrDefault(remote => !string.IsNullOrWhiteSpace(remote.Id)) is { } remoteManagement)
+        if (!locked.Contains("RemoteManagement")
+            && content.RemoteManagement.FirstOrDefault(remote => !string.IsNullOrWhiteSpace(remote.Id)) is { } remoteManagement)
         {
             computer.RemoteManagementId = remoteManagement.Id;
             computer.RemoteManagementType = remoteManagement.Type;
@@ -316,26 +335,26 @@ public class InventoryImportService(
         if (content.Bios is { } bios)
         {
             DictionaryRuleEngine.Result manufacturer = DictionaryRuleEngine.Apply(bios.SystemManufacturer, GetRules(dictionaries, DictionaryRuleType.Manufacturer));
-            if (!manufacturer.Ignore) computer.Manufacturer = manufacturer.Value ?? computer.Manufacturer;
+            if (!manufacturer.Ignore && !locked.Contains("Manufacturer")) computer.Manufacturer = manufacturer.Value ?? computer.Manufacturer;
 
             DictionaryRuleEngine.Result model = DictionaryRuleEngine.Apply(bios.SystemModel, GetRules(dictionaries, DictionaryRuleType.ComputerModel));
-            if (!model.Ignore) computer.Model = model.Value ?? computer.Model;
+            if (!model.Ignore && !locked.Contains("Model")) computer.Model = model.Value ?? computer.Model;
 
             // Liste noire (voir ImportBlacklistEngine) : un numéro de série placeholder du
             // constructeur ("SYS-1234567890", etc.) est traité comme absent plutôt qu'enregistré.
             string? serial = ImportBlacklistEngine.IsBlacklisted(blacklist, ImportBlacklistType.SerialNumber, bios.SystemSerial) ? null : bios.SystemSerial;
-            computer.SerialNumber = serial ?? computer.SerialNumber;
+            if (!locked.Contains("SerialNumber")) computer.SerialNumber = serial ?? computer.SerialNumber;
         }
 
         if (content.OperatingSystem is { } os)
         {
             DictionaryRuleEngine.Result osName = DictionaryRuleEngine.Apply(os.FullName ?? os.Name, GetRules(dictionaries, DictionaryRuleType.OperatingSystem));
-            if (!osName.Ignore) computer.OperatingSystem = osName.Value ?? computer.OperatingSystem;
+            if (!osName.Ignore && !locked.Contains("OperatingSystem")) computer.OperatingSystem = osName.Value ?? computer.OperatingSystem;
 
             DictionaryRuleEngine.Result osVersion = DictionaryRuleEngine.Apply(os.Version, GetRules(dictionaries, DictionaryRuleType.OperatingSystemVersion));
-            if (!osVersion.Ignore) computer.OsVersion = osVersion.Value ?? computer.OsVersion;
+            if (!osVersion.Ignore && !locked.Contains("OsVersion")) computer.OsVersion = osVersion.Value ?? computer.OsVersion;
 
-            computer.OsKernelVersion = os.KernelVersion ?? computer.OsKernelVersion;
+            if (!locked.Contains("OsKernelVersion")) computer.OsKernelVersion = os.KernelVersion ?? computer.OsKernelVersion;
         }
     }
 

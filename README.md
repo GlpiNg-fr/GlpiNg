@@ -169,6 +169,13 @@ réseau, imprimante ou téléphone. Les fiches ordinateurs exposent
 composants, logiciels, volumes, batteries, ports réseau, antivirus, historique
 des modifications et historique d'import.
 
+Chaque champ de la fiche ordinateur alimenté par l'inventaire porte un cadenas
+(équivalent de `glpi_lockedfields`) : verrouillé, il n'est plus réécrit par les
+remontées d'agent, et la valeur saisie à la main fait foi. Le cadenas reste
+visible même déverrouillé — c'est ce qui fait savoir qu'un champ est alimenté par
+l'agent, donc qu'une correction manuelle y serait écrasée sans lui. Chaque
+bascule est tracée dans l'historique du poste.
+
 ### Déploiement et réseau (`/tools/deployments`)
 
 - Paquets et jobs de déploiement, fichiers stockés et servis par hash SHA512,
