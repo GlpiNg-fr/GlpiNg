@@ -73,7 +73,11 @@ public sealed class GlpiInventoryPluginImportService(
             progress?.Report(new GlpiImportProgress(GlpiImportPhases.DeployPackages, 0));
             await ImportDeployPackagesAsync(
                 connection, tablePrefix, entityId,
-                new GlpiDeployFileSource(selection.DeployFilesPath, selection.GlpiBaseUrl),
+                new GlpiDeployFileSource(
+                    selection.DeployFilesPath,
+                    selection.DeployFilesUserName,
+                    selection.DeployFilesPassword,
+                    selection.GlpiBaseUrl),
                 result, cancellationToken);
         }
 

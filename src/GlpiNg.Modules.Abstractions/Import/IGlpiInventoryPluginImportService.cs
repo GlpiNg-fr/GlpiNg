@@ -41,6 +41,13 @@ public class GlpiPluginImportSelection
     /// </summary>
     public string? DeployFilesPath { get; set; }
 
+    /// <summary>Compte à présenter au partage réseau hébergeant <see cref="DeployFilesPath"/>.
+    /// Optionnel : sans lui, la lecture se fait avec le compte du processus.</summary>
+    public string? DeployFilesUserName { get; set; }
+
+    /// <summary>Mot de passe associé à <see cref="DeployFilesUserName"/>.</summary>
+    public string? DeployFilesPassword { get; set; }
+
     /// <summary>Racine HTTP de GLPI, essayée quand le répertoire n'est pas renseigné ou ne rend rien.</summary>
     public string? GlpiBaseUrl { get; set; }
 
