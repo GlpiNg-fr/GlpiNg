@@ -1031,22 +1031,6 @@ body {
 .glpi-priority-5 { background: #fbdcdc; }
 
 /* --- Grille de cases à cocher (Analyse d'impact, Colonnes par défaut) --- */
-.glpi-checkbox-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 0.4rem 1rem;
-  max-width: 720px;
-  margin: 0.5rem 0 1.5rem;
-}
-
-.glpi-checkbox-grid label {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.8rem;
-  color: #232629;
-}
-
 .glpi-itemtype-columns {
   max-width: 720px;
   margin-bottom: 1rem;
@@ -1984,9 +1968,9 @@ body {
   opacity: 1;
 }
 
-/* Grille d'interrupteurs (onglets « Analyse d'impact » et « Colonnes par défaut »). Même gabarit
-   que .glpi-checkbox-grid, mais chaque entrée est faite de deux éléments — l'interrupteur et son
-   libellé, tous deux cliquables — au lieu d'un seul label enveloppant la case. */
+/* Grille d'interrupteurs (onglets « Analyse d'impact », « Colonnes par défaut » et « Assistance »).
+   Chaque entrée est faite de deux éléments — l'interrupteur et son libellé, tous deux cliquables —
+   là où la grille de cases à cocher qu'elle remplace n'avait qu'un label enveloppant sa case. */
 .glpi-switch-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));

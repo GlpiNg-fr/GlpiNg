@@ -1,4 +1,4 @@
-@using GlpiNg.Web.Models
+﻿@using GlpiNg.Web.Models
 @using GlpiNg.Web.Services
 @using GlpiNg.Web.Components.Shared
 @inject SettingsCacheService SettingsStore
@@ -55,13 +55,17 @@ else
 
         <div class="glpi-config-field">
             <label>Planification des journées ouvrées</label>
-            <div class="glpi-checkbox-grid" style="margin:0;grid-template-columns:repeat(auto-fill, minmax(120px, 1fr));">
+            <div class="glpi-switch-grid" style="margin:0;grid-template-columns:repeat(auto-fill, minmax(130px, 1fr));">
                 @foreach (var day in WorkDays)
                 {
-                    <label>
-                        <input type="checkbox" checked="@_model.PlanningWorkDays.Contains(day.Value)" @onchange="e => ToggleWorkDay(day.Value, (bool)e.Value!)" />
-                        @day.Label
-                    </label>
+                    var inputId = $"as-workday-{day.Value}";
+                    <div class="glpi-switch-grid-item">
+                        <label class="glpi-switch">
+                            <input id="@inputId" type="checkbox" checked="@_model.PlanningWorkDays.Contains(day.Value)" @onchange="e => ToggleWorkDay(day.Value, (bool)e.Value!)" />
+                            <span class="glpi-switch-slider"></span>
+                        </label>
+                        <label for="@inputId">@day.Label</label>
+                    </div>
                 }
             </div>
         </div>
