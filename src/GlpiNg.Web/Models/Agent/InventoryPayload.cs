@@ -144,6 +144,13 @@ public class InventoryContent
     [JsonPropertyName("modems")]
     public List<InventoryGenericDevice> Modems { get; set; } = [];
 
+    /// <summary>
+    /// Connecteurs physiques de la machine (section "ports" du protocole) : USB, série, parallèle,
+    /// vidéo, audio... Remontés par l'agent depuis Win32_PortConnector ou le type 8 de dmidecode.
+    /// </summary>
+    [JsonPropertyName("ports")]
+    public List<InventoryPort> Ports { get; set; } = [];
+
     [JsonPropertyName("simcards")]
     public List<InventorySimCard> SimCards { get; set; } = [];
 
@@ -459,6 +466,23 @@ public class InventoryMonitor
 }
 
 /// <summary>content.batteries.</summary>
+/// <summary>Un connecteur physique remonté par la section "ports".</summary>
+public class InventoryPort
+{
+    [JsonPropertyName("name")]
+    public string? Name { get; set; }
+
+    [JsonPropertyName("caption")]
+    public string? Caption { get; set; }
+
+    [JsonPropertyName("description")]
+    public string? Description { get; set; }
+
+    /// <summary>Type de connecteur tel que nommé par l'agent : "USB", "Serial", "Video", ...</summary>
+    [JsonPropertyName("type")]
+    public string? Type { get; set; }
+}
+
 public class InventoryBattery
 {
     [JsonPropertyName("name")]

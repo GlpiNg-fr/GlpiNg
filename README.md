@@ -166,8 +166,11 @@ cartes SIM (ICCID, ligne, PIN/PUK, opérateur), plus une vue globale
 (`/parc/allassets`). Les actifs non gérés (`/parc/unmanaged`) exposent côté parc
 les équipements remontés par la découverte réseau, avec conversion en matériel
 réseau, imprimante ou téléphone. Les fiches ordinateurs exposent
-composants, logiciels, volumes, batteries, ports réseau, antivirus, historique
-des modifications et historique d'import.
+composants, logiciels, volumes, batteries, ports réseau, connecteurs, antivirus,
+historique des modifications et historique d'import. L'onglet « Connecteurs »
+reprend la section `ports` de l'inventaire — les prises physiques du châssis (USB,
+série, vidéo...), à distinguer de « Connexions » (ce qui y est branché) et de
+« Ports réseau » (les interfaces IP configurées).
 
 Le bouton « Actions » de la fiche ordinateur permet de réveiller le poste
 (Wake-on-LAN) : le serveur diffuse un magic packet sur **toutes** les adresses MAC

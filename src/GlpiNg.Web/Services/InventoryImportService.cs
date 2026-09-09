@@ -151,6 +151,7 @@ public class InventoryImportService(
         if (settings.ImportPeripherals) await ApplyPeripheralsAsync(computer, content, cancellationToken);
         ApplyVolumes(computer, content, settings);
         if (settings.ImportBatteries) ApplyBatteries(computer, content);
+        ApplyConnectors(computer, content);
         ApplyNetworkPorts(computer, content, blacklist);
         if (settings.ImportAntivirus) ApplyAntivirus(computer, content);
         await ApplySimCardsAsync(computer, content, cancellationToken);
@@ -831,6 +832,43 @@ public class InventoryImportService(
             });
         }
     }
+
+    /// <summary>
+    /// Remplace intégralement les connecteurs du poste par ceux de l'inventaire courant (section
+    /// "ports"), même logique d'instantané complet que <see cref="ApplyComponents"/>.
+    ///
+    /// Pas de réglage dédié dans <see cref="InventorySettings"/>, pour la même raison que les
+    /// sections génériques d'<see cref="ApplyComponents"/> : une case par section multiplierait les
+    /// réglages sans rien apporter.
+    ///
+    /// Les entrées sans aucun libellé exploitable sont ignorées : l'agent remonte volontiers des
+    /// connecteurs vides pour des emplacements que le BIOS déclare sans les nommer, et une liste de
+    /// « Connecteur » anonymes n'apprendrait rien.
+    /// </summary>
+    private static void ApplyConnectors(Computer computer, InventoryContent content)
+    {
+        computer.Connectors.Clear();
+
+        foreach (InventoryPort port in content.Ports)
+        {
+            string? designation = FirstNonBlank(port.Name, port.Caption, port.Description);
+            if (designation is null && string.IsNullOrWhiteSpace(port.Type))
+            {
+                continue;
+            }
+
+            computer.Connectors.Add(new ComputerConnector
+            {
+                Designation = designation ?? port.Type!,
+                Type = port.Type,
+                Caption = port.Caption,
+                Description = port.Description
+            });
+        }
+    }
+
+    private static string? FirstNonBlank(params string?[] values) =>
+        values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value))?.Trim();
 
     /// <summary>
     /// Remplace intégralement les ports réseau du poste par ceux de l'inventaire courant, même

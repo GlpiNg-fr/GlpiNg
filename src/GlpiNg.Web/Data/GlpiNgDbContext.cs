@@ -25,6 +25,7 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<ComputerPeripheral> ComputerPeripherals => Set<ComputerPeripheral>();
     public DbSet<ComputerVolume> ComputerVolumes => Set<ComputerVolume>();
     public DbSet<ComputerBattery> ComputerBatteries => Set<ComputerBattery>();
+    public DbSet<ComputerConnector> ComputerConnectors => Set<ComputerConnector>();
     public DbSet<ComputerNetworkPort> ComputerNetworkPorts => Set<ComputerNetworkPort>();
     public DbSet<ComputerAntivirus> ComputerAntiviruses => Set<ComputerAntivirus>();
     public DbSet<ComputerImportHistory> ComputerImportHistories => Set<ComputerImportHistory>();
