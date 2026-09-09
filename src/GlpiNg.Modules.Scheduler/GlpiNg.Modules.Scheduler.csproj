@@ -18,7 +18,7 @@
     <!-- Uniquement les abstractions EF Core (DbContext, DbSet<T>) : ce module ne connaît pas
          le fournisseur de base de données ni le DbContext concret de l'hôte — même principe que
          GlpiNg.Modules.Cron.csproj. -->
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />
   </ItemGroup>
 
   <ItemGroup>
