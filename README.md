@@ -386,9 +386,20 @@ propre, donc la reprise se demande explicitement. Idempotent par `SourceGlpiId`,
 sauf les actifs non gérés, corrélés par adresse MAC puis IP comme le fait la
 découverte réseau. Non repris : les tâches du plugin, et ses agents — déjà
 couverts par la catégorie « Agents » (`glpi_agents`, table du cœur de GLPI).
-Deux limites signalées à l'exécution : un paquet n'est repris que par son nom et
-son commentaire (ses actions et fichiers vivent hors de la base GLPI), et les
-protocoles SNMPv3 restent à « Aucun » plutôt que d'être devinés.
+Le contenu d'un paquet est repris : la colonne `json` du plugin, qui porte ses
+vérifications, ses actions (`cmd`, `move`, `copy`, `mkdir`, `delete`) et ses
+interactions utilisateur, est traduite vers les entrées correspondantes de GlpiNg
+(`GlpiDeployPackageJsonMapper`). La lecture est permissive — le format a bougé
+entre FusionInventory et GLPI Inventory — et ce qui n'a pas d'équivalent est
+listé dans les avertissements plutôt que perdu en silence.
+
+Les **fichiers** d'un paquet, eux, vivent sur le disque du serveur GLPI et
+restent hors de portée d'un import qui ne lit que la base. Ils ne sont
+volontairement pas créés : un paquet dont les fichiers seraient déclarés mais
+absents produirait un job que l'agent ne peut pas terminer, et l'échec ne se
+verrait qu'au déploiement. L'import liste à la place, paquet par paquet, les noms
+et empreintes à téléverser. Autre limite signalée à l'exécution : les protocoles
+SNMPv3 restent à « Aucun » plutôt que d'être devinés.
 
 **Non couvert / limites connues** :
 - Un seul compte utilisateur MySQL en lecture seule est supposé ; aucune

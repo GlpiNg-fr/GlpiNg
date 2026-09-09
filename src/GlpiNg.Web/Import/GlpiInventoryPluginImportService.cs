@@ -1,4 +1,6 @@
+﻿using System.Text.Json;
 using GlpiNg.Modules.Abstractions.Import;
+using GlpiNg.Modules.Deployment.Import;
 using GlpiNg.Modules.Deployment.Models;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Services;
@@ -208,40 +210,121 @@ public sealed class GlpiInventoryPluginImportService(GlpiNgDbContext db, EntityT
             return;
         }
 
-        string sql = $"SELECT id, name, {ColumnOrNull(columns, "comment")} FROM `{table}`";
+        // La colonne "json" porte le contenu du paquet (vérifications, actions, interactions).
+        // Elle n'existe pas sur toutes les versions du plugin : sans elle, on retombe sur l'import
+        // de la seule coquille, comme avant.
+        string sql = $"SELECT id, name, {ColumnOrNull(columns, "comment")}, {ColumnOrNull(columns, "json")} FROM `{table}`";
+
+        List<(string Package, GlpiDeployPackageContent Content)> imported = [];
 
         await foreach (MySqlDataReader reader in ReadAsync(connection, sql, ct))
         {
             int sourceId = reader.GetInt32("id");
+            string name = GetNullableString(reader, "name") ?? $"Paquet #{sourceId}";
+
+            GlpiDeployPackageContent content = GlpiDeployPackageJsonMapper.Parse(GetNullableString(reader, "json"));
 
             DeploymentPackage? existing = await db.DeploymentPackages.IgnoreQueryFilters()
                 .FirstOrDefaultAsync(package => package.SourceGlpiId == sourceId, ct);
 
             if (existing is null)
             {
-                db.DeploymentPackages.Add(new DeploymentPackage
+                DeploymentPackage created = new()
                 {
-                    Name = GetNullableString(reader, "name") ?? $"Paquet #{sourceId}",
+                    Name = name,
                     Description = GetNullableString(reader, "comment"),
                     SourceGlpiId = sourceId,
                     EntityId = entityId,
-                });
+                };
+                ApplyContent(created, content);
+                db.DeploymentPackages.Add(created);
                 result.DeployPackagesCreated++;
             }
             else
             {
-                existing.Name = GetNullableString(reader, "name") ?? existing.Name;
+                existing.Name = name;
                 existing.Description = GetNullableString(reader, "comment") ?? existing.Description;
+
+                // Un second passage réécrit le contenu depuis la source, comme le reste de
+                // l'import : c'est ce qui le rend idempotent. Un paquet vide côté GLPI n'écrase
+                // rien, pour ne pas effacer un contenu saisi ici entre deux imports.
+                if (!content.IsEmpty)
+                {
+                    ApplyContent(existing, content);
+                }
+
                 result.DeployPackagesUpdated++;
+            }
+
+            result.DeployPackageChecksImported += content.Checks.Count;
+            result.DeployPackageActionsImported += content.Actions.Count;
+
+            if (content.Files.Count > 0 || content.Unsupported.Count > 0)
+            {
+                imported.Add((name, content));
             }
         }
 
-        if (result.DeployPackagesCreated + result.DeployPackagesUpdated > 0)
+        ReportPackageGaps(imported, result);
+    }
+
+    private static void ApplyContent(DeploymentPackage package, GlpiDeployPackageContent content)
+    {
+        package.ChecksJson = JsonSerializer.Serialize(content.Checks);
+        package.ActionsJson = JsonSerializer.Serialize(content.Actions);
+        package.UserInteractionsJson = JsonSerializer.Serialize(content.UserInteractions);
+    }
+
+    /// <summary>
+    /// Dit précisément ce que l'import n'a pas pu reprendre, paquet par paquet.
+    ///
+    /// Les fichiers d'un paquet vivent sur le disque du serveur GLPI, hors de portée d'un import
+    /// qui ne lit que la base. Ils ne sont volontairement pas créés en base ici : un paquet dont
+    /// les fichiers sont déclarés mais absents produirait un job que l'agent ne peut pas terminer,
+    /// et l'échec ne se verrait qu'au déploiement. Mieux vaut un paquet visiblement incomplet
+    /// qu'un paquet qui semble prêt. Les noms et empreintes sont donc listés ici, pour que l'admin
+    /// sache exactement quoi téléverser.
+    /// </summary>
+    private static void ReportPackageGaps(
+        List<(string Package, GlpiDeployPackageContent Content)> imported, GlpiPluginImportResult result)
+    {
+        const int MaxDetailedPackages = 20;
+
+        List<(string Package, GlpiDeployPackageContent Content)> withFiles =
+            [.. imported.Where(entry => entry.Content.Files.Count > 0)];
+
+        if (withFiles.Count > 0)
         {
-            // Le contenu d'un paquet (vérifications, actions, interactions) est un document JSON
-            // propre au plugin, et ses fichiers vivent sur le disque du serveur GLPI, hors de
-            // portée d'un import qui ne lit que la base. Seule la coquille est reprise.
-            result.Warnings.Add("Paquets de déploiement : seuls le nom et le commentaire sont repris. Les vérifications, actions et fichiers associés restent à recréer — ils vivent hors de la base GLPI.");
+            result.DeployPackageFilesPending = withFiles.Sum(entry => entry.Content.Files.Count);
+            result.Warnings.Add(
+                $"Paquets de déploiement : {result.DeployPackageFilesPending} fichier(s) référencé(s) par {withFiles.Count} paquet(s) restent à téléverser. "
+                + "Leur contenu vit sur le disque du serveur GLPI, que cet import ne lit pas ; les vérifications et les actions, elles, ont été reprises.");
+
+            foreach ((string package, GlpiDeployPackageContent content) in withFiles.Take(MaxDetailedPackages))
+            {
+                string files = string.Join(", ", content.Files.Select(file =>
+                    file.FileName is { Length: > 0 } named ? named : $"(sans nom, {file.Sha512[..Math.Min(12, file.Sha512.Length)]}…)"));
+                result.Warnings.Add($"  « {package} » attend : {files}");
+            }
+
+            if (withFiles.Count > MaxDetailedPackages)
+            {
+                result.Warnings.Add($"  … et {withFiles.Count - MaxDetailedPackages} autre(s) paquet(s).");
+            }
+        }
+
+        List<string> unsupported = [.. imported
+            .SelectMany(entry => entry.Content.Unsupported)
+            .GroupBy(label => label, StringComparer.Ordinal)
+            .OrderByDescending(group => group.Count())
+            .Select(group => $"{group.Key} ×{group.Count()}")];
+
+        if (unsupported.Count > 0)
+        {
+            result.Warnings.Add(
+                "Paquets de déploiement : éléments sans équivalent dans GlpiNg, à recréer à la main — "
+                + string.Join(", ", unsupported.Take(10))
+                + (unsupported.Count > 10 ? ", …" : string.Empty));
         }
     }
 
