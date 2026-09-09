@@ -415,7 +415,11 @@ sélectionnés :
 
 - le **répertoire des fichiers** du plugin, vu depuis la machine GlpiNg (chemin
   local ou partage réseau) — route principale, qui ne dépend d'aucune convention
-  d'URL. Les fragments y sont retrouvés par leur nom au moyen d'un index bâti sur
+  d'URL. Un identifiant et un mot de passe optionnels permettent d'atteindre un
+  partage auquel le compte du service n'a pas accès : la session est ouverte le
+  temps de l'import (`WNetAddConnection2`, sans réserver de lettre de lecteur) et
+  refermée ensuite. Windows uniquement ; ailleurs, le partage doit être monté par
+  l'hôte au préalable, ce que l'import dit explicitement plutôt que d'échouer. Les fragments y sont retrouvés par leur nom au moyen d'un index bâti sur
   l'arborescence, quel que soit son découpage en sous-dossiers, et leur
   compression est détectée sur le contenu plutôt que déduite d'une extension ;
 - l'**URL de GLPI**, essayée en repli, avec des gabarits d'URL réglables
