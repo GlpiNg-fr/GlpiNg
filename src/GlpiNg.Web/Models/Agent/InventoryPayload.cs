@@ -286,6 +286,18 @@ public class InventoryBios
 
     [JsonPropertyName("ssn")]
     public string? SystemSerial { get; set; }
+
+    /// <summary>Version du BIOS/UEFI lui-même — à distinguer des champs "s*" ci-dessus, qui
+    /// décrivent la machine et non le firmware.</summary>
+    [JsonPropertyName("bversion")]
+    public string? BiosVersion { get; set; }
+
+    [JsonPropertyName("bmanufacturer")]
+    public string? BiosManufacturer { get; set; }
+
+    /// <summary>Date du BIOS, telle que remontée par l'agent (format libre selon la plateforme).</summary>
+    [JsonPropertyName("bdate")]
+    public string? BiosDate { get; set; }
 }
 
 public class InventoryOperatingSystem

@@ -523,6 +523,44 @@ public class InventoryImportService(
         AddGenericComponents(computer, content.Controllers, ComponentType.Controller, "Contrôleur");
         AddGenericComponents(computer, content.Sounds, ComponentType.SoundCard, "Carte son");
         AddGenericComponents(computer, content.Modems, ComponentType.Modem, "Modem");
+
+        AddFirmware(computer, content);
+    }
+
+    /// <summary>
+    /// Reprend le BIOS/UEFI de la section "bios" comme composant, à l'image du Firmware de GLPI.
+    ///
+    /// La section était déjà lue, mais seulement pour ses champs "s*" (smanufacturer, smodel, ssn),
+    /// qui décrivent la machine — pas le firmware. Sa version et sa date, elles, n'étaient nulle
+    /// part, alors qu'un parc se pilote en grande partie sur « qui n'est pas à jour ».
+    ///
+    /// Rien n'est ajouté si l'agent ne remonte ni version ni fabricant : un composant « BIOS » vide
+    /// n'apprendrait rien et alourdirait l'onglet de chaque poste.
+    /// </summary>
+    private static void AddFirmware(Computer computer, InventoryContent content)
+    {
+        if (content.Bios is not { } bios)
+        {
+            return;
+        }
+
+        string? manufacturer = FirstNonBlank(bios.BiosManufacturer);
+        string? version = FirstNonBlank(bios.BiosVersion);
+        string? date = FirstNonBlank(bios.BiosDate);
+
+        if (manufacturer is null && version is null)
+        {
+            return;
+        }
+
+        computer.Components.Add(new ComputerComponent
+        {
+            Type = ComponentType.Firmware,
+            Designation = manufacturer ?? "BIOS",
+            Capacity = version is null
+                ? date
+                : date is null ? version : $"{version} ({date})"
+        });
     }
 
     /// <summary>
