@@ -53,8 +53,11 @@ public class GlpiPluginImportResult
     /// <summary>Actions reprises depuis le contenu JSON des paquets.</summary>
     public int DeployPackageActionsImported { get; set; }
 
-    /// <summary>Fichiers qu'un paquet importé référence sans que l'import puisse les rapatrier :
-    /// ils vivent sur le disque du serveur GLPI et restent à téléverser à la main.</summary>
+    public int DeployPackageFilesCreated { get; set; }
+    public int DeployPackageFilesUpdated { get; set; }
+
+    /// <summary>Fichiers créés sans leur contenu : les octets vivent sur le disque du serveur GLPI
+    /// et restent à téléverser à la main depuis la fiche du paquet.</summary>
     public int DeployPackageFilesPending { get; set; }
     public int UnmanagedDevicesCreated { get; set; }
     public int UnmanagedDevicesUpdated { get; set; }

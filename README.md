@@ -400,13 +400,16 @@ interactions utilisateur, est traduite vers les entrées correspondantes de Glpi
 entre FusionInventory et GLPI Inventory — et ce qui n'a pas d'équivalent est
 listé dans les avertissements plutôt que perdu en silence.
 
-Les **fichiers** d'un paquet, eux, vivent sur le disque du serveur GLPI et
-restent hors de portée d'un import qui ne lit que la base. Ils ne sont
-volontairement pas créés : un paquet dont les fichiers seraient déclarés mais
-absents produirait un job que l'agent ne peut pas terminer, et l'échec ne se
-verrait qu'au déploiement. L'import liste à la place, paquet par paquet, les noms
-et empreintes à téléverser. Autre limite signalée à l'exécution : les protocoles
-SNMPv3 restent à « Aucun » plutôt que d'être devinés.
+Les **fichiers** d'un paquet sont créés avec leur nom, leur empreinte et leur
+taille — complétés au besoin depuis la table `deployfiles` du plugin — mais
+**sans leur contenu** : les octets vivent sur le disque du serveur GLPI, hors de
+portée d'un import qui ne lit que la base. La fiche du paquet les affiche
+« À téléverser », et le lancement d'une tâche comme l'assignation à un poste
+refusent un paquet dans cet état : sans ce garde-fou le job partirait avec un
+`multiparts` vide, et l'échec ne se verrait qu'au déploiement, poste par poste. Un
+second import ne touche jamais aux fragments déjà téléversés. Autre limite
+signalée à l'exécution : les protocoles SNMPv3 restent à « Aucun » plutôt que
+d'être devinés.
 
 **Non couvert / limites connues** :
 - Un seul compte utilisateur MySQL en lecture seule est supposé ; aucune
