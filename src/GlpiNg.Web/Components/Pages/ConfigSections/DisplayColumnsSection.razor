@@ -1,4 +1,4 @@
-@using GlpiNg.Web.Models
+﻿@using GlpiNg.Web.Models
 @using GlpiNg.Web.Services
 @inject SettingsCacheService SettingsStore
 @inject ConfigHistoryService History
@@ -23,14 +23,21 @@ else
                 var selected = _model.ColumnsByItemType.TryGetValue(itemType, out var cols) ? cols : [];
                 <div class="glpi-itemtype-columns-row">
                     <div class="itemtype-label">@label</div>
-                    <div class="glpi-checkbox-grid" style="margin:0;">
+                    <div class="glpi-switch-grid" style="margin:0;">
                         @foreach (var (columnKey, columnLabel) in DisplayColumnsSettings.AvailableColumns)
                         {
-                            <label>
-                                <input type="checkbox" checked="@selected.Contains(columnKey)"
-                                       @onchange="e => Toggle(itemType, columnKey, (bool)e.Value!)" />
-                                @columnLabel
-                            </label>
+                            @* L'identifiant porte le type d'objet : la même colonne est proposée
+                               sur chaque ligne, et un id répété rendrait le libellé de la première
+                               ligne cliquable pour toutes les autres. *@
+                            var inputId = $"cols-{itemType}-{columnKey}";
+                            <div class="glpi-switch-grid-item">
+                                <label class="glpi-switch">
+                                    <input id="@inputId" type="checkbox" checked="@selected.Contains(columnKey)"
+                                           @onchange="e => Toggle(itemType, columnKey, (bool)e.Value!)" />
+                                    <span class="glpi-switch-slider"></span>
+                                </label>
+                                <label for="@inputId">@columnLabel</label>
+                            </div>
                         }
                     </div>
                 </div>

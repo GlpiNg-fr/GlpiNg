@@ -1,4 +1,4 @@
-@using GlpiNg.Web.Models
+﻿@using GlpiNg.Web.Models
 @using GlpiNg.Web.Services
 @inject SettingsCacheService SettingsStore
 @inject ConfigHistoryService History
@@ -13,13 +13,17 @@ else
     <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glpi-config-form">
         <p class="hint" style="margin-left:0;">Types d'éléments proposés dans les graphes d'analyse d'impact.</p>
 
-        <div class="glpi-checkbox-grid">
+        <div class="glpi-switch-grid">
             @foreach (var (key, label) in ImpactAnalysisSettings.AvailableItemTypes)
             {
-                <label>
-                    <input type="checkbox" checked="@_model.EnabledItemTypes.Contains(key)" @onchange="e => Toggle(key, (bool)e.Value!)" />
-                    @label
-                </label>
+                var inputId = $"impact-{key}";
+                <div class="glpi-switch-grid-item">
+                    <label class="glpi-switch">
+                        <input id="@inputId" type="checkbox" checked="@_model.EnabledItemTypes.Contains(key)" @onchange="e => Toggle(key, (bool)e.Value!)" />
+                        <span class="glpi-switch-slider"></span>
+                    </label>
+                    <label for="@inputId">@label</label>
+                </div>
             }
         </div>
 
