@@ -85,7 +85,13 @@
         <table class="table table-vcenter card-table">
             <thead>
                 <tr>
-                    <th style="width: 2.5rem;"></th>
+                    <th style="width: 2.5rem;">
+                        @* Ne coche que les lignes affichées — la page courante là où le tableau est
+                           paginé : cocher ici ne doit jamais engager plus que ce qu'on voit. *@
+                        <input class="form-check-input m-0" type="checkbox" title="Sélectionner les éléments visibles"
+                               checked="@AllSelected"
+                               @onchange="@((ChangeEventArgs e) => ToggleSelectAll((bool)(e.Value ?? false)))" />
+                    </th>
                     <th></th>
                     <th>Identifiant</th>
                     <th>Nom de famille</th>
@@ -215,7 +221,13 @@
                         <table class="table table-vcenter card-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 2.5rem;"></th>
+                                    <th style="width: 2.5rem;">
+                                        @* Les candidats déjà présents ont leur case désactivée : les
+                                           inclure ici cocherait des lignes qu'on ne peut pas importer. *@
+                                        <input class="form-check-input m-0" type="checkbox" title="Sélectionner les candidats importables"
+                                               checked="@AllCandidatesSelected"
+                                               @onchange="@((ChangeEventArgs e) => ToggleSelectAllCandidates((bool)(e.Value ?? false)))" />
+                                    </th>
                                     <th>Identifiant</th>
                                     <th>Nom</th>
                                     <th>Courriel</th>
