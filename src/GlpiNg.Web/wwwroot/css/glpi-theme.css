@@ -2028,3 +2028,30 @@ body {
 .glpi-import-tabs .nav-link .glpi-switch {
   margin-left: 0.15rem;
 }
+
+/* Entête de l'onglet « Plugin d'inventaire » : ce qui a été trouvé sur la base source. Un simple
+   bandeau et non une alerte — la couleur d'alerte laissait croire à un avertissement, alors que ce
+   bloc ne fait que présenter un constat. */
+.glpi-import-plugin-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.85rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--tblr-border-color, #e6e7e9);
+  border-radius: 8px;
+  background: #f8f9fa;
+}
+
+.glpi-import-plugin-head > .ti {
+  font-size: 1.4rem;
+  color: #6c757d;
+}
+
+.glpi-import-plugin-name {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
