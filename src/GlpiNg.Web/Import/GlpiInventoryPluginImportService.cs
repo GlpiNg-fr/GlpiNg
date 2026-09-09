@@ -32,6 +32,7 @@ public sealed class GlpiInventoryPluginImportService(GlpiNgDbContext db, EntityT
         string connectionString,
         string tablePrefix,
         GlpiPluginImportSelection selection,
+        IProgress<GlpiImportProgress>? progress = null,
         CancellationToken cancellationToken = default)
     {
         GlpiPluginImportResult result = new();
@@ -52,21 +53,25 @@ public sealed class GlpiInventoryPluginImportService(GlpiNgDbContext db, EntityT
 
         if (selection.ImportIpRanges)
         {
+            progress?.Report(new GlpiImportProgress(GlpiImportPhases.IpRanges, 0));
             await ImportIpRangesAsync(connection, tablePrefix, entityId, result, cancellationToken);
         }
 
         if (selection.ImportSnmpCredentials)
         {
+            progress?.Report(new GlpiImportProgress(GlpiImportPhases.SnmpCredentials, 0));
             await ImportSnmpCredentialsAsync(connection, tablePrefix, entityId, result, cancellationToken);
         }
 
         if (selection.ImportDeployPackages)
         {
+            progress?.Report(new GlpiImportProgress(GlpiImportPhases.DeployPackages, 0));
             await ImportDeployPackagesAsync(connection, tablePrefix, entityId, result, cancellationToken);
         }
 
         if (selection.ImportUnmanagedDevices)
         {
+            progress?.Report(new GlpiImportProgress(GlpiImportPhases.UnmanagedDevices, 0));
             await ImportUnmanagedDevicesAsync(connection, tablePrefix, entityId, result, cancellationToken);
         }
 

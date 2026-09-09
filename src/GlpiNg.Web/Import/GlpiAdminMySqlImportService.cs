@@ -1,4 +1,4 @@
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using GlpiNg.Modules.Abstractions.Import;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
@@ -53,7 +53,11 @@ public class GlpiAdminMySqlImportService(GlpiNgDbContext db, SettingsCacheServic
         };
     }
 
-    public async Task<GlpiAdminImportResult> RunAsync(string connectionString, GlpiAdminImportSelection selection, CancellationToken cancellationToken = default)
+    public async Task<GlpiAdminImportResult> RunAsync(
+        string connectionString,
+        GlpiAdminImportSelection selection,
+        IProgress<GlpiImportProgress>? progress = null,
+        CancellationToken cancellationToken = default)
     {
         GlpiAdminImportResult result = new();
 
@@ -66,6 +70,8 @@ public class GlpiAdminMySqlImportService(GlpiNgDbContext db, SettingsCacheServic
 
         if (selection.ImportEntities)
         {
+            progress?.Report(new GlpiImportProgress(GlpiImportPhases.Entities, 0));
+
             try
             {
                 entityIdMap = await ImportEntitiesAsync(connection, result, cancellationToken);
@@ -83,6 +89,8 @@ public class GlpiAdminMySqlImportService(GlpiNgDbContext db, SettingsCacheServic
 
         if (selection.ImportGroups)
         {
+            progress?.Report(new GlpiImportProgress(GlpiImportPhases.Groups, 0));
+
             try
             {
                 groupIdMap = await ImportGroupsAsync(connection, result, cancellationToken);
@@ -100,6 +108,8 @@ public class GlpiAdminMySqlImportService(GlpiNgDbContext db, SettingsCacheServic
 
         if (selection.ImportProfiles)
         {
+            progress?.Report(new GlpiImportProgress(GlpiImportPhases.Profiles, 0));
+
             try
             {
                 profileIdMap = await ImportProfilesAsync(connection, result, cancellationToken);
@@ -117,6 +127,8 @@ public class GlpiAdminMySqlImportService(GlpiNgDbContext db, SettingsCacheServic
 
         if (selection.ImportUsers)
         {
+            progress?.Report(new GlpiImportProgress(GlpiImportPhases.Users, 0));
+
             try
             {
                 await ImportUsersAsync(connection, entityIdMap, groupIdMap, profileIdMap, result, cancellationToken);
@@ -129,6 +141,8 @@ public class GlpiAdminMySqlImportService(GlpiNgDbContext db, SettingsCacheServic
 
         if (selection.ImportGeneralConfig)
         {
+            progress?.Report(new GlpiImportProgress(GlpiImportPhases.GeneralConfig, 0));
+
             try
             {
                 result.GeneralConfigKeysImported = await ImportGeneralConfigAsync(connection, cancellationToken);

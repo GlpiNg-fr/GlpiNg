@@ -1,4 +1,4 @@
-namespace GlpiNg.Modules.Abstractions.Import;
+﻿namespace GlpiNg.Modules.Abstractions.Import;
 
 /// <summary>
 /// Implémenté par l'hôte (GlpiNg.Web) pour importer les données "Administration" (entités,
@@ -17,7 +17,14 @@ public interface IGlpiAdminImportService
     Task<GlpiAdminImportAnalysis> AnalyzeAsync(string connectionString, CancellationToken cancellationToken = default);
 
     /// <summary>Importe les catégories cochées dans <paramref name="selection"/> depuis la base GLPI MySQL source.</summary>
-    Task<GlpiAdminImportResult> RunAsync(string connectionString, GlpiAdminImportSelection selection, CancellationToken cancellationToken = default);
+    // « progress » : rapporteur d'avancement, optionnel. Ces catégories portent peu de lignes au
+    // regard du parc — l'annonce se fait à l'entrée de chaque phase, sans compter les éléments un
+    // à un.
+    Task<GlpiAdminImportResult> RunAsync(
+        string connectionString,
+        GlpiAdminImportSelection selection,
+        IProgress<GlpiImportProgress>? progress = null,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>Résumé, avant import, du contenu "Administration"/"Configuration" de la base GLPI MySQL source.</summary>

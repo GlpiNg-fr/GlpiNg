@@ -15,10 +15,14 @@
 /// </summary>
 public interface IGlpiInventoryPluginImportService
 {
+    // « progress » : rapporteur d'avancement, optionnel. Ces catégories portent peu de lignes au
+    // regard du parc — l'annonce se fait à l'entrée de chaque phase, sans compter les éléments un
+    // à un.
     Task<GlpiPluginImportResult> RunAsync(
         string connectionString,
         string tablePrefix,
         GlpiPluginImportSelection selection,
+        IProgress<GlpiImportProgress>? progress = null,
         CancellationToken cancellationToken = default);
 }
 
