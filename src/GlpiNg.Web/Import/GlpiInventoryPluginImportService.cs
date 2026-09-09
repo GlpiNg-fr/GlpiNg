@@ -220,6 +220,7 @@ public sealed class GlpiInventoryPluginImportService(GlpiNgDbContext db, EntityT
         // de la seule coquille, comme avant.
         string sql = $"SELECT id, name, {ColumnOrNull(columns, "comment")}, {ColumnOrNull(columns, "json")} FROM `{table}`";
 
+        Dictionary<string, GlpiDeployFileInfo> knownFiles = await LoadDeployFilesAsync(connection, prefix, ct);
         List<(string Package, GlpiDeployPackageContent Content)> imported = [];
 
         await foreach (MySqlDataReader reader in ReadAsync(connection, sql, ct))
@@ -242,6 +243,7 @@ public sealed class GlpiInventoryPluginImportService(GlpiNgDbContext db, EntityT
                     EntityId = entityId,
                 };
                 ApplyContent(created, content);
+                ApplyFiles(created, content, knownFiles, result);
                 db.DeploymentPackages.Add(created);
                 result.DeployPackagesCreated++;
             }
@@ -256,6 +258,9 @@ public sealed class GlpiInventoryPluginImportService(GlpiNgDbContext db, EntityT
                 if (!content.IsEmpty)
                 {
                     ApplyContent(existing, content);
+
+                    await db.Entry(existing).Collection(package => package.Files).LoadAsync(ct);
+                    ApplyFiles(existing, content, knownFiles, result);
                 }
 
                 result.DeployPackagesUpdated++;
@@ -271,6 +276,105 @@ public sealed class GlpiInventoryPluginImportService(GlpiNgDbContext db, EntityT
         }
 
         ReportPackageGaps(imported, result);
+    }
+
+    /// <summary>Ce que la table des fichiers du plugin sait d'un fichier, quand elle existe.</summary>
+    private sealed record GlpiDeployFileInfo(string? Name, long SizeBytes);
+
+    /// <summary>
+    /// Lit le répertoire de fichiers du plugin (<c>deployfiles</c>) : nom d'origine et taille, par
+    /// empreinte.
+    ///
+    /// L'association fichier ↔ paquet, elle, ne vient pas de cette table mais du document JSON du
+    /// paquet — c'est ainsi que le plugin la stocke. Cette lecture ne sert qu'à compléter ce que le
+    /// document ne dit pas toujours : la taille, et le nom quand il y manque. Table absente ou
+    /// colonnes différentes selon la version : on se contente alors de ce que le document porte.
+    ///
+    /// Les deux colonnes d'empreinte sont indexées, le document pouvant référencer indifféremment
+    /// l'empreinte complète ou sa forme courte selon la version du plugin.
+    /// </summary>
+    private static async Task<Dictionary<string, GlpiDeployFileInfo>> LoadDeployFilesAsync(
+        MySqlConnection connection, string prefix, CancellationToken ct)
+    {
+        Dictionary<string, GlpiDeployFileInfo> files = new(StringComparer.OrdinalIgnoreCase);
+
+        string table = prefix + "deployfiles";
+        HashSet<string> columns = await GetColumnsAsync(connection, table, ct);
+
+        if (columns.Count == 0)
+        {
+            return files;
+        }
+
+        string sql = $"SELECT {ColumnOrNull(columns, "name")}, {ColumnOrNull(columns, "filesize")}, "
+            + $"{ColumnOrNull(columns, "sha512")}, {ColumnOrNull(columns, "shortsha512")} FROM `{table}`";
+
+        await foreach (MySqlDataReader reader in ReadAsync(connection, sql, ct))
+        {
+            string? name = GetNullableString(reader, "name");
+            long size = long.TryParse(GetNullableString(reader, "filesize"), out long parsed) ? parsed : 0;
+            GlpiDeployFileInfo info = new(name, size);
+
+            foreach (string column in (string[])["sha512", "shortsha512"])
+            {
+                if (GetNullableString(reader, column) is { Length: > 0 } hash)
+                {
+                    files[hash] = info;
+                }
+            }
+        }
+
+        return files;
+    }
+
+    /// <summary>
+    /// Crée les fichiers qu'un paquet référence, sans leur contenu.
+    ///
+    /// Les octets vivent sur le disque du serveur GLPI, qu'un import lisant la base ne peut pas
+    /// atteindre : le fichier est donc créé avec son nom, son empreinte et sa taille, mais sans
+    /// aucun fragment. C'est un état volontairement visible — la fiche du paquet l'affiche « à
+    /// téléverser », et <c>DeploymentTaskLaunchService</c> refuse de lancer un paquet dans cet
+    /// état plutôt que d'envoyer à l'agent un job qu'il ne pourra pas terminer.
+    ///
+    /// Un fichier déjà présent n'est jamais réécrit au point de perdre ses fragments : un second
+    /// import ne doit pas effacer un contenu que l'administrateur a téléversé entre-temps.
+    /// </summary>
+    private static void ApplyFiles(
+        DeploymentPackage package,
+        GlpiDeployPackageContent content,
+        Dictionary<string, GlpiDeployFileInfo> knownFiles,
+        GlpiPluginImportResult result)
+    {
+        foreach (GlpiDeployFileReference reference in content.Files)
+        {
+            GlpiDeployFileInfo? known = knownFiles.GetValueOrDefault(reference.Sha512);
+            string fileName = reference.FileName ?? known?.Name ?? $"fichier-{reference.Sha512[..Math.Min(12, reference.Sha512.Length)]}";
+            long size = known?.SizeBytes ?? 0;
+
+            DeploymentPackageFile? existing = package.Files
+                .FirstOrDefault(file => string.Equals(file.Sha512, reference.Sha512, StringComparison.OrdinalIgnoreCase));
+
+            if (existing is null)
+            {
+                package.Files.Add(new DeploymentPackageFile
+                {
+                    FileName = fileName,
+                    Sha512 = reference.Sha512,
+                    SizeBytes = size,
+                });
+                result.DeployPackageFilesCreated++;
+            }
+            else
+            {
+                existing.FileName = fileName;
+                if (size > 0)
+                {
+                    existing.SizeBytes = size;
+                }
+
+                result.DeployPackageFilesUpdated++;
+            }
+        }
     }
 
     private static void ApplyContent(DeploymentPackage package, GlpiDeployPackageContent content)
@@ -302,14 +406,14 @@ public sealed class GlpiInventoryPluginImportService(GlpiNgDbContext db, EntityT
         {
             result.DeployPackageFilesPending = withFiles.Sum(entry => entry.Content.Files.Count);
             result.Warnings.Add(
-                $"Paquets de déploiement : {result.DeployPackageFilesPending} fichier(s) référencé(s) par {withFiles.Count} paquet(s) restent à téléverser. "
-                + "Leur contenu vit sur le disque du serveur GLPI, que cet import ne lit pas ; les vérifications et les actions, elles, ont été reprises.");
+                $"Paquets de déploiement : {result.DeployPackageFilesPending} fichier(s) créé(s) sur {withFiles.Count} paquet(s), sans leur contenu — à téléverser depuis la fiche du paquet. "
+                + "Les octets vivent sur le disque du serveur GLPI, que cet import ne lit pas. Tant qu'ils manquent, ces paquets ne peuvent pas être déployés.");
 
             foreach ((string package, GlpiDeployPackageContent content) in withFiles.Take(MaxDetailedPackages))
             {
                 string files = string.Join(", ", content.Files.Select(file =>
                     file.FileName is { Length: > 0 } named ? named : $"(sans nom, {file.Sha512[..Math.Min(12, file.Sha512.Length)]}…)"));
-                result.Warnings.Add($"  « {package} » attend : {files}");
+                result.Warnings.Add($"  « {package} » : {files}");
             }
 
             if (withFiles.Count > MaxDetailedPackages)
