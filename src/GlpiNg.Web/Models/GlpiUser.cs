@@ -1,3 +1,5 @@
+﻿using GlpiNg.Modules.Abstractions.Preferences;
+
 namespace GlpiNg.Web.Models;
 
 /// <summary>Source d'authentification d'un <see cref="GlpiUser"/> : mot de passe local, ou bind LDAP contre un <see cref="AuthLdapServer"/>.</summary>
@@ -16,6 +18,17 @@ public class GlpiUser
     public required string PasswordHash { get; set; }
     public bool IsAdmin { get; set; }
     public bool SidebarCollapsed { get; set; }
+
+    /// <summary>
+    /// Nombre de lignes affichées par défaut dans les tableaux paginés (page /preferences).
+    /// 0 signifie « rien de choisi » : la valeur par défaut de l'application s'applique alors, ce
+    /// qui évite d'avoir à renseigner tous les comptes existants au moment de la migration.
+    /// </summary>
+    public int ItemsPerPage { get; set; }
+
+    /// <summary>Écriture des adresses MAC à l'affichage — voir MacAddressFormat.</summary>
+    public MacAddressFormat MacAddressFormat { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     /// <summary>Id de l'utilisateur GLPI d'origine (glpi_users.id) — voir Import/GlpiAdminMySqlImportService, même principe que Computer.SourceGlpiId.</summary>

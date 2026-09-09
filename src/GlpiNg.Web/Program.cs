@@ -9,6 +9,7 @@ using GlpiNg.Modules.Abstractions.Cron;
 using GlpiNg.Modules.Abstractions.Deployment;
 using GlpiNg.Modules.Abstractions.Entities;
 using GlpiNg.Modules.Abstractions.Import;
+using GlpiNg.Modules.Abstractions.Preferences;
 using GlpiNg.Modules.Abstractions.Storage;
 using GlpiNg.Modules.Cron;
 using GlpiNg.Modules.Deployment;
@@ -271,6 +272,11 @@ public class Program
             builder.Services.AddSingleton<EntityTreeCache>();
             builder.Services.AddScoped<IEntityScopeProvider, EntityScopeProvider>();
             builder.Services.AddScoped<IProfileRightsProvider, ProfileRightsProvider>();
+
+            // Préférences d'affichage du compte connecté, consultées par les pages des modules
+            // (taille des tableaux, écriture des adresses MAC). Scoped : une lecture par circuit,
+            // mémorisée — voir UserPreferencesProvider.
+            builder.Services.AddScoped<IUserPreferences, UserPreferencesProvider>();
             builder.Services.AddScoped<ProfileRightsService>();
             builder.Services.AddScoped<EntityDeletionGuard>();
             builder.Services.AddScoped<IEntityOptionsProvider, EntityOptionsProvider>();

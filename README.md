@@ -111,6 +111,11 @@ directement par le code hôte. Un futur module Tickets suivrait le même schéma
 
 - Connexion par cookie (`/login`), avec un profil admin créé par l'assistant
   d'installation.
+- Préférences personnelles (`/preferences`) : repli du menu latéral, nombre
+  d'éléments par page dans les listes, et format d'affichage des adresses MAC
+  (laissé sur « Réglage de l'instance », il suit « Affichage adresse MAC » de la
+  configuration générale). Contrat `IUserPreferences` côté `Abstractions`, pour
+  que les pages des modules les consultent sans connaître le modèle de compte.
 - Sources d'authentification externes : annuaires LDAP (CRUD sous
   `/config/auth`), avec bind LDAP au login et provisionnement automatique
   des comptes externes si activé (`AuthSettings.AutoAddUsersFromExternalAuth`).
