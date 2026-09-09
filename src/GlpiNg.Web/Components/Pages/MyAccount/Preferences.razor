@@ -1,4 +1,5 @@
-@page "/preferences"
+﻿@page "/preferences"
+@using GlpiNg.Modules.Abstractions.Preferences
 @rendermode InteractiveServer
 
 <PageTitle>GlpiNg — Préférences</PageTitle>
@@ -14,9 +15,8 @@
     <div class="glpi-fiche-block">
         <div class="glpi-fiche-block-title"><i class="ti ti-layout-sidebar"></i>Affichage</div>
         <p class="text-secondary small">
-            GlpiNg n'a pas (encore) les dizaines de préférences d'affichage de GLPI (langue,
-            thème, tableaux de bord...) : seul le repli du menu latéral est une vraie préférence
-            exploitée par l'application.
+            GlpiNg n'a pas (encore) les dizaines de préférences d'affichage de GLPI (langue, thème,
+            tableaux de bord...). Celles qui suivent sont réellement exploitées par l'application.
         </p>
         <div class="row">
             <div class="col-md-6">
@@ -27,8 +27,43 @@
                         <option value="true">Oui</option>
                     </select>
                 </div>
+                <div class="glpi-fiche-field">
+                    <label>Éléments par page</label>
+                    <select class="form-select" value="@_itemsPerPage.ToString()"
+                            @onchange="@(e => _itemsPerPage = int.TryParse((string?)e.Value, out int size) ? size : DefaultItemsPerPage)">
+                        @foreach (int size in ItemsPerPageOptions)
+                        {
+                            <option value="@size">@size</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="glpi-fiche-field">
+                    <label>Format des adresses MAC</label>
+                    <select class="form-select" value="@((int)_macAddressFormat)"
+                            @onchange="@(e => _macAddressFormat = int.TryParse((string?)e.Value, out int format) && Enum.IsDefined((MacAddressFormat)format) ? (MacAddressFormat)format : MacAddressFormat.Default)">
+                        @foreach (MacAddressFormat format in Enum.GetValues<MacAddressFormat>())
+                        {
+                            @* L'exemple sert de libellé : « ColonUpper » ne dit rien, « AA:BB:CC:DD:EE:FF »
+                               se reconnaît immédiatement. *@
+                            <option value="@((int)format)">
+                                @(format == MacAddressFormat.Default
+                                    ? $"Réglage de l'instance ({MacAddressFormatter.Sample(_instanceMacFormat)})"
+                                    : MacAddressFormatter.Sample(format))
+                            </option>
+                        }
+                    </select>
+                </div>
             </div>
         </div>
+        <p class="text-secondary small mb-0">
+            Le nombre d'éléments par page s'applique à l'ouverture d'une liste ; il reste modifiable
+            au pied de chaque tableau pour la consultation en cours. Le format des adresses MAC ne
+            change que l'affichage — la valeur remontée par l'agent est conservée telle quelle. Laissé
+            sur « Réglage de l'instance », il suit « Affichage adresse MAC » de la configuration
+            générale.
+        </p>
     </div>
 
     <div class="d-flex justify-content-end gap-2 mt-3">
