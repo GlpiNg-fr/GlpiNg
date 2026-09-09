@@ -1,4 +1,4 @@
-namespace GlpiNg.Modules.Abstractions.Import;
+﻿namespace GlpiNg.Modules.Abstractions.Import;
 
 /// <summary>
 /// Importe les données du plugin d'inventaire de la base GLPI source (GLPI Inventory ou
@@ -42,6 +42,16 @@ public class GlpiPluginImportResult
     public int SnmpCredentialsUpdated { get; set; }
     public int DeployPackagesCreated { get; set; }
     public int DeployPackagesUpdated { get; set; }
+
+    /// <summary>Vérifications reprises depuis le contenu JSON des paquets.</summary>
+    public int DeployPackageChecksImported { get; set; }
+
+    /// <summary>Actions reprises depuis le contenu JSON des paquets.</summary>
+    public int DeployPackageActionsImported { get; set; }
+
+    /// <summary>Fichiers qu'un paquet importé référence sans que l'import puisse les rapatrier :
+    /// ils vivent sur le disque du serveur GLPI et restent à téléverser à la main.</summary>
+    public int DeployPackageFilesPending { get; set; }
     public int UnmanagedDevicesCreated { get; set; }
     public int UnmanagedDevicesUpdated { get; set; }
 
