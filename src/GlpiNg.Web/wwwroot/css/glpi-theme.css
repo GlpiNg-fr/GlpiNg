@@ -1983,3 +1983,27 @@ body {
 .glpi-fiche-field .glpi-field-lock.text-warning {
   opacity: 1;
 }
+
+/* Grille d'interrupteurs (onglets « Analyse d'impact » et « Colonnes par défaut »). Même gabarit
+   que .glpi-checkbox-grid, mais chaque entrée est faite de deux éléments — l'interrupteur et son
+   libellé, tous deux cliquables — au lieu d'un seul label enveloppant la case. */
+.glpi-switch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.4rem 1rem;
+  max-width: 720px;
+  margin: 0.5rem 0 1.5rem;
+}
+
+.glpi-switch-grid-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 1.75rem;
+}
+
+.glpi-switch-grid-item label:not(.glpi-switch) {
+  font-size: 0.8rem;
+  color: #232629;
+  cursor: pointer;
+}
