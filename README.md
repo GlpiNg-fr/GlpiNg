@@ -185,7 +185,11 @@ Chaque champ de la fiche ordinateur alimenté par l'inventaire porte un cadenas
 remontées d'agent, et la valeur saisie à la main fait foi. Le cadenas reste
 visible même déverrouillé — c'est ce qui fait savoir qu'un champ est alimenté par
 l'agent, donc qu'une correction manuelle y serait écrasée sans lui. Chaque
-bascule est tracée dans l'historique du poste.
+bascule est tracée dans l'historique du poste. L'onglet « Verrous » de la fiche
+en donne la vue d'ensemble : tous les champs verrouillables, leur valeur
+courante, leur état, qui a posé le verrou et depuis quand — les champs
+verrouillables que la fiche n'affiche pas (domaine, prise en main à distance) n'y
+sont accessibles que là.
 
 ### Déploiement et réseau (`/tools/deployments`)
 

@@ -1968,12 +1968,18 @@ body {
   background: none;
   padding: 0 0.1rem;
   line-height: 1;
-  opacity: 0.3;
   transition: opacity 0.12s ease-in-out;
 }
 
+/* L'atténuation ne vaut que dans la fiche, où le cadenas accompagne un champ sans être le sujet.
+   Dans l'onglet « Verrous », il est la colonne d'action : le laisser à 30 % d'opacité en ferait
+   un bouton qu'on croirait désactivé. */
+.glpi-fiche-field .glpi-field-lock {
+  opacity: 0.3;
+}
+
 .glpi-fiche-field:hover .glpi-field-lock,
-.glpi-field-lock:focus-visible,
-.glpi-field-lock.text-warning {
+.glpi-fiche-field .glpi-field-lock:focus-visible,
+.glpi-fiche-field .glpi-field-lock.text-warning {
   opacity: 1;
 }
