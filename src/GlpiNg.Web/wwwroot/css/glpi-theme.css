@@ -580,6 +580,14 @@ body {
 .glpi-list-page .glpi-computers-layout {
   flex: 1;
   min-height: 0;
+  /* Les cartes de cette rangée doivent s'étirer sur toute sa hauteur : c'est ce qui borne le
+     .table-responsive qu'elles contiennent, et donc ce qui le rend défilant. Un align-items-start
+     ici (ou la classe utilitaire du même nom sur l'élément, qui passe en !important) fait grandir
+     la carte avec son contenu ; la liste déborde alors du cadre, que .glpi-page-body coupe en
+     overflow-y: hidden — plus aucun défilement passé quelques dizaines de lignes.
+     Le panneau des recherches sauvegardées n'est pas concerné : épinglé il pose son propre
+     align-self et sa hauteur, détaché il est en position: fixed. */
+  align-items: stretch;
 }
 
 .glpi-list-page .card-header,
