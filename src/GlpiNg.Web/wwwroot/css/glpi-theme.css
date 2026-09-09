@@ -2013,3 +2013,18 @@ body {
   50% { margin-left: 60%; }
   100% { margin-left: 0; }
 }
+
+/* Onglets de la page d'import : chaque titre porte son interrupteur « tout activer », d'où un
+   nav-link disposé en ligne. Le <span> tient lieu d'onglet plutôt qu'un <button> : un <label>
+   interactif ne peut pas vivre à l'intérieur d'un bouton. */
+.glpi-import-tabs .nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.glpi-import-tabs .nav-link .glpi-switch {
+  margin-left: 0.15rem;
+}

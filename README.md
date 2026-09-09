@@ -386,6 +386,12 @@ agents, plages IP, identifiants SNMP, actifs non gérés). Croisement de
 de la présence réelle des tables, découvertes par préfixe plutôt que listées en
 dur, leurs noms ayant changé d'une version à l'autre.
 
+La sélection est répartie en trois onglets — Parc, Administration, Plugin
+d'inventaire, soit les trois services d'import — dont chaque titre porte un
+interrupteur qui active ou désactive tout son contenu, et un compteur
+« sélectionnés / disponibles ». Une catégorie absente de la base source reste hors
+du compte comme hors de la bascule.
+
 L'administrateur choisit ensuite ce qu'il souhaite reprendre parmi les plages IP,
 les identifiants SNMP, les paquets de déploiement et les actifs non gérés. Rien
 n'est coché par défaut : ces données doublonnent un domaine que GlpiNg gère en
