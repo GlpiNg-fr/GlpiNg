@@ -169,6 +169,17 @@ réseau, imprimante ou téléphone. Les fiches ordinateurs exposent
 composants, logiciels, volumes, batteries, ports réseau, antivirus, historique
 des modifications et historique d'import.
 
+Le bouton « Actions » de la fiche ordinateur permet de réveiller le poste
+(Wake-on-LAN) : le serveur diffuse un magic packet sur **toutes** les adresses MAC
+connues du poste, en broadcast limité et — quand l'inventaire connaît l'IP et le
+masque de l'interface — en broadcast dirigé vers son sous-réseau, sur les ports
+UDP 9 et 7. C'est un envoi immédiat et sans relais, mais un routeur ne fait
+normalement pas traverser un broadcast : pour un poste hors du segment du
+serveur, ce sont les tâches Wake-on-LAN (`/tools/deployments`), relayées par un
+agent sur place, qui restent la voie fiable. Le détail de l'envoi (MAC visées,
+adresses de diffusion) est affiché, un magic packet ne donnant aucun accusé de
+réception ; la demande est tracée dans l'historique du poste.
+
 Chaque champ de la fiche ordinateur alimenté par l'inventaire porte un cadenas
 (équivalent de `glpi_lockedfields`) : verrouillé, il n'est plus réécrit par les
 remontées d'agent, et la valeur saisie à la main fait foi. Le cadenas reste
