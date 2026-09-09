@@ -401,9 +401,28 @@ entre FusionInventory et GLPI Inventory — et ce qui n'a pas d'équivalent est
 listé dans les avertissements plutôt que perdu en silence.
 
 Les **fichiers** d'un paquet sont créés avec leur nom, leur empreinte et leur
-taille — complétés au besoin depuis la table `deployfiles` du plugin — mais
-**sans leur contenu** : les octets vivent sur le disque du serveur GLPI, hors de
-portée d'un import qui ne lit que la base. La fiche du paquet les affiche
+taille, complétés au besoin depuis la table `deployfiles` du plugin. Leur contenu,
+lui, n'est pas en base : il vit sur le disque du serveur GLPI, déjà découpé en
+fragments compressés avec un manifeste par fichier. Deux sources permettent de le
+rapatrier, renseignées dans le formulaire d'import quand les paquets sont
+sélectionnés :
+
+- le **répertoire des fichiers** du plugin, vu depuis la machine GlpiNg (chemin
+  local ou partage réseau) — route principale, qui ne dépend d'aucune convention
+  d'URL. Les fragments y sont retrouvés par leur nom au moyen d'un index bâti sur
+  l'arborescence, quel que soit son découpage en sous-dossiers, et leur
+  compression est détectée sur le contenu plutôt que déduite d'une extension ;
+- l'**URL de GLPI**, essayée en repli, avec des gabarits d'URL réglables
+  (`{base}`/`{sha512}`) plutôt que figés — le tracé du dépôt a changé entre
+  FusionInventory et GLPI Inventory. En cas d'échec, l'URL réellement demandée est
+  rapportée telle quelle.
+
+Chaque contenu récupéré est réécrit par le stockage GlpiNg, qui en recalcule le
+SHA-512 : s'il ne correspond pas à celui que le paquet attend, rien n'est
+enregistré. Un contenu déjà présent n'est jamais retéléchargé ni écrasé.
+
+Sans l'une de ces deux sources, les fichiers restent déclarés **sans leur
+contenu**. La fiche du paquet les affiche
 « À téléverser », et le lancement d'une tâche comme l'assignation à un poste
 refusent un paquet dans cet état : sans ce garde-fou le job partirait avec un
 `multiparts` vide, et l'échec ne se verrait qu'au déploiement, poste par poste. Un

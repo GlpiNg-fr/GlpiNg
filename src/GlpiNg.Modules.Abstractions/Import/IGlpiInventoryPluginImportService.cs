@@ -34,6 +34,16 @@ public class GlpiPluginImportSelection
     public bool ImportDeployPackages { get; set; }
     public bool ImportUnmanagedDevices { get; set; }
 
+    /// <summary>
+    /// Répertoire des fichiers du plugin GLPI, vu depuis la machine GlpiNg (chemin local ou partage
+    /// réseau). Renseigné, l'import ne se contente pas de déclarer les fichiers d'un paquet : il en
+    /// rapatrie le contenu.
+    /// </summary>
+    public string? DeployFilesPath { get; set; }
+
+    /// <summary>Racine HTTP de GLPI, essayée quand le répertoire n'est pas renseigné ou ne rend rien.</summary>
+    public string? GlpiBaseUrl { get; set; }
+
     public bool AnySelected => ImportIpRanges || ImportSnmpCredentials || ImportDeployPackages || ImportUnmanagedDevices;
 }
 
@@ -55,6 +65,9 @@ public class GlpiPluginImportResult
 
     public int DeployPackageFilesCreated { get; set; }
     public int DeployPackageFilesUpdated { get; set; }
+
+    /// <summary>Fichiers dont le contenu a pu être rapatrié depuis l'installation GLPI source.</summary>
+    public int DeployPackageFilesDownloaded { get; set; }
 
     /// <summary>Fichiers créés sans leur contenu : les octets vivent sur le disque du serveur GLPI
     /// et restent à téléverser à la main depuis la fiche du paquet.</summary>

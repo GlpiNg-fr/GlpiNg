@@ -2,6 +2,7 @@
 using GlpiNg.Modules.Abstractions.Import;
 using GlpiNg.Modules.Deployment.Import;
 using GlpiNg.Modules.Deployment.Models;
+using GlpiNg.Modules.Deployment.Services;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Services;
 using Microsoft.EntityFrameworkCore;
@@ -25,7 +26,11 @@ namespace GlpiNg.Web.Import;
 /// l'autre : chaque lecture passe par les colonnes réellement présentes (information_schema), même
 /// principe que <c>GlpiMySqlImportService</c>.
 /// </summary>
-public sealed class GlpiInventoryPluginImportService(GlpiNgDbContext db, EntityTreeCache entityTree)
+public sealed class GlpiInventoryPluginImportService(
+    GlpiNgDbContext db,
+    EntityTreeCache entityTree,
+    GlpiDeployFileFetcher fileFetcher,
+    DeploymentPackageFileStorageService fileStorage)
     : IGlpiInventoryPluginImportService
 {
     public async Task<GlpiPluginImportResult> RunAsync(
@@ -66,7 +71,10 @@ public sealed class GlpiInventoryPluginImportService(GlpiNgDbContext db, EntityT
         if (selection.ImportDeployPackages)
         {
             progress?.Report(new GlpiImportProgress(GlpiImportPhases.DeployPackages, 0));
-            await ImportDeployPackagesAsync(connection, tablePrefix, entityId, result, cancellationToken);
+            await ImportDeployPackagesAsync(
+                connection, tablePrefix, entityId,
+                new GlpiDeployFileSource(selection.DeployFilesPath, selection.GlpiBaseUrl),
+                result, cancellationToken);
         }
 
         if (selection.ImportUnmanagedDevices)
@@ -204,7 +212,8 @@ public sealed class GlpiInventoryPluginImportService(GlpiNgDbContext db, EntityT
     }
 
     private async Task ImportDeployPackagesAsync(
-        MySqlConnection connection, string prefix, int? entityId, GlpiPluginImportResult result, CancellationToken ct)
+        MySqlConnection connection, string prefix, int? entityId, GlpiDeployFileSource fileSource,
+        GlpiPluginImportResult result, CancellationToken ct)
     {
         string table = prefix + "deploypackages";
         HashSet<string> columns = await GetColumnsAsync(connection, table, ct);
@@ -243,7 +252,7 @@ public sealed class GlpiInventoryPluginImportService(GlpiNgDbContext db, EntityT
                     EntityId = entityId,
                 };
                 ApplyContent(created, content);
-                ApplyFiles(created, content, knownFiles, result);
+                await ApplyFilesAsync(created, content, knownFiles, fileSource, result, ct);
                 db.DeploymentPackages.Add(created);
                 result.DeployPackagesCreated++;
             }
@@ -260,7 +269,7 @@ public sealed class GlpiInventoryPluginImportService(GlpiNgDbContext db, EntityT
                     ApplyContent(existing, content);
 
                     await db.Entry(existing).Collection(package => package.Files).LoadAsync(ct);
-                    ApplyFiles(existing, content, knownFiles, result);
+                    await ApplyFilesAsync(existing, content, knownFiles, fileSource, result, ct);
                 }
 
                 result.DeployPackagesUpdated++;
@@ -339,11 +348,13 @@ public sealed class GlpiInventoryPluginImportService(GlpiNgDbContext db, EntityT
     /// Un fichier déjà présent n'est jamais réécrit au point de perdre ses fragments : un second
     /// import ne doit pas effacer un contenu que l'administrateur a téléversé entre-temps.
     /// </summary>
-    private static void ApplyFiles(
+    private async Task ApplyFilesAsync(
         DeploymentPackage package,
         GlpiDeployPackageContent content,
         Dictionary<string, GlpiDeployFileInfo> knownFiles,
-        GlpiPluginImportResult result)
+        GlpiDeployFileSource fileSource,
+        GlpiPluginImportResult result,
+        CancellationToken ct)
     {
         foreach (GlpiDeployFileReference reference in content.Files)
         {
@@ -351,29 +362,97 @@ public sealed class GlpiInventoryPluginImportService(GlpiNgDbContext db, EntityT
             string fileName = reference.FileName ?? known?.Name ?? $"fichier-{reference.Sha512[..Math.Min(12, reference.Sha512.Length)]}";
             long size = known?.SizeBytes ?? 0;
 
-            DeploymentPackageFile? existing = package.Files
-                .FirstOrDefault(file => string.Equals(file.Sha512, reference.Sha512, StringComparison.OrdinalIgnoreCase));
+            DeploymentPackageFile? file = package.Files
+                .FirstOrDefault(candidate => string.Equals(candidate.Sha512, reference.Sha512, StringComparison.OrdinalIgnoreCase));
 
-            if (existing is null)
+            if (file is null)
             {
-                package.Files.Add(new DeploymentPackageFile
+                file = new DeploymentPackageFile
                 {
                     FileName = fileName,
                     Sha512 = reference.Sha512,
                     SizeBytes = size,
-                });
+                };
+                package.Files.Add(file);
                 result.DeployPackageFilesCreated++;
             }
             else
             {
-                existing.FileName = fileName;
+                file.FileName = fileName;
                 if (size > 0)
                 {
-                    existing.SizeBytes = size;
+                    file.SizeBytes = size;
                 }
 
                 result.DeployPackageFilesUpdated++;
             }
+
+            // Contenu déjà présent : ne jamais le retélécharger ni l'écraser. Un second import doit
+            // pouvoir tourner sans défaire ce qu'un administrateur a téléversé entre-temps.
+            if (file.Parts.Count > 0 || !fileSource.Any)
+            {
+                continue;
+            }
+
+            await TryFetchContentAsync(package, file, fileSource, result, ct);
+        }
+    }
+
+    /// <summary>
+    /// Rapatrie le contenu d'un fichier et le réécrit dans le stockage GlpiNg.
+    ///
+    /// L'empreinte fait office de preuve : le stockage recalcule le SHA-512 de ce qu'il a reçu, et
+    /// on refuse d'enregistrer un contenu qui ne correspond pas à celui que le paquet attend. C'est
+    /// ce qui rend cette récupération sûre malgré tout ce qu'elle doit supposer de l'installation
+    /// d'en face — un fragment mal décompressé ou un dépôt lu de travers échoue franchement, au
+    /// lieu de produire un paquet qui se déploierait en abîmant des postes.
+    /// </summary>
+    private async Task TryFetchContentAsync(
+        DeploymentPackage package,
+        DeploymentPackageFile file,
+        GlpiDeployFileSource fileSource,
+        GlpiPluginImportResult result,
+        CancellationToken ct)
+    {
+        GlpiDeployFileFetchResult fetched = await fileFetcher.FetchAsync(file.Sha512, fileSource, ct);
+
+        if (!fetched.Succeeded)
+        {
+            result.Warnings.Add($"  « {package.Name} » / {file.FileName} : contenu non récupéré ({fetched.Failure}).");
+            return;
+        }
+
+        try
+        {
+            await using FileStream stream = File.OpenRead(fetched.TempFilePath!);
+            (string storedSha512, long sizeBytes, IReadOnlyList<(string StoragePath, string Sha512, long SizeBytes)> parts) =
+                await fileStorage.SaveAsSplitAsync(stream, ct);
+
+            if (!string.Equals(storedSha512, file.Sha512, StringComparison.OrdinalIgnoreCase))
+            {
+                result.Warnings.Add(
+                    $"  « {package.Name} » / {file.FileName} : contenu récupéré mais rejeté, son empreinte ne correspond pas "
+                    + $"(attendue {file.Sha512}, obtenue {storedSha512}).");
+                return;
+            }
+
+            file.SizeBytes = sizeBytes;
+            for (int partIndex = 0; partIndex < parts.Count; partIndex++)
+            {
+                file.Parts.Add(new DeploymentPackageFilePart
+                {
+                    PartIndex = partIndex,
+                    Sha512 = parts[partIndex].Sha512,
+                    SizeBytes = parts[partIndex].SizeBytes,
+                    StoragePath = parts[partIndex].StoragePath,
+                });
+            }
+
+            result.DeployPackageFilesDownloaded++;
+        }
+        finally
+        {
+            File.Delete(fetched.TempFilePath!);
         }
     }
 
@@ -404,7 +483,16 @@ public sealed class GlpiInventoryPluginImportService(GlpiNgDbContext db, EntityT
 
         if (withFiles.Count > 0)
         {
-            result.DeployPackageFilesPending = withFiles.Sum(entry => entry.Content.Files.Count);
+            result.DeployPackageFilesPending = withFiles.Sum(entry => entry.Content.Files.Count)
+                - result.DeployPackageFilesDownloaded;
+
+            if (result.DeployPackageFilesPending <= 0)
+            {
+                result.Warnings.Add(
+                    $"Paquets de déploiement : le contenu des {result.DeployPackageFilesDownloaded} fichier(s) a été récupéré depuis l'installation GLPI source.");
+                return;
+            }
+
             result.Warnings.Add(
                 $"Paquets de déploiement : {result.DeployPackageFilesPending} fichier(s) créé(s) sur {withFiles.Count} paquet(s), sans leur contenu — à téléverser depuis la fiche du paquet. "
                 + "Les octets vivent sur le disque du serveur GLPI, que cet import ne lit pas. Tant qu'ils manquent, ces paquets ne peuvent pas être déployés.");
