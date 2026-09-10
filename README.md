@@ -178,6 +178,13 @@ reprend la section `ports` de l'inventaire — les prises physiques du châssis 
 série, vidéo...), à distinguer de « Connexions » (ce qui y est branché) et de
 « Ports réseau » (les interfaces IP configurées).
 
+La fiche d'une imprimante a un onglet **Cartouches** : celles en service, avec le
+lien vers leur référence et la date de pose, celles retirées avec leur durée de
+vie, et l'installation d'une unité en stock. Seules les références ayant une
+unité disponible sont proposées, et c'est la plus anciennement reçue qui part la
+première. Chaque pose et chaque retrait sont tracés des deux côtés — historique
+de l'imprimante et de la référence.
+
 Une référence de cartouche porte un **OID SNMP** optionnel, adresse à laquelle une
 imprimante expose le niveau restant de cette cartouche (norme
 `prtMarkerSuppliesLevel`, `1.3.6.1.2.1.43.11.1.1.9.1.n`). Il est destiné à un
