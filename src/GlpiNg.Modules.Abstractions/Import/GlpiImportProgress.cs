@@ -1,4 +1,4 @@
-namespace GlpiNg.Modules.Abstractions.Import;
+﻿namespace GlpiNg.Modules.Abstractions.Import;
 
 /// <summary>
 /// Avancement d'un import GLPI, tel qu'un service d'import le rapporte à l'écran qui l'a lancé.
@@ -8,7 +8,12 @@ namespace GlpiNg.Modules.Abstractions.Import;
 /// qui permet à l'appelant de la retrouver dans le plan qu'il a bâti depuis l'analyse.
 /// </param>
 /// <param name="Completed">Éléments traités dans cette phase depuis son début.</param>
-public sealed record GlpiImportProgress(string Phase, int Completed);
+/// <param name="Detail">
+/// Ce sur quoi la phase travaille en ce moment, quand le compteur seul ne suffit pas à montrer
+/// qu'elle avance : le téléchargement d'un fichier de paquet peut durer des minutes sans qu'aucun
+/// élément ne soit terminé, et une barre immobile pendant ce temps se lit comme un blocage.
+/// </param>
+public sealed record GlpiImportProgress(string Phase, int Completed, string? Detail = null);
 
 /// <summary>
 /// Noms des phases d'import, partagés entre les services qui les rapportent et l'écran qui les

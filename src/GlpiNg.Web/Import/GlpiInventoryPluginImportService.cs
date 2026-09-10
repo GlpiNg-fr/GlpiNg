@@ -58,19 +58,16 @@ public sealed class GlpiInventoryPluginImportService(
 
         if (selection.ImportIpRanges)
         {
-            progress?.Report(new GlpiImportProgress(GlpiImportPhases.IpRanges, 0));
-            await ImportIpRangesAsync(connection, tablePrefix, entityId, result, cancellationToken);
+            await ImportIpRangesAsync(connection, tablePrefix, entityId, result, progress, cancellationToken);
         }
 
         if (selection.ImportSnmpCredentials)
         {
-            progress?.Report(new GlpiImportProgress(GlpiImportPhases.SnmpCredentials, 0));
-            await ImportSnmpCredentialsAsync(connection, tablePrefix, entityId, result, cancellationToken);
+            await ImportSnmpCredentialsAsync(connection, tablePrefix, entityId, result, progress, cancellationToken);
         }
 
         if (selection.ImportDeployPackages)
         {
-            progress?.Report(new GlpiImportProgress(GlpiImportPhases.DeployPackages, 0));
             await ImportDeployPackagesAsync(
                 connection, tablePrefix, entityId,
                 new GlpiDeployFileSource(
@@ -81,13 +78,12 @@ public sealed class GlpiInventoryPluginImportService(
                     selection.GlpiUserName,
                     selection.GlpiPassword,
                     selection.DeployMirrorUrls),
-                result, cancellationToken);
+                result, progress, cancellationToken);
         }
 
         if (selection.ImportUnmanagedDevices)
         {
-            progress?.Report(new GlpiImportProgress(GlpiImportPhases.UnmanagedDevices, 0));
-            await ImportUnmanagedDevicesAsync(connection, tablePrefix, entityId, result, cancellationToken);
+            await ImportUnmanagedDevicesAsync(connection, tablePrefix, entityId, result, progress, cancellationToken);
         }
 
         await db.SaveChangesAsync(cancellationToken);
@@ -95,7 +91,8 @@ public sealed class GlpiInventoryPluginImportService(
     }
 
     private async Task ImportIpRangesAsync(
-        MySqlConnection connection, string prefix, int? entityId, GlpiPluginImportResult result, CancellationToken ct)
+        MySqlConnection connection, string prefix, int? entityId, GlpiPluginImportResult result,
+        IProgress<GlpiImportProgress>? progress, CancellationToken ct)
     {
         string table = prefix + "ipranges";
         HashSet<string> columns = await GetColumnsAsync(connection, table, ct);
@@ -118,8 +115,12 @@ public sealed class GlpiInventoryPluginImportService(
 
         string sql = $"SELECT id, name, `{startColumn}` AS ip_start, `{endColumn}` AS ip_end FROM `{table}`";
 
+        int seen = 0;
+
         await foreach (MySqlDataReader reader in ReadAsync(connection, sql, ct))
         {
+            progress?.Report(new GlpiImportProgress(GlpiImportPhases.IpRanges, ++seen));
+
             int sourceId = reader.GetInt32("id");
             string? start = GetNullableString(reader, "ip_start");
             string? end = GetNullableString(reader, "ip_end");
@@ -155,7 +156,8 @@ public sealed class GlpiInventoryPluginImportService(
     }
 
     private async Task ImportSnmpCredentialsAsync(
-        MySqlConnection connection, string prefix, int? entityId, GlpiPluginImportResult result, CancellationToken ct)
+        MySqlConnection connection, string prefix, int? entityId, GlpiPluginImportResult result,
+        IProgress<GlpiImportProgress>? progress, CancellationToken ct)
     {
         string table = prefix + "configsecurities";
         HashSet<string> columns = await GetColumnsAsync(connection, table, ct);
@@ -176,8 +178,12 @@ public sealed class GlpiInventoryPluginImportService(
             FROM `{table}`
             """;
 
+        int seen = 0;
+
         await foreach (MySqlDataReader reader in ReadAsync(connection, sql, ct))
         {
+            progress?.Report(new GlpiImportProgress(GlpiImportPhases.SnmpCredentials, ++seen));
+
             int sourceId = reader.GetInt32("id");
 
             SnmpCredential? existing = await db.SnmpCredentials.IgnoreQueryFilters()
@@ -220,7 +226,7 @@ public sealed class GlpiInventoryPluginImportService(
 
     private async Task ImportDeployPackagesAsync(
         MySqlConnection connection, string prefix, int? entityId, GlpiDeployFileSource fileSource,
-        GlpiPluginImportResult result, CancellationToken ct)
+        GlpiPluginImportResult result, IProgress<GlpiImportProgress>? progress, CancellationToken ct)
     {
         string table = prefix + "deploypackages";
         HashSet<string> columns = await GetColumnsAsync(connection, table, ct);
@@ -239,8 +245,12 @@ public sealed class GlpiInventoryPluginImportService(
         Dictionary<string, GlpiDeployFileInfo> knownFiles = await LoadDeployFilesAsync(connection, prefix, ct);
         List<(string Package, GlpiDeployPackageContent Content)> imported = [];
 
+        int seen = 0;
+
         await foreach (MySqlDataReader reader in ReadAsync(connection, sql, ct))
         {
+            progress?.Report(new GlpiImportProgress(GlpiImportPhases.DeployPackages, ++seen));
+
             int sourceId = reader.GetInt32("id");
             string name = GetNullableString(reader, "name") ?? $"Paquet #{sourceId}";
 
@@ -259,7 +269,7 @@ public sealed class GlpiInventoryPluginImportService(
                     EntityId = entityId,
                 };
                 ApplyContent(created, content);
-                await ApplyFilesAsync(created, content, knownFiles, fileSource, result, ct);
+                await ApplyFilesAsync(created, content, knownFiles, fileSource, result, progress, seen, ct);
                 db.DeploymentPackages.Add(created);
                 result.DeployPackagesCreated++;
             }
@@ -276,7 +286,7 @@ public sealed class GlpiInventoryPluginImportService(
                     ApplyContent(existing, content);
 
                     await db.Entry(existing).Collection(package => package.Files).LoadAsync(ct);
-                    await ApplyFilesAsync(existing, content, knownFiles, fileSource, result, ct);
+                    await ApplyFilesAsync(existing, content, knownFiles, fileSource, result, progress, seen, ct);
                 }
 
                 result.DeployPackagesUpdated++;
@@ -363,6 +373,8 @@ public sealed class GlpiInventoryPluginImportService(
         Dictionary<string, GlpiDeployFileInfo> knownFiles,
         GlpiDeployFileSource fileSource,
         GlpiPluginImportResult result,
+        IProgress<GlpiImportProgress>? progress,
+        int packagesSeen,
         CancellationToken ct)
     {
         foreach (GlpiDeployFileReference reference in content.Files)
@@ -403,7 +415,14 @@ public sealed class GlpiInventoryPluginImportService(
                 continue;
             }
 
+            // Le contenu d'un fichier peut peser des gigaoctets : sans ce détail, la phase reste
+            // sur le même compte pendant tout le téléchargement, ce qui se lit comme un blocage.
+            progress?.Report(new GlpiImportProgress(
+                GlpiImportPhases.DeployPackages, packagesSeen, $"téléchargement de {file.FileName}"));
+
             await TryFetchContentAsync(package, file, fileSource, known?.Id, result, ct);
+
+            progress?.Report(new GlpiImportProgress(GlpiImportPhases.DeployPackages, packagesSeen));
         }
     }
 
@@ -536,7 +555,8 @@ public sealed class GlpiInventoryPluginImportService(
     }
 
     private async Task ImportUnmanagedDevicesAsync(
-        MySqlConnection connection, string prefix, int? entityId, GlpiPluginImportResult result, CancellationToken ct)
+        MySqlConnection connection, string prefix, int? entityId, GlpiPluginImportResult result,
+        IProgress<GlpiImportProgress>? progress, CancellationToken ct)
     {
         string table = prefix + "unmanageds";
         HashSet<string> columns = await GetColumnsAsync(connection, table, ct);
@@ -556,8 +576,12 @@ public sealed class GlpiInventoryPluginImportService(
             FROM `{table}`
             """;
 
+        int seen = 0;
+
         await foreach (MySqlDataReader reader in ReadAsync(connection, sql, ct))
         {
+            progress?.Report(new GlpiImportProgress(GlpiImportPhases.UnmanagedDevices, ++seen));
+
             string? ip = GetNullableString(reader, "ip");
             string? mac = GetNullableString(reader, "mac");
 
