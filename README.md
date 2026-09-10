@@ -373,10 +373,13 @@ configuration générale (`glpi_configs`, contexte `core`).
 
 L'import affiche une barre de progression : le plan est bâti au lancement depuis
 les volumes annoncés par l'analyse, si bien qu'une phase de dix mille ordinateurs
-et une de trois profils n'avancent pas d'autant. Les phases du parc rapportent
-élément par élément, celles de l'administration et du plugin à chaque entrée de
-phase (leur volume ne le justifie pas). Le rafraîchissement est étranglé à
-quelques images par seconde pour ne pas engorger le circuit Blazor.
+et une de trois profils n'avancent pas d'autant. Les phases du parc et du plugin
+rapportent élément par élément, celles de l'administration à chaque entrée de
+phase (leur volume ne le justifie pas). Le téléchargement du contenu d'un fichier
+de paquet, qui peut durer des minutes sans qu'aucun élément ne s'achève, affiche
+en plus le nom du fichier en cours. Le rafraîchissement est étranglé à quelques
+images par seconde pour ne pas engorger le circuit Blazor — sauf un changement de
+phase ou de fichier, toujours affiché immédiatement.
 
 **Détection du plugin d'inventaire** : l'analyse signale la présence de GLPI
 Inventory (`glpiinventory`) ou de son ancêtre FusionInventory, avec sa version,
