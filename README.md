@@ -178,6 +178,13 @@ reprend la section `ports` de l'inventaire — les prises physiques du châssis 
 série, vidéo...), à distinguer de « Connexions » (ce qui y est branché) et de
 « Ports réseau » (les interfaces IP configurées).
 
+Une référence de cartouche porte un **OID SNMP** optionnel, adresse à laquelle une
+imprimante expose le niveau restant de cette cartouche (norme
+`prtMarkerSuppliesLevel`, `1.3.6.1.2.1.43.11.1.1.9.1.n`). Il est destiné à un
+relevé automatique par le serveur ; sa syntaxe est vérifiée à la saisie, et une
+référence sans OID n'est simplement pas relevée. Le relevé lui-même reste à
+brancher — voir « À faire ».
+
 Le bouton « Actions » de la fiche ordinateur permet de réveiller le poste
 (Wake-on-LAN) : le serveur diffuse un magic packet sur **toutes** les adresses MAC
 connues du poste, en broadcast limité et — quand l'inventaire connaît l'IP et le
@@ -547,6 +554,8 @@ manques suivants sont connus et assumés à ce stade.
 - [ ] Sections d'inventaire encore non reprises, faute d'équivalent dans le
       modèle : machines virtuelles, processus, variables d'environnement, règles
       de pare-feu, comptes et groupes locaux, licences logicielles
+- [ ] Relevé SNMP du niveau des cartouches : l'OID est configurable sur la
+      référence de cartouche, mais aucune tâche ne l'interroge encore
 - [ ] Page `/self-service` (les cibles libre-service sont déjà configurables
       sur la fiche paquet)
 - [ ] Migrations EF Core dédiées pour MySQL/PostgreSQL (l'installation utilise
