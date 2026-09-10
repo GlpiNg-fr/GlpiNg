@@ -285,7 +285,11 @@ public sealed class GlpiInventoryPluginImportService(
                 {
                     ApplyContent(existing, content);
 
-                    await db.Entry(existing).Collection(package => package.Files).LoadAsync(ct);
+                    // Include des fragments, et pas seulement des fichiers : c'est leur présence
+                    // qui dit si le contenu est déjà là. Sans eux la collection paraît vide, le
+                    // fichier serait retéléchargé et ses fragments ajoutés une seconde fois.
+                    await db.Entry(existing).Collection(package => package.Files)
+                        .Query().Include(file => file.Parts).LoadAsync(ct);
                     await ApplyFilesAsync(existing, content, knownFiles, fileSource, result, progress, seen, ct);
                 }
 
