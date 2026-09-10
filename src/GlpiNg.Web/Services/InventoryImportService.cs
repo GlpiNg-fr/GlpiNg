@@ -190,6 +190,16 @@ public class InventoryImportService(
         ComputerRuleEngine.Apply(computer, isNew, computerRules,
             statusName => ruleStatusIds.TryGetValue(statusName, out int id) ? id : null);
 
+        // Un poste à la corbeille qui se remet à envoyer des inventaires est un poste revenu :
+        // le laisser à la corbeille en le mettant à jour dans l'ombre donnait un poste vivant mais
+        // introuvable, que rien dans l'application ne permettait de faire réapparaître. Même
+        // comportement que GLPI, où un inventaire restaure un actif supprimé.
+        bool restoredFromTrash = computer.IsDeleted;
+        if (restoredFromTrash)
+        {
+            computer.IsDeleted = false;
+        }
+
         computer.LastInventoryAt = DateTime.UtcNow;
 
         // Libellés lus après coup, depuis les identifiants réellement retenus : le statut final
@@ -210,6 +220,16 @@ public class InventoryImportService(
         foreach (ComputerHistoryEntry entry in BuildHistoryEntries(before, computer, isNew, beforeStatusLabel, afterStatusLabel))
         {
             computer.HistoryEntries.Add(entry);
+        }
+
+        if (restoredFromTrash)
+        {
+            computer.HistoryEntries.Add(new ComputerHistoryEntry
+            {
+                User = "Inventaire",
+                Field = "Corbeille",
+                Description = "Poste sorti de la corbeille : son agent a de nouveau remonté un inventaire.",
+            });
         }
 
         agent.Computer = computer;
