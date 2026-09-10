@@ -51,6 +51,10 @@ public class GlpiPluginImportSelection
     /// <summary>Racine HTTP de GLPI, essayée quand le répertoire n'est pas renseigné ou ne rend rien.</summary>
     public string? GlpiBaseUrl { get; set; }
 
+    /// <summary>Serveurs de miroir déclarés par le plugin sur la base source : ce sont les adresses
+    /// depuis lesquelles ses agents téléchargent réellement, donc les premières à essayer.</summary>
+    public IReadOnlyList<string> DeployMirrorUrls { get; set; } = [];
+
     public bool AnySelected => ImportIpRanges || ImportSnmpCredentials || ImportDeployPackages || ImportUnmanagedDevices;
 }
 
