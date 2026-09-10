@@ -430,9 +430,17 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
             .HasForeignKey(part => part.DeploymentPackageFileId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        // Index de recherche, et non contrainte d'unicité : un fragment est adressé par le hash de
+        // son contenu (voir AgentController.GetDeployFilePart), mais il appartient à un fichier,
+        // lui-même à un paquet. Deux paquets qui embarquent le même fichier — cas courant d'un
+        // import depuis GLPI — produisent donc deux fois les mêmes fragments, et un fichier dont
+        // deux morceaux sont identiques en produit deux aussi. L'unicité était intenable, et sa
+        // violation faisait échouer l'enregistrement de tout l'import.
+        //
+        // Les doublons sont sans conséquence à la lecture : le hash désigne un contenu, donc
+        // n'importe laquelle des lignes qui le portent mène aux mêmes octets.
         modelBuilder.Entity<DeploymentPackageFilePart>()
-            .HasIndex(part => part.Sha512)
-            .IsUnique();
+            .HasIndex(part => part.Sha512);
 
         // SetNull : supprimer le groupe désactive juste le déploiement à la demande du paquet
         // (retombe sur "-----", comme plugin_glpiinventory_deploygroups_id côté GLPI-Inventory
