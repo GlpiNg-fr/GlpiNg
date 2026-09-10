@@ -51,6 +51,13 @@ public class GlpiPluginImportSelection
     /// <summary>Racine HTTP de GLPI, essayée quand le répertoire n'est pas renseigné ou ne rend rien.</summary>
     public string? GlpiBaseUrl { get; set; }
 
+    /// <summary>Compte GLPI servant à ouvrir une session web : le point d'accès qui rend un fichier
+    /// entier vérifie un droit, et n'est donc pas accessible anonymement.</summary>
+    public string? GlpiUserName { get; set; }
+
+    /// <inheritdoc cref="GlpiUserName"/>
+    public string? GlpiPassword { get; set; }
+
     /// <summary>Serveurs de miroir déclarés par le plugin sur la base source : ce sont les adresses
     /// depuis lesquelles ses agents téléchargent réellement, donc les premières à essayer.</summary>
     public IReadOnlyList<string> DeployMirrorUrls { get; set; } = [];

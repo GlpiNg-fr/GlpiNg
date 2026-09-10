@@ -413,28 +413,36 @@ fragments compressés avec un manifeste par fichier. Deux sources permettent de 
 rapatrier, renseignées dans le formulaire d'import quand les paquets sont
 sélectionnés :
 
+D'après le code du plugin (`inc/deployfile.class.php`,
+`inc/deployfilepart.class.php`, `public/b/deploy/index.php`), un fichier est
+découpé en fragments compressés en gzip, rangés dans
+`files/repository/{1er caractère}/{2 premiers}/{empreinte du fragment}`, et la
+liste de ses fragments vit dans `files/manifests/{empreinte du fichier}`, à plat.
+Cette liste n'est **nulle part en base** : `deployfiles` ne porte que le nom, la
+taille, le type et l'empreinte. Trois routes en découlent :
+
 - le **répertoire des fichiers** du plugin, vu depuis la machine GlpiNg (chemin
-  local ou partage réseau) — route principale, qui ne dépend d'aucune convention
-  d'URL. GLPI range son dépôt en sous-dossiers d'empreinte — premier caractère,
-  puis les deux premiers, `000dfe…` vivant sous `0/00/` — et ces emplacements sont
-  essayés directement ; l'index de toute l'arborescence ne sert que de filet de
-  sécurité, un dépôt de plusieurs milliers de fichiers étant long à parcourir sur un
-  partage réseau. Un identifiant et un mot de passe optionnels permettent d'atteindre un
-  partage auquel le compte du service n'a pas accès : la session est ouverte le
-  temps de l'import (`WNetAddConnection2`, sans réserver de lettre de lecteur) et
-  refermée ensuite. Windows uniquement ; ailleurs, le partage doit être monté par
-  l'hôte au préalable, ce que l'import dit explicitement plutôt que d'échouer. Les fragments y sont retrouvés par leur nom au moyen d'un index bâti sur
-  l'arborescence, quel que soit son découpage en sous-dossiers, et leur
-  compression est détectée sur le contenu plutôt que déduite d'une extension ;
-- les **adresses HTTP**, essayées en repli et **trouvées dans la base source** —
-  l'administrateur n'a rien à saisir. L'analyse lit les serveurs de miroir
-  déclarés par le plugin (`deploymirrors`), essayés en premier puisque ce sont ceux
-  depuis lesquels les agents de cette installation téléchargent déjà, puis la
-  racine HTTP que GLPI se connaît (`glpi_configs.url_base`, celle de ses propres
-  courriels), qui pré-remplit un champ modifiable. Les gabarits d'URL sont
-  réglables (`{base}`, `{sha512}`, `{shard}` pour le découpage) plutôt que figés — le tracé du dépôt a changé
-  entre FusionInventory et GLPI Inventory — et chaque échec rapporte l'URL
-  réellement demandée.
+  local ou partage réseau) : manifeste puis fragments, aux emplacements ci-dessus.
+  La seule qui fonctionne sans rien d'autre. Les chemins connus sont essayés
+  directement, l'index de toute l'arborescence ne servant que de filet de sécurité
+  — un dépôt de plusieurs milliers de fichiers est long à parcourir sur un partage.
+  Un identifiant et un mot de passe optionnels permettent d'atteindre un partage
+  auquel le compte du service n'a pas accès : la session est ouverte le temps de
+  l'import (`WNetAddConnection2`, sans réserver de lettre de lecteur) et refermée
+  ensuite. Windows uniquement ; ailleurs, le partage doit être monté par l'hôte au
+  préalable, ce que l'import dit explicitement plutôt que d'échouer ;
+- les **serveurs de miroir** déclarés par le plugin (`deploymirrors`, lus à
+  l'analyse) : un miroir est une copie statique de `files/` servie par un serveur
+  web ordinaire, donc les mêmes chemins en HTTP ;
+- une **session GLPI**, avec la racine HTTP que GLPI se connaît
+  (`glpi_configs.url_base`, qui pré-remplit un champ modifiable) et un compte :
+  `front/deployfile_download.php?deployfile_id=` rend le fichier entier déjà
+  réassemblé et décompressé, mais vérifie le droit
+  `plugin_glpiinventory_package` — d'où la connexion préalable au formulaire.
+
+Le point d'accès des agents (`b/deploy/?action=getFilePart`) n'est **pas** une
+route utilisable : il ne sert qu'un fragment à la fois, et l'agent n'apprend la
+liste des fragments que dans le JSON de son job, construit à partir du manifeste.
 
 Chaque contenu récupéré est réécrit par le stockage GlpiNg, qui en recalcule le
 SHA-512 : s'il ne correspond pas à celui que le paquet attend, rien n'est
