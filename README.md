@@ -438,7 +438,16 @@ taille, le type et l'empreinte. Trois routes en découlent :
   (`glpi_configs.url_base`, qui pré-remplit un champ modifiable) et un compte :
   `front/deployfile_download.php?deployfile_id=` rend le fichier entier déjà
   réassemblé et décompressé, mais vérifie le droit
-  `plugin_glpiinventory_package` — d'où la connexion préalable au formulaire.
+  `plugin_glpiinventory_package` — d'où la connexion préalable au formulaire, dont
+  le jeton anti-rejeu est repris (son absence est signalée pour elle-même plutôt
+  que laissée devenir un 400 inexplicable).
+
+Une **clé d'API ne convient pas** ici, et ce n'est pas un oubli de GLPI :
+`apirest.php` n'expose aucun point d'accès rendant les octets d'un fichier de
+paquet, le plugin n'en expose pas non plus, et la session ouverte par
+`initSession` ne peut pas servir de session web — elle retire `valid_id` de
+`$_SESSION` juste après avoir forgé son jeton, précisément pour empêcher cet
+usage, alors que les pages `front/` l'exigent.
 
 Le point d'accès des agents (`b/deploy/?action=getFilePart`) n'est **pas** une
 route utilisable : il ne sert qu'un fragment à la fois, et l'agent n'apprend la
