@@ -178,6 +178,15 @@ reprend la section `ports` de l'inventaire — les prises physiques du châssis 
 série, vidéo...), à distinguer de « Connexions » (ce qui y est branché) et de
 « Ports réseau » (les interfaces IP configurées).
 
+Une imprimante porte ses paramètres d'**interrogation SNMP** : adresse IP, port,
+et version (aucune / v1 / v2c / v3). Le formulaire suit la version choisie —
+communauté en v1 et v2c, nom de sécurité puis authentification et chiffrement en
+v3, ce dernier n'apparaîtssant qu'une fois l'authentification choisie (SNMPv3 n'a
+pas de mode chiffré sans authentification). Changer de version efface ce qui n'a
+plus cours, pour ne pas laisser un secret oublié en base. Ce qui manque est
+signalé sans empêcher d'enregistrer, et les phrases secrètes n'entrent dans
+l'historique que sous forme de « renseignée ou non ».
+
 La fiche d'une imprimante a un onglet **Cartouches** : celles en service, avec le
 lien vers leur référence et la date de pose, celles retirées avec leur durée de
 vie, et l'installation d'une unité en stock. Seules les références ayant une
