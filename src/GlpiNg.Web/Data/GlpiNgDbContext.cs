@@ -801,9 +801,12 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
         // l'imprimante dans laquelle une cartouche est en service (retirer/supprimer
         // l'imprimante ne doit pas supprimer la cartouche, qui retombe simplement en stock).
         modelBuilder.Entity<CartridgeItem>().HasOne(e => e.LocationItem).WithMany().HasForeignKey(e => e.LocationId).OnDelete(DeleteBehavior.Restrict);
+        // WithOne(c => c.CartridgeItem) : la navigation inverse sert à nommer une unité vue depuis
+        // l'imprimante, où seul le numéro d'exemplaire serait autrement disponible. Même relation,
+        // même clé étrangère — rien ne change au schéma.
         modelBuilder.Entity<CartridgeItem>()
             .HasMany(ci => ci.Cartridges)
-            .WithOne()
+            .WithOne(c => c.CartridgeItem!)
             .HasForeignKey(c => c.CartridgeItemId)
             .OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<CartridgeItem>()
