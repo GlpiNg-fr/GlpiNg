@@ -415,7 +415,11 @@ sélectionnés :
 
 - le **répertoire des fichiers** du plugin, vu depuis la machine GlpiNg (chemin
   local ou partage réseau) — route principale, qui ne dépend d'aucune convention
-  d'URL. Un identifiant et un mot de passe optionnels permettent d'atteindre un
+  d'URL. GLPI range son dépôt en sous-dossiers d'empreinte — premier caractère,
+  puis les deux premiers, `000dfe…` vivant sous `0/00/` — et ces emplacements sont
+  essayés directement ; l'index de toute l'arborescence ne sert que de filet de
+  sécurité, un dépôt de plusieurs milliers de fichiers étant long à parcourir sur un
+  partage réseau. Un identifiant et un mot de passe optionnels permettent d'atteindre un
   partage auquel le compte du service n'a pas accès : la session est ouverte le
   temps de l'import (`WNetAddConnection2`, sans réserver de lettre de lecteur) et
   refermée ensuite. Windows uniquement ; ailleurs, le partage doit être monté par
@@ -428,7 +432,7 @@ sélectionnés :
   depuis lesquels les agents de cette installation téléchargent déjà, puis la
   racine HTTP que GLPI se connaît (`glpi_configs.url_base`, celle de ses propres
   courriels), qui pré-remplit un champ modifiable. Les gabarits d'URL sont
-  réglables (`{base}`/`{sha512}`) plutôt que figés — le tracé du dépôt a changé
+  réglables (`{base}`, `{sha512}`, `{shard}` pour le découpage) plutôt que figés — le tracé du dépôt a changé
   entre FusionInventory et GLPI Inventory — et chaque échec rapporte l'URL
   réellement demandée.
 
