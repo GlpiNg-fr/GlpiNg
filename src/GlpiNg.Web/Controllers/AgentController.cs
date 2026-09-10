@@ -421,6 +421,29 @@ public class AgentController(
         return Ok(answer);
     }
 
+    /// <summary>
+    /// Message complet d'une exception, ses causes internes comprises.
+    ///
+    /// Une erreur d'enregistrement se réduit sinon à « An error occurred while saving the entity
+    /// changes. See the inner exception for details. » — une phrase qui renvoie vers une exception
+    /// que ni l'administrateur ni l'agent ne peuvent consulter. Ce sont les niveaux suivants qui
+    /// nomment la table et la contrainte en cause.
+    /// </summary>
+    private static string Describe(Exception exception)
+    {
+        List<string> messages = [];
+
+        for (Exception? current = exception; current is not null; current = current.InnerException)
+        {
+            if (!messages.Contains(current.Message, StringComparer.Ordinal))
+            {
+                messages.Add(current.Message);
+            }
+        }
+
+        return string.Join(" — ", messages);
+    }
+
     private async Task<IActionResult> HandleInventoryAsync(string agentUuid, JsonDocument document, CancellationToken cancellationToken)
     {
         InventoryRequest? inventoryRequest;
@@ -531,7 +554,7 @@ public class AgentController(
             try
             {
                 await eventLog.LogAsync("inventory", EventLogLevel.Error,
-                    $"Échec de l'import de l'inventaire : {ex.Message}",
+                    $"Échec de l'import de l'inventaire : {Describe(ex)}",
                     itemLabel: agent.DeviceId ?? agentUuid, cancellationToken: cancellationToken);
             }
             catch (Exception logEx)
@@ -540,7 +563,7 @@ public class AgentController(
                 logger.LogError(logEx, "inventory: échec de l'écriture au journal de l'erreur ci-dessus.");
             }
 
-            return StatusCode(500, new ProtocolAnswer { Status = "error", Message = $"inventory import failed: {ex.Message}" });
+            return StatusCode(500, new ProtocolAnswer { Status = "error", Message = $"inventory import failed: {Describe(ex)}" });
         }
 
         return Ok(new ProtocolAnswer { Status = "ok", Expiration = expiration });
