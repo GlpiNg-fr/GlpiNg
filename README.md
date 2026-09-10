@@ -405,7 +405,11 @@ couverts par la catégorie « Agents » (`glpi_agents`, table du cœur de GLPI).
 Le contenu d'un paquet est repris : la colonne `json` du plugin, qui porte ses
 vérifications, ses actions (`cmd`, `move`, `copy`, `mkdir`, `delete`) et ses
 interactions utilisateur, est traduite vers les entrées correspondantes de GlpiNg
-(`GlpiDeployPackageJsonMapper`). La lecture est permissive — le format a bougé
+(`GlpiDeployPackageJsonMapper`). Ce document est lu tel quel, puis
+« désassaini » : GLPI n'écrit pas ses champs texte bruts en base —
+`Toolbox\Sanitizer` y échappe les caractères réservés de SQL et encode `&`, `<`
+et `>` en entités — si bien qu'un document lu directement dans la colonne n'est
+pas du JSON valide. La lecture est permissive — le format a bougé
 entre FusionInventory et GLPI Inventory — et ce qui n'a pas d'équivalent est
 listé dans les avertissements plutôt que perdu en silence.
 
