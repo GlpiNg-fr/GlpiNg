@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using GlpiNg.Modules.Abstractions.Import;
+﻿using GlpiNg.Modules.Abstractions.Import;
 using GlpiNg.Modules.Deployment.Import;
 using GlpiNg.Modules.Deployment.Models;
 using GlpiNg.Modules.Deployment.Services;
@@ -491,9 +490,15 @@ public sealed class GlpiInventoryPluginImportService(
 
     private static void ApplyContent(DeploymentPackage package, GlpiDeployPackageContent content)
     {
-        package.ChecksJson = JsonSerializer.Serialize(content.Checks);
-        package.ActionsJson = JsonSerializer.Serialize(content.Actions);
-        package.UserInteractionsJson = JsonSerializer.Serialize(content.UserInteractions);
+        // Par le convertisseur du module, et non par une sérialisation directe des objets : les
+        // colonnes ChecksJson/ActionsJson/UserInteractionsJson ont une forme précise, celle que
+        // l'écran d'édition relit et que DeployJobJsonBuilder transmet à l'agent. Une action y est
+        // un objet à une seule clé donnant son type (« cmd », « move »...), pas la projection des
+        // propriétés de DeploymentActionEntry — sérialisées telles quelles, elles étaient
+        // silencieusement ignorées à la relecture, et le paquet importé n'affichait aucune action.
+        package.ChecksJson = DeploymentPackageJsonConverter.SerializeChecks(content.Checks);
+        package.ActionsJson = DeploymentPackageJsonConverter.SerializeActions(content.Actions);
+        package.UserInteractionsJson = DeploymentPackageJsonConverter.SerializeUserInteractions(content.UserInteractions);
     }
 
     /// <summary>
