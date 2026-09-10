@@ -77,7 +77,8 @@ public sealed class GlpiInventoryPluginImportService(
                     selection.DeployFilesPath,
                     selection.DeployFilesUserName,
                     selection.DeployFilesPassword,
-                    selection.GlpiBaseUrl),
+                    selection.GlpiBaseUrl,
+                    MirrorUrls: selection.DeployMirrorUrls),
                 result, cancellationToken);
         }
 

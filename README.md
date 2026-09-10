@@ -422,10 +422,15 @@ sélectionnés :
   l'hôte au préalable, ce que l'import dit explicitement plutôt que d'échouer. Les fragments y sont retrouvés par leur nom au moyen d'un index bâti sur
   l'arborescence, quel que soit son découpage en sous-dossiers, et leur
   compression est détectée sur le contenu plutôt que déduite d'une extension ;
-- l'**URL de GLPI**, essayée en repli, avec des gabarits d'URL réglables
-  (`{base}`/`{sha512}`) plutôt que figés — le tracé du dépôt a changé entre
-  FusionInventory et GLPI Inventory. En cas d'échec, l'URL réellement demandée est
-  rapportée telle quelle.
+- les **adresses HTTP**, essayées en repli et **trouvées dans la base source** —
+  l'administrateur n'a rien à saisir. L'analyse lit les serveurs de miroir
+  déclarés par le plugin (`deploymirrors`), essayés en premier puisque ce sont ceux
+  depuis lesquels les agents de cette installation téléchargent déjà, puis la
+  racine HTTP que GLPI se connaît (`glpi_configs.url_base`, celle de ses propres
+  courriels), qui pré-remplit un champ modifiable. Les gabarits d'URL sont
+  réglables (`{base}`/`{sha512}`) plutôt que figés — le tracé du dépôt a changé
+  entre FusionInventory et GLPI Inventory — et chaque échec rapporte l'URL
+  réellement demandée.
 
 Chaque contenu récupéré est réécrit par le stockage GlpiNg, qui en recalcule le
 SHA-512 : s'il ne correspond pas à celui que le paquet attend, rien n'est
