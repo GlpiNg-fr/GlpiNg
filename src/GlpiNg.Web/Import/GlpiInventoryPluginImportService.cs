@@ -78,7 +78,9 @@ public sealed class GlpiInventoryPluginImportService(
                     selection.DeployFilesUserName,
                     selection.DeployFilesPassword,
                     selection.GlpiBaseUrl,
-                    MirrorUrls: selection.DeployMirrorUrls),
+                    selection.GlpiUserName,
+                    selection.GlpiPassword,
+                    selection.DeployMirrorUrls),
                 result, cancellationToken);
         }
 
@@ -293,7 +295,7 @@ public sealed class GlpiInventoryPluginImportService(
     }
 
     /// <summary>Ce que la table des fichiers du plugin sait d'un fichier, quand elle existe.</summary>
-    private sealed record GlpiDeployFileInfo(string? Name, long SizeBytes);
+    private sealed record GlpiDeployFileInfo(int Id, string? Name, long SizeBytes);
 
     /// <summary>
     /// Lit le répertoire de fichiers du plugin (<c>deployfiles</c>) : nom d'origine et taille, par
@@ -320,14 +322,16 @@ public sealed class GlpiInventoryPluginImportService(
             return files;
         }
 
-        string sql = $"SELECT {ColumnOrNull(columns, "name")}, {ColumnOrNull(columns, "filesize")}, "
+        // « id » : seul paramètre accepté par front/deployfile_download.php, qui rend le fichier
+        // entier — c'est ce qui rend la route HTTP authentifiée possible.
+        string sql = $"SELECT id, {ColumnOrNull(columns, "name")}, {ColumnOrNull(columns, "filesize")}, "
             + $"{ColumnOrNull(columns, "sha512")}, {ColumnOrNull(columns, "shortsha512")} FROM `{table}`";
 
         await foreach (MySqlDataReader reader in ReadAsync(connection, sql, ct))
         {
             string? name = GetNullableString(reader, "name");
             long size = long.TryParse(GetNullableString(reader, "filesize"), out long parsed) ? parsed : 0;
-            GlpiDeployFileInfo info = new(name, size);
+            GlpiDeployFileInfo info = new(reader.GetInt32("id"), name, size);
 
             foreach (string column in (string[])["sha512", "shortsha512"])
             {
@@ -399,7 +403,7 @@ public sealed class GlpiInventoryPluginImportService(
                 continue;
             }
 
-            await TryFetchContentAsync(package, file, fileSource, result, ct);
+            await TryFetchContentAsync(package, file, fileSource, known?.Id, result, ct);
         }
     }
 
@@ -416,10 +420,11 @@ public sealed class GlpiInventoryPluginImportService(
         DeploymentPackage package,
         DeploymentPackageFile file,
         GlpiDeployFileSource fileSource,
+        int? deployFileId,
         GlpiPluginImportResult result,
         CancellationToken ct)
     {
-        GlpiDeployFileFetchResult fetched = await fileFetcher.FetchAsync(file.Sha512, fileSource, ct);
+        GlpiDeployFileFetchResult fetched = await fileFetcher.FetchAsync(file.Sha512, fileSource, deployFileId, ct);
 
         if (!fetched.Succeeded)
         {
