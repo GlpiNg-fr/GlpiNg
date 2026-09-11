@@ -103,7 +103,7 @@ public partial class MainLayout : IDisposable
             new("Authentification", "/config/auth", "ti-key"),
             new("Clients OAuth", "/config/oauth-clients", "ti-lock-access"),
             new("Collecteurs", Icon: "ti-mail"),
-            new("Liens externes", Icon: "ti-external-link"),
+            new("Liens externes", "/config/external-links", "ti-external-link"),
             new("Plugins", Icon: "ti-plug"),
         ]),
     ];

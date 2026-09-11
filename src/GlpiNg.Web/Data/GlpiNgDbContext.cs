@@ -5,6 +5,7 @@ using GlpiNg.Modules.Deployment.Models;
 using GlpiNg.Modules.Inventory.Models;
 using GlpiNg.Web.Models;
 using GlpiNg.Web.Models.Notifications;
+using GlpiNg.Web.Models.ExternalLinks;
 using GlpiNg.Web.Models.Webhooks;
 using GlpiNg.Web.Services;
 using Microsoft.Data.SqlClient;
@@ -150,6 +151,9 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<Webhook> Webhooks => Set<Webhook>();
     public DbSet<WebhookHeader> WebhookHeaders => Set<WebhookHeader>();
     public DbSet<QueuedWebhook> QueuedWebhooks => Set<QueuedWebhook>();
+
+    public DbSet<ExternalLink> ExternalLinks => Set<ExternalLink>();
+    public DbSet<ExternalLinkItemType> ExternalLinkItemTypes => Set<ExternalLinkItemType>();
 
     public DbSet<EventLogEntry> EventLogEntries => Set<EventLogEntry>();
 
@@ -930,6 +934,22 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
         // (page de consultation) : c'est le seul index qui compte ici.
         modelBuilder.Entity<QueuedWebhook>()
             .HasIndex(q => new { q.Status, q.CreatedAt });
+
+        modelBuilder.Entity<ExternalLink>()
+            .HasMany(link => link.ItemTypes)
+            .WithOne(association => association.ExternalLink)
+            .HasForeignKey(association => association.ExternalLinkId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Un même type ne s'associe qu'une fois à un lien : deux lignes identiques feraient
+        // apparaître le lien en double sur chaque fiche concernée.
+        modelBuilder.Entity<ExternalLinkItemType>()
+            .HasIndex(association => new { association.ExternalLinkId, association.ItemType })
+            .IsUnique();
+
+        // C'est la requête de chaque ouverture de fiche : « quels liens pour ce type ? »
+        modelBuilder.Entity<ExternalLinkItemType>()
+            .HasIndex(association => association.ItemType);
 
         // Clé primaire textuelle (nom de section, ex. "ParcSettings") plutôt qu'un Id auto-incrémenté :
         // longueur bornée nécessaire pour qu'une clé primaire soit indexable sous MySQL (utf8mb4).
