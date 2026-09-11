@@ -2,7 +2,7 @@
 @using GlpiNg.Web.Models
 @rendermode InteractiveServer
 
-<PageTitle>GlpiNg — @(_server?.Name ?? "Annuaire LDAP")</PageTitle>
+<PageTitle>@(_server?.Name ?? "Annuaire LDAP") — GlpiNg</PageTitle>
 
 <AuthTabStrip Current="ldap" />
 

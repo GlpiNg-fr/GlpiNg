@@ -1,8 +1,8 @@
-@page "/config/auth/mail/{ServerId:int}"
+﻿@page "/config/auth/mail/{ServerId:int}"
 @using GlpiNg.Web.Models
 @rendermode InteractiveServer
 
-<PageTitle>GlpiNg — @(_server?.Name ?? "Serveur mails")</PageTitle>
+<PageTitle>@(_server?.Name ?? "Serveur mails") — GlpiNg</PageTitle>
 
 <AuthTabStrip Current="mail" />
 

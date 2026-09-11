@@ -1,8 +1,8 @@
-@page "/admin/profiles/{ProfileId:int}"
+﻿@page "/admin/profiles/{ProfileId:int}"
 @using GlpiNg.Web.Models
 @rendermode InteractiveServer
 
-<PageTitle>GlpiNg — @(_profile?.Name ?? "Profil")</PageTitle>
+<PageTitle>@(_profile?.Name ?? "Profil") — GlpiNg</PageTitle>
 
 @if (_profile is null)
 {

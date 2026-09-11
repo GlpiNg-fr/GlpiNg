@@ -1,8 +1,8 @@
-@page "/admin/groups/{GroupId:int}"
+﻿@page "/admin/groups/{GroupId:int}"
 @using GlpiNg.Web.Models
 @rendermode InteractiveServer
 
-<PageTitle>GlpiNg — @(_group?.Name ?? "Groupe")</PageTitle>
+<PageTitle>@(_group?.Name ?? "Groupe") — GlpiNg</PageTitle>
 
 @if (_group is null)
 {

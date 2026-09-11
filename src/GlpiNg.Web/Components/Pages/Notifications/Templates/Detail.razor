@@ -1,8 +1,8 @@
-@page "/config/notifications/templates/{TemplateId:int}"
+﻿@page "/config/notifications/templates/{TemplateId:int}"
 @using GlpiNg.Web.Models.Notifications
 @rendermode InteractiveServer
 
-<PageTitle>GlpiNg — @(_template?.Name ?? "Gabarit")</PageTitle>
+<PageTitle>@(_template?.Name ?? "Gabarit") — GlpiNg</PageTitle>
 
 <NotificationsTabStrip Current="templates" />
 
