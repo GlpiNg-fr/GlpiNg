@@ -196,10 +196,20 @@ de l'imprimante et de la référence.
 
 Une référence de cartouche porte un **OID SNMP** optionnel, adresse à laquelle une
 imprimante expose le niveau restant de cette cartouche (norme
-`prtMarkerSuppliesLevel`, `1.3.6.1.2.1.43.11.1.1.9.1.n`). Il est destiné à un
-relevé automatique par le serveur ; sa syntaxe est vérifiée à la saisie, et une
-référence sans OID n'est simplement pas relevée. Le relevé lui-même reste à
-brancher — voir « À faire ».
+`prtMarkerSuppliesLevel`, `1.3.6.1.2.1.43.11.1.1.9.1.n`). Sa syntaxe est vérifiée à la saisie, et une
+référence sans OID n'est simplement pas relevée.
+
+L'action automatique **« Relevé SNMP des imprimantes »**
+(`printer_snmp_poll`, 12 h par défaut) interroge les imprimantes dont la fiche
+porte une adresse et une version, et met à jour leur compteur de pages
+(`prtMarkerLifeCount`, standardisé) ainsi que le niveau des cartouches
+installées. Le pourcentage est dérivé en lisant la capacité maximale au même rang
+(colonne 8 au lieu de 9 du même sous-arbre), ce qui évite un second OID à saisir ;
+à défaut, une valeur inférieure à 100 est prise pour un pourcentage et les autres
+sont abandonnées. Les valeurs réservées de la norme (-1 « inconnu », -2 « sans
+limite », -3 « il en reste ») ne sont pas enregistrées comme des niveaux. Une
+imprimante injoignable est ignorée et réessayée au cycle suivant, jamais au prix
+du relevé des autres.
 
 Le bouton « Actions » de la fiche ordinateur permet de réveiller le poste
 (Wake-on-LAN) : le serveur diffuse un magic packet sur **toutes** les adresses MAC
@@ -570,8 +580,6 @@ manques suivants sont connus et assumés à ce stade.
 - [ ] Sections d'inventaire encore non reprises, faute d'équivalent dans le
       modèle : machines virtuelles, processus, variables d'environnement, règles
       de pare-feu, comptes et groupes locaux, licences logicielles
-- [ ] Relevé SNMP du niveau des cartouches : l'OID est configurable sur la
-      référence de cartouche, mais aucune tâche ne l'interroge encore
 - [ ] Page `/self-service` (les cibles libre-service sont déjà configurables
       sur la fiche paquet)
 - [ ] Migrations EF Core dédiées pour MySQL/PostgreSQL (l'installation utilise
