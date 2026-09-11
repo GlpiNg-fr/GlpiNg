@@ -11,7 +11,8 @@ Assistance, Gestion, Outils, Administration, Configuration).
 
 - Inventaire de parc (postes, composants, statuts, affectations) alimenté par de
   vrais agents GLPI-Agent, étendu à 15 types d'actifs
-- Compatibilité protocole GLPI-Agent : `contact`, `inventory`, `getJobs`/`setStatus`
+- Compatibilité protocole GLPI-Agent : `contact`, `inventory`, `getJobs`/`setStatus`,
+  collectes (`getCollectJobs`/`setCollectAnswer`)
   (déploiement de paquets)
 - Déploiement de paquets, découverte/inventaire réseau SNMP et Wake-on-LAN,
   planifiés par tâches et créneaux horaires
@@ -373,6 +374,10 @@ Endpoint POST unique dispatché sur un champ `action` :
 - `getJobs` : renvoie le prochain job de déploiement au format JSON GLPI-Agent
   (`jobs.checks/associatedFiles/actions`, fichiers indexés par hash SHA512)
 - `setStatus` : rapport d'avancement/résultat d'un job par l'agent
+- `getCollectJobs` : renvoie les collectes actives à exécuter (`getFromRegistry`,
+  `getFromWMI`, `findFile`), chacune portant un `_sid` qui identifie l'entrée
+- `setCollectAnswer` : enregistre les valeurs rapportées, visibles dans l'onglet
+  « Informations de collecte » de la fiche du poste
 - `GET /inventory/deploy/file/{sha512}` : téléchargement d'un fichier de
   package par son hash
 
@@ -581,6 +586,11 @@ manques suivants sont connus et assumés à ce stade.
   et compilée, sans chargement à chaud ni marketplace.
 - **Moteur de règles partiel** — absents : règles d'habilitations LDAP, règles
   métier tickets, règles d'affectation d'entité, règles de localisation.
+- **Collectes sans ciblage** — les collectes (clés de registre, requêtes WMI,
+  recherches de fichiers) sont transmises aux agents et leurs résultats stockés,
+  mais *toutes* les collectes actives s'appliquent à *tous* les agents : le
+  plugin d'origine les cible par tâche, GlpiNg n'a pas de tâche de collecte.
+  Seule la dernière valeur de chaque entrée est conservée, sans historique.
 - **Recherche** — le moteur multi-critères est en place sur toutes les listes du
   parc, mais l'enregistrement/rappel d'une recherche n'est branché que sur
   Ordinateurs et Moniteurs : `SavedSearchItemTypes` annonce les autres types,
@@ -593,10 +603,6 @@ manques suivants sont connus et assumés à ce stade.
 - [ ] Sections d'inventaire encore non reprises, faute d'équivalent dans le
       modèle : machines virtuelles, processus, variables d'environnement, règles
       de pare-feu, comptes et groupes locaux, licences logicielles
-- [ ] Collectes (clés de registre, requêtes WMI, recherches de fichiers) : les
-      définitions sont configurables, mais le protocole agent ne traite pas
-      l'action « collect » — rien n'est exécuté ni remonté, et l'onglet
-      « Informations de collecte » d'une fiche le dit explicitement
 - [ ] Page `/self-service` coté utilisateur (le déploiement à la demande est déjà
       opérant depuis la fiche d'un poste : seuls les paquets dont le libre-service
       est activé pour un groupe dont ce poste est membre y sont proposés)

@@ -27,6 +27,10 @@ namespace GlpiNg.Web.Controllers;
 /// Traite aussi "getJobs" (récupération d'une tâche de déploiement) et "setStatus"
 /// (rapport d'exécution), et expose le téléchargement des fichiers de package associés.
 ///
+/// Ainsi que "getCollectJobs" / "setCollectAnswer" pour les collectes (registre, WMI, recherche
+/// de fichiers) : même adaptation que le déploiement — une action sur la route unique plutôt que
+/// le point d'accès b/collect du plugin d'origine.
+///
 /// Non couvert pour l'instant : compression brotli, chiffrement (GLPI-CryptoKey-ID),
 /// proxy agent (GLPI-Proxy-ID). La compression zlib/gzip (Content-Type
 /// "application/x-compress-zlib"/"-gzip") est décompressée en entrée. Le PROLOG legacy XML
@@ -235,6 +239,8 @@ public class AgentController(
                 "getNetInventoryJobs" => await HandleGetNetworkJobsAsync(agentUuid, NetworkTaskMethod.NetworkInventory, cancellationToken),
                 "netdiscovery" or "netinventory" => await HandleNetworkInventoryAsync(agentUuid, action, document, cancellationToken),
                 "getWakeOnLanJobs" => await HandleGetWakeOnLanJobsAsync(agentUuid, cancellationToken),
+                "getCollectJobs" => await HandleGetCollectJobsAsync(agentUuid, cancellationToken),
+                "setCollectAnswer" => await HandleSetCollectAnswerAsync(agentUuid, document, cancellationToken),
                 "setStatus" => await HandleSetStatusAsync(document, cancellationToken),
                 _ => BadRequest(new ProtocolAnswer { Status = "error", Message = $"unsupported action '{action}'" })
             };
@@ -442,6 +448,233 @@ public class AgentController(
         }
 
         return string.Join(" — ", messages);
+    }
+
+    /// <summary>
+    /// Collectes à exécuter par l'agent : clés de registre, requêtes WMI, recherches de fichiers.
+    ///
+    /// Forme reprise de <c>PluginGlpiinventoryCollect::communication()</c> — un tableau
+    /// <c>jobs</c> dont chaque entrée porte sa <c>function</c> (<c>getFromRegistry</c>,
+    /// <c>getFromWMI</c>, <c>findFile</c>) et un <c>_sid</c> qui identifie l'entrée interrogée,
+    /// renvoyé tel quel dans la réponse. Comme pour le déploiement, c'est une adaptation : GlpiNg
+    /// expose une action sur sa route unique plutôt que le point d'accès <c>b/collect</c>.
+    ///
+    /// Ce sont toutes les collectes actives qui s'appliquent, sans ciblage par tâche. Le plugin
+    /// d'origine passe par des tâches ; GlpiNg n'en a pas pour les collectes, et inventer un
+    /// ciblage que rien ne configure serait pire que la règle simple et prévisible qu'on annonce.
+    /// </summary>
+    private async Task<IActionResult> HandleGetCollectJobsAsync(string agentUuid, CancellationToken cancellationToken)
+    {
+        GlpiAgent? agent = await db.Agents.FirstOrDefaultAsync(a => a.AgentUuid == agentUuid, cancellationToken);
+        if (agent is null)
+        {
+            return Ok(new JsonObject { ["jobs"] = new JsonArray() });
+        }
+
+        UpdateAgentRequestMetadata(agent);
+        await db.SaveChangesAsync(cancellationToken);
+
+        List<CollectDefinition> collects = await db.CollectDefinitions
+            .AsNoTracking()
+            .Include(collect => collect.RegistryEntries)
+            .Include(collect => collect.WmiEntries)
+            .Include(collect => collect.FileSearchEntries)
+            .Where(collect => collect.Enabled)
+            .ToListAsync(cancellationToken);
+
+        JsonArray jobs = [];
+
+        foreach (CollectDefinition collect in collects)
+        {
+            foreach (CollectRegistryEntry entry in collect.RegistryEntries)
+            {
+                jobs.Add(new JsonObject
+                {
+                    ["function"] = "getFromRegistry",
+                    ["_sid"] = Sid(collect.Id, "registry", entry.Id),
+                    ["_name"] = entry.Name,
+                    ["path"] = RegistryPath(entry),
+                });
+            }
+
+            foreach (CollectWmiEntry entry in collect.WmiEntries)
+            {
+                JsonArray properties = [];
+                foreach (string property in (entry.Properties ?? string.Empty)
+                             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                {
+                    properties.Add(property);
+                }
+
+                jobs.Add(new JsonObject
+                {
+                    ["function"] = "getFromWMI",
+                    ["_sid"] = Sid(collect.Id, "wmi", entry.Id),
+                    ["_name"] = entry.Name,
+                    ["class"] = entry.WmiClass,
+                    ["properties"] = properties,
+                    ["moniker"] = entry.Moniker,
+                });
+            }
+
+            foreach (CollectFileSearchEntry entry in collect.FileSearchEntries)
+            {
+                jobs.Add(new JsonObject
+                {
+                    ["function"] = "findFile",
+                    ["_sid"] = Sid(collect.Id, "file", entry.Id),
+                    ["_name"] = entry.Name,
+                    ["dir"] = entry.Path,
+                    ["filter"] = entry.Pattern,
+                    ["recursive"] = entry.Recursive ? 1 : 0,
+                });
+            }
+        }
+
+        return Ok(new JsonObject { ["jobs"] = jobs });
+    }
+
+    /// <summary>
+    /// Résultat d'une collecte, renvoyé par l'agent.
+    ///
+    /// Le <c>_sid</c> reçu est celui qui a été envoyé : il porte la collecte et l'entrée, ce qui
+    /// évite d'avoir à faire correspondre des libellés dont rien ne garantit l'unicité.
+    ///
+    /// Un nouveau passage remplace le résultat précédent de la même entrée : une collecte dit
+    /// l'état du poste à l'instant où elle a tourné, pas une accumulation.
+    /// </summary>
+    private async Task<IActionResult> HandleSetCollectAnswerAsync(string agentUuid, JsonDocument document, CancellationToken cancellationToken)
+    {
+        GlpiAgent? agent = await db.Agents
+            .Include(a => a.Computer)
+            .FirstOrDefaultAsync(a => a.AgentUuid == agentUuid, cancellationToken);
+
+        if (agent?.Computer is not { } computer)
+        {
+            // Un agent sans ordinateur n'a pas encore envoyé d'inventaire : il n'y a nulle part où
+            // ranger le résultat. Accepté sans rien écrire plutôt que rejeté, pour ne pas faire
+            // boucler l'agent sur une erreur qu'il ne peut pas corriger.
+            return Ok(new ProtocolAnswer { Status = "ok", Message = "no computer for this agent" });
+        }
+
+        JsonElement root = document.RootElement;
+        int stored = 0;
+
+        foreach (JsonElement answer in EnumerateAnswers(root))
+        {
+            if (!answer.TryGetProperty("_sid", out JsonElement sidElement)
+                || ParseSid(sidElement.GetString()) is not { } sid)
+            {
+                continue;
+            }
+
+            // Le nom vient de la définition, pas de la réponse : c'est lui qui s'affiche sur la
+            // fiche et qui sert de clé d'unicité, et rien ne garantit que l'agent réémette les
+            // champs qu'il n'utilise pas. Le "_name" reçu n'est qu'un repli, et le libellé de la
+            // nature un dernier recours pour ne jamais perdre une valeur remontée.
+            string entryName = await ResolveEntryNameAsync(sid, cancellationToken)
+                               ?? ReadString(answer, "_name")
+                               ?? sid.Kind;
+
+            CollectResult? existing = await db.CollectResults
+                .FirstOrDefaultAsync(result => result.ComputerId == computer.Id
+                                               && result.CollectDefinitionId == sid.CollectId
+                                               && result.EntryName == entryName, cancellationToken);
+
+            existing ??= AddResult(computer.Id, sid, entryName);
+
+            existing.Key = ReadString(answer, "key") ?? ReadString(answer, "path") ?? ReadString(answer, "class");
+            existing.Value = ReadString(answer, "value") ?? ReadString(answer, "content") ?? RawValue(answer);
+            existing.CollectedAt = DateTime.UtcNow;
+            stored++;
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        logger.LogInformation("collect: agent {AgentUuid} — {Count} résultat(s) de collecte enregistré(s).", agentUuid, stored);
+
+        return Ok(new ProtocolAnswer { Status = "ok" });
+    }
+
+    /// <summary>Nom de l'entrée de collecte désignée par le <c>_sid</c>, ou null si elle a été
+    /// supprimée depuis l'envoi du job.</summary>
+    private async Task<string?> ResolveEntryNameAsync((int CollectId, string Kind, int EntryId) sid, CancellationToken cancellationToken) =>
+        sid.Kind switch
+        {
+            "wmi" => await db.Set<CollectWmiEntry>()
+                .Where(entry => entry.Id == sid.EntryId && entry.CollectDefinitionId == sid.CollectId)
+                .Select(entry => entry.Name).FirstOrDefaultAsync(cancellationToken),
+            "file" => await db.Set<CollectFileSearchEntry>()
+                .Where(entry => entry.Id == sid.EntryId && entry.CollectDefinitionId == sid.CollectId)
+                .Select(entry => entry.Name).FirstOrDefaultAsync(cancellationToken),
+            _ => await db.Set<CollectRegistryEntry>()
+                .Where(entry => entry.Id == sid.EntryId && entry.CollectDefinitionId == sid.CollectId)
+                .Select(entry => entry.Name).FirstOrDefaultAsync(cancellationToken),
+        };
+
+    private CollectResult AddResult(int computerId, (int CollectId, string Kind, int EntryId) sid, string entryName)
+    {
+        CollectResult created = new()
+        {
+            ComputerId = computerId,
+            CollectDefinitionId = sid.CollectId,
+            Type = sid.Kind switch
+            {
+                "wmi" => CollectType.Wmi,
+                "file" => CollectType.FileSearch,
+                _ => CollectType.Registry,
+            },
+            EntryName = entryName,
+        };
+
+        db.CollectResults.Add(created);
+        return created;
+    }
+
+    /// <summary>Les réponses arrivent soit en tableau, soit une par requête : les deux sont acceptées.</summary>
+    private static IEnumerable<JsonElement> EnumerateAnswers(JsonElement root)
+    {
+        if (root.ValueKind == JsonValueKind.Array)
+        {
+            return root.EnumerateArray();
+        }
+
+        if (root.TryGetProperty("answers", out JsonElement answers) && answers.ValueKind == JsonValueKind.Array)
+        {
+            return answers.EnumerateArray();
+        }
+
+        return [root];
+    }
+
+    private static string? ReadString(JsonElement element, string property) =>
+        element.TryGetProperty(property, out JsonElement value) && value.ValueKind is not JsonValueKind.Null
+            ? value.ToString()
+            : null;
+
+    /// <summary>Repli quand l'agent rend la valeur sans nom de champ connu : on garde le corps tel
+    /// quel plutôt que d'enregistrer un résultat vide.</summary>
+    private static string? RawValue(JsonElement element) =>
+        element.ValueKind is JsonValueKind.Object or JsonValueKind.Array ? element.GetRawText() : element.ToString();
+
+    /// <summary>Ruche, chemin et clé recollés en un seul chemin, sans doubler les séparateurs que
+    /// la saisie peut déjà porter aux extrémités.</summary>
+    private static string RegistryPath(CollectRegistryEntry entry) =>
+        string.Join('\\', new[] { entry.Hive, entry.Path, entry.RegistryKey }
+            .Select(part => part.Trim('\\'))
+            .Where(part => part.Length > 0));
+
+    private static string Sid(int collectId, string kind, int entryId) => $"{collectId}:{kind}:{entryId}";
+
+    private static (int CollectId, string Kind, int EntryId)? ParseSid(string? sid)
+    {
+        string[] parts = (sid ?? string.Empty).Split(':');
+
+        return parts.Length == 3
+               && int.TryParse(parts[0], out int collectId)
+               && int.TryParse(parts[2], out int entryId)
+            ? (collectId, parts[1], entryId)
+            : null;
     }
 
     private async Task<IActionResult> HandleInventoryAsync(string agentUuid, JsonDocument document, CancellationToken cancellationToken)

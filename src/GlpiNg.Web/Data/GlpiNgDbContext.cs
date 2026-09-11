@@ -72,6 +72,7 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
 
     public DbSet<GlpiAgent> Agents => Set<GlpiAgent>();
     public DbSet<DeploymentJob> DeploymentJobs => Set<DeploymentJob>();
+    public DbSet<CollectResult> CollectResults => Set<CollectResult>();
     public DbSet<DeploymentPackage> DeploymentPackages => Set<DeploymentPackage>();
     public DbSet<DeploymentPackageFile> DeploymentPackageFiles => Set<DeploymentPackageFile>();
     public DbSet<DeploymentPackageFilePart> DeploymentPackageFileParts => Set<DeploymentPackageFilePart>();
@@ -418,6 +419,20 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
             .WithMany(t => t.Jobs)
             .HasForeignKey(j => j.WakeOnLanTaskId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Cascade des deux côtés : un résultat de collecte n'a de sens ni sans le poste qu'il
+        // décrit, ni sans la collecte qui l'a demandé. L'index le rend consultable par poste —
+        // c'est la seule lecture que fait la fiche — et garantit une valeur par entrée : un
+        // nouveau passage remplace le précédent au lieu de s'empiler.
+        modelBuilder.Entity<CollectResult>()
+            .HasOne(result => result.CollectDefinition)
+            .WithMany()
+            .HasForeignKey(result => result.CollectDefinitionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<CollectResult>()
+            .HasIndex(result => new { result.ComputerId, result.CollectDefinitionId, result.EntryName })
+            .IsUnique();
 
         modelBuilder.Entity<DeploymentPackage>()
             .HasMany(p => p.Files)
