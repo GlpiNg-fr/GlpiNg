@@ -151,6 +151,12 @@ public class InventoryImportService(
         if (settings.ImportPeripherals) await ApplyPeripheralsAsync(computer, content, cancellationToken);
         ApplyVolumes(computer, content, settings);
         if (settings.ImportBatteries) ApplyBatteries(computer, content);
+
+        // Catalogue de composants (Configuration > Composants) : les modèles rencontrés y sont
+        // référencés au passage. Sans cela la page reste vide à jamais — les composants d'un
+        // inventaire sont rattachés au poste, et rien ne tenait la liste des modèles connus du
+        // parc, alors que c'est précisément ce que cette page prétend montrer.
+        await CatalogComponentModelsAsync(computer, cancellationToken);
         ApplyConnectors(computer, content);
         ApplyNetworkPorts(computer, content, blacklist);
         if (settings.ImportAntivirus) ApplyAntivirus(computer, content);
@@ -781,6 +787,69 @@ public class InventoryImportService(
     // Models/DropdownItem.cs. Utilisé pour tous les statuts assignés automatiquement par cet
     // import (toujours "En production", que ce soit pour un Computer ou un Peripheral détecté),
     // plutôt que l'ancienne énumération fixe ComputerStatus.
+    /// <summary>
+    /// Référence dans le catalogue les modèles de composants que ce poste vient de remonter.
+    ///
+    /// Le catalogue est une liste de modèles connus du parc, pas un inventaire par machine : une
+    /// entrée par nom distinct, quel que soit le nombre de postes qui la portent. Les doublons
+    /// sont écartés par une lecture préalable des noms déjà connus pour les seules catégories
+    /// concernées — une requête par catégorie présente dans cet inventaire, pas une par composant.
+    ///
+    /// Les désignations vides ou manifestement inutiles (« inconnu », « CPU inconnu ») ne sont pas
+    /// cataloguées : elles ne désignent aucun modèle et pollueraient une liste dont l'intérêt est
+    /// justement d'être parcourable.
+    /// </summary>
+    private async Task CatalogComponentModelsAsync(Computer computer, CancellationToken cancellationToken)
+    {
+        Dictionary<DropdownType, HashSet<string>> wanted = [];
+
+        void Want(DropdownType? type, string? name)
+        {
+            if (type is not { } catalogType || !DropdownTypeCatalog.IsCatalogueableName(name))
+            {
+                return;
+            }
+
+            if (!wanted.TryGetValue(catalogType, out HashSet<string>? names))
+            {
+                names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                wanted[catalogType] = names;
+            }
+
+            names.Add(name!.Trim());
+        }
+
+        foreach (ComputerComponent component in computer.Components)
+        {
+            Want(DropdownTypeCatalog.ForComponent(component.Type), component.Designation);
+        }
+
+        foreach (ComputerBattery battery in computer.Batteries)
+        {
+            Want(DropdownType.Battery, battery.Name);
+        }
+
+        if (wanted.Count == 0)
+        {
+            return;
+        }
+
+        foreach ((DropdownType type, HashSet<string> names) in wanted)
+        {
+            List<string> known = await db.DropdownItems
+                .Where(item => item.Type == type)
+                .Select(item => item.Name)
+                .ToListAsync(cancellationToken);
+
+            HashSet<string> existing = new(known, StringComparer.OrdinalIgnoreCase);
+
+            foreach (string name in names.Where(candidate => !existing.Contains(candidate)))
+            {
+                db.DropdownItems.Add(new DropdownItem { Type = type, Name = name });
+            }
+        }
+    }
+
     private async Task<int?> ResolveStatusIdAsync(string name, CancellationToken cancellationToken)
     {
         DropdownItem? item = await db.DropdownItems
