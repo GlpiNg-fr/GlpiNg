@@ -199,6 +199,12 @@ imprimante expose le niveau restant de cette cartouche (norme
 `prtMarkerSuppliesLevel`, `1.3.6.1.2.1.43.11.1.1.9.1.n`). Sa syntaxe est vérifiée à la saisie, et une
 référence sans OID n'est simplement pas relevée.
 
+La liste des imprimantes se déplie, comme celle des logiciels : chaque ligne
+affiche le nombre de cartouches en service et le **plus bas** de leurs niveaux —
+c'est lui qui commande, une imprimante n'étant utilisable que jusqu'à ce que sa
+cartouche la plus basse soit vide — et s'ouvre sur le détail de chacune avec son
+niveau et la date de son relevé.
+
 L'action automatique **« Relevé SNMP des imprimantes »**
 (`printer_snmp_poll`, 12 h par défaut) interroge les imprimantes dont la fiche
 porte une adresse et une version, et met à jour leur compteur de pages

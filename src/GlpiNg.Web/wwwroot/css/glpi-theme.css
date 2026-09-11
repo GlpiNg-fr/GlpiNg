@@ -2055,3 +2055,10 @@ body {
   font-weight: 600;
   font-size: 0.9rem;
 }
+
+/* Curseur des éléments cliquables qui ne sont ni un lien ni un bouton : les chevrons de dépliage
+   des listes (Logiciels, Imprimantes). Défini localement plutôt que pris de Tabler, qui vient d'un
+   CDN — la classe y existe, mais rien ici ne permet de le garantir d'une version à l'autre. */
+.cursor-pointer {
+  cursor: pointer;
+}
