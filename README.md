@@ -593,6 +593,10 @@ manques suivants sont connus et assumés à ce stade.
 - [ ] Sections d'inventaire encore non reprises, faute d'équivalent dans le
       modèle : machines virtuelles, processus, variables d'environnement, règles
       de pare-feu, comptes et groupes locaux, licences logicielles
+- [ ] Collectes (clés de registre, requêtes WMI, recherches de fichiers) : les
+      définitions sont configurables, mais le protocole agent ne traite pas
+      l'action « collect » — rien n'est exécuté ni remonté, et l'onglet
+      « Informations de collecte » d'une fiche le dit explicitement
 - [ ] Page `/self-service` coté utilisateur (le déploiement à la demande est déjà
       opérant depuis la fiche d'un poste : seuls les paquets dont le libre-service
       est activé pour un groupe dont ce poste est membre y sont proposés)
