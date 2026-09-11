@@ -22,6 +22,7 @@ using GlpiNg.Web.Middleware;
 using GlpiNg.Web.Options;
 using GlpiNg.Web.Services;
 using GlpiNg.Web.Services.Notifications;
+using GlpiNg.Web.Services.Webhooks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -199,6 +200,20 @@ public class Program
                 UseProxy = false,
                 ConnectTimeout = TimeSpan.FromSeconds(5),
                 ConnectCallback = ConnectToGlpiAgentAsync,
+            });
+
+        // Client des appels sortants de webhook. UseProxy = false pour la même raison que le
+        // client "GlpiAgent" ci-dessus : un destinataire sur le LAN ne doit pas partir dans le
+        // proxy système. Redirections non suivies : un webhook signé perdrait sa signature en
+        // rejouant la requête ailleurs, et une redirection silencieuse vers un autre hôte est
+        // exactement ce qu'un secret partagé sert à empêcher. Le délai réel est fixé par appel
+        // depuis WebhookSettings.TimeoutSeconds, donc large ici.
+        builder.Services.AddHttpClient(WebhookSender.HttpClientName, client => client.Timeout = TimeSpan.FromMinutes(5))
+            .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+            {
+                UseProxy = false,
+                AllowAutoRedirect = false,
+                ConnectTimeout = TimeSpan.FromSeconds(10),
             });
 
         // Activation de Swagger pilotée par la config (section "Swagger:Enabled",
@@ -425,6 +440,14 @@ public class Program
             builder.Services.AddScoped<NotificationDispatchService>();
             builder.Services.AddSingleton<SmtpMailSender>();
             builder.Services.AddScoped<ICronTask, QueuedNotificationSenderCronTask>();
+
+            // Webhooks (voir /config/webhooks, Models/Webhooks et Services/Webhooks) : second
+            // canal branché sur les mêmes événements que les notifications ci-dessus —
+            // NotificationDispatchService délègue à WebhookDispatchService, qui dépose des
+            // QueuedWebhook, et QueuedWebhookSenderCronTask les expédie en HTTP au même tick cron.
+            builder.Services.AddScoped<WebhookDispatchService>();
+            builder.Services.AddScoped<WebhookSender>();
+            builder.Services.AddScoped<ICronTask, QueuedWebhookSenderCronTask>();
 
             // Journal des évènements système consulté sur /admin/logs (voir Administration →
             // "Journaux", EventLogEntry) : connexions, contacts d'agent GLPI-Agent, ...

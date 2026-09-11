@@ -20,8 +20,8 @@ Assistance, Gestion, Outils, Administration, Configuration).
 - Administration : utilisateurs, groupes, entités, profils, sources
   d'authentification (LDAP), clients OAuth2
 - Moteur de règles et dictionnaires (ordinateurs, import, intitulés)
-- Notifications par courriel (gabarits, règles, file d'attente) et actions
-  automatiques (cron applicatif)
+- Notifications par courriel (gabarits, règles, file d'attente), webhooks
+  sortants signés, et actions automatiques (cron applicatif)
 - Assistant d'installation intégré (`/setup`) et gestion des migrations EF Core
   depuis l'UI (`/update`), doublés d'une CLI d'administration (`GlpiNg.Console`)
 
@@ -346,13 +346,22 @@ simplification assumée de la matrice très fine de GLPI.
   (`NotificationEventCatalog` : inventaire, agent, job de déploiement, tâche
   réseau, équipement découvert, WoL), file d'attente consultable
   (`/config/notifications/queue`) et envoi SMTP (`SmtpMailSender`).
+- Webhooks sortants (`/config/webhooks`) : mêmes couples type/événement que les
+  notifications, avec URL, verbe HTTP, corps JSON par défaut ou personnalisé
+  (balises `##cle##`), en-têtes supplémentaires, secret partagé et file de
+  livraison consultable (`/config/webhooks/queue`) avec reprise et purge. Les
+  appels signés portent `X-GLPI-signature` (HMAC-SHA256 hexadécimal du corps
+  concaténé à l'horodatage) et `X-GLPI-timestamp`, comme GLPI. Un bouton
+  « Tester » envoie un appel réel — valeurs d'exemple préfixées `TEST`, pour
+  qu'un destinataire qui agit sur ce qu'il reçoit puisse le distinguer d'un vrai
+  événement.
 - Statut par défaut d'un poste créé par un inventaire, choisi dans les intitulés
   (`Administration > Inventaire`) : appliqué à la création seulement, les
   inventaires suivants ne touchant plus au statut.
 - Cron applicatif (`GlpiNg.Modules.Cron`) piloté depuis
   `/config/automatic-actions` : purge d'historique, envoi de la file de
-  notifications, nettoyage des agents, déclenchement des tâches de déploiement,
-  réseau et Wake-on-LAN.
+  notifications, envoi et purge de la file des webhooks, nettoyage des agents,
+  déclenchement des tâches de déploiement, réseau et Wake-on-LAN.
 
 ### CLI d'administration (`GlpiNg.Console`)
 
@@ -560,8 +569,8 @@ manques suivants sont connus et assumés à ce stade.
 - **Outils** : réservations, rapports, base de connaissances (et, absents même
   de la sidebar : projets, rappels, flux RSS).
 - **Administration** : formulaires.
-- **Configuration** : actifs personnalisés, webhooks, niveaux de services
-  (SLA/OLA), unicité des champs, collecteurs, liens externes, plugins.
+- **Configuration** : actifs personnalisés, niveaux de services (SLA/OLA),
+  unicité des champs, collecteurs, liens externes, plugins.
 
 À noter : les sections `Assistance`, `Helpdesk` et `Analyse d'impact` de
 `/config` configurent des fonctionnalités qui n'existent pas encore.
@@ -591,6 +600,12 @@ manques suivants sont connus et assumés à ce stade.
   mais *toutes* les collectes actives s'appliquent à *tous* les agents : le
   plugin d'origine les cible par tâche, GlpiNg n'a pas de tâche de collecte.
   Seule la dernière valeur de chaque entrée est conservée, sans historique.
+- **Webhooks sans Twig ni validation CRA** — le corps personnalisé substitue des
+  balises `##cle##` comme les gabarits de notification, là où GLPI interprète du
+  Twig ; et l'URL n'est pas validée par le défi `crc_token` de GLPI à
+  l'enregistrement, le bouton « Tester » répondant au même besoin. Les
+  événements disponibles sont ceux que GlpiNg déclenche réellement
+  (`NotificationEventCatalog`), donc pas les événements ITIL de GLPI.
 - **Recherche** — le moteur multi-critères est en place sur toutes les listes du
   parc, mais l'enregistrement/rappel d'une recherche n'est branché que sur
   Ordinateurs et Moniteurs : `SavedSearchItemTypes` annonce les autres types,

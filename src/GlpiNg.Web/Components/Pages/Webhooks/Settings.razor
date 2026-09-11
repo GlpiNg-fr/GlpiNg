@@ -1,0 +1,101 @@
+@page "/config/webhooks/settings"
+@using GlpiNg.Web.Models.Webhooks
+@using GlpiNg.Web.Services
+@using GlpiNg.Web.Services.Webhooks
+@inject SettingsCacheService SettingsStore
+@inject ToastService ToastService
+@rendermode InteractiveServer
+
+<PageTitle>Webhooks — GlpiNg</PageTitle>
+
+<WebhooksTabStrip Current="settings" />
+
+@if (_model is null)
+{
+    <p>Chargement…</p>
+}
+else
+{
+    <div class="glpi-config">
+        <div class="glpi-config-body">
+            <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glpi-config-form">
+                <div class="glpi-config-field checkbox">
+                    <label for="wh-use">Activer les webhooks</label>
+                    <label class="glpi-switch">
+                        <input id="wh-use" type="checkbox" @bind="_model.UseWebhooks" />
+                        <span class="glpi-switch-slider"></span>
+                    </label>
+                </div>
+                <p class="hint">
+                    Coupe tout d'un seul geste : plus aucune livraison n'est mise en file ni expédiée,
+                    sans avoir à désactiver chaque webhook. Les livraisons déjà en attente reprennent
+                    à la réactivation.
+                </p>
+
+                <div class="glpi-config-field">
+                    <label for="wh-timeout">Délai d'attente (secondes)</label>
+                    <input id="wh-timeout" type="number" min="1" max="300" class="glpi-config-input-sm" @bind="_model.TimeoutSeconds" />
+                </div>
+
+                <div class="glpi-config-field">
+                    <label for="wh-attempts">Tentatives avant échec définitif</label>
+                    <input id="wh-attempts" type="number" min="1" max="20" class="glpi-config-input-sm" @bind="_model.MaxAttempts" />
+                </div>
+
+                <div class="glpi-config-field">
+                    <label for="wh-purge">Purge des livraisons terminées (jours)</label>
+                    <input id="wh-purge" type="number" min="0" max="3650" class="glpi-config-input-sm" @bind="_model.PurgeAfterDays" />
+                </div>
+                <p class="hint">
+                    Les livraisons envoyées ou définitivement en échec sont supprimées passé cet âge.
+                    Zéro conserve tout — la file grossit alors sans fin.
+                </p>
+
+                <button type="submit" class="glpi-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+            </EditForm>
+
+            <div class="glpi-fiche-block-title mt-4"><i class="ti ti-lock"></i>Signature des appels</div>
+            <p class="text-secondary" style="max-width: 52rem;">
+                Quand un webhook porte un secret, chaque livraison est signée comme le fait GLPI :
+                l'en-tête <code>X-GLPI-signature</code> contient le HMAC-SHA256, en hexadécimal, du
+                corps concaténé à l'horodatage, et <code>X-GLPI-timestamp</code> porte cet horodatage
+                (secondes Unix). Le destinataire recalcule la même valeur avec le secret partagé pour
+                vérifier que l'appel vient bien de ce serveur et n'est pas un rejeu.
+            </p>
+        </div>
+    </div>
+}
+
+@code {
+    private WebhookSettings? _model;
+    private bool _isSaving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _model = await SettingsStore.ReadSectionAsync<WebhookSettings>(WebhookDispatchService.SettingsSection);
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_model is null)
+        {
+            return;
+        }
+
+        _isSaving = true;
+
+        try
+        {
+            _model.TimeoutSeconds = Math.Clamp(_model.TimeoutSeconds, 1, 300);
+            _model.MaxAttempts = Math.Clamp(_model.MaxAttempts, 1, 20);
+            _model.PurgeAfterDays = Math.Clamp(_model.PurgeAfterDays, 0, 3650);
+
+            await SettingsStore.SaveSectionAsync(WebhookDispatchService.SettingsSection, _model);
+            ToastService.Notify(new ToastMessage(ToastType.Success, "Configuration enregistrée."));
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+}

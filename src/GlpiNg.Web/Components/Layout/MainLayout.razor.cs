@@ -96,7 +96,7 @@ public partial class MainLayout : IDisposable
             new("Actifs personnalisés", Icon: "ti-tool"),
             new("Composants", Icon: "ti-puzzle"),
             new("Notifications", "/config/notifications", "ti-bell-ringing"),
-            new("Webhooks", Icon: "ti-webhook"),
+            new("Webhooks", "/config/webhooks", "ti-webhook"),
             new("Niveaux de services", Icon: "ti-clipboard-check"),
             new("Unicité des champs", Icon: "ti-fingerprint"),
             new("Actions automatiques", "/config/automatic-actions", "ti-robot"),

@@ -1,5 +1,6 @@
-using GlpiNg.Web.Data;
+﻿using GlpiNg.Web.Data;
 using GlpiNg.Web.Models.Notifications;
+using GlpiNg.Web.Services.Webhooks;
 using Microsoft.EntityFrameworkCore;
 
 namespace GlpiNg.Web.Services.Notifications;
@@ -14,13 +15,29 @@ namespace GlpiNg.Web.Services.Notifications;
 /// destinataire résolu. N'envoie rien elle-même : voir <see cref="QueuedNotificationSenderCronTask"/>,
 /// qui vide la file à intervalle régulier — ainsi le code appelant (ex. AgentController.HandleSetStatusAsync,
 /// qui doit répondre vite à l'agent) n'attend jamais une connexion SMTP.
+///
+/// Sert aussi de point de publication aux webhooks (voir <see cref="WebhookDispatchService"/>) :
+/// un webhook écoute exactement les mêmes couples type/événement, donc le brancher ici plutôt
+/// que sur chaque appelant évite d'avoir à répercuter chaque nouvel événement à deux endroits.
+/// Les deux canaux ont leur propre interrupteur et ne se conditionnent pas l'un l'autre : couper
+/// les e-mails ne doit pas couper silencieusement les intégrations HTTP.
 /// </summary>
-public class NotificationDispatchService(GlpiNgDbContext db, SettingsCacheService settingsStore)
+public class NotificationDispatchService(
+    GlpiNgDbContext db,
+    SettingsCacheService settingsStore,
+    WebhookDispatchService webhookDispatch)
 {
     private const string SettingsSection = "NotificationSettings";
 
     public async Task PublishAsync(string itemType, string eventKey, int itemId, IReadOnlyDictionary<string, string?> variables,
         CancellationToken cancellationToken = default)
+    {
+        await webhookDispatch.PublishAsync(itemType, eventKey, itemId, variables, cancellationToken);
+        await PublishMailAsync(itemType, eventKey, itemId, variables, cancellationToken);
+    }
+
+    private async Task PublishMailAsync(string itemType, string eventKey, int itemId, IReadOnlyDictionary<string, string?> variables,
+        CancellationToken cancellationToken)
     {
         NotificationSettings settings = await settingsStore.ReadSectionAsync<NotificationSettings>(SettingsSection, cancellationToken);
         if (!settings.UseNotifications)

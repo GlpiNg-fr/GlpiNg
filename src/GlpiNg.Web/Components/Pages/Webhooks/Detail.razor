@@ -1,0 +1,159 @@
+@page "/config/webhooks/{WebhookId:int}"
+@using GlpiNg.Web.Models.Webhooks
+@rendermode InteractiveServer
+
+<PageTitle>@(_hook?.Name ?? "Webhook") — GlpiNg</PageTitle>
+
+<WebhooksTabStrip Current="list" />
+
+@if (_hook is null)
+{
+    <div class="text-center text-secondary py-5">
+        <i class="ti ti-webhook fs-1"></i>
+        <p class="mt-2">Ce webhook est introuvable.</p>
+    </div>
+}
+else
+{
+    <div class="card mb-3">
+        <div class="card-header">
+            <i class="ti ti-webhook me-2"></i>
+            <span class="fw-semibold">Webhook - @_hook.Name - ID @_hook.Id</span>
+        </div>
+        <div class="card-body">
+            <EditForm Model="_hook" OnValidSubmit="SaveAsync">
+                <WebhookFormFields Hook="_hook" HasStoredSecret="@(!string.IsNullOrEmpty(_hook.SecretProtected))"
+                                   OnSecretChanged="OnSecretChanged" OnChanged="StateHasChanged" />
+
+                <div class="d-flex justify-content-end gap-2 mt-3">
+                    <button type="button" class="btn btn-outline-danger" @onclick="DeleteAsync">
+                        <i class="ti ti-trash me-1"></i>Supprimer définitivement
+                    </button>
+                    <button type="submit" class="btn btn-primary" disabled="@_isSaving">
+                        <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header">
+            <i class="ti ti-list-details me-2"></i>
+            <span class="fw-semibold">En-têtes supplémentaires (@_headers.Count)</span>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive mb-3">
+                <table class="table table-vcenter card-table mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 16rem;">Nom</th>
+                            <th>Valeur</th>
+                            <th style="width: 8rem;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input class="form-control" placeholder="Authorization" @bind="_addHeaderName" /></td>
+                            <td><input class="form-control" placeholder="Bearer ..." @bind="_addHeaderValue" /></td>
+                            <td>
+                                <button type="button" class="btn btn-primary w-100"
+                                        disabled="@string.IsNullOrWhiteSpace(_addHeaderName)" @onclick="AddHeaderAsync">
+                                    <i class="ti ti-plus me-1"></i>Ajouter
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            @if (_headers.Count == 0)
+            {
+                <div class="glpi-config-placeholder">
+                    <i class="ti ti-list-details"></i>
+                    <p class="mb-0">Aucun en-tête supplémentaire.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-vcenter card-table mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 16rem;">Nom</th>
+                                <th>Valeur</th>
+                                <th style="width: 6rem;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (WebhookHeader header in _headers)
+                            {
+                                <tr>
+                                    <td>@header.Name</td>
+                                    <td class="text-secondary" style="word-break: break-all;">@header.Value</td>
+                                    <td>
+                                        <button type="button" class="btn btn-icon btn-sm text-danger" title="Retirer"
+                                                @onclick="() => RemoveHeaderAsync(header.Id)">
+                                            <i class="ti ti-x"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <p class="hint">
+                    Les valeurs acceptent les balises <code>##cle##</code>, remplacées au moment de
+                    l'événement comme dans le corps.
+                </p>
+            }
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <i class="ti ti-plug-connected me-2"></i>
+            <span class="fw-semibold">Tester</span>
+        </div>
+        <div class="card-body">
+            <p class="text-secondary mb-3" style="max-width: 52rem;">
+                Envoie tout de suite un appel réel à l'URL, par le même chemin qu'une vraie livraison
+                — signature comprise. Les balises sont remplies de valeurs d'exemple, et rien n'est
+                déposé dans la file. Enregistrez vos modifications avant de tester : c'est la
+                version enregistrée qui part.
+            </p>
+
+            <button type="button" class="btn btn-outline-primary" disabled="@_isTesting" @onclick="SendTestAsync">
+                <i class="ti ti-send me-1"></i>@(_isTesting ? "Envoi…" : "Envoyer un appel de test")
+            </button>
+
+            @if (_testResult is { } result)
+            {
+                <div class="alert @(result.Success ? "alert-success" : "alert-danger") mt-3 mb-0" role="alert">
+                    <div class="fw-semibold">
+                        <i class="ti @(result.Success ? "ti-check" : "ti-alert-triangle") me-1"></i>
+                        @(result.Success ? "Le destinataire a accepté l'appel." : "L'appel a échoué.")
+                        @if (result.StatusCode is { } statusCode)
+                        {
+                            <span> Code HTTP @statusCode.</span>
+                        }
+                    </div>
+                    @if (result.Error is { Length: > 0 } error)
+                    {
+                        <div class="small mt-1">@error</div>
+                    }
+                    @if (result.ResponseBody is { Length: > 0 } body)
+                    {
+                        <pre class="small mt-2 mb-0" style="white-space: pre-wrap; word-break: break-all;">@body</pre>
+                    }
+                </div>
+            }
+
+            @if (_testPayload is { Length: > 0 } testPayload)
+            {
+                <div class="glpi-fiche-block-title mt-3"><i class="ti ti-code"></i>Corps envoyé</div>
+                <pre class="small mb-0" style="white-space: pre-wrap; word-break: break-all;">@testPayload</pre>
+            }
+        </div>
+    </div>
+}
