@@ -323,6 +323,11 @@ simplification assumée de la matrice très fine de GLPI.
   sur le statut. Une règle peut s'appliquer à l'ajout, à la mise à jour et/ou à
   l'exécution périodique — ce dernier moment est indispensable aux conditions
   d'ancienneté, qu'un inventaire entrant ne peut jamais vérifier.
+- Catalogue de composants (`/config/components`) : alimenté par les inventaires,
+  une entrée par modèle distinct rencontré dans le parc (processeurs, mémoires,
+  disques, cartes...). Un bouton « Reconstruire depuis le parc » rattrape les
+  modèles remontés par les inventaires antérieurs, sans attendre que chaque poste
+  repasse ; il n'ajoute que ce qui manque.
 - Dictionnaires (`/admin/dictionaries`,
   `DictionaryRuleEngine`), règles d'import/affectation avec liste noire et
   journal des imports refusés (`/admin/import-rules`).
