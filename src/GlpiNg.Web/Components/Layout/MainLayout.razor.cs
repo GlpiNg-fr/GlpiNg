@@ -1,4 +1,4 @@
-using GlpiNg.Modules.Abstractions.Menu;
+﻿using GlpiNg.Modules.Abstractions.Menu;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
 using GlpiNg.Web.Services;
@@ -290,6 +290,20 @@ public partial class MainLayout : IDisposable
 
     private bool IsGroupOpen(NavGroup group) => IsSearching || _expandedGroup == group.Key;
 
+    /// <summary>
+    /// Vrai quand ce lien désigne la page affichée.
+    ///
+    /// C'est la position dans le fil qui décidait jusqu'ici du caractère cliquable : le dernier
+    /// élément était toujours du texte mort. Sur une fiche — « Accueil / Parc / Ordinateurs » vu
+    /// depuis /parc/computer/12 — « Ordinateurs » est le dernier élément mais désigne la liste,
+    /// pas la page courante : c'est exactement le lien dont on a besoin pour remonter.
+    /// </summary>
+    private bool IsCurrentPage(string href)
+    {
+        string path = "/" + new Uri(Nav.Uri).AbsolutePath.Trim('/');
+        return string.Equals(path, "/" + href.Trim('/'), StringComparison.OrdinalIgnoreCase);
+    }
+
     private List<(string Icon, string Label, string? Href)> BuildBreadcrumb()
     {
         var path = "/" + new Uri(Nav.Uri).AbsolutePath.Trim('/');
@@ -321,7 +335,11 @@ public partial class MainLayout : IDisposable
 
         if (parentGroup is not null)
         {
-            items.Add((parentGroup.Icon, parentGroup.Label, null));
+            // Un groupe du menu latéral n'a pas de page à lui. Il mène donc à sa première entrée,
+            // comme le fait le clic sur un groupe : sans cela « Parc » était un mot mort au milieu
+            // du fil d'Ariane, alors que c'est précisément par là qu'on remonte.
+            string? groupHref = parentGroup.Items.FirstOrDefault(item => item.Href is not null)?.Href;
+            items.Add((parentGroup.Icon, parentGroup.Label, groupHref));
         }
 
         if (bestMatch is not null)
