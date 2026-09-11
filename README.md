@@ -570,7 +570,9 @@ manques suivants sont connus et assumés à ce stade.
   pièces jointes sur les fiches.
 - **Pas d'internationalisation** — aucun `.resx` ni `IStringLocalizer`, l'UI est
   en français en dur.
-- **Pas d'actions massives**, et export limité à la page Ordinateurs
+- **Actions massives limitées aux Ordinateurs** : statut, lieu et utilisateur
+  assigné y sont modifiables sur une sélection ; les autres listes n'ont que la
+  suppression. L'export reste lui aussi limité à cette page
   (`ComputerExportWriter`) au lieu d'un export générique sur toutes les listes.
 - **2FA inerte** — `GlpiEntity.TwoFactorAuthRequired` et
   `GlpiUser.TwoFactorAuthDisabled` sont stockés et éditables, mais il n'y a ni
