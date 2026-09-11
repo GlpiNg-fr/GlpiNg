@@ -1,4 +1,4 @@
-namespace GlpiNg.Modules.Abstractions.Deployment;
+﻿namespace GlpiNg.Modules.Abstractions.Deployment;
 
 /// <summary>
 /// Implémenté par le module Déploiement pour permettre à la fiche Ordinateur du module
@@ -9,7 +9,15 @@ namespace GlpiNg.Modules.Abstractions.Deployment;
 /// </summary>
 public interface IComputerDeploymentAssignmentService
 {
-    Task<List<DeploymentPackageOption>> GetAvailablePackagesAsync(CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Paquets qu'on peut proposer au déploiement à la demande pour ce poste précis.
+    ///
+    /// Prend l'ordinateur en paramètre, et pas seulement le jeton d'annulation : le déploiement à
+    /// la demande est activé paquet par paquet pour un groupe d'ordinateurs donné (voir
+    /// <c>DeploymentPackage.DeployComputerGroupId</c>), et proposer tout le catalogue sur chaque
+    /// fiche reviendrait à ignorer ce réglage.
+    /// </summary>
+    Task<List<DeploymentPackageOption>> GetAvailablePackagesAsync(int computerId, CancellationToken cancellationToken = default);
 
     Task<List<ComputerDeploymentAssignment>> GetAssignmentsAsync(int computerId, CancellationToken cancellationToken = default);
 
