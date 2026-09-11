@@ -5,6 +5,7 @@ using GlpiNg.Modules.Deployment.Models;
 using GlpiNg.Modules.Inventory.Models;
 using GlpiNg.Web.Models;
 using GlpiNg.Web.Models.Notifications;
+using GlpiNg.Web.Models.Webhooks;
 using GlpiNg.Web.Services;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -145,6 +146,10 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<NotificationRecipient> NotificationRecipients => Set<NotificationRecipient>();
     public DbSet<QueuedNotification> QueuedNotifications => Set<QueuedNotification>();
+
+    public DbSet<Webhook> Webhooks => Set<Webhook>();
+    public DbSet<WebhookHeader> WebhookHeaders => Set<WebhookHeader>();
+    public DbSet<QueuedWebhook> QueuedWebhooks => Set<QueuedWebhook>();
 
     public DbSet<EventLogEntry> EventLogEntries => Set<EventLogEntry>();
 
@@ -905,6 +910,26 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
             .WithMany()
             .HasForeignKey(q => q.NotificationId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Webhook>()
+            .HasMany(w => w.Headers)
+            .WithOne(h => h.Webhook)
+            .HasForeignKey(h => h.WebhookId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Même choix que QueuedNotification juste au-dessus : supprimer un webhook ne doit pas
+        // effacer la trace de ce qu'il a déjà envoyé — voir QueuedWebhook.WebhookName, qui garde
+        // le nom une fois la référence perdue.
+        modelBuilder.Entity<QueuedWebhook>()
+            .HasOne(q => q.Webhook)
+            .WithMany()
+            .HasForeignKey(q => q.WebhookId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // La file est lue par statut puis par ancienneté (tâche cron) et par ancienneté seule
+        // (page de consultation) : c'est le seul index qui compte ici.
+        modelBuilder.Entity<QueuedWebhook>()
+            .HasIndex(q => new { q.Status, q.CreatedAt });
 
         // Clé primaire textuelle (nom de section, ex. "ParcSettings") plutôt qu'un Id auto-incrémenté :
         // longueur bornée nécessaire pour qu'une clé primaire soit indexable sous MySQL (utf8mb4).

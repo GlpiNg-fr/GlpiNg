@@ -1,0 +1,204 @@
+@using GlpiNg.Web.Models.Notifications
+@using GlpiNg.Web.Models.Webhooks
+@using GlpiNg.Web.Services.Webhooks
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="glpi-fiche-field">
+            <label>Nom</label>
+            <input class="form-control" @bind="Hook.Name" @bind:event="oninput" @bind:after="NotifyChangedAsync" />
+        </div>
+        <div class="glpi-fiche-field">
+            <label>Activé</label>
+            @YesNoSelect(Hook.IsActive, v => Hook.IsActive = v)
+        </div>
+        <div class="glpi-fiche-field">
+            <label>Commentaires</label>
+            <textarea class="form-control" rows="2" @bind="Hook.Comment"></textarea>
+        </div>
+        <div class="glpi-fiche-field">
+            <label>Type d'objet</label>
+            <select class="form-select" value="@Hook.ItemType" @onchange="OnItemTypeChanged">
+                @foreach ((string itemType, string label) in NotificationEventCatalog.ItemTypes)
+                {
+                    <option value="@itemType">@label</option>
+                }
+            </select>
+        </div>
+        <div class="glpi-fiche-field">
+            <label>Événement</label>
+            <select class="form-select" @bind="Hook.Event" @bind:after="NotifyChangedAsync">
+                @foreach (NotificationEventDefinition evt in NotificationEventCatalog.EventsFor(Hook.ItemType))
+                {
+                    <option value="@evt.EventKey">@evt.EventLabel</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="glpi-fiche-field">
+            <label>URL cible</label>
+            <input class="form-control" placeholder="https://exemple.org/hook" @bind="Hook.Url"
+                   @bind:event="oninput" @bind:after="NotifyChangedAsync" />
+        </div>
+        @if (UrlWarning is { } urlWarning)
+        {
+            <p class="hint text-warning">@urlWarning</p>
+        }
+
+        <div class="glpi-fiche-field">
+            <label>Méthode HTTP</label>
+            <select class="form-select" @bind="Hook.Method" @bind:after="NotifyChangedAsync">
+                <option value="@WebhookHttpMethod.Post">POST</option>
+                <option value="@WebhookHttpMethod.Put">PUT</option>
+                <option value="@WebhookHttpMethod.Patch">PATCH</option>
+                <option value="@WebhookHttpMethod.Delete">DELETE</option>
+                <option value="@WebhookHttpMethod.Get">GET</option>
+            </select>
+        </div>
+        @if (Hook.Method == WebhookHttpMethod.Get)
+        {
+            <p class="hint">Un GET ne porte pas de corps : seules l'URL et les en-têtes partent.</p>
+        }
+
+        <div class="glpi-fiche-field">
+            <label>Secret partagé</label>
+            <input type="password" class="form-control" value="@_secretPlain" @oninput="OnSecretInputAsync"
+                   placeholder="@(HasStoredSecret ? "Laisser vide pour conserver le secret actuel" : "Optionnel")" />
+        </div>
+        <p class="hint">
+            Renseigné, chaque appel porte <code>X-GLPI-signature</code> et <code>X-GLPI-timestamp</code>,
+            ce qui permet au destinataire de vérifier l'origine de l'appel.
+        </p>
+
+        <div class="glpi-fiche-field">
+            <label>Conserver la réponse</label>
+            @YesNoSelect(Hook.SaveResponseBody, v => Hook.SaveResponseBody = v)
+        </div>
+        <p class="hint">
+            Garde le corps renvoyé par le destinataire dans la file de livraison. Utile le temps de
+            mettre au point une intégration ; inutile ensuite, le code HTTP suffit.
+        </p>
+    </div>
+</div>
+
+@if (Hook.Method != WebhookHttpMethod.Get)
+{
+    <div class="glpi-fiche-block-title mt-3"><i class="ti ti-code"></i>Corps de la requête</div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="glpi-fiche-field">
+                <label>Contenu</label>
+                <select class="form-select" @bind="Hook.PayloadMode" @bind:after="NotifyChangedAsync">
+                    <option value="@WebhookPayloadMode.Default">Par défaut (JSON construit par GlpiNg)</option>
+                    <option value="@WebhookPayloadMode.Custom">Personnalisé</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    @if (Hook.PayloadMode == WebhookPayloadMode.Custom)
+    {
+        <div class="glpi-fiche-field">
+            <label>Corps personnalisé</label>
+            <textarea class="form-control font-monospace" rows="8" @bind="Hook.CustomPayload"
+                      placeholder='{ "poste": "##computer.name##" }'></textarea>
+        </div>
+        <p class="hint">
+            Les balises <code>##cle##</code> ci-dessous sont remplacées au moment de l'événement.
+            Le corps part tel quel, avec <code>Content-Type: application/json</code> — à vous
+            d'écrire du JSON valide si le destinataire en attend.
+        </p>
+    }
+    else
+    {
+        <p class="hint">
+            Document JSON portant <code>event</code>, <code>itemtype</code>, <code>items_id</code>,
+            <code>timestamp</code>, et les valeurs de l'événement regroupées sous <code>data</code>.
+        </p>
+    }
+
+    <div class="glpi-fiche-block-title mt-3"><i class="ti ti-tags"></i>Balises disponibles</div>
+    <div class="d-flex flex-wrap gap-2">
+        @foreach (NotificationTag tag in WebhookPayloadBuilder.TagsFor(Hook.ItemType, Hook.Event))
+        {
+            <span class="badge bg-secondary-lt" title="@tag.Label">##@tag.Key##</span>
+        }
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public Webhook Hook { get; set; } = null!;
+
+    /// <summary>Un secret est déjà enregistré : le champ vide se lit alors « inchangé ».</summary>
+    [Parameter]
+    public bool HasStoredSecret { get; set; }
+
+    /// <summary>
+    /// Remonte le secret saisi en clair, que la page appelante chiffre au moment d'enregistrer.
+    /// Il ne transite pas par <see cref="Hook"/> : le champ du modèle est chiffré, donc
+    /// inaffichable, et un champ laissé vide doit vouloir dire « ne change rien » plutôt
+    /// qu'« efface le secret ».
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> OnSecretChanged { get; set; }
+
+    private string _secretPlain = string.Empty;
+
+    private async Task OnSecretInputAsync(ChangeEventArgs e)
+    {
+        _secretPlain = e.Value?.ToString() ?? string.Empty;
+        await OnSecretChanged.InvokeAsync(_secretPlain);
+        await NotifyChangedAsync();
+    }
+
+    [Parameter]
+    public EventCallback OnChanged { get; set; }
+
+    /// <summary>
+    /// Seul le schéma est contrôlé, et seulement pour avertir : une URL en http:// expédie le
+    /// corps et les en-têtes en clair, secret compris pour un destinataire qui le renverrait.
+    /// On n'interdit pas — un destinataire sur un réseau fermé reste un cas légitime.
+    /// </summary>
+    private string? UrlWarning
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(Hook.Url))
+            {
+                return null;
+            }
+
+            if (!Uri.TryCreate(Hook.Url, UriKind.Absolute, out Uri? uri))
+            {
+                return "URL incomplète : indiquez une adresse absolue, par exemple https://exemple.org/hook.";
+            }
+
+            return uri.Scheme == Uri.UriSchemeHttp
+                ? "En http://, le corps et les en-têtes circulent en clair."
+                : null;
+        }
+    }
+
+    private Task NotifyChangedAsync() => OnChanged.InvokeAsync();
+
+    private async Task OnItemTypeChanged(ChangeEventArgs e)
+    {
+        Hook.ItemType = e.Value?.ToString() ?? Hook.ItemType;
+
+        // Les événements ne sont pas les mêmes d'un type à l'autre : garder l'ancien laisserait un
+        // webhook posé sur un couple qui ne se déclenche jamais.
+        Hook.Event = NotificationEventCatalog.EventsFor(Hook.ItemType).FirstOrDefault()?.EventKey ?? Hook.Event;
+
+        await NotifyChangedAsync();
+    }
+
+    private RenderFragment YesNoSelect(bool value, Action<bool> setter) =>
+        @<select class="form-select" value="@(value ? "true" : "false")" @onchange="@(e => setter(e.Value?.ToString() == "true"))">
+            <option value="false">Non</option>
+            <option value="true">Oui</option>
+        </select>;
+}

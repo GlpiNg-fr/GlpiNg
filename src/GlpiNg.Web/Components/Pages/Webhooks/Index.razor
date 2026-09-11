@@ -1,0 +1,138 @@
+@page "/config/webhooks"
+@using GlpiNg.Web.Models.Notifications
+@using GlpiNg.Web.Models.Webhooks
+@rendermode InteractiveServer
+
+<PageTitle>Webhooks — GlpiNg</PageTitle>
+
+<WebhooksTabStrip Current="list" />
+
+<div class="glpi-list-page">
+<div class="card">
+    <div class="card-header d-flex align-items-center justify-content-between glpi-list-toolbar">
+        <div class="btn-list">
+            <div class="dropdown">
+                <button type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="ti ti-search me-1"></i>Rechercher
+                </button>
+                <div class="dropdown-menu p-3" style="min-width: 280px;">
+                    <div class="input-icon">
+                        <span class="input-icon-addon">
+                            <i class="ti ti-search"></i>
+                        </span>
+                        <input type="text" class="form-control" placeholder="Rechercher un webhook..."
+                               @bind="_searchTerm" @bind:event="oninput" @onkeyup="OnSearchChanged" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="btn-list align-items-center">
+            <div class="dropdown">
+                <button type="button" class="btn btn-icon text-danger" data-bs-toggle="dropdown" aria-expanded="false"
+                        disabled="@(_selectedIds.Count == 0)" title="Supprimer la sélection">
+                    <i class="ti ti-trash"></i>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end p-3" style="min-width: 280px;">
+                    <p class="mb-2">
+                        Supprimer @_selectedIds.Count webhook(s) sélectionné(s) ? Cette action est définitive.
+                        Les livraisons déjà envoyées restent dans la file.
+                    </p>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-sm">Annuler</button>
+                        <button type="button" class="btn btn-sm btn-danger" @onclick="DeleteSelectedAsync">Supprimer</button>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-icon" @onclick="OnRefreshAsync" title="Rafraîchir">
+                <i class="ti ti-refresh"></i>
+            </button>
+
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newWebhookModal">
+                <i class="ti ti-plus me-1"></i>Ajouter
+            </button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th style="width: 2.5rem;">
+                        @* Ne coche que les lignes affichées : cocher ici ne doit jamais engager
+                           plus que ce qu'on voit. *@
+                        <input class="form-check-input m-0" type="checkbox" title="Sélectionner les éléments visibles"
+                               checked="@AllSelected"
+                               @onchange="@((ChangeEventArgs e) => ToggleSelectAll((bool)(e.Value ?? false)))" />
+                    </th>
+                    <th>Nom</th>
+                    <th>Type d'objet</th>
+                    <th>Événement</th>
+                    <th>Méthode</th>
+                    <th>URL</th>
+                    <th>Activé</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (_filtered.Count == 0)
+                {
+                    <tr>
+                        <td colspan="7" class="text-center text-secondary py-4">Aucun webhook configuré.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (Webhook hook in _filtered)
+                    {
+                        <tr>
+                            <td>
+                                <input class="form-check-input m-0" type="checkbox" checked="@_selectedIds.Contains(hook.Id)"
+                                       @onchange="@((ChangeEventArgs e) => ToggleSelect(hook.Id, (bool)(e.Value ?? false)))" />
+                            </td>
+                            <td>
+                                <a href="@($"/config/webhooks/{hook.Id}")" class="text-reset fw-semibold">
+                                    <i class="ti ti-webhook me-1 text-secondary"></i>@hook.Name
+                                </a>
+                            </td>
+                            <td>@NotificationEventCatalog.ItemTypeLabel(hook.ItemType)</td>
+                            <td>@NotificationEventCatalog.EventLabel(hook.ItemType, hook.Event)</td>
+                            <td><span class="badge bg-secondary-lt">@hook.Method.ToString().ToUpperInvariant()</span></td>
+                            <td class="text-secondary" style="word-break: break-all;">@hook.Url</td>
+                            <td>
+                                @if (hook.IsActive)
+                                {
+                                    <span class="badge bg-success">Oui</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Non</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
+
+<div class="modal fade" id="newWebhookModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="ti ti-webhook me-2"></i>Nouvel élément - Webhook</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <WebhookFormFields Hook="_newHook" OnChanged="StateHasChanged" OnSecretChanged="OnNewSecretChanged" />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-warning" disabled="@(!CanCreate)" @onclick="CreateAsync">
+                    <i class="ti ti-plus me-1"></i>Ajouter
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
