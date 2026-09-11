@@ -593,8 +593,7 @@ manques suivants sont connus et assumés à ce stade.
       de pare-feu, comptes et groupes locaux, licences logicielles
 - [ ] Page `/self-service` coté utilisateur (le déploiement à la demande est déjà
       opérant depuis la fiche d'un poste : seuls les paquets dont le libre-service
-      est activé pour un groupe dont ce poste est membre y sont proposés) (les cibles libre-service sont déjà configurables
-      sur la fiche paquet)
+      est activé pour un groupe dont ce poste est membre y sont proposés)
 - [ ] Migrations EF Core dédiées pour MySQL/PostgreSQL (l'installation utilise
       `EnsureCreatedAsync` pour ces providers, donc `dotnet ef database update`
       n'y est pas encore utilisable pour les évolutions de schéma futures)
