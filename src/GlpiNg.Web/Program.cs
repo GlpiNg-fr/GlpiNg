@@ -22,6 +22,8 @@ using GlpiNg.Web.Middleware;
 using GlpiNg.Web.Options;
 using GlpiNg.Web.Services;
 using GlpiNg.Web.Services.Notifications;
+using GlpiNg.Modules.Abstractions.ExternalLinks;
+using GlpiNg.Web.Services.ExternalLinks;
 using GlpiNg.Web.Services.Webhooks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -448,6 +450,11 @@ public class Program
             builder.Services.AddScoped<WebhookDispatchService>();
             builder.Services.AddScoped<WebhookSender>();
             builder.Services.AddScoped<ICronTask, QueuedWebhookSenderCronTask>();
+
+            // Liens externes (voir /config/external-links) : contrat porté par Abstractions et
+            // implémenté ici, consommé par les fiches des modules — même montage
+            // qu'IUserPreferences plus haut, l'hôte détenant les données et le module l'affichage.
+            builder.Services.AddScoped<IExternalLinkProvider, ExternalLinkProvider>();
 
             // Journal des évènements système consulté sur /admin/logs (voir Administration →
             // "Journaux", EventLogEntry) : connexions, contacts d'agent GLPI-Agent, ...

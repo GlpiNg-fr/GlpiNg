@@ -1,0 +1,176 @@
+@page "/config/external-links/{LinkId:int}"
+@using GlpiNg.Modules.Abstractions.ExternalLinks
+@using GlpiNg.Modules.Inventory.Services
+@using GlpiNg.Web.Models.ExternalLinks
+@using GlpiNg.Web.Services.ExternalLinks
+@rendermode InteractiveServer
+
+<PageTitle>@(_link?.Name ?? "Lien externe") — GlpiNg</PageTitle>
+
+@if (_link is null)
+{
+    <div class="text-center text-secondary py-5">
+        <i class="ti ti-external-link fs-1"></i>
+        <p class="mt-2">Ce lien est introuvable.</p>
+    </div>
+}
+else
+{
+    <div class="card mb-3">
+        <div class="card-header">
+            <i class="ti ti-external-link me-2"></i>
+            <span class="fw-semibold">Lien externe - @_link.Name - ID @_link.Id</span>
+        </div>
+        <div class="card-body">
+            <EditForm Model="_link" OnValidSubmit="SaveAsync">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="glpi-fiche-field">
+                            <label>Nom</label>
+                            <input class="form-control" @bind="_link.Name" @bind:event="oninput" />
+                        </div>
+                        <div class="glpi-fiche-field">
+                            <label>Commentaires</label>
+                            <textarea class="form-control" rows="2" @bind="_link.Comment"></textarea>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="glpi-fiche-field">
+                            <label>Adresse</label>
+                            <input class="form-control" @bind="_link.Url" @bind:event="oninput"
+                                   placeholder="https://supervision.exemple.org/host/[NAME]" />
+                        </div>
+                        @if (UrlWarning is { } urlWarning)
+                        {
+                            <p class="hint text-warning">@urlWarning</p>
+                        }
+                        <div class="glpi-fiche-field">
+                            <label>Ouvrir dans un nouvel onglet</label>
+                            <select class="form-select" value="@(_link.OpenInNewWindow ? "true" : "false")"
+                                    @onchange="@(e => _link.OpenInNewWindow = e.Value?.ToString() == "true")">
+                                <option value="false">Non</option>
+                                <option value="true">Oui</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-3">
+                    <button type="button" class="btn btn-outline-danger" @onclick="DeleteAsync">
+                        <i class="ti ti-trash me-1"></i>Supprimer définitivement
+                    </button>
+                    <button type="submit" class="btn btn-primary" disabled="@_isSaving">
+                        <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header">
+            <i class="ti ti-category me-2"></i>
+            <span class="fw-semibold">Types d'objets associés (@_selectedItemTypes.Count)</span>
+        </div>
+        <div class="card-body">
+            <p class="text-secondary mb-3" style="max-width: 52rem;">
+                Le lien apparaît dans l'onglet « Liens externes » de la fiche des types cochés.
+                Sans aucun type coché, il n'apparaît nulle part.
+            </p>
+
+            <div class="glpi-switch-grid">
+                @foreach ((string itemType, string label, string icon) in ExternalLinkTagSource.Catalog)
+                {
+                    <div class="glpi-config-field checkbox">
+                        <label for="@($"itemtype-{itemType}")">
+                            <i class="ti @icon me-1 text-secondary"></i>@label
+                        </label>
+                        <label class="glpi-switch">
+                            <input id="@($"itemtype-{itemType}")" type="checkbox"
+                                   checked="@_selectedItemTypes.Contains(itemType)"
+                                   @onchange="@((ChangeEventArgs e) => ToggleItemType(itemType, (bool)(e.Value ?? false)))" />
+                            <span class="glpi-switch-slider"></span>
+                        </label>
+                    </div>
+                }
+            </div>
+
+            <div class="d-flex justify-content-end mt-3">
+                <button type="button" class="btn btn-primary" disabled="@_isSavingItemTypes" @onclick="SaveItemTypesAsync">
+                    <i class="ti ti-device-floppy me-1"></i>@(_isSavingItemTypes ? "Enregistrement…" : "Enregistrer les types")
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <i class="ti ti-tags me-2"></i>
+            <span class="fw-semibold">Balises et aperçu</span>
+        </div>
+        <div class="card-body">
+            @if (_selectedItemTypes.Count == 0)
+            {
+                <div class="glpi-config-placeholder">
+                    <i class="ti ti-category"></i>
+                    <p class="mb-0">Cochez un type d'objet pour voir les balises qu'il fournit.</p>
+                </div>
+            }
+            else
+            {
+                <div class="glpi-fiche-field">
+                    <label>Type de référence</label>
+                    <select class="form-select" @bind="_previewItemType">
+                        @foreach (string itemType in _selectedItemTypes.OrderBy(t => ExternalLinkTagSource.LabelFor(t)))
+                        {
+                            <option value="@itemType">@ExternalLinkTagSource.LabelFor(itemType)</option>
+                        }
+                    </select>
+                </div>
+
+                @* Les balises dépendent du type : toutes les fiches ne portent pas une adresse IP
+                   ou un numéro d'inventaire. Ne montrer que ce que ce type-là fournit évite de
+                   composer une URL qui se remplirait de vide sur les fiches réelles. *@
+                <div class="glpi-fiche-block-title mt-3">
+                    <i class="ti ti-tags"></i>Balises fournies par « @ExternalLinkTagSource.LabelFor(PreviewItemType) »
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach (string tag in ExternalLinkTagSource.SupportedTags(PreviewItemType))
+                    {
+                        <span class="badge bg-secondary-lt" title="@TagLabel(tag)">[@tag]</span>
+                    }
+                </div>
+
+                @if (UnsupportedTagsUsed is { Count: > 0 } unsupported)
+                {
+                    @* Une balise valide ailleurs mais absente de ce type-ci se remplacerait par du
+                       vide sans rien dire — c'est le cas le plus difficile à diagnostiquer après
+                       coup, donc on le signale à la saisie. *@
+                    <div class="alert alert-warning mt-3 mb-0" role="alert">
+                        <i class="ti ti-alert-triangle me-1"></i>
+                        « @ExternalLinkTagSource.LabelFor(PreviewItemType) » ne fournit pas
+                        @string.Join(", ", unsupported.Select(tag => $"[{tag}]")) : sur ces fiches, la
+                        balise sera remplacée par du vide.
+                    </div>
+                }
+
+                <div class="glpi-fiche-block-title mt-3"><i class="ti ti-eye"></i>Aperçu</div>
+                <p class="hint" style="margin-left: 0;">
+                    Avec des valeurs d'exemple, pour vérifier la forme de l'URL avant de l'éprouver
+                    sur une vraie fiche.
+                </p>
+                <pre class="small mb-0" style="white-space: pre-wrap; word-break: break-all;">@Preview</pre>
+
+                @if (!ExternalLinkProvider.IsRenderableUrl(_link.Url))
+                {
+                    <div class="alert alert-danger mt-3 mb-0" role="alert">
+                        <i class="ti ti-alert-triangle me-1"></i>
+                        Les schémas <code>javascript:</code>, <code>data:</code> et <code>vbscript:</code>
+                        exécuteraient du code dans le navigateur du visiteur : ce lien ne sera pas
+                        affiché sur les fiches.
+                    </div>
+                }
+            }
+        </div>
+    </div>
+}

@@ -355,6 +355,13 @@ simplification assumée de la matrice très fine de GLPI.
   « Tester » envoie un appel réel — valeurs d'exemple préfixées `TEST`, pour
   qu'un destinataire qui agit sur ce qu'il reçoit puisse le distinguer d'un vrai
   événement.
+- Liens externes (`/config/external-links`) : une URL portant des balises
+  (`[NAME]`, `[IP]`, `[SERIAL]`, ...) remplacées par les valeurs de la fiche,
+  associée à un ou plusieurs types d'actifs, et affichée dans l'onglet « Liens
+  externes » de leur fiche — pour pointer une supervision, une prise en main ou
+  un wiki sur le bon élément. L'écran de configuration montre les balises que
+  chaque type fournit réellement, signale celles qu'il ne fournit pas, et donne
+  un aperçu de l'URL rendue.
 - Statut par défaut d'un poste créé par un inventaire, choisi dans les intitulés
   (`Administration > Inventaire`) : appliqué à la création seulement, les
   inventaires suivants ne touchant plus au statut.
@@ -570,7 +577,7 @@ manques suivants sont connus et assumés à ce stade.
   de la sidebar : projets, rappels, flux RSS).
 - **Administration** : formulaires.
 - **Configuration** : actifs personnalisés, niveaux de services (SLA/OLA),
-  unicité des champs, collecteurs, liens externes, plugins.
+  unicité des champs, collecteurs, plugins.
 
 À noter : les sections `Assistance`, `Helpdesk` et `Analyse d'impact` de
 `/config` configurent des fonctionnalités qui n'existent pas encore.
@@ -600,6 +607,12 @@ manques suivants sont connus et assumés à ce stade.
   mais *toutes* les collectes actives s'appliquent à *tous* les agents : le
   plugin d'origine les cible par tâche, GlpiNg n'a pas de tâche de collecte.
   Seule la dernière valeur de chaque entrée est conservée, sans historique.
+- **Liens externes sans `[FIELD:colonne]`** — les balises forment une liste
+  fermée (voir `ExternalLinkTags`), là où GLPI accepte n'importe quelle colonne
+  de la table de l'objet ; et un lien ne sait pas générer de fichier à partir
+  d'un gabarit, seulement pointer une URL. Les schémas `javascript:`, `data:` et
+  `vbscript:` ne sont jamais rendus — un lien est configuré par un
+  administrateur mais s'affiche pour tous ceux qui ouvrent la fiche.
 - **Webhooks sans Twig ni validation CRA** — le corps personnalisé substitue des
   balises `##cle##` comme les gabarits de notification, là où GLPI interprète du
   Twig ; et l'URL n'est pas validée par le défi `crc_token` de GLPI à
