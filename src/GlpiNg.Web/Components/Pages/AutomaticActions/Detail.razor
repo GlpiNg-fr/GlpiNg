@@ -1,9 +1,9 @@
-@page "/config/automatic-actions/{TaskKey}"
+﻿@page "/config/automatic-actions/{TaskKey}"
 @using GlpiNg.Modules.Cron
 @using GlpiNg.Modules.Cron.Models
 @rendermode InteractiveServer
 
-<PageTitle>GlpiNg — @(_task?.Name ?? "Action automatique")</PageTitle>
+<PageTitle>@(_task?.Name ?? "Action automatique") — GlpiNg</PageTitle>
 
 @if (_task is null || _state is null)
 {

@@ -1,9 +1,9 @@
-@page "/config/notifications/rules/{RuleId:int}"
+﻿@page "/config/notifications/rules/{RuleId:int}"
 @using GlpiNg.Web.Models
 @using GlpiNg.Web.Models.Notifications
 @rendermode InteractiveServer
 
-<PageTitle>GlpiNg — @(_rule?.Name ?? "Notification")</PageTitle>
+<PageTitle>@(_rule?.Name ?? "Notification") — GlpiNg</PageTitle>
 
 <NotificationsTabStrip Current="rules" />
 

@@ -1,8 +1,8 @@
-@page "/config/oauth-clients/{ClientId:int}"
+﻿@page "/config/oauth-clients/{ClientId:int}"
 @using GlpiNg.Web.Models
 @rendermode InteractiveServer
 
-<PageTitle>GlpiNg — @(_client?.Name ?? "Client OAuth")</PageTitle>
+<PageTitle>@(_client?.Name ?? "Client OAuth") — GlpiNg</PageTitle>
 
 @if (_client is null)
 {
