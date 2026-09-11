@@ -428,8 +428,11 @@ body {
   font-size: 1rem;
 }
 
-.glpi-breadcrumb-item:hover {
+/* Seul un lien réagit au survol : l'élément courant est un <span>, et le teinter promettait un
+   clic qui ne menait nulle part. */
+a.glpi-breadcrumb-item:hover {
   color: var(--tblr-primary);
+  text-decoration: underline;
 }
 
 .glpi-breadcrumb-item.active {

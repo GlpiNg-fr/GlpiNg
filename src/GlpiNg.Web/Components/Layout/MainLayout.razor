@@ -1,4 +1,4 @@
-@inherits LayoutComponentBase
+﻿@inherits LayoutComponentBase
 
 <div class="glpi-app">
     <aside class="glpi-sidebar @(_collapsed ? "collapsed" : "")">
@@ -106,12 +106,13 @@
                 @for (int i = 0; i < Breadcrumb.Count; i++)
                 {
                     var crumb = Breadcrumb[i];
-                    var isLast = i == Breadcrumb.Count - 1;
                     if (i > 0)
                     {
                         <span class="glpi-breadcrumb-sep">/</span>
                     }
-                    if (isLast || crumb.Href is null)
+                    @* Cliquable dès qu'il mène ailleurs que là où l'on est : c'est la destination
+                       qui décide, pas la position dans le fil. *@
+                    if (crumb.Href is null || IsCurrentPage(crumb.Href))
                     {
                         <span class="glpi-breadcrumb-item active">
                             <i class="ti @crumb.Icon"></i>
