@@ -94,7 +94,8 @@ public sealed class GlpiKnowledgeBaseImportService(GlpiNgDbContext db, EntityTre
         // GlpiImportStateService), il n'y a donc pas d'entité active à reprendre — même choix que
         // l'import du plugin d'inventaire.
         int? rootEntityId = entityTree.GetRootEntityId();
-        Dictionary<int, int> entityMap = await LoadSourceMapAsync(db.Entities.Select(e => new SourceRef(e.SourceGlpiId, e.Id)), cancellationToken);
+        Dictionary<int, int> entityMap = await LoadSourceMapAsync(
+            db.Entities.Where(e => e.SourceGlpiId != null).Select(e => new SourceRef(e.SourceGlpiId, e.Id)), cancellationToken);
 
         if (selection.ImportCategories)
         {
@@ -105,7 +106,7 @@ public sealed class GlpiKnowledgeBaseImportService(GlpiNgDbContext db, EntityTre
         // conservée de l'étape précédente, pour que « Articles » seul fonctionne aussi sur un
         // import déjà passé.
         Dictionary<int, int> categoryMap = await LoadSourceMapAsync(
-            db.Set<KnowledgeBaseCategory>().Select(c => new SourceRef(c.SourceGlpiId, c.Id)), cancellationToken);
+            db.Set<KnowledgeBaseCategory>().Where(c => c.SourceGlpiId != null).Select(c => new SourceRef(c.SourceGlpiId, c.Id)), cancellationToken);
 
         if (selection.ImportArticles)
         {
@@ -113,7 +114,7 @@ public sealed class GlpiKnowledgeBaseImportService(GlpiNgDbContext db, EntityTre
         }
 
         Dictionary<int, int> articleMap = await LoadSourceMapAsync(
-            db.Set<KnowledgeBaseArticle>().Select(a => new SourceRef(a.SourceGlpiId, a.Id)), cancellationToken);
+            db.Set<KnowledgeBaseArticle>().Where(a => a.SourceGlpiId != null).Select(a => new SourceRef(a.SourceGlpiId, a.Id)), cancellationToken);
 
         if (selection.ImportTargets)
         {
@@ -363,9 +364,12 @@ public sealed class GlpiKnowledgeBaseImportService(GlpiNgDbContext db, EntityTre
         MySqlConnection connection, Dictionary<int, int> articleMap, Dictionary<int, int> entityMap,
         GlpiKnowledgeBaseImportResult result, IProgress<GlpiImportProgress>? progress, CancellationToken ct)
     {
-        Dictionary<int, int> groupMap = await LoadSourceMapAsync(db.Groups.Select(g => new SourceRef(g.SourceGlpiId, g.Id)), ct);
-        Dictionary<int, int> profileMap = await LoadSourceMapAsync(db.Profiles.Select(p => new SourceRef(p.SourceGlpiId, p.Id)), ct);
-        Dictionary<int, int> userMap = await LoadSourceMapAsync(db.Users.Select(u => new SourceRef(u.SourceGlpiId, u.Id)), ct);
+        Dictionary<int, int> groupMap = await LoadSourceMapAsync(
+            db.Groups.Where(g => g.SourceGlpiId != null).Select(g => new SourceRef(g.SourceGlpiId, g.Id)), ct);
+        Dictionary<int, int> profileMap = await LoadSourceMapAsync(
+            db.Profiles.Where(p => p.SourceGlpiId != null).Select(p => new SourceRef(p.SourceGlpiId, p.Id)), ct);
+        Dictionary<int, int> userMap = await LoadSourceMapAsync(
+            db.Users.Where(u => u.SourceGlpiId != null).Select(u => new SourceRef(u.SourceGlpiId, u.Id)), ct);
 
         // Les cibles déjà en base sont relues pour ne pas les recréer : l'index d'unicité
         // (article, type, cible, portée) ferait échouer tout l'enregistrement au second import.
@@ -549,10 +553,19 @@ public sealed class GlpiKnowledgeBaseImportService(GlpiNgDbContext db, EntityTre
     /// <summary>Couple (identifiant GLPI d'origine, identifiant local) tel que lu en base.</summary>
     private sealed record SourceRef(int? SourceGlpiId, int LocalId);
 
+    /// <summary>
+    /// Construit la table (identifiant GLPI d'origine → identifiant local) à partir d'une requête
+    /// déjà projetée.
+    ///
+    /// <paramref name="query"/> doit <b>déjà</b> avoir écarté les lignes sans identifiant d'origine
+    /// (<c>Where(x =&gt; x.SourceGlpiId != null)</c> posé sur l'entité, avant le <c>Select</c>).
+    /// Filtrer ici, après la projection, ne se traduit pas en SQL : EF ne sait pas relire un
+    /// <see cref="SourceRef"/> construit dans la projection pour en extraire une colonne, et lève
+    /// « The LINQ expression [...] could not be translated ». Le <c>!</c> ci-dessous s'appuie donc
+    /// sur ce filtre amont, appliqué côté serveur — voir les appelants.
+    /// </summary>
     private static async Task<Dictionary<int, int>> LoadSourceMapAsync(IQueryable<SourceRef> query, CancellationToken ct)
-        => await query
-            .Where(reference => reference.SourceGlpiId != null)
-            .ToDictionaryAsync(reference => reference.SourceGlpiId!.Value, reference => reference.LocalId, ct);
+        => await query.ToDictionaryAsync(reference => reference.SourceGlpiId!.Value, reference => reference.LocalId, ct);
 
     private static int? ResolveEntity(MySqlDataReader reader, Dictionary<int, int> entityMap, int? rootEntityId)
         => GetNullableInt(reader, "entities_id") is int sourceEntityId && entityMap.TryGetValue(sourceEntityId, out int entityId)
