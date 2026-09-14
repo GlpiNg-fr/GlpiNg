@@ -611,6 +611,48 @@ a.glpi-breadcrumb-item:hover {
   background: var(--tblr-card-bg, #fff);
 }
 
+/* --- Base de connaissances : colonne des catégories + tableau des articles ---
+   La page range ses articles à côté d'un arbre de catégories, ce qu'aucune autre liste ne fait.
+   Sans ce conteneur en flex borné, le .table-responsive qu'il contient n'a pas de hauteur à
+   remplir : il grandit avec son contenu, déborde du cadre que .glpi-page-body coupe en
+   overflow-y: hidden, et emporte la pagination hors de l'écran — plus rien ne défile passé
+   quelques dizaines d'articles. */
+.glpi-kb-layout {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+/* min-width: 0 — sans lui, un sujet long élargirait la colonne du tableau au lieu de déclencher
+   son propre défilement horizontal : l'élément flex prend par défaut la largeur de son contenu. */
+.glpi-kb-layout > .table-responsive {
+  min-width: 0;
+}
+
+.glpi-kb-categories {
+  width: 260px;
+  flex-shrink: 0;
+  /* Les catégories défilent séparément : un arbre profond ne doit pas repousser le tableau. */
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* Sous la largeur d'une tablette, les deux colonnes s'empilent et c'est la page qui défile :
+   côte à côte, chacune devient trop étroite pour être lisible. */
+@media (max-width: 767.98px) {
+  .glpi-kb-layout {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .glpi-kb-categories {
+    width: auto;
+    overflow-y: visible;
+  }
+}
+
 /* --- Page de configuration (/config), sous-menu + formulaire type GLPI --- */
 .glpi-config {
   display: flex;
