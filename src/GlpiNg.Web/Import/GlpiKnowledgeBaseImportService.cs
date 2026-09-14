@@ -1,4 +1,4 @@
-using GlpiNg.Modules.Abstractions.Directory;
+﻿using GlpiNg.Modules.Abstractions.Directory;
 using GlpiNg.Modules.Abstractions.Import;
 using GlpiNg.Modules.KnowledgeBase.Models;
 using GlpiNg.Web.Data;
@@ -235,6 +235,8 @@ public sealed class GlpiKnowledgeBaseImportService(GlpiNgDbContext db, EntityTre
                    {ColumnOrNull(columns, "entities_id")},
                    {ColumnOrNull(columns, "is_recursive")},
                    {ColumnOrNull(columns, "date_mod")},
+                   {ColumnOrNull(columns, "begin_date")},
+                   {ColumnOrNull(columns, "end_date")},
                    {(createdColumn is null ? "NULL AS `date_creation`" : $"`{createdColumn}` AS `date_creation`")}
             FROM `{ArticlesTable}`
             """;
@@ -288,6 +290,11 @@ public sealed class GlpiKnowledgeBaseImportService(GlpiNgDbContext db, EntityTre
             article.IsRecursive = GetNullableInt(reader, "is_recursive") == 1;
             article.CreatedAt = GetNullableDate(reader, "date_creation") ?? article.CreatedAt;
             article.UpdatedAt = GetNullableDate(reader, "date_mod");
+
+            // Période de visibilité (GLPI 9.2+) : absente des bases plus anciennes, où
+            // ColumnOrNull rend NULL — l'article est alors simplement sans borne.
+            article.VisibleFrom = GetNullableDate(reader, "begin_date");
+            article.VisibleUntil = GetNullableDate(reader, "end_date");
 
             int? sourceCategoryId = GetNullableInt(reader, "knowbaseitemcategories_id")
                 ?? (categoryByArticle.TryGetValue(sourceId, out int linked) ? linked : null);
@@ -361,13 +368,13 @@ public sealed class GlpiKnowledgeBaseImportService(GlpiNgDbContext db, EntityTre
         Dictionary<int, int> userMap = await LoadSourceMapAsync(db.Users.Select(u => new SourceRef(u.SourceGlpiId, u.Id)), ct);
 
         // Les cibles déjà en base sont relues pour ne pas les recréer : l'index d'unicité
-        // (article, type, cible) ferait échouer tout l'enregistrement au second import.
+        // (article, type, cible, portée) ferait échouer tout l'enregistrement au second import.
         var existingTargets = await db.Set<KnowledgeBaseArticleTarget>()
-            .Select(target => new { target.ArticleId, target.Type, target.ItemId })
+            .Select(target => new { target.ArticleId, target.Type, target.ItemId, target.ScopeEntityId })
             .ToListAsync(ct);
 
-        HashSet<(int ArticleId, PrincipalKind Kind, int ItemId)> known =
-            [.. existingTargets.Select(target => (target.ArticleId, target.Type, target.ItemId))];
+        HashSet<(int ArticleId, PrincipalKind Kind, int ItemId, int? ScopeEntityId)> known =
+            [.. existingTargets.Select(target => (target.ArticleId, target.Type, target.ItemId, target.ScopeEntityId))];
 
         int seen = 0;
 
@@ -386,7 +393,19 @@ public sealed class GlpiKnowledgeBaseImportService(GlpiNgDbContext db, EntityTre
                 _ => entityMap,
             };
 
-            string sql = $"SELECT knowbaseitems_id, `{foreignKey}` AS target_id FROM `{table}`";
+            // GLPI porte la portée par entité sur les tables groupe et profil (entities_id +
+            // is_recursive) et la seule récursivité sur la table entité. Les colonnes sont lues
+            // quand elles existent : une base antérieure à leur apparition rend NULL, ce qui vaut
+            // « pas de portée » — soit exactement le comportement d'avant.
+            HashSet<string> targetColumns = await GetColumnsAsync(connection, table, ct);
+
+            string sql = $"""
+                SELECT knowbaseitems_id,
+                       `{foreignKey}` AS target_id,
+                       {ColumnOrNull(targetColumns, "entities_id")},
+                       {ColumnOrNull(targetColumns, "is_recursive")}
+                FROM `{table}`
+                """;
 
             await foreach (MySqlDataReader reader in ReadAsync(connection, sql, ct))
             {
@@ -409,7 +428,18 @@ public sealed class GlpiKnowledgeBaseImportService(GlpiNgDbContext db, EntityTre
                     continue;
                 }
 
-                if (!known.Add((articleId, kind, itemId)))
+                bool recursive = GetNullableInt(reader, "is_recursive") == 1;
+
+                // Pour une cible entité, entities_id *est* la cible (déjà lue en target_id) : la
+                // reprendre comme portée ferait doublon. Pour un utilisateur, la portée n'a pas
+                // de sens — désigner quelqu'un nommément ne se restreint pas davantage.
+                int? scopeEntityId = kind is PrincipalKind.Group or PrincipalKind.Profile
+                    && GetNullableInt(reader, "entities_id") is int sourceScopeId
+                    && entityMap.TryGetValue(sourceScopeId, out int mappedScopeId)
+                        ? mappedScopeId
+                        : null;
+
+                if (!known.Add((articleId, kind, itemId, scopeEntityId)))
                 {
                     continue;
                 }
@@ -419,6 +449,8 @@ public sealed class GlpiKnowledgeBaseImportService(GlpiNgDbContext db, EntityTre
                     ArticleId = articleId,
                     Type = kind,
                     ItemId = itemId,
+                    ScopeEntityId = scopeEntityId,
+                    IsRecursive = recursive && kind is not PrincipalKind.User,
                 });
 
                 result.TargetsImported++;

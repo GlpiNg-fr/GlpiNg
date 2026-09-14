@@ -78,8 +78,8 @@ src/
     Controllers/                    # Upload fragmenté des fichiers de paquet
     Reports/                        # Rapports déploiements / tâches / équipements découverts
   GlpiNg.Modules.KnowledgeBase/     # Module Base de connaissances (articles, catégories, révisions)
-    Models/                         # KnowledgeBaseArticle/Category/ArticleRevision/ArticleTarget
-    Services/                       # KnowledgeBaseService (révisions, cibles, vues), CategoryTree,
+    Models/                         # KnowledgeBaseArticle/Category/ArticleRevision/ArticleTarget/ArticleHistoryEntry
+    Services/                       # KnowledgeBaseService (révisions, historique, cibles, vues), CategoryTree,
                                      #   MarkdownRenderer (rendu sûr du Markdown des articles)
     Components/Pages/KnowledgeBase/ # Consultation, fiche d'article, gestion des catégories
     Reports/                        # Rapport « Base de connaissances »
@@ -284,11 +284,29 @@ connaissances » de GLPI.
   qu'elle rangeait — sous-catégories et articles sont rattachés à sa catégorie parente.
 - **Révisions** : chaque modification du sujet ou du contenu archive l'état antérieur,
   consultable et restaurable depuis la fiche. Une modification qui ne touche qu'un
-  drapeau ou la catégorie n'en crée pas.
+  drapeau ou la catégorie n'en crée pas — elle est en revanche tracée dans l'historique
+  (voir plus bas).
 - **Cibles de visibilité** (entité, groupe, profil, utilisateur) : sans cible, l'article
   est visible de tous ceux qui accèdent à la base ; avec des cibles, seuls les acteurs
   visés — et l'auteur — y ont accès, y compris par URL directe. Le cloisonnement par
   entité s'applique en amont, comme partout.
+  - Une cible **groupe** ou **profil** peut être restreinte à une **entité**, et s'étendre
+    ou non à ses **sous-entités** (colonnes `entities_id` / `is_recursive` de GLPI) : sans
+    cette portée, cibler « Technicien » ouvrirait l'article aux techniciens de toutes les
+    entités à la fois. Une cible **entité** porte la seule récursivité ; une cible
+    **utilisateur** ne se restreint pas davantage.
+  - L'évaluation tient compte des habilitations récursives du lecteur : un compte habilité
+    récursivement sur « Siège » est traité comme présent dans toutes ses sous-entités.
+- **Période de visibilité** (`begin_date` / `end_date` de GLPI) : deux bornes facultatives
+  et indépendantes — publication différée, consigne qui s'efface d'elle-même. Hors période,
+  l'article reste en base mais n'est visible que de son auteur, qui le voit signalé comme
+  tel dans la liste et sur la fiche.
+- **Historique** : onglet reprenant celui des autres fiches (date, utilisateur, champ, mise
+  à jour). Trace *tous* les changements — sujet, contenu, catégorie, drapeau FAQ, épinglage,
+  dates de visibilité, cibles ajoutées ou retirées — là où les révisions n'archivent que le
+  texte, pour le restaurer. Les consultations n'y figurent pas : elles noieraient les
+  modifications. Les entrées sont purgées par la tâche automatique « Purge de l'historique »,
+  au même délai que les autres historiques (`/config` → « Purge de l'historique »).
 - **Compteur de consultations**, comptées une fois par lecteur et par article sur une
   fenêtre de 30 minutes : sans cela, le double rendu de Blazor Server (pré-rendu puis
   circuit) et le moindre aller-retour d'onglet gonfleraient le compteur, et « les
@@ -539,10 +557,13 @@ configuration générale (`glpi_configs`, contexte `core`).
 « Base de connaissances » de la page d'import : catégories
 (`glpi_knowbaseitemcategories`, arborescence reconstruite en deux passes comme
 les entités), articles (`glpi_knowbaseitems` : sujet, contenu, FAQ, compteur de
-consultations, auteur, dates), cibles de visibilité (`glpi_knowbaseitems_users`
-/`_groups`/`_profiles`/`_entities`) et révisions
-(`glpi_knowbaseitems_revisions`, GLPI ≥ 9.2). Idempotent par `SourceGlpiId` sur
-la catégorie et sur l'article.
+consultations, auteur, dates, période de visibilité `begin_date`/`end_date`),
+cibles de visibilité (`glpi_knowbaseitems_users`/`_groups`/`_profiles`/`_entities`,
+avec leur portée `entities_id`/`is_recursive`) et révisions
+(`glpi_knowbaseitems_revisions`, GLPI ≥ 9.2). Les colonnes apparues au fil des
+versions sont détectées via `information_schema` : sur une base plus ancienne,
+elles valent `NULL` et l'article arrive simplement sans borne ni portée.
+Idempotent par `SourceGlpiId` sur la catégorie et sur l'article.
 
 Deux points à connaître avant de le lancer :
 

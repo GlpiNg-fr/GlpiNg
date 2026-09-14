@@ -42,12 +42,19 @@ a plain class library referenced only by the host — never the reverse.
   `/tools/reports`; the host only renders tables and exports them), `Directory.IPrincipalDirectory`
   / `IPrincipalContextProvider` (entities/groups/profiles/users, and a user's habilitations, for
   modules that restrict an object's visibility), plus the older Deployment/Import/Preferences ones.
+  `PrincipalContext.Matches` is the single place where « is this user targeted? » is decided,
+  entity scope and recursion included; the host expands recursive habilitations into
+  `EntityIds`/`EntityAncestorIds` since only it can read the entity tree.
 - `GlpiNg.Modules.Inventory` — the asset park domain (Computer, ComputerComponent,
   GlpiAgent), the GLPI MySQL import (`Import/GlpiMySqlImportService`), and its own
   controllers. It only depends on the base EF Core `DbContext`, never on the host's
   concrete `GlpiNgDbContext` — see the comment in `GlpiNg.Modules.Inventory.csproj`.
 - `GlpiNg.Modules.KnowledgeBase` — the knowledge base (articles, categories, revisions,
-  visibility targets). The most self-contained module: it references `Abstractions` only. Its
+  visibility targets, per-article change history). The most self-contained module: it
+  references `Abstractions` only. Visibility lives entirely in `KnowledgeBaseService.IsVisible`
+  (author exception, then the `VisibleFrom`/`VisibleUntil` window, then targets) and is applied
+  by both the list and the detail page — a new screen reading articles must call it too, or a
+  pasted URL becomes a way around the targeting. Its
   Razor pages live in its own assembly, so they must be listed in `Routes.razor`'s
   `AdditionalAssemblies` — a module page that 404s is usually that line. Article content is
   **Markdown**, rendered only through `Services/MarkdownRenderer` (Markdig with `DisableHtml()`
