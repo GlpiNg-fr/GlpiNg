@@ -58,14 +58,7 @@ public class InventoryImportService(
             return null;
         }
 
-        Computer? computer = await db.Computers
-            .Include(c => c.Components)
-            .Include(c => c.Softwares)
-            .Include(c => c.Peripherals)
-            .Include(c => c.Volumes)
-            .Include(c => c.Batteries)
-            .Include(c => c.NetworkPorts)
-            .Include(c => c.Antiviruses)
+        Computer? computer = await WithInventoryCollections(db.Computers)
             .FirstOrDefaultAsync(c => c.AgentId == agent.Id, cancellationToken);
 
         string ruleName;
@@ -79,14 +72,7 @@ public class InventoryImportService(
         }
         // Fallback de corrélation : si l'agent n'est pas encore lié, on tente de retrouver
         // le poste par son UUID matériel (stable même si le nom de machine change).
-        else if (content.Hardware?.Uuid is { Length: > 0 } uuid && (computer = await db.Computers
-                     .Include(c => c.Components)
-                     .Include(c => c.Softwares)
-                     .Include(c => c.Peripherals)
-                     .Include(c => c.Volumes)
-                     .Include(c => c.Batteries)
-                     .Include(c => c.NetworkPorts)
-                     .Include(c => c.Antiviruses)
+        else if (content.Hardware?.Uuid is { Length: > 0 } uuid && (computer = await WithInventoryCollections(db.Computers)
                      .FirstOrDefaultAsync(c => c.HardwareUuid == uuid, cancellationToken)) is not null)
         {
             ruleName = "Mise à jour de l'ordinateur (par UUID matériel)";
@@ -255,6 +241,32 @@ public class InventoryImportService(
 
         return computer;
     }
+
+    /// <summary>
+    /// Charge un ordinateur avec toutes les collections que l'import réécrit.
+    ///
+    /// <b>AsSplitQuery est ce qui rend cette requête viable</b>, pas une optimisation de confort.
+    /// Sept <c>Include</c> de collections dans une requête unique font produire à EF Core un seul
+    /// SQL où les sept tables sont jointes entre elles : le résultat n'est pas la somme des lignes
+    /// mais leur <i>produit</i>. Sur un poste de bureau ordinaire — 840 logiciels, une centaine de
+    /// composants, une quinzaine de périphériques, quelques volumes et ports — cela se compte en
+    /// centaines de millions de lignes, chacune portant les colonnes des sept tables. La requête
+    /// ne revient jamais, et l'agent abandonne au bout de son délai de lecture de trois minutes en
+    /// signalant un « 500 read timeout » qui n'a pourtant jamais été renvoyé par le serveur.
+    ///
+    /// En mode fractionné, EF émet une requête par collection : sept requêtes qui rendent chacune
+    /// ses quelques centaines de lignes.
+    /// </summary>
+    private static IQueryable<Computer> WithInventoryCollections(IQueryable<Computer> computers)
+        => computers
+            .Include(c => c.Components)
+            .Include(c => c.Softwares)
+            .Include(c => c.Peripherals)
+            .Include(c => c.Volumes)
+            .Include(c => c.Batteries)
+            .Include(c => c.NetworkPorts)
+            .Include(c => c.Antiviruses)
+            .AsSplitQuery();
 
     private async Task ApplyDeploymentRulesAsync(Computer computer, int agentId, CancellationToken cancellationToken)
     {

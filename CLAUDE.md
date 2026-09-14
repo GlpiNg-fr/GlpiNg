@@ -128,6 +128,16 @@ restart — it's `MapWhen`-mounted conditionally rather than statically register
 Changes made from either store are tracked by `ConfigHistoryService`, called separately
 by each Razor page after a successful save.
 
+**Loading a Computer with its collections**: always go through
+`InventoryImportService.WithInventoryCollections` (or copy its `AsSplitQuery()`), never a bare
+chain of collection `Include`s. EF Core emits a single SQL joining every included collection, so
+the row count is their *product* — on an ordinary desktop (840 softwares × ~100 components ×
+15 peripherals × volumes × ports) that is hundreds of millions of rows and the query never
+returns. The agent then gives up after its 180-second read timeout and logs
+`[http client] internal response: 500 read timeout`, which looks like a server 500 but is
+synthesised client-side: nothing was ever returned. `Computers/Detail.razor.cs` already splits;
+the import did not, and `/inventory` hung on every real machine.
+
 **GLPI HTML → Markdown** (`Import/GlpiHtmlToMarkdown`): GLPI often stores knowledge-base
 answers **HTML-escaped** (`&lt;p&gt;`), which a converter reads as plain text — the article
 then shows every tag, since `MarkdownRenderer` never interprets HTML. `Unescape` undoes that
