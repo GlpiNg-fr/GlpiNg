@@ -3,6 +3,7 @@ using GlpiNg.Modules.Abstractions.Entities;
 using GlpiNg.Modules.Cron.Models;
 using GlpiNg.Modules.Deployment.Models;
 using GlpiNg.Modules.Inventory.Models;
+using GlpiNg.Modules.KnowledgeBase.Models;
 using GlpiNg.Web.Models;
 using GlpiNg.Web.Models.Notifications;
 using GlpiNg.Web.Models.ExternalLinks;
@@ -154,6 +155,11 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
 
     public DbSet<ExternalLink> ExternalLinks => Set<ExternalLink>();
     public DbSet<ExternalLinkItemType> ExternalLinkItemTypes => Set<ExternalLinkItemType>();
+
+    public DbSet<KnowledgeBaseCategory> KnowledgeBaseCategories => Set<KnowledgeBaseCategory>();
+    public DbSet<KnowledgeBaseArticle> KnowledgeBaseArticles => Set<KnowledgeBaseArticle>();
+    public DbSet<KnowledgeBaseArticleRevision> KnowledgeBaseArticleRevisions => Set<KnowledgeBaseArticleRevision>();
+    public DbSet<KnowledgeBaseArticleTarget> KnowledgeBaseArticleTargets => Set<KnowledgeBaseArticleTarget>();
 
     public DbSet<EventLogEntry> EventLogEntries => Set<EventLogEntry>();
 
@@ -966,7 +972,61 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
             .HasIndex(l => new { l.ItemType, l.ItemId, l.Field })
             .IsUnique();
 
+        ConfigureKnowledgeBase(modelBuilder);
+
         ConfigureEntityScoping(modelBuilder);
+    }
+
+    /// <summary>
+    /// Base de connaissances (module GlpiNg.Modules.KnowledgeBase) : arborescence des catégories,
+    /// articles, révisions et cibles de visibilité.
+    /// </summary>
+    private static void ConfigureKnowledgeBase(ModelBuilder modelBuilder)
+    {
+        // Supprimer une catégorie ne doit jamais emporter ses sous-catégories ni les articles
+        // qu'elle range : l'écran des catégories les remonte d'un niveau lui-même, et une cascade
+        // ferait disparaître en silence des articles que personne n'a demandé à supprimer.
+        modelBuilder.Entity<KnowledgeBaseCategory>()
+            .HasOne(category => category.Parent)
+            .WithMany(category => category.Children)
+            .HasForeignKey(category => category.ParentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<KnowledgeBaseArticle>()
+            .HasOne(article => article.Category)
+            .WithMany(category => category.Articles)
+            .HasForeignKey(article => article.CategoryId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Les révisions et les cibles, elles, n'ont pas d'existence sans leur article : elles
+        // partent avec lui.
+        modelBuilder.Entity<KnowledgeBaseArticleRevision>()
+            .HasOne(revision => revision.Article)
+            .WithMany(article => article.Revisions)
+            .HasForeignKey(revision => revision.ArticleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<KnowledgeBaseArticleTarget>()
+            .HasOne(target => target.Article)
+            .WithMany(article => article.Targets)
+            .HasForeignKey(target => target.ArticleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Numérotation des révisions : une seule par numéro et par article (voir
+        // KnowledgeBaseService.SaveAsync, qui calcule le suivant).
+        modelBuilder.Entity<KnowledgeBaseArticleRevision>()
+            .HasIndex(revision => new { revision.ArticleId, revision.Number })
+            .IsUnique();
+
+        // Une même cible ne s'ajoute qu'une fois à un article : deux lignes identiques ne
+        // changeraient rien à la visibilité mais s'afficheraient en double.
+        modelBuilder.Entity<KnowledgeBaseArticleTarget>()
+            .HasIndex(target => new { target.ArticleId, target.Type, target.ItemId })
+            .IsUnique();
+
+        // La liste est rangée par catégorie à chaque ouverture de la page.
+        modelBuilder.Entity<KnowledgeBaseArticle>()
+            .HasIndex(article => article.CategoryId);
     }
 
     /// <summary>

@@ -24,3 +24,6 @@ src/GlpiNg.Web/config-history.json
 ## OS
 .DS_Store
 Thumbs.db
+
+## Clés ASP.NET Data Protection générées au démarrage (ne doivent jamais être versionnées)
+src/GlpiNg.Web/Data/keys/

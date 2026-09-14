@@ -3754,6 +3754,167 @@ namespace GlpiNg.Web.Migrations
                     b.ToTable("TableColumnPreferences");
                 });
 
+            modelBuilder.Entity("GlpiNg.Modules.KnowledgeBase.Models.KnowledgeBaseArticle", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AuthorName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("AuthorUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("EntityId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsFaq")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPinned")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsRecursive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LastEditorName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("SourceGlpiId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ViewCount")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("EntityId");
+
+                    b.ToTable("KnowledgeBaseArticles");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.KnowledgeBase.Models.KnowledgeBaseArticleRevision", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ArticleId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EditorName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("RevisedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ArticleId", "Number")
+                        .IsUnique();
+
+                    b.ToTable("KnowledgeBaseArticleRevisions");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.KnowledgeBase.Models.KnowledgeBaseArticleTarget", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ArticleId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ArticleId", "Type", "ItemId")
+                        .IsUnique();
+
+                    b.ToTable("KnowledgeBaseArticleTargets");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.KnowledgeBase.Models.KnowledgeBaseCategory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("EntityId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsRecursive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("ParentId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SourceGlpiId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityId");
+
+                    b.HasIndex("ParentId");
+
+                    b.ToTable("KnowledgeBaseCategories");
+                });
+
             modelBuilder.Entity("GlpiNg.Web.Models.AppSetting", b =>
                 {
                     b.Property<string>("SectionName")
@@ -6125,6 +6286,58 @@ namespace GlpiNg.Web.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("GlpiNg.Modules.KnowledgeBase.Models.KnowledgeBaseArticle", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.KnowledgeBase.Models.KnowledgeBaseCategory", "Category")
+                        .WithMany("Articles")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("GlpiNg.Web.Models.GlpiEntity", null)
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.KnowledgeBase.Models.KnowledgeBaseArticleRevision", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.KnowledgeBase.Models.KnowledgeBaseArticle", "Article")
+                        .WithMany("Revisions")
+                        .HasForeignKey("ArticleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Article");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.KnowledgeBase.Models.KnowledgeBaseArticleTarget", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.KnowledgeBase.Models.KnowledgeBaseArticle", "Article")
+                        .WithMany("Targets")
+                        .HasForeignKey("ArticleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Article");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.KnowledgeBase.Models.KnowledgeBaseCategory", b =>
+                {
+                    b.HasOne("GlpiNg.Web.Models.GlpiEntity", null)
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("GlpiNg.Modules.KnowledgeBase.Models.KnowledgeBaseCategory", "Parent")
+                        .WithMany("Children")
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Parent");
+                });
+
             modelBuilder.Entity("GlpiNg.Web.Models.ExternalLinks.ExternalLink", b =>
                 {
                     b.HasOne("GlpiNg.Web.Models.GlpiEntity", null)
@@ -6549,6 +6762,20 @@ namespace GlpiNg.Web.Migrations
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.SimCard", b =>
                 {
                     b.Navigation("HistoryEntries");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.KnowledgeBase.Models.KnowledgeBaseArticle", b =>
+                {
+                    b.Navigation("Revisions");
+
+                    b.Navigation("Targets");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.KnowledgeBase.Models.KnowledgeBaseCategory", b =>
+                {
+                    b.Navigation("Articles");
+
+                    b.Navigation("Children");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.ExternalLinks.ExternalLink", b =>

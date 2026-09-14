@@ -75,5 +75,76 @@ window.glpiNg = {
             if (input) input.value = "";
             return total;
         });
+    },
+
+    // --- Éditeur Markdown de la base de connaissances ---------------------------------------
+    // Applique une commande de barre d'outils au <textarea> d'id donné et renvoie le texte
+    // résultant avec la sélection à rétablir. Le C# reste maître de la valeur : il la réaffecte
+    // au modèle puis redemande la sélection (voir setEditorSelection). Sans ce passage par JS,
+    // on n'a accès ni au curseur ni à la portion sélectionnée, et la barre d'outils ne saurait
+    // que concaténer en fin de texte.
+    //
+    // options : { before, after, placeholder } pour encadrer la sélection,
+    //           { linePrefix } pour préfixer chaque ligne concernée (titres, listes, citations).
+    editorCommand: function (id, options) {
+        var el = document.getElementById(id);
+        if (!el) return null;
+
+        var value = el.value;
+        var start = el.selectionStart;
+        var end = el.selectionEnd;
+
+        if (options.linePrefix) {
+            var prefix = options.linePrefix;
+            var ordered = prefix === "1. ";
+
+            // On étend la sélection aux lignes entières : préfixer une demi-ligne n'a pas de sens.
+            var lineStart = value.lastIndexOf("\n", start - 1) + 1;
+            var lineEnd = value.indexOf("\n", end);
+            if (lineEnd < 0) lineEnd = value.length;
+
+            var lines = value.substring(lineStart, lineEnd).split("\n");
+            var isPrefixed = function (line) {
+                return ordered ? /^\d+\.\s/.test(line) : line.indexOf(prefix) === 0;
+            };
+
+            // Commande à bascule : si tout est déjà préfixé, on retire — c'est ce qu'attend
+            // quiconque reclique sur « liste » en voyant sa liste déjà faite.
+            var allPrefixed = lines.every(isPrefixed);
+            var mapped = lines.map(function (line, index) {
+                if (allPrefixed) {
+                    return ordered ? line.replace(/^\d+\.\s/, "") : line.substring(prefix.length);
+                }
+                return (ordered ? (index + 1) + ". " : prefix) + line;
+            });
+
+            var replaced = mapped.join("\n");
+            return {
+                value: value.substring(0, lineStart) + replaced + value.substring(lineEnd),
+                start: lineStart,
+                end: lineStart + replaced.length
+            };
+        }
+
+        var before = options.before || "";
+        var after = options.after || "";
+        // Sans sélection, on insère un libellé d'exemple et on le sélectionne : la frappe
+        // suivante le remplace, ce qui évite de repositionner le curseur à la main.
+        var selected = value.substring(start, end) || options.placeholder || "";
+        var inserted = before + selected + after;
+
+        return {
+            value: value.substring(0, start) + inserted + value.substring(end),
+            start: start + before.length,
+            end: start + before.length + selected.length
+        };
+    },
+
+    // Rend le focus et la sélection au <textarea> après que Blazor a réécrit sa valeur.
+    setEditorSelection: function (id, start, end) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.focus();
+        el.setSelectionRange(start, end);
     }
 };

@@ -67,6 +67,7 @@ src/
                                      #   ImportAssignmentRule, SavedSearch
     Import/                         # Import depuis une base GLPI MySQL source
     Controllers/                    # POST /admin/import/glpi (protégé OAuth2)
+    Reports/                        # Rapports de parc, logiciels, réseau et fraîcheur d'inventaire
     InventoryMenuProvider.cs        # Contribue "Parc", "Outils", "Administration", "Configuration"
   GlpiNg.Modules.Deployment/        # Module Déploiement + réseau
     Models/                         # DeploymentPackage/Job/Task, DeployComputerGroup, DeploymentRule,
@@ -75,10 +76,19 @@ src/
     Services/                       # DeployJobJsonBuilder, DeploymentRuleEngine, DeployGroupCriteriaEvaluator,
                                      #   DeploymentPackageFileStorageService, *LaunchService...
     Controllers/                    # Upload fragmenté des fichiers de paquet
+    Reports/                        # Rapports déploiements / tâches / équipements découverts
+  GlpiNg.Modules.KnowledgeBase/     # Module Base de connaissances (articles, catégories, révisions)
+    Models/                         # KnowledgeBaseArticle/Category/ArticleRevision/ArticleTarget
+    Services/                       # KnowledgeBaseService (révisions, cibles, vues), CategoryTree,
+                                     #   MarkdownRenderer (rendu sûr du Markdown des articles)
+    Components/Pages/KnowledgeBase/ # Consultation, fiche d'article, gestion des catégories
+    Reports/                        # Rapport « Base de connaissances »
   GlpiNg.Modules.Cron/              # Ordonnanceur applicatif : CronBackgroundService + AutomaticActionRunner
   GlpiNg.Modules.Scheduler/         # Tâches cron qui déclenchent déploiements / tâches réseau / WoL
   GlpiNg.Modules.Abstractions/      # Contrats de contribution : Menu (IMenuProvider / MenuGroup /
-                                     #   MenuItem), Cron (ICronTask), Deployment (IDeploymentTargetDirectory,
+                                     #   MenuItem), Reports (IReportProvider / ReportDefinition /
+                                     #   ReportResult), Directory (IPrincipalDirectory /
+                                     #   IPrincipalContextProvider), Cron (ICronTask), Deployment (IDeploymentTargetDirectory,
                                      #   ICurrentUserDeploymentContextProvider, ...), Import
   GlpiNg.Console/                   # CLI d'administration (db:install, db:check, user:*)
 ```
@@ -253,6 +263,95 @@ sont accessibles que là.
 - Les cibles « libre-service » (entité/groupe/profil/utilisateur) se configurent
   déjà sur la fiche paquet, mais la page `/self-service` correspondante n'existe
   pas encore.
+
+### Base de connaissances (`/tools/knowledgebase`)
+
+Module à part entière (`GlpiNg.Modules.KnowledgeBase`), équivalent de « Outils > Base de
+connaissances » de GLPI.
+
+- **Articles** : sujet, contenu, catégorie, drapeau FAQ, épinglage. Recherche plein
+  texte sur le sujet et le contenu, tri par date, par consultations ou alphabétique,
+  les articles épinglés restant en tête quel que soit le tri.
+- **Éditeur Markdown** : barre d'outils (gras, italique, barré, titre, listes, cases à
+  cocher, citation, code en ligne et bloc, lien, image, tableau, séparateur) agissant sur
+  la sélection courante, et bascule « Rédaction / Aperçu ». Le rendu est fait par Markdig
+  avec le HTML brut désactivé — un `<script>` collé dans un article s'affiche comme du
+  texte — et les schémas d'URL dangereux (`javascript:`, `data:`, `vbscript:`, `file:`)
+  sont neutralisés avant rendu, comme pour les liens externes. Un retour à la ligne simple
+  vaut saut de ligne, pour que les articles tapés au fil de l'eau s'affichent tels quels.
+- **Catégories** arborescentes (`/tools/knowledgebase/categories`) : création,
+  renommage, déplacement, suppression. Supprimer une catégorie ne supprime rien de ce
+  qu'elle rangeait — sous-catégories et articles sont rattachés à sa catégorie parente.
+- **Révisions** : chaque modification du sujet ou du contenu archive l'état antérieur,
+  consultable et restaurable depuis la fiche. Une modification qui ne touche qu'un
+  drapeau ou la catégorie n'en crée pas.
+- **Cibles de visibilité** (entité, groupe, profil, utilisateur) : sans cible, l'article
+  est visible de tous ceux qui accèdent à la base ; avec des cibles, seuls les acteurs
+  visés — et l'auteur — y ont accès, y compris par URL directe. Le cloisonnement par
+  entité s'applique en amont, comme partout.
+- **Compteur de consultations**, comptées une fois par lecteur et par article sur une
+  fenêtre de 30 minutes : sans cela, le double rendu de Blazor Server (pré-rendu puis
+  circuit) et le moindre aller-retour d'onglet gonfleraient le compteur, et « les
+  articles les plus consultés » ne voudrait plus rien dire.
+- Un **rapport** « Base de connaissances » (voir ci-dessous) montre les articles par
+  catégorie, les plus consultés et ceux que personne n'ouvre.
+
+Limites connues : l'éditeur est un éditeur **Markdown** (barre d'outils et aperçu), pas
+un WYSIWYG, et le HTML n'y est jamais interprété ; il n'y a **ni commentaires, ni pièces
+jointes, ni corbeille** (la suppression d'un article est définitive, après confirmation)
+— les images doivent donc être hébergées ailleurs et référencées par URL, faute de
+gestion documentaire (voir « Manques transverses ») ; et le drapeau FAQ sert de filtre et
+de marquage éditorial plutôt que de publication vers une interface simplifiée, qui
+n'existe pas encore.
+
+### Rapports (`/tools/reports`)
+
+Équivalent de « Outils > Rapports » de GLPI. La page liste les rapports par
+catégorie ; chacun s'ouvre sur `/tools/reports/{clé}`, se génère dès l'ouverture
+avec ses filtres par défaut, et s'exporte en CSV, XLSX, ODS ou PDF
+(paysage/portrait). Ce qu'un rapport compte est ce que celui qui le demande a le
+droit de voir : le cloisonnement par entité s'applique comme partout ailleurs, et
+les postes en corbeille sont exclus.
+
+Aucun rapport n'est codé dans l'hôte : chaque module contribue les siens via
+`IReportProvider` (`GlpiNg.Modules.Abstractions/Reports`), comme il contribue ses
+entrées de menu via `IMenuProvider`. L'hôte (`ReportCatalog` et les pages
+`Components/Pages/Reports`) ne manipule que des tableaux de texte — un rapport
+nouveau n'a donc rien à ajouter côté hôte, et un module désactivé emporte les
+siens avec lui.
+
+Rapports du module Inventory :
+
+- **Rapport par défaut** — actifs par type, puis par statut.
+- **État des matériels** — tableau croisé type d'actif × statut.
+- **Matériels par lieu** — répartition géographique, ordinateurs / moniteurs /
+  imprimantes / matériels réseau / autres.
+- **Matériel par fabricant et modèle** — filtrable par type d'actif et par
+  fabricant.
+- **Entrées dans le parc par année** — filtrable sur une période.
+- **Logiciels installés** — versions, installations, part des postes ; filtrable
+  par éditeur et par nombre minimal d'installations.
+- **Systèmes d'exploitation** — postes par OS, puis par version.
+- **Rapport réseau** — matériels réseau par type, interfaces des postes par
+  sous-réseau (interfaces virtuelles exclues par défaut).
+- **Fraîcheur des inventaires** — ancienneté des remontées par tranches, postes
+  silencieux et agents sans contact au-delà d'un seuil réglable.
+
+Rapports du module Déploiement :
+
+- **État des déploiements** — jobs par paquet (en attente / en cours / succès /
+  erreur) et derniers échecs, sur une période.
+- **Tâches de déploiement** — paquets, cibles et résultats de chaque tâche.
+- **Équipements découverts** — découvertes réseau par statut, par type deviné, et
+  celles qui restent à traiter.
+
+Limites connues : les rapports de contrats, de licences et financiers de GLPI
+n'ont pas d'équivalent, faute des modèles correspondants ; « Entrées dans le parc
+par année » s'appuie sur la date d'entrée en base (`CreatedAt`) et non sur une
+date d'achat, qui n'existe pas ici ; les tableaux de détail sont plafonnés à 200
+lignes, leur titre indiquant alors le nombre total de correspondances ; les
+cartouches et consommables, qui sont des références de stock et non des actifs
+installés, ne sont comptés dans aucun rapport de parc.
 
 ### Cloisonnement par entité
 
@@ -436,6 +535,30 @@ passes), profils, utilisateurs, habilitations (`glpi_profiles_users`),
 appartenances aux groupes (`glpi_groups_users`), et un sous-ensemble de la
 configuration générale (`glpi_configs`, contexte `core`).
 
+**Couvert (base de connaissances)** — `GlpiKnowledgeBaseImportService`, onglet
+« Base de connaissances » de la page d'import : catégories
+(`glpi_knowbaseitemcategories`, arborescence reconstruite en deux passes comme
+les entités), articles (`glpi_knowbaseitems` : sujet, contenu, FAQ, compteur de
+consultations, auteur, dates), cibles de visibilité (`glpi_knowbaseitems_users`
+/`_groups`/`_profiles`/`_entities`) et révisions
+(`glpi_knowbaseitems_revisions`, GLPI ≥ 9.2). Idempotent par `SourceGlpiId` sur
+la catégorie et sur l'article.
+
+Deux points à connaître avant de le lancer :
+
+- **Le contenu change de format.** GLPI stocke la réponse d'un article en HTML,
+  GlpiNg stocke du Markdown et n'interprète jamais de HTML : la conversion est
+  faite à l'import (ReverseMarkdown, balises inconnues supprimées). Une mise en
+  forme complexe peut s'en trouver simplifiée.
+- **L'ordre compte.** L'import de la base de connaissances passe après celui de
+  l'administration, dont il dépend : sans les entités, groupes, profils et
+  comptes, l'auteur d'un article n'est pas retrouvé et ses cibles de visibilité
+  sont ignorées — l'article arrive alors visible de tous, et le nombre de cibles
+  ignorées est affiché en fin d'import pour que ça ne passe pas inaperçu.
+  Le rattachement à la catégorie est lu depuis la colonne
+  `knowbaseitemcategories_id` ou, sur GLPI 10, depuis la table de liaison
+  `glpi_knowbaseitems_knowbaseitemcategories`.
+
 L'import affiche une barre de progression : le plan est bâti au lancement depuis
 les volumes annoncés par l'analyse, si bien qu'une phase de dix mille ordinateurs
 et une de trois profils n'avancent pas d'autant. Les phases du parc et du plugin
@@ -573,8 +696,12 @@ manques suivants sont connus et assumés à ce stade.
 - **Gestion** (groupe entier) : licences, budgets, fournisseurs, contacts,
   contrats, documents, lignes téléphoniques, certificats, data centers,
   clusters, domaines, applicatifs, bases de données.
-- **Outils** : réservations, rapports, base de connaissances (et, absents même
-  de la sidebar : projets, rappels, flux RSS).
+- **Outils** : réservations (et, absents même de la sidebar : projets, rappels,
+  flux RSS). Les rapports et la base de connaissances existent (voir leurs sections
+  ci-dessus) ; côté rapports, ceux de GLPI qui portent sur des modules absents —
+  contrats, licences, financier — n'ont pas d'équivalent, et côté base de
+  connaissances, le contenu est du Markdown (pas de WYSIWYG), sans commentaires ni pièces
+  jointes.
 - **Administration** : formulaires.
 - **Configuration** : actifs personnalisés, niveaux de services (SLA/OLA),
   unicité des champs, collecteurs, plugins.

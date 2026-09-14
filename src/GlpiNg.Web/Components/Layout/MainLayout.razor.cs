@@ -77,8 +77,7 @@ public partial class MainLayout : IDisposable
         new("outils", "ti-briefcase", "Outils",
         [
             new("Réservations", Icon: "ti-calendar-event"),
-            new("Rapports", Icon: "ti-report"),
-            new("Base de connaissances", Icon: "ti-book"),
+            new("Rapports", "/tools/reports", "ti-report"),
         ]),
         new("administration", "ti-shield", "Administration",
         [
@@ -94,7 +93,6 @@ public partial class MainLayout : IDisposable
         [
             new("Générale", "/config", "ti-settings"),
             new("Actifs personnalisés", Icon: "ti-tool"),
-            new("Composants", Icon: "ti-puzzle"),
             new("Notifications", "/config/notifications", "ti-bell-ringing"),
             new("Webhooks", "/config/webhooks", "ti-webhook"),
             new("Niveaux de services", Icon: "ti-clipboard-check"),

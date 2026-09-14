@@ -112,6 +112,13 @@ public static class ProfileSectionMap
                 : ProfileSection.Outils;
         }
 
+        // Base de connaissances : articles, catégories, révisions et cibles relèvent tous des
+        // Outils, section sous laquelle la page vit (/tools/knowledgebase).
+        if (ns.StartsWith("GlpiNg.Modules.KnowledgeBase", StringComparison.Ordinal))
+        {
+            return ProfileSection.Outils;
+        }
+
         if (ns.StartsWith("GlpiNg.Modules.Inventory", StringComparison.Ordinal))
         {
             // Le module Inventory porte, en plus du parc, des objets qui apparaissent ailleurs

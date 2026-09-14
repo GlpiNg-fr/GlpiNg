@@ -11,19 +11,18 @@
 }
 else
 {
-    <CardExpander Title="Modules" Icon="ti-toggle-left">
-        <div class="glpi-module-master-toggle">
-            <span class="glpi-module-toggle-label">
-                <i class="ti ti-headset"></i>
-                <span>Module Assistance</span>
-            </span>
-            <label class="glpi-switch">
+    @* L'interrupteur du module est porté par la ligne de titre elle-même : il commande tout ce que
+       la carte contient, et reste donc accessible sans la déplier. *@
+    <CardExpander Title="Module Assistance" Icon="ti-headset" Expanded="false">
+        <HeaderActions>
+            <label class="glpi-switch" title="Activer ou désactiver tout le module Assistance">
                 <input type="checkbox" checked="@_moduleEnabled" @onchange="OnModuleMasterToggled" />
                 <span class="glpi-switch-slider"></span>
             </label>
-        </div>
-
-        <ModuleToggleList GroupKey="assistance" Items="ModuleItems" Modules="_modules" OnToggle="OnModuleToggled" Disabled="@(!_moduleEnabled)" />
+        </HeaderActions>
+        <ChildContent>
+            <ModuleToggleList GroupKey="assistance" Items="ModuleItems" Modules="_modules" OnToggle="OnModuleToggled" Disabled="@(!_moduleEnabled)" />
+        </ChildContent>
     </CardExpander>
 
     <div class="glpi-config-divider">

@@ -822,6 +822,26 @@ a.glpi-breadcrumb-item:hover {
   overflow: hidden;
 }
 
+.glpi-card-expander-header-row {
+  display: flex;
+  align-items: center;
+  background: #f8f9fa;
+}
+
+/* Le bouton de repli prend toute la place laissée par l'action d'en-tête (voir CardExpander) :
+   sans ça, cliquer à droite du titre ne replierait plus la carte. */
+.glpi-card-expander-header-row > .glpi-card-expander-header {
+  flex: 1;
+  min-width: 0;
+}
+
+.glpi-card-expander-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem 0.75rem 0;
+}
+
 .glpi-card-expander-header {
   width: 100%;
   display: flex;
@@ -871,27 +891,6 @@ a.glpi-breadcrumb-item:hover {
   border: 1px solid #e6e7e9;
   border-radius: 8px;
   overflow: hidden;
-}
-
-.glpi-module-master-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.65rem 1rem;
-  background: #f8f9fa;
-  border: 1px solid #e6e7e9;
-  border-radius: 8px;
-  margin-bottom: 0.75rem;
-}
-
-.glpi-module-master-toggle .glpi-module-toggle-label {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #232629;
 }
 
 .glpi-module-toggle-item {
@@ -2064,4 +2063,135 @@ a.glpi-breadcrumb-item:hover {
    CDN — la classe y existe, mais rien ici ne permet de le garantir d'une version à l'autre. */
 .cursor-pointer {
   cursor: pointer;
+}
+
+/* --- Base de connaissances : éditeur Markdown et rendu d'un article --- */
+.glpi-md-editor {
+  border: 1px solid #e6e7e9;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.glpi-md-editor-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e6e7e9;
+}
+
+.glpi-md-editor-sep {
+  width: 1px;
+  align-self: stretch;
+  margin: 0.15rem 0.25rem;
+  background: #e6e7e9;
+}
+
+/* Le textarea est déjà encadré par .glpi-md-editor : sa propre bordure ferait un double trait. */
+.glpi-md-editor-input.form-control {
+  border: none;
+  border-radius: 0;
+  resize: vertical;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+}
+
+.glpi-md-editor-input.form-control:focus {
+  box-shadow: none;
+}
+
+.glpi-md-editor-preview {
+  padding: 0.75rem 1rem;
+  min-height: 12rem;
+  background: #fff;
+}
+
+/* Rendu d'un article : le HTML vient de Markdig (voir MarkdownRenderer), donc d'un jeu de
+   balises connu et fermé — pas besoin de styler au-delà. */
+.glpi-kb-content > *:first-child {
+  margin-top: 0;
+}
+
+.glpi-kb-content > *:last-child {
+  margin-bottom: 0;
+}
+
+.glpi-kb-content h1,
+.glpi-kb-content h2,
+.glpi-kb-content h3,
+.glpi-kb-content h4 {
+  margin: 1.4rem 0 0.6rem;
+  font-weight: 600;
+}
+
+.glpi-kb-content h1 { font-size: 1.5rem; }
+.glpi-kb-content h2 { font-size: 1.25rem; }
+.glpi-kb-content h3 { font-size: 1.1rem; }
+.glpi-kb-content h4 { font-size: 1rem; }
+
+.glpi-kb-content p,
+.glpi-kb-content ul,
+.glpi-kb-content ol,
+.glpi-kb-content table {
+  margin-bottom: 0.9rem;
+}
+
+.glpi-kb-content ul,
+.glpi-kb-content ol {
+  padding-left: 1.4rem;
+}
+
+.glpi-kb-content code {
+  padding: 0.1rem 0.3rem;
+  background: #f1f2f4;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+
+.glpi-kb-content pre {
+  padding: 0.75rem 1rem;
+  background: #f8f9fa;
+  border: 1px solid #e6e7e9;
+  border-radius: 6px;
+  overflow-x: auto;
+}
+
+.glpi-kb-content pre code {
+  padding: 0;
+  background: none;
+}
+
+.glpi-kb-content blockquote {
+  margin: 0 0 0.9rem;
+  padding: 0.25rem 0 0.25rem 0.9rem;
+  border-left: 3px solid #d7d9dc;
+  color: #6c737b;
+}
+
+.glpi-kb-content table {
+  width: auto;
+  border-collapse: collapse;
+}
+
+.glpi-kb-content th,
+.glpi-kb-content td {
+  padding: 0.35rem 0.7rem;
+  border: 1px solid #e6e7e9;
+}
+
+.glpi-kb-content th {
+  background: #f8f9fa;
+}
+
+/* Une image trop large ne doit pas élargir la fiche et faire défiler toute la page. */
+.glpi-kb-content img {
+  max-width: 100%;
+  height: auto;
+}
+
+.glpi-kb-content hr {
+  margin: 1.2rem 0;
+  border-top: 1px solid #e6e7e9;
 }
