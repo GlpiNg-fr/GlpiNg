@@ -37,12 +37,22 @@ history, not just the latest model.
 **Solution layout**: `GlpiNg.Web` (host) + `GlpiNg.Modules.*` (feature modules), each
 a plain class library referenced only by the host — never the reverse.
 
-- `GlpiNg.Modules.Abstractions` — shared contracts modules use to plug into the host
-  (currently `Menu.IMenuProvider` / `MenuGroup` / `MenuItem`).
+- `GlpiNg.Modules.Abstractions` — shared contracts modules use to plug into the host:
+  `Menu.IMenuProvider`, `Reports.IReportProvider` (a module contributes its own reports to
+  `/tools/reports`; the host only renders tables and exports them), `Directory.IPrincipalDirectory`
+  / `IPrincipalContextProvider` (entities/groups/profiles/users, and a user's habilitations, for
+  modules that restrict an object's visibility), plus the older Deployment/Import/Preferences ones.
 - `GlpiNg.Modules.Inventory` — the asset park domain (Computer, ComputerComponent,
   GlpiAgent), the GLPI MySQL import (`Import/GlpiMySqlImportService`), and its own
   controllers. It only depends on the base EF Core `DbContext`, never on the host's
   concrete `GlpiNgDbContext` — see the comment in `GlpiNg.Modules.Inventory.csproj`.
+- `GlpiNg.Modules.KnowledgeBase` — the knowledge base (articles, categories, revisions,
+  visibility targets). The most self-contained module: it references `Abstractions` only. Its
+  Razor pages live in its own assembly, so they must be listed in `Routes.razor`'s
+  `AdditionalAssemblies` — a module page that 404s is usually that line. Article content is
+  **Markdown**, rendered only through `Services/MarkdownRenderer` (Markdig with `DisableHtml()`
+  plus URL-scheme filtering): never render article content as `MarkupString` any other way, and
+  never store HTML — that renderer is the single place where user-authored content becomes markup.
 - `GlpiNg.Web` — the host: Blazor UI, the `/inventory` protocol controller, the
   concrete `GlpiNgDbContext` (composed from module entities), auth, config, setup.
 

@@ -7,6 +7,7 @@ using System.Text.Json.Nodes;
 using AnthoDingo.Setup;
 using GlpiNg.Modules.Abstractions.Cron;
 using GlpiNg.Modules.Abstractions.Deployment;
+using GlpiNg.Modules.Abstractions.Directory;
 using GlpiNg.Modules.Abstractions.Entities;
 using GlpiNg.Modules.Abstractions.Import;
 using GlpiNg.Modules.Abstractions.Preferences;
@@ -14,6 +15,7 @@ using GlpiNg.Modules.Abstractions.Storage;
 using GlpiNg.Modules.Cron;
 using GlpiNg.Modules.Deployment;
 using GlpiNg.Modules.Inventory;
+using GlpiNg.Modules.KnowledgeBase;
 using GlpiNg.Modules.Scheduler;
 using GlpiNg.Web.Components;
 using GlpiNg.Web.Data;
@@ -399,18 +401,22 @@ public class Program
             // plugin GLPI Inventory détecté sur la base source (voir GlpiInventoryPluginInfo).
             builder.Services.AddScoped<IGlpiInventoryPluginImportService, GlpiInventoryPluginImportService>();
 
-            // Alimente les sélecteurs de cibles (Entité/Groupe/Profil/Utilisateur) de l'onglet
-            // "Cibles pour le déploiement à la demande" de la fiche Paquet (module Deployment)
-            // sans que celui-ci dépende de ces types (GlpiNg.Web.Models, domaine utilisateurs/
-            // groupes/entités/profils non extrait en module) — voir IDeploymentTargetDirectory
-            // (GlpiNg.Modules.Abstractions).
-            builder.Services.AddScoped<IDeploymentTargetDirectory, DeploymentTargetDirectory>();
+            // Alimente les sélecteurs de cibles (Entité/Groupe/Profil/Utilisateur) des modules —
+            // onglet "Cibles pour le déploiement à la demande" d'un paquet, onglet "Cibles" d'un
+            // article de la base de connaissances — sans qu'ils dépendent de ces types
+            // (GlpiNg.Web.Models, domaine utilisateurs/groupes/entités/profils non extrait en
+            // module). Voir IPrincipalDirectory (GlpiNg.Modules.Abstractions) ; la même
+            // implémentation rend aussi l'ancien IDeploymentTargetDirectory, d'où les deux
+            // enregistrements sur la même classe.
+            builder.Services.AddScoped<IPrincipalDirectory, PrincipalDirectory>();
+            builder.Services.AddScoped<IDeploymentTargetDirectory, PrincipalDirectory>();
 
-            // Donne au module Déploiement de quoi évaluer l'éligibilité de l'utilisateur connecté
-            // au libre-service (page /self-service, voir SelfServiceDeploymentService) sans qu'il
-            // dépende de GlpiUser/GlpiUserProfile/GlpiGroupUser — même principe
-            // qu'IDeploymentTargetDirectory ci-dessus, dans le sens inverse.
-            builder.Services.AddScoped<ICurrentUserDeploymentContextProvider, CurrentUserDeploymentContextProvider>();
+            // Traduit un utilisateur connecté en ses habilitations (entités, profils, groupes), de
+            // quoi évaluer ces mêmes cibles côté lecteur : éligibilité au libre-service (module
+            // Déploiement), visibilité d'un article (module Base de connaissances) — même principe
+            // qu'IPrincipalDirectory ci-dessus, dans le sens inverse.
+            builder.Services.AddScoped<IPrincipalContextProvider, PrincipalContextProvider>();
+            builder.Services.AddScoped<ICurrentUserDeploymentContextProvider, PrincipalContextProvider>();
 
             // Module Deployment (voir GlpiNg.Modules.Deployment.DeploymentModuleServiceCollectionExtensions) :
             // agents GLPI, paquets/jobs de déploiement, groupes d'ordinateurs dynamiques, créneaux
@@ -418,6 +424,24 @@ public class Program
             // ci-dessus : ComputerDeploymentTasksProvider et ses contrôleurs/pages dépendent du DbContext
             // de base.
             builder.Services.AddDeploymentModule();
+
+            // Import de la base de connaissances GLPI (catégories, articles, cibles, révisions) —
+            // voir IGlpiKnowledgeBaseImportService, hébergé ici pour la même raison que l'import du
+            // plugin d'inventaire : seul l'hôte voit à la fois les modèles du module et les
+            // entités/groupes/profils/comptes auxquels les cibles renvoient.
+            builder.Services.AddScoped<IGlpiKnowledgeBaseImportService, GlpiKnowledgeBaseImportService>();
+
+            // Module Base de connaissances (voir
+            // GlpiNg.Modules.KnowledgeBase.KnowledgeBaseModuleServiceCollectionExtensions) :
+            // articles, catégories, révisions et cibles de visibilité. Enregistré ici pour la même
+            // raison que les modules ci-dessus : ses pages dépendent du DbContext de base.
+            builder.Services.AddKnowledgeBaseModule();
+
+            // Rapports (/tools/reports) : vue unique sur les IReportProvider contribués par les
+            // modules ci-dessus (Inventory, Deployment, Base de connaissances). Enregistré après eux, pour que la
+            // résolution d'IEnumerable<IReportProvider> les voie tous — l'hôte ne déclare lui-même
+            // aucun rapport, voir ReportCatalog.
+            builder.Services.AddScoped<ReportCatalog>();
 
             // Module Scheduler (voir GlpiNg.Modules.Scheduler.SchedulerModuleServiceCollectionExtensions) :
             // contribue un ICronTask qui lance automatiquement les DeploymentTask dont la fenêtre

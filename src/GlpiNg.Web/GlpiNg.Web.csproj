@@ -14,12 +14,18 @@
 
   <ItemGroup>
     <PackageReference Include="Blazor.Bootstrap" Version="4.0.0" />
+    <!-- Exports des rapports (/tools/reports) : XLSX et PDF. Mêmes bibliothèques que l'export de
+         la liste des ordinateurs (voir ComputerExportWriter, module Inventory) — l'ODS et le CSV
+         sont écrits à la main, sans dépendance. -->
+    <PackageReference Include="ClosedXML" Version="0.105.1" />
+    <PackageReference Include="QuestPDF" Version="2026.8.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.12" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.12" />
+    <PackageReference Include="ReverseMarkdown" Version="6.2.1" />
 	<PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
     <PackageReference Include="Microting.EntityFrameworkCore.MySql" Version="10.0.11" />
@@ -38,6 +44,7 @@
     <ProjectReference Include="..\GlpiNg.Modules.Cron\GlpiNg.Modules.Cron.csproj" />
     <ProjectReference Include="..\GlpiNg.Modules.Deployment\GlpiNg.Modules.Deployment.csproj" />
     <ProjectReference Include="..\GlpiNg.Modules.Scheduler\GlpiNg.Modules.Scheduler.csproj" />
+    <ProjectReference Include="..\GlpiNg.Modules.KnowledgeBase\GlpiNg.Modules.KnowledgeBase.csproj" />
   </ItemGroup>
 
 </Project>

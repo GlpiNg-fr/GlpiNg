@@ -44,6 +44,12 @@ public static class GlpiImportPhases
     public const string Users = "Utilisateurs";
     public const string GeneralConfig = "Configuration générale";
 
+    // Base de connaissances (hôte, pour le module du même nom).
+    public const string KnowledgeBaseCategories = "Catégories de connaissances";
+    public const string KnowledgeBaseArticles = "Articles de connaissances";
+    public const string KnowledgeBaseTargets = "Visibilité des articles";
+    public const string KnowledgeBaseRevisions = "Révisions des articles";
+
     // Plugin d'inventaire (hôte).
     public const string IpRanges = "Plages IP";
     public const string SnmpCredentials = "Identifiants SNMP";
