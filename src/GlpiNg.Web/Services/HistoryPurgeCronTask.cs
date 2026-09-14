@@ -1,4 +1,4 @@
-using GlpiNg.Modules.Abstractions.Cron;
+﻿using GlpiNg.Modules.Abstractions.Cron;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
 using Microsoft.EntityFrameworkCore;
@@ -7,7 +7,7 @@ namespace GlpiNg.Web.Services;
 
 /// <summary>
 /// Équivalent réduit de la tâche cron GLPI "purgelogs" : purge les entrées d'historique
-/// (Entités/Groupes/Utilisateurs/Profils) ainsi que le journal des évènements système
+/// (Entités/Groupes/Utilisateurs/Profils/Base de connaissances) ainsi que le journal des évènements
 /// (<see cref="EventLogEntry"/>, voir /admin/logs) plus anciens que le réglage "Purger toutes
 /// les entrées de l'historique" de l'onglet /config → "Purge de l'historique" (voir
 /// <see cref="PurgeSettings.RetentionMonths"/>, clé "All").
@@ -16,7 +16,7 @@ namespace GlpiNg.Web.Services;
 /// manière de GLPI, mais les entrées d'historique de GlpiNg ne portent pas cette
 /// catégorisation (leur champ "Field" est un libellé humain, ex. "Nom", "Commentaires" —
 /// voir GlpiEntityHistoryEntry) : seul le réglage global "All" est donc appliqué,
-/// uniformément aux quatre tables.
+/// uniformément aux cinq tables.
 /// </summary>
 public sealed class HistoryPurgeCronTask(GlpiNgDbContext db, SettingsCacheService settingsStore) : ICronTask
 {
@@ -27,7 +27,8 @@ public sealed class HistoryPurgeCronTask(GlpiNgDbContext db, SettingsCacheServic
     public string Name => "Purge de l'historique";
 
     public string Description =>
-        "Purge les entrées d'historique (Entités, Groupes, Utilisateurs, Profils) et le journal " +
+        "Purge les entrées d'historique (Entités, Groupes, Utilisateurs, Profils, Base de connaissances) " +
+        "et le journal " +
         "des évènements système plus anciennes que le délai réglé dans /config → \"Purge de l'historique\".";
 
     public int DefaultFrequencyMinutes => 1440;
@@ -49,6 +50,7 @@ public sealed class HistoryPurgeCronTask(GlpiNgDbContext db, SettingsCacheServic
         await db.GroupHistoryEntries.Where(h => h.OccurredAt < threshold).ExecuteDeleteAsync(cancellationToken);
         await db.UserHistoryEntries.Where(h => h.OccurredAt < threshold).ExecuteDeleteAsync(cancellationToken);
         await db.ProfileHistoryEntries.Where(h => h.OccurredAt < threshold).ExecuteDeleteAsync(cancellationToken);
+        await db.KnowledgeBaseArticleHistoryEntries.Where(h => h.OccurredAt < threshold).ExecuteDeleteAsync(cancellationToken);
         await db.EventLogEntries.Where(e => e.OccurredAt < threshold).ExecuteDeleteAsync(cancellationToken);
     }
 }

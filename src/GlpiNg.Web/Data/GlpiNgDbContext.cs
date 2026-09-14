@@ -160,6 +160,7 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<KnowledgeBaseArticle> KnowledgeBaseArticles => Set<KnowledgeBaseArticle>();
     public DbSet<KnowledgeBaseArticleRevision> KnowledgeBaseArticleRevisions => Set<KnowledgeBaseArticleRevision>();
     public DbSet<KnowledgeBaseArticleTarget> KnowledgeBaseArticleTargets => Set<KnowledgeBaseArticleTarget>();
+    public DbSet<KnowledgeBaseArticleHistoryEntry> KnowledgeBaseArticleHistoryEntries => Set<KnowledgeBaseArticleHistoryEntry>();
 
     public DbSet<EventLogEntry> EventLogEntries => Set<EventLogEntry>();
 
@@ -979,7 +980,7 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
 
     /// <summary>
     /// Base de connaissances (module GlpiNg.Modules.KnowledgeBase) : arborescence des catégories,
-    /// articles, révisions et cibles de visibilité.
+    /// articles, révisions, cibles de visibilité et historique des changements.
     /// </summary>
     private static void ConfigureKnowledgeBase(ModelBuilder modelBuilder)
     {
@@ -1012,6 +1013,12 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
             .HasForeignKey(target => target.ArticleId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        modelBuilder.Entity<KnowledgeBaseArticleHistoryEntry>()
+            .HasOne(entry => entry.Article)
+            .WithMany(article => article.History)
+            .HasForeignKey(entry => entry.ArticleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         // Numérotation des révisions : une seule par numéro et par article (voir
         // KnowledgeBaseService.SaveAsync, qui calcule le suivant).
         modelBuilder.Entity<KnowledgeBaseArticleRevision>()
@@ -1019,10 +1026,23 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
             .IsUnique();
 
         // Une même cible ne s'ajoute qu'une fois à un article : deux lignes identiques ne
-        // changeraient rien à la visibilité mais s'afficheraient en double.
+        // changeraient rien à la visibilité mais s'afficheraient en double. La portée par entité
+        // fait partie de la clé — un même profil peut légitimement être visé dans deux entités
+        // différentes, ce qui fait bien deux cibles distinctes.
+        //
+        // HasFilter(null) retire le filtre « ScopeEntityId IS NOT NULL » que SQL Server pose
+        // d'office sur un index unique contenant une colonne nullable : sans cela, l'unicité ne
+        // couvrirait plus les cibles *sans* portée — c'est-à-dire le cas courant, celui qu'il
+        // s'agit justement de protéger.
         modelBuilder.Entity<KnowledgeBaseArticleTarget>()
-            .HasIndex(target => new { target.ArticleId, target.Type, target.ItemId })
-            .IsUnique();
+            .HasIndex(target => new { target.ArticleId, target.Type, target.ItemId, target.ScopeEntityId })
+            .IsUnique()
+            .HasFilter(null);
+
+        // L'onglet "Historique" lit toujours les entrées d'un article, de la plus récente à la
+        // plus ancienne ; la purge (HistoryPurgeCronTask) balaie sur la seule date.
+        modelBuilder.Entity<KnowledgeBaseArticleHistoryEntry>()
+            .HasIndex(entry => new { entry.ArticleId, entry.OccurredAt });
 
         // La liste est rangée par catégorie à chaque ouverture de la page.
         modelBuilder.Entity<KnowledgeBaseArticle>()
