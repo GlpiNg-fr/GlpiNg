@@ -128,6 +128,14 @@ restart — it's `MapWhen`-mounted conditionally rather than statically register
 Changes made from either store are tracked by `ConfigHistoryService`, called separately
 by each Razor page after a successful save.
 
+**GLPI HTML → Markdown** (`Import/GlpiHtmlToMarkdown`): GLPI often stores knowledge-base
+answers **HTML-escaped** (`&lt;p&gt;`), which a converter reads as plain text — the article
+then shows every tag, since `MarkdownRenderer` never interprets HTML. `Unescape` undoes that
+first, but only while the content carries *no* real tag, so an article demonstrating
+`&lt;VirtualHost&gt;` keeps its example. Unknown tags use `Bypass` (drop the tag, keep the
+content) rather than `Drop`, which silently swallowed anything wrapped in `<font>` or Word's
+`<o:p>`; `script`/`style`/`iframe` are excluded with their content instead.
+
 **GLPI text encoding**: many GLPI installs declare columns `latin1` while storing UTF-8,
 so imported text arrives as "ProcÃ©dure". Every string read from a GLPI database should go
 through `Import/GlpiText.Repair` (already wired into the knowledge-base import's

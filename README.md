@@ -597,6 +597,20 @@ détectées via `information_schema` : sur une base plus ancienne, elles valent
 `NULL` et l'article arrive simplement sans borne ni portée. Idempotent par
 `SourceGlpiId` sur la catégorie, l'article et le document.
 
+Le **contenu HTML est traduit en Markdown** par `Import/GlpiHtmlToMarkdown`, avec
+deux précautions apprises sur de vraies bases. D'abord, beaucoup de GLPI stockent
+le HTML **échappé** (`&lt;p&gt;` au lieu de `<p>`) : un convertisseur n'y voit que
+du texte, et l'article arrive avec toutes ses balises en clair — d'autant plus
+sûrement que le rendu de GlpiNg n'interprète jamais le HTML. L'échappement est
+donc défait avant conversion, mais seulement tant que le contenu ne porte **aucune**
+vraie balise, pour ne pas transformer en balise un `&lt;VirtualHost&gt;` qu'un
+article montre à titre d'exemple. Ensuite, une balise inconnue (`<font>`, `<o:p>`
+collé depuis Word) est retirée **sans emporter son contenu** ; seuls `script`,
+`style`, `iframe` et consorts sont écartés avec le leur.
+
+Un article déjà repris se corrige en relançant l'import : il est idempotent, et
+« Articles » réécrit le contenu — au prix des retouches faites depuis dans GlpiNg.
+
 Le **texte est réparé à la lecture** : beaucoup d'installations GLPI ont des
 colonnes déclarées `latin1` qui contiennent en réalité de l'UTF-8, ce qui fait
 arriver les articles en « ProcÃ©dure » ou « Câ€™est ». `Import/GlpiText` refait le
