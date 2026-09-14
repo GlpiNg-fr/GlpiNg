@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
-namespace GlpiNg.Modules.Deployment.Import;
+namespace GlpiNg.Modules.Abstractions.Storage;
 
 /// <summary>
 /// Ouvre une session authentifiée vers un partage réseau Windows, le temps d'une lecture.
@@ -16,6 +16,10 @@ namespace GlpiNg.Modules.Deployment.Import;
 /// Aucune lettre de lecteur n'est réservée : la connexion est sans nom local, donc invisible du
 /// reste du système et sans risque de collision avec un lecteur déjà monté. Elle est refermée à la
 /// libération.
+///
+/// Vit dans Abstractions et non dans un module : l'import des paquets de déploiement et celui des
+/// documents lisent tous deux le même partage GLPI, et un utilitaire système n'a pas à être
+/// emprunté à une fonctionnalité pour servir à une autre.
 ///
 /// Windows uniquement — <c>mpr.dll</c> n'a pas d'équivalent ailleurs. Sur un autre système, un
 /// partage doit être monté par l'hôte avant le lancement, et <see cref="Connect"/> le dit au lieu

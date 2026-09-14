@@ -64,7 +64,8 @@ public class GlpiKnowledgeBaseImportSelection
 
     /// <summary>
     /// Dossier <c>files/</c> de l'installation GLPI source (chemin local ou partage réseau), d'où
-    /// lire le contenu des documents.
+    /// lire le contenu des documents. Saisi une fois dans le formulaire de connexion, avec les
+    /// identifiants du partage, et partagé par tout l'import.
     ///
     /// Facultatif, et c'est délibéré : GLPI ne range pas les fichiers en base — seul le chemin
     /// relatif y figure (<c>glpi_documents.filepath</c>) — donc la connexion MySQL seule ne peut
@@ -73,6 +74,21 @@ public class GlpiKnowledgeBaseImportSelection
     /// la racine de stockage de GlpiNg.
     /// </summary>
     public string? GlpiFilesPath { get; set; }
+
+    /// <summary>
+    /// Identifiants du partage réseau hébergeant <see cref="GlpiFilesPath"/>, quand le compte sous
+    /// lequel tourne GlpiNg n'y a pas accès.
+    ///
+    /// Un chemin UNC n'a pas de place pour des identifiants : une lecture se présente avec le
+    /// compte du processus et échoue en « accès refusé ». L'import ouvre donc d'abord une session
+    /// vers le partage, exactement comme celui des paquets de déploiement. Sans objet pour un
+    /// chemin local, où ils sont ignorés. Gardés en mémoire le temps de la session, jamais
+    /// persistés.
+    /// </summary>
+    public string? GlpiFilesUserName { get; set; }
+
+    /// <inheritdoc cref="GlpiFilesUserName"/>
+    public string? GlpiFilesPassword { get; set; }
 
     public bool AnySelected => ImportCategories || ImportArticles || ImportTargets || ImportRevisions || ImportDocuments;
 }

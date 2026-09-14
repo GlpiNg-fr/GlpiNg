@@ -1,5 +1,6 @@
 ﻿using GlpiNg.Modules.Abstractions.Directory;
 using GlpiNg.Modules.Abstractions.Import;
+using GlpiNg.Modules.Abstractions.Storage;
 using GlpiNg.Modules.KnowledgeBase.Models;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models.Documents;
@@ -141,7 +142,7 @@ public sealed class GlpiKnowledgeBaseImportService(
 
         if (selection.ImportDocuments)
         {
-            await ImportDocumentsAsync(connection, articleMap, entityMap, rootEntityId, selection.GlpiFilesPath,
+            await ImportDocumentsAsync(connection, articleMap, entityMap, rootEntityId, selection,
                 result, progress, cancellationToken);
         }
 
@@ -526,7 +527,7 @@ public sealed class GlpiKnowledgeBaseImportService(
     /// </summary>
     private async Task ImportDocumentsAsync(
         MySqlConnection connection, Dictionary<int, int> articleMap, Dictionary<int, int> entityMap,
-        int? rootEntityId, string? glpiFilesPath, GlpiKnowledgeBaseImportResult result,
+        int? rootEntityId, GlpiKnowledgeBaseImportSelection selection, GlpiKnowledgeBaseImportResult result,
         IProgress<GlpiImportProgress>? progress, CancellationToken ct)
     {
         if (!await TableExistsAsync(connection, DocumentsTable, ct) ||
@@ -536,9 +537,51 @@ public sealed class GlpiKnowledgeBaseImportService(
             return;
         }
 
-        bool hasFiles = !string.IsNullOrWhiteSpace(glpiFilesPath) && Directory.Exists(glpiFilesPath);
+        string? glpiFilesPath = selection.GlpiFilesPath;
 
-        if (!string.IsNullOrWhiteSpace(glpiFilesPath) && !hasFiles)
+        // La session vers le partage est ouverte avant tout test d'existence : sur un chemin UNC
+        // que le compte du service ne voit pas, Directory.Exists répond « non » aussi bien pour un
+        // dossier absent que pour un accès refusé, et le message d'erreur désignerait la mauvaise
+        // cause. Sans identifiants, ou sur un chemin local, Connect ne fait rien.
+        NetworkShareConnection? share = NetworkShareConnection.None;
+
+        if (!string.IsNullOrWhiteSpace(glpiFilesPath))
+        {
+            share = NetworkShareConnection.Connect(
+                glpiFilesPath, selection.GlpiFilesUserName, selection.GlpiFilesPassword, out string? shareFailure);
+
+            if (share is null)
+            {
+                result.Warnings.Add(
+                    $"Connexion au partage « {glpiFilesPath} » impossible ({shareFailure}) : les documents "
+                    + "sont repris sans leur fichier.");
+            }
+        }
+
+        using (share)
+        {
+            await ImportDocumentsCoreAsync(
+                connection, articleMap, entityMap, rootEntityId, glpiFilesPath, share is not null,
+                result, progress, ct);
+        }
+    }
+
+    /// <summary>
+    /// Le gros de l'import des documents, une fois la session vers le partage ouverte (ou établie
+    /// inutile). Séparé pour que la session se referme par <c>using</c> autour d'un seul appel
+    /// plutôt que de courir jusqu'au bout d'une méthode de deux cents lignes.
+    /// </summary>
+    private async Task ImportDocumentsCoreAsync(
+        MySqlConnection connection, Dictionary<int, int> articleMap, Dictionary<int, int> entityMap,
+        int? rootEntityId, string? glpiFilesPath, bool shareOpened, GlpiKnowledgeBaseImportResult result,
+        IProgress<GlpiImportProgress>? progress, CancellationToken ct)
+    {
+
+        bool hasFiles = shareOpened
+            && !string.IsNullOrWhiteSpace(glpiFilesPath)
+            && Directory.Exists(glpiFilesPath);
+
+        if (shareOpened && !string.IsNullOrWhiteSpace(glpiFilesPath) && !hasFiles)
         {
             result.Warnings.Add(
                 $"Dossier « {glpiFilesPath} » introuvable : les documents sont repris sans leur fichier. "

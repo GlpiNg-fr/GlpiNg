@@ -604,13 +604,30 @@ chemin à l'envers (ré-encodage en Windows-1252 — le « latin1 » de MySQL en
 puis relecture en UTF-8) et ne corrige que si les octets retrouvés forment de
 l'UTF-8 valide, ce qui laisse intact un texte déjà correct.
 
-Les **fichiers des documents ne sont pas en base** : `glpi_documents.filepath` ne
-donne qu'un chemin relatif au dossier `files/` de GLPI. L'écran d'import propose
-donc un champ facultatif pour ce dossier (chemin local ou partage réseau, lisible
-par le service GlpiNg). Laissé vide ou inaccessible, les fiches et les
-rattachements sont créés sans contenu téléchargeable, comptés à part et signalés
-dans le compte rendu ; téléverser le fichier plus tard depuis l'article retombe
-sur la même empreinte et complète la fiche existante.
+Les **fichiers ne sont pas en base**, ni ceux des documents
+(`glpi_documents.filepath` ne donne qu'un chemin relatif) ni ceux des paquets de
+déploiement. Le dossier `files/` de GLPI et les **identifiants du partage** se
+saisissent donc une seule fois, avec la connexion MySQL : c'est une propriété de
+l'installation source au même titre que son serveur, et tout ce que l'import va
+chercher sur disque en descend.
+
+- Les **documents** s'y lisent directement.
+- Les **fichiers de paquets** s'y lisent sous `_plugins/<plugin>/files`, déduit du
+  préfixe de tables détecté à l'analyse (`glpi_plugin_glpiinventory_` →
+  `glpiinventory`). La section « Plugin d'inventaire » garde un champ de
+  dérogation, à ne renseigner que si l'installation les range ailleurs.
+
+Un chemin UNC n'a pas de place pour des identifiants : une lecture se présente
+avec le compte du service et échoue en « accès refusé ». L'import ouvre donc
+d'abord une session vers le partage (`WNetAddConnection2`, voir
+`Abstractions/Storage/NetworkShareConnection`) — **Windows uniquement** ; ailleurs
+le partage doit être monté avant le lancement, et le message le dit. Sur un chemin
+local, les identifiants sont ignorés. Ils ne sont jamais enregistrés.
+
+Dossier laissé vide ou inaccessible : les fiches et les rattachements sont créés
+sans contenu téléchargeable, comptés à part et signalés dans le compte rendu ;
+téléverser le fichier plus tard depuis l'article retombe sur la même empreinte et
+complète la fiche existante.
 
 Deux points à connaître avant de le lancer :
 
