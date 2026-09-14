@@ -271,7 +271,9 @@ connaissances » de GLPI.
 
 - **Articles** : sujet, contenu, catégorie, drapeau FAQ, épinglage. Recherche plein
   texte sur le sujet et le contenu, tri par date, par consultations ou alphabétique,
-  les articles épinglés restant en tête quel que soit le tri.
+  les articles épinglés restant en tête quel que soit le tri. La liste est un tableau
+  défilant (en-têtes collants) à côté de l'arbre des catégories, avec la pagination
+  figée en pied de carte, comme les listes du parc.
 - **Éditeur Markdown** : barre d'outils (gras, italique, barré, titre, listes, cases à
   cocher, citation, code en ligne et bloc, lien, image, tableau, séparateur) agissant sur
   la sélection courante, et bascule « Rédaction / Aperçu ». Le rendu est fait par Markdig
