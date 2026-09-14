@@ -466,6 +466,17 @@ public class AgentController(
     private async Task<IActionResult> HandleGetCollectJobsAsync(string agentUuid, CancellationToken cancellationToken)
     {
         GlpiAgent? agent = await db.Agents.FirstOrDefaultAsync(a => a.AgentUuid == agentUuid, cancellationToken);
+
+        return await BuildCollectJobsAsync(agent, cancellationToken);
+    }
+
+    /// <summary>
+    /// Travaux de collecte à exécuter, quelle que soit la route par laquelle ils sont demandés :
+    /// l'action <c>getCollectJobs</c> de la route unique, ou le <c>getJobs</c> du protocole natif
+    /// de la tâche Collect (voir <see cref="CollectEndpoint"/>).
+    /// </summary>
+    private async Task<IActionResult> BuildCollectJobsAsync(GlpiAgent? agent, CancellationToken cancellationToken)
+    {
         if (agent is null)
         {
             return Ok(new JsonObject { ["jobs"] = new JsonArray() });
@@ -491,6 +502,7 @@ public class AgentController(
                 jobs.Add(new JsonObject
                 {
                     ["function"] = "getFromRegistry",
+                    ["uuid"] = Sid(collect.Id, "registry", entry.Id),
                     ["_sid"] = Sid(collect.Id, "registry", entry.Id),
                     ["_name"] = entry.Name,
                     ["path"] = RegistryPath(entry),
@@ -509,6 +521,7 @@ public class AgentController(
                 jobs.Add(new JsonObject
                 {
                     ["function"] = "getFromWMI",
+                    ["uuid"] = Sid(collect.Id, "wmi", entry.Id),
                     ["_sid"] = Sid(collect.Id, "wmi", entry.Id),
                     ["_name"] = entry.Name,
                     ["class"] = entry.WmiClass,
@@ -522,6 +535,7 @@ public class AgentController(
                 jobs.Add(new JsonObject
                 {
                     ["function"] = "findFile",
+                    ["uuid"] = Sid(collect.Id, "file", entry.Id),
                     ["_sid"] = Sid(collect.Id, "file", entry.Id),
                     ["_name"] = entry.Name,
                     ["dir"] = entry.Path,
@@ -549,6 +563,17 @@ public class AgentController(
             .Include(a => a.Computer)
             .FirstOrDefaultAsync(a => a.AgentUuid == agentUuid, cancellationToken);
 
+        return await StoreCollectAnswersAsync(agent, document.RootElement, agentUuid, cancellationToken);
+    }
+
+    /// <summary>
+    /// Range les résultats d'une collecte, quelle que soit la route par laquelle ils arrivent :
+    /// l'action <c>setCollectAnswer</c> de la route unique, ou le <c>setAnswer</c> du protocole
+    /// natif de la tâche Collect (voir <see cref="CollectEndpoint"/>).
+    /// </summary>
+    private async Task<IActionResult> StoreCollectAnswersAsync(
+        GlpiAgent? agent, JsonElement root, string agentLabel, CancellationToken cancellationToken)
+    {
         if (agent?.Computer is not { } computer)
         {
             // Un agent sans ordinateur n'a pas encore envoyé d'inventaire : il n'y a nulle part où
@@ -557,14 +582,18 @@ public class AgentController(
             return Ok(new ProtocolAnswer { Status = "ok", Message = "no computer for this agent" });
         }
 
-        JsonElement root = document.RootElement;
         int stored = 0;
 
         foreach (JsonElement answer in EnumerateAnswers(root))
         {
-            if (!answer.TryGetProperty("_sid", out JsonElement sidElement)
-                || ParseSid(sidElement.GetString()) is not { } sid)
+            // Le « _sid » n'est réémis par l'agent que s'il figurait dans le job ; l'« uuid »,
+            // lui, l'est toujours (voir GLPI::Agent::Task::Collect). Les deux portent la même
+            // valeur, et se replier sur l'uuid évite de perdre silencieusement un résultat.
+            string? rawSid = ReadString(answer, "_sid") ?? ReadString(answer, "uuid");
+
+            if (ParseSid(rawSid) is not { } sid)
             {
+                logger.LogWarning("collect: réponse ignorée, identifiant d'entrée illisible ({Sid}).", rawSid ?? "absent");
                 continue;
             }
 
@@ -591,10 +620,139 @@ public class AgentController(
 
         await db.SaveChangesAsync(cancellationToken);
 
-        logger.LogInformation("collect: agent {AgentUuid} — {Count} résultat(s) de collecte enregistré(s).", agentUuid, stored);
+        logger.LogInformation("collect: agent {AgentUuid} — {Count} résultat(s) de collecte enregistré(s).", agentLabel, stored);
 
         return Ok(new ProtocolAnswer { Status = "ok" });
     }
+
+    // ---- Protocole natif de la tâche Collect ------------------------------------------------
+
+    /// <summary>
+    /// Chemin annoncé à l'agent comme « remote » de la tâche Collect. Route distincte de la route
+    /// unique parce que la tâche y envoie <c>action=getJobs</c>, nom déjà pris par le déploiement :
+    /// le plugin d'origine les distingue par leurs points d'accès, pas par l'action.
+    /// </summary>
+    private const string CollectRemotePath = "/inventory/collect";
+
+    /// <summary>
+    /// <c>GET /inventory?action=getConfig</c> — premier échange de la tâche Collect.
+    ///
+    /// La tâche ne lit pas ses travaux sur la route unique : elle demande d'abord une
+    /// configuration, y lit un <c>schedule</c>, et n'interroge ensuite que l'URL <c>remote</c>
+    /// qu'il porte. Sans cette réponse, elle s'arrête là et aucune collecte n'est jamais
+    /// exécutée — c'est ce qui laissait l'onglet « Informations de collecte » vide.
+    ///
+    /// En GET et sans en-tête <c>GLPI-Agent-ID</c> : la tâche passe par le client « Fusion » du
+    /// projet GLPI-Agent, qui envoie ses paramètres en query string et ne pose pas cet en-tête.
+    /// L'agent est donc reconnu par son <c>machineid</c>, qui vaut son <c>deviceid</c>.
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> GetConfig(
+        [FromQuery] string? action, [FromQuery] string? machineid, CancellationToken cancellationToken)
+    {
+        if (!string.Equals(action, "getConfig", StringComparison.OrdinalIgnoreCase))
+        {
+            return BadRequest(new ProtocolAnswer { Status = "error", Message = $"unsupported action '{action}'" });
+        }
+
+        GlpiAgent? agent = await FindAgentByMachineIdAsync(machineid, cancellationToken);
+
+        if (agent is not null)
+        {
+            UpdateAgentRequestMetadata(agent);
+            await db.SaveChangesAsync(cancellationToken);
+        }
+
+        // La périodicité est celle de la collecte, pas celle de l'inventaire : une heure suffit
+        // pour des valeurs de registre ou de WMI, et l'agent la respecte sans que le serveur ait à
+        // tenir un échéancier par poste.
+        return Ok(new JsonObject
+        {
+            ["configValidityPeriod"] = 600,
+            ["schedule"] = new JsonArray
+            {
+                new JsonObject
+                {
+                    ["task"] = "Collect",
+                    ["remote"] = $"{Request.Scheme}://{Request.Host}{CollectRemotePath}",
+                    ["periodicity"] = 3600,
+                },
+            },
+        });
+    }
+
+    /// <summary>
+    /// <c>GET|POST /inventory/collect</c> — travaux et résultats de la tâche Collect.
+    ///
+    /// Les deux verbes, parce que le client « Fusion » envoie <c>getJobs</c> en GET (paramètres en
+    /// query string) et <c>setAnswer</c> en POST <c>application/x-www-form-urlencoded</c>, avec
+    /// l'action dans l'URL et les valeurs dans le corps. Ni l'un ni l'autre n'est du JSON, ce que
+    /// la route unique attend pourtant : c'est pourquoi ils ne pouvaient pas y aboutir.
+    ///
+    /// Un résultat arrive seul, à plat, une requête par valeur remontée.
+    /// </summary>
+    [HttpGet("collect")]
+    [HttpPost("collect")]
+    public async Task<IActionResult> CollectEndpoint(CancellationToken cancellationToken)
+    {
+        string? action = Request.Query["action"].FirstOrDefault();
+        string? machineId = Request.Query["machineid"].FirstOrDefault();
+
+        // Le corps d'un setAnswer porte les valeurs collectées, et peut aussi porter l'action et
+        // l'identité quand le client ne les a pas mises dans l'URL.
+        IFormCollection? form = Request.HasFormContentType
+            ? await Request.ReadFormAsync(cancellationToken)
+            : null;
+
+        if (form is not null)
+        {
+            action ??= form["action"].FirstOrDefault();
+            machineId ??= form["machineid"].FirstOrDefault();
+        }
+
+        GlpiAgent? agent = await FindAgentByMachineIdAsync(machineId, cancellationToken);
+
+        if (string.Equals(action, "getJobs", StringComparison.OrdinalIgnoreCase))
+        {
+            return await BuildCollectJobsAsync(agent, cancellationToken);
+        }
+
+        if (string.Equals(action, "setAnswer", StringComparison.OrdinalIgnoreCase))
+        {
+            if (form is null)
+            {
+                return BadRequest(new ProtocolAnswer { Status = "error", Message = "setAnswer expects a form body" });
+            }
+
+            // Le formulaire est converti en objet JSON pour être rangé par le même code que
+            // l'action setCollectAnswer : ce qui diffère est le transport, pas le résultat.
+            JsonObject answer = [];
+
+            foreach (string key in form.Keys)
+            {
+                answer[key] = form[key].FirstOrDefault();
+            }
+
+            using JsonDocument document = JsonDocument.Parse(answer.ToJsonString());
+
+            return await StoreCollectAnswersAsync(
+                agent, document.RootElement, machineId ?? "(inconnu)", cancellationToken);
+        }
+
+        return BadRequest(new ProtocolAnswer { Status = "error", Message = $"unsupported action '{action}'" });
+    }
+
+    /// <summary>
+    /// Retrouve l'agent par le <c>machineid</c> de la tâche Collect, qui vaut son
+    /// <c>deviceid</c> d'inventaire — le seul identifiant dont elle dispose, le client qu'elle
+    /// utilise ne posant pas d'en-tête <c>GLPI-Agent-ID</c>.
+    /// </summary>
+    private async Task<GlpiAgent?> FindAgentByMachineIdAsync(string? machineId, CancellationToken cancellationToken)
+        => string.IsNullOrWhiteSpace(machineId)
+            ? null
+            : await db.Agents
+                .Include(a => a.Computer)
+                .FirstOrDefaultAsync(a => a.DeviceId == machineId || a.AgentUuid == machineId, cancellationToken);
 
     /// <summary>Nom de l'entrée de collecte désignée par le <c>_sid</c>, ou null si elle a été
     /// supprimée depuis l'envoi du job.</summary>
