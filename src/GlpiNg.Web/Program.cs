@@ -64,16 +64,29 @@ public class Program
         // limite ne le concerne plus directement.
         builder.Services.Configure<FormOptions>(options => options.MultipartBodyLengthLimit = 8L * 1024 * 1024 * 1024);
 
+        // Emplacements de stockage : résolus avant tout le reste, car la configuration de
+        // DataProtection en dépend et intervient au démarrage, et surtout parce que le fichier de
+        // configuration propre à l'installation vit maintenant dans cette racine — il faut donc
+        // la connaître pour aller le lire. Instancié à la main plutôt que résolu depuis le
+        // conteneur, qui n'est pas encore construit à ce stade.
+        //
+        // Conséquence à garder en tête : à cet instant, seuls appsettings.json, les variables
+        // d'environnement et la ligne de commande sont chargés. « Storage:RootPath » doit donc
+        // venir de l'un d'eux, jamais du fichier local — voir la doc de StoragePaths.
+        StoragePaths storagePaths = new(builder.Configuration, builder.Environment);
+        builder.Services.AddSingleton<IStoragePaths>(storagePaths);
+
+        EnsureLocalSettingsNotLeftBehind(builder.Environment, storagePaths);
+
+        // La racine est créée ici, et non à la demande comme les autres emplacements : le
+        // fournisseur de fichiers de configuration surveille le dossier (reloadOnChange) et
+        // échoue s'il n'existe pas encore.
+        storagePaths.Ensure(storagePaths.Root);
+
         // Fichier écrit par l'assistant d'installation (AnthoDingo.Setup) à la fin du wizard —
         // prioritaire sur appsettings.json une fois l'installation terminée. Ne doit jamais être
         // commité (voir .gitignore).
-        builder.Configuration.AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true);
-
-        // Emplacements de stockage : résolus avant tout le reste, car la configuration de
-        // DataProtection en dépend et intervient au démarrage. Instancié à la main plutôt que
-        // résolu depuis le conteneur, qui n'est pas encore construit à ce stade.
-        StoragePaths storagePaths = new(builder.Configuration, builder.Environment);
-        builder.Services.AddSingleton<IStoragePaths>(storagePaths);
+        builder.Configuration.AddJsonFile(storagePaths.LocalSettings, optional: true, reloadOnChange: true);
 
         // UI Blazor Server (rendu interactif)
         builder.Services.AddRazorComponents()
@@ -236,6 +249,11 @@ public class Program
         {
             setupOptions.AllowedProviders = [DbProvider.SqlServer, DbProvider.MySql, DbProvider.Postgres];
             setupOptions.AllowUsernameAdmin = true;
+
+            // L'assistant écrit dans la racine du stockage et non à côté du binaire, comme le
+            // reste de ce qui est propre à l'installation. Un chemin absolu est repris tel quel
+            // par AnthoDingo.Setup ; un chemin relatif serait résolu depuis ContentRootPath.
+            setupOptions.LocalConfigFileName = storagePaths.LocalSettings;
         });
 
         // Le DbContext applicatif n'est enregistré qu'une fois l'installation terminée : tant que
@@ -367,7 +385,7 @@ public class Program
             // ce fichier et ne l'écrira plus. N'est demandé explicitement que par les endpoints
             // qui l'exigent (voir la policy "OAuthApiAccess" plus haut et son usage sur
             // GlpiImportController) : le schéma cookie par défaut n'est pas affecté.
-            string oauthSigningKey = EnsureOAuthSigningKey(builder);
+            string oauthSigningKey = EnsureOAuthSigningKey(builder, storagePaths);
             authenticationBuilder.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
             {
                 options.TokenValidationParameters = new TokenValidationParameters
@@ -643,12 +661,38 @@ public class Program
     }
 
     /// <summary>
+    /// Refuse de démarrer si le fichier de configuration est resté à son ancien emplacement (à
+    /// côté du binaire) alors que le nouveau, dans la racine du stockage, est absent.
+    ///
+    /// Sans ce garde-fou, une installation déjà faite repartirait silencieusement à zéro : faute
+    /// de trouver « Setup:IsComplete », le middleware d'installation redirigerait tout vers
+    /// /setup, et l'assistant proposerait de réinstaller par-dessus une base qui contient déjà
+    /// les données. Une erreur au démarrage, qui dit quoi déplacer et où, coûte infiniment moins
+    /// cher que cette réinstallation-là.
+    /// </summary>
+    private static void EnsureLocalSettingsNotLeftBehind(IWebHostEnvironment environment, StoragePaths storagePaths)
+    {
+        string legacyPath = Path.Combine(environment.ContentRootPath, StoragePaths.LocalSettingsFileName);
+
+        if (!File.Exists(legacyPath) || File.Exists(storagePaths.LocalSettings))
+        {
+            return;
+        }
+
+        throw new InvalidOperationException(
+            $"« {StoragePaths.LocalSettingsFileName} » a été trouvé à l'ancien emplacement ({legacyPath}) " +
+            $"mais pas au nouveau ({storagePaths.LocalSettings}). Déplacez le fichier vers la racine du " +
+            "stockage pour continuer : il contient la chaîne de connexion et l'état de l'installation, sans " +
+            "lesquels GlpiNg repartirait sur l'assistant d'installation.");
+    }
+
+    /// <summary>
     /// Renvoie la clé de signature des jetons OAuth2 (base64, 256 bits), en la générant et en la
     /// persistant dans appsettings.local.json au premier démarrage si elle est absente. Doit
     /// s'exécuter avant builder.Build() : AddJwtBearer a besoin de la clé pour configurer la
     /// validation des jetons dès l'enregistrement des services, pas seulement au premier appel.
     /// </summary>
-    private static string EnsureOAuthSigningKey(WebApplicationBuilder builder)
+    private static string EnsureOAuthSigningKey(WebApplicationBuilder builder, StoragePaths storagePaths)
     {
         string? existing = builder.Configuration["Oauth:SigningKey"];
         if (!string.IsNullOrEmpty(existing))
@@ -658,7 +702,12 @@ public class Program
 
         string key = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
 
-        string localSettingsPath = Path.Combine(builder.Environment.ContentRootPath, "appsettings.local.json");
+        // La racine existe déjà (créée au tout début de Main), mais l'écriture ci-dessous est la
+        // première à en dépendre vraiment : la recréer ici coûte un appel et évite d'échouer si
+        // elle a disparu entre-temps — une racine sur un partage réseau, typiquement.
+        storagePaths.Ensure(storagePaths.Root);
+
+        string localSettingsPath = storagePaths.LocalSettings;
         JsonNode root = File.Exists(localSettingsPath)
             ? JsonNode.Parse(File.ReadAllText(localSettingsPath)) ?? new JsonObject()
             : new JsonObject();

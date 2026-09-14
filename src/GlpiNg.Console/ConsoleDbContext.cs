@@ -1,5 +1,6 @@
-using AnthoDingo.Setup;
+﻿using AnthoDingo.Setup;
 using GlpiNg.Web.Data;
+using GlpiNg.Web.Services;
 using Microsoft.Extensions.Configuration;
 
 namespace GlpiNg.Console;
@@ -10,10 +11,19 @@ public static class ConsoleDbContext
     {
         basePath ??= Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "GlpiNg.Web"));
 
+        // appsettings.json d'abord et seul : c'est lui qui porte « Storage:RootPath », dont on a
+        // besoin pour savoir où se trouve la configuration propre à l'installation. La chercher
+        // dans cette dernière reviendrait à avoir besoin de la racine pour trouver la racine —
+        // voir StoragePaths.
+        var fileConfig = new ConfigurationBuilder()
+            .SetBasePath(basePath)
+            .AddJsonFile("appsettings.json", optional: false)
+            .Build();
+
         var config = new ConfigurationBuilder()
             .SetBasePath(basePath)
             .AddJsonFile("appsettings.json", optional: false)
-            .AddJsonFile("appsettings.local.json", optional: true)
+            .AddJsonFile(StoragePaths.ResolveLocalSettings(fileConfig[StoragePaths.ConfigurationKey], basePath), optional: true)
             .Build();
 
         var setupSection = config.GetSection("Setup");

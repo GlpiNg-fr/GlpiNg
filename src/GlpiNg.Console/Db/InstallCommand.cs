@@ -1,8 +1,9 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using AnthoDingo.Setup;
 using GlpiNg.Web.Data;
+using GlpiNg.Web.Services;
 using Microsoft.EntityFrameworkCore;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -24,14 +25,17 @@ public class InstallCommand : AsyncCommand<InstallCommand.Settings>
         public string? ConnectionString { get; init; }
 
         [CommandOption("--web-path <PATH>")]
-        [Description("Chemin vers le dossier GlpiNg.Web (pour écrire appsettings.local.json)")]
+        [Description("Chemin vers le dossier GlpiNg.Web (y lire Storage:RootPath, où écrire appsettings.local.json)")]
         public string? WebPath { get; init; }
     }
 
     protected override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellation)
     {
         var webPath = ResolveWebPath(settings.WebPath);
-        var localConfigPath = Path.Combine(webPath, "appsettings.local.json");
+
+        // Même emplacement que celui où GlpiNg.Web ira le lire : la racine du stockage, dont le
+        // chemin se lit dans appsettings.json (voir StoragePaths).
+        var localConfigPath = StoragePaths.ResolveLocalSettings(ReadStorageRootPath(webPath), webPath);
 
         if (File.Exists(localConfigPath))
         {
@@ -80,6 +84,7 @@ public class InstallCommand : AsyncCommand<InstallCommand.Settings>
 
         AnsiConsole.MarkupLine("[green]Schéma créé avec succès.[/]");
 
+        Directory.CreateDirectory(Path.GetDirectoryName(localConfigPath)!);
         await WriteLocalConfig(localConfigPath, provider, connectionString);
         AnsiConsole.MarkupLine($"[green]Configuration écrite dans [bold]{localConfigPath.EscapeMarkup()}[/][/]");
 
@@ -116,6 +121,32 @@ public class InstallCommand : AsyncCommand<InstallCommand.Settings>
 
         throw new InvalidOperationException(
             "Impossible de trouver le dossier GlpiNg.Web. Utilisez --web-path pour le spécifier.");
+    }
+
+    /// <summary>
+    /// Racine du stockage telle que configurée dans appsettings.json, ou <c>null</c> pour le
+    /// dossier par défaut. Lue à la main plutôt que par ConfigurationBuilder : à l'installation,
+    /// le fichier peut ne pas exister encore.
+    /// </summary>
+    private static string? ReadStorageRootPath(string webPath)
+    {
+        var settingsPath = Path.Combine(webPath, "appsettings.json");
+
+        if (!File.Exists(settingsPath))
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonNode.Parse(File.ReadAllText(settingsPath))?["Storage"]?["RootPath"]?.GetValue<string>();
+        }
+        catch (JsonException)
+        {
+            // appsettings.json illisible : le dossier par défaut reste le meilleur pari, et
+            // l'erreur se manifestera plus clairement au démarrage de GlpiNg.Web.
+            return null;
+        }
     }
 
     private static async Task WriteLocalConfig(string path, DbProvider provider, string connectionString)

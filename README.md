@@ -818,3 +818,22 @@ Il n'y a pas de projet de tests ni de pipeline CI dans ce repo actuellement.
 `appsettings.local.json` (écrit par l'assistant d'installation, gitignored) a
 priorité sur `appsettings.json` une fois l'installation terminée et ne doit
 jamais être committé.
+
+Il vit **dans la racine du stockage** (`data/` par défaut, ou le chemin réglé par
+`Storage:RootPath` — voir Configuration › Général › Système), aux côtés de `keys/`
+et `packages/` : tout ce qui est propre à une installation se trouve au même
+endroit, ce qui permet de la sauvegarder, la déplacer ou la monter sur un volume
+dédié d'un seul geste, et de mettre à jour le programme sans y toucher.
+
+Conséquence : `Storage:RootPath` doit rester dans `appsettings.json` (où l'écran
+Système l'écrit) ou dans une variable d'environnement `Storage__RootPath` — le
+chercher dans `appsettings.local.json` reviendrait à avoir besoin de la racine
+pour trouver la racine. Si le fichier est resté à l'ancien emplacement (à côté du
+binaire) alors qu'il manque au nouveau, GlpiNg refuse de démarrer avec un message
+indiquant quoi déplacer, plutôt que de repartir sur l'assistant d'installation
+par-dessus une base déjà remplie.
+
+> Sous Windows, `data` se résout vers le dossier source `Data/` déjà présent
+> (système de fichiers insensible à la casse) : les fichiers d'exécution
+> atterrissent donc dans `src/GlpiNg.Web/Data/`. Régler `Storage:RootPath` sur un
+> chemin explicite, hors de l'arborescence des sources, évite ce mélange.

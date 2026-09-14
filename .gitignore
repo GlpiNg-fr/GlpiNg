@@ -25,5 +25,9 @@ src/GlpiNg.Web/config-history.json
 .DS_Store
 Thumbs.db
 
-## Clés ASP.NET Data Protection générées au démarrage (ne doivent jamais être versionnées)
-src/GlpiNg.Web/Data/keys/
+## Racine du stockage (StoragePaths) : clés DataProtection, fragments de paquets, et
+## appsettings.local.json (déjà ignoré par son nom plus haut). Rien de tout cela ne se versionne.
+## Les deux orthographes sont couvertes : sous Windows, « data » se résout vers le dossier source
+## « Data/ » déjà présent, alors qu'un système sensible à la casse crée bien « data/ ».
+src/GlpiNg.Web/[Dd]ata/keys/
+src/GlpiNg.Web/[Dd]ata/packages/
