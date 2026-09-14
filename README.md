@@ -537,10 +537,32 @@ Endpoint POST unique dispatché sur un champ `action` :
 - `getJobs` : renvoie le prochain job de déploiement au format JSON GLPI-Agent
   (`jobs.checks/associatedFiles/actions`, fichiers indexés par hash SHA512)
 - `setStatus` : rapport d'avancement/résultat d'un job par l'agent
-- `getCollectJobs` : renvoie les collectes actives à exécuter (`getFromRegistry`,
-  `getFromWMI`, `findFile`), chacune portant un `_sid` qui identifie l'entrée
-- `setCollectAnswer` : enregistre les valeurs rapportées, visibles dans l'onglet
+- `getCollectJobs` / `setCollectAnswer` : variantes GlpiNg des collectes sur la
+  route unique, conservées pour un client qui les utiliserait
+
+La **tâche Collect d'un vrai GLPI-Agent ne passe pas par la route unique** : elle
+a son propre protocole, désormais implémenté tel quel.
+
+- `GET /inventory?action=getConfig&machineid=…` : renvoie un `schedule` dont
+  l'entrée `Collect` porte l'URL `remote` à interroger
+- `GET /inventory/collect?action=getJobs&machineid=…` : les collectes actives
+  (`getFromRegistry`, `getFromWMI`, `findFile`), chacune portant un `uuid` — que
+  l'agent exige et réémet — et un `_sid` de même valeur
+- `POST /inventory/collect` (`action=setAnswer`, `application/x-www-form-urlencoded`,
+  un résultat par requête) : enregistre les valeurs, visibles dans l'onglet
   « Informations de collecte » de la fiche du poste
+
+Route et verbes distincts parce que la tâche envoie `action=getJobs`, nom déjà pris
+par le déploiement, et qu'elle utilise le client « Fusion » de GLPI-Agent : GET avec
+paramètres en query string, POST form-urlencodé, et **pas d'en-tête
+`GLPI-Agent-ID`** — l'agent est donc reconnu par son `machineid`, qui vaut son
+`deviceid`.
+
+> **Prérequis côté agent.** La tâche `collect` est souvent installée sans être
+> activée, et le serveur **ne peut pas l'activer à distance** : le champ `tasks`
+> d'une réponse `contact` ne fait qu'enregistrer ce que le serveur sait faire, il
+> n'active rien. Si la fiche de l'agent affiche « Collecte (désactivée) »,
+> retirez-la de `no-task` ou ajoutez-la à `tasks` dans `agent.cfg`.
 - `GET /inventory/deploy/file/{sha512}` : téléchargement d'un fichier de
   package par son hash
 

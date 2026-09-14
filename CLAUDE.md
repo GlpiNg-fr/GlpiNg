@@ -128,6 +128,17 @@ restart — it's `MapWhen`-mounted conditionally rather than statically register
 Changes made from either store are tracked by `ConfigHistoryService`, called separately
 by each Razor page after a successful save.
 
+**Collect task protocol**: a real GLPI-Agent's Collect task does *not* speak the single-POST
+`action` convention. It calls `GET /inventory?action=getConfig`, reads `schedule[].remote`, then
+hits that URL with `action=getJobs` (GET, query string) and `action=setAnswer` (POST,
+`application/x-www-form-urlencoded`, one result per request) — via GLPI-Agent's "Fusion" HTTP
+client, which sends **no `GLPI-Agent-ID` header**, so the agent is matched on `machineid` (its
+`deviceid`). Jobs must carry a `uuid`; `_sid` is only echoed back when the job had one, so
+`StoreCollectAnswersAsync` falls back to `uuid`. The older `getCollectJobs`/`setCollectAnswer`
+actions are kept but no real agent emits them. Note the server cannot enable the task remotely:
+`tasks` in a contact answer only records server-side support, and a task missing from the agent's
+own `tasks`/`no-task` config never runs.
+
 **Loading a Computer with its collections**: always go through
 `InventoryImportService.WithInventoryCollections` (or copy its `AsSplitQuery()`), never a bare
 chain of collection `Include`s. EF Core emits a single SQL joining every included collection, so
