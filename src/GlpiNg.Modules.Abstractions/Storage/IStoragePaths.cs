@@ -24,6 +24,16 @@ public interface IStoragePaths
     string Packages { get; }
 
     /// <summary>
+    /// Fichier de configuration propre à l'installation (<c>appsettings.local.json</c> : chaîne de
+    /// connexion, état de l'assistant, clé de signature OAuth).
+    ///
+    /// Il est rangé ici avec le reste plutôt qu'à côté du binaire pour que déplacer ou sauvegarder
+    /// une installation ne demande qu'un geste. Corollaire : déplacer la racine impose de déplacer
+    /// ce fichier avec elle, sans quoi GlpiNg ne retrouve plus son installation.
+    /// </summary>
+    string LocalSettings { get; }
+
+    /// <summary>
     /// Crée le dossier s'il n'existe pas et renvoie son chemin. Les emplacements sont créés à la
     /// demande plutôt qu'au démarrage : une racine sur un partage réseau peut n'être disponible
     /// qu'après le lancement du service.

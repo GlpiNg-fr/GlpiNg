@@ -96,7 +96,16 @@ from the dictionary is treated as enabled.
 
 **Configuration**: `appsettings.local.json` is written by the AnthoDingo.Setup wizard
 post-install and takes priority over `appsettings.json`; it's gitignored and must
-never be committed. Most `/config` settings sections (see `ConfigSections/*.razor`) are
+never be committed. It lives **inside the storage root** (`StoragePaths.Root` — `data/`
+by default, or `Storage:RootPath`), next to `keys/` and `packages/`, so everything
+install-specific sits in one backup-able place. That ordering constraint is load-bearing
+in `Program.cs`: `StoragePaths` is built *before* the file is added to configuration, so
+`Storage:RootPath` must come from `appsettings.json`, env, or CLI — never from the local
+file, which would need the root to find the root. `EnsureLocalSettingsNotLeftBehind`
+throws at startup if the file is still at the old path (beside the binary) and missing
+from the new one, rather than silently redirecting to `/setup` over a populated database.
+On Windows, `data` resolves onto the existing `Data/` source folder (case-insensitive FS),
+so runtime files land in `src/GlpiNg.Web/Data/`; the `.gitignore` covers both spellings. Most `/config` settings sections (see `ConfigSections/*.razor`) are
 stored in the `AppSettings` table (one row per section, JSON-serialized) and read/written
 through `SettingsCacheService` — a singleton that keeps every section in an in-memory
 cache, so reads never hit the database and a save updates the DB row and the cache
