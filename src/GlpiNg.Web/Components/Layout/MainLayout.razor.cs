@@ -65,7 +65,7 @@ public partial class MainLayout : IDisposable
             new("Fournisseurs", Icon: "ti-truck"),
             new("Contacts", Icon: "ti-address-book"),
             new("Contrats", Icon: "ti-file-text"),
-            new("Documents", Icon: "ti-file"),
+            new("Documents", "/management/documents", "ti-file"),
             new("Lignes téléphoniques", Icon: "ti-phone-call"),
             new("Certificats", Icon: "ti-certificate"),
             new("Data centers", Icon: "ti-building-warehouse"),

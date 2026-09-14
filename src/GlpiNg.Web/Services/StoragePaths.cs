@@ -1,4 +1,4 @@
-using GlpiNg.Modules.Abstractions.Storage;
+﻿using GlpiNg.Modules.Abstractions.Storage;
 
 namespace GlpiNg.Web.Services;
 
@@ -44,6 +44,7 @@ public sealed class StoragePaths : IStoragePaths
         Root = ResolveRoot(configuredRootPath, contentRootPath);
         Keys = Path.Combine(Root, "keys");
         Packages = Path.Combine(Root, "packages");
+        Documents = Path.Combine(Root, "documents");
         LocalSettings = Path.Combine(Root, LocalSettingsFileName);
     }
 
@@ -63,6 +64,9 @@ public sealed class StoragePaths : IStoragePaths
         => Path.Combine(ResolveRoot(configuredRootPath, contentRootPath), LocalSettingsFileName);
 
     public string Root { get; }
+
+    /// <summary>Fichiers des documents (voir Models/Documents/Document.cs).</summary>
+    public string Documents { get; }
 
     /// <summary>Configuration propre à cette installation — voir <see cref="LocalSettingsFileName"/>.</summary>
     public string LocalSettings { get; }

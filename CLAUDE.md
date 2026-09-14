@@ -61,7 +61,14 @@ a plain class library referenced only by the host — never the reverse.
   plus URL-scheme filtering): never render article content as `MarkupString` any other way, and
   never store HTML — that renderer is the single place where user-authored content becomes markup.
 - `GlpiNg.Web` — the host: Blazor UI, the `/inventory` protocol controller, the
-  concrete `GlpiNgDbContext` (composed from module entities), auth, config, setup.
+  concrete `GlpiNgDbContext` (composed from module entities), auth, config, setup. It also
+  owns **Documents** (`Models/Documents`, `Services/Documents`, `/management/documents`), a
+  GLPI-shaped global entity: files are attached to any item through the polymorphic
+  `DocumentItem` (`ItemType` + `ItemId`, GLPI's own type names). Modules never touch that
+  model — they go through `Abstractions/Documents/IDocumentAttachments`, the way the
+  knowledge base's "Documents" tab does. Bytes live under `StoragePaths.Documents`, sharded
+  by SHA-256, so identical content is stored once; `/documents/{id}/download` always serves
+  `application/octet-stream` as an attachment, never the declared MIME type.
 
 **Module registration pattern**: each module exposes a single `AddXxxModule(...)`
 extension (e.g. `InventoryModuleServiceCollectionExtensions.AddInventoryModule`)
@@ -120,6 +127,14 @@ access, and needs a restart anyway; Swagger's toggle relies on
 restart — it's `MapWhen`-mounted conditionally rather than statically registered.
 Changes made from either store are tracked by `ConfigHistoryService`, called separately
 by each Razor page after a successful save.
+
+**GLPI text encoding**: many GLPI installs declare columns `latin1` while storing UTF-8,
+so imported text arrives as "ProcÃ©dure". Every string read from a GLPI database should go
+through `Import/GlpiText.Repair` (already wired into the knowledge-base import's
+`GetNullableString`). It reverses the decode via **Windows-1252** — MySQL's `latin1` is
+cp1252, which is where `’`, `€` and the dashes live — and only rewrites when the recovered
+bytes are valid UTF-8, so correct text is left alone. The admin and inventory importers
+read strings inline and are not yet wired to it.
 
 **GLPI MySQL import** (`GlpiMySqlImportService`, triggered via
 `POST /admin/import/glpi`): read-only, idempotent import from an existing GLPI MySQL

@@ -23,6 +23,9 @@ public interface IStoragePaths
     /// <summary>Fragments des fichiers de paquets de déploiement.</summary>
     string Packages { get; }
 
+    /// <summary>Fichiers des documents rattachés aux objets (voir <see cref="Documents.IDocumentAttachments"/>).</summary>
+    string Documents { get; }
+
     /// <summary>
     /// Fichier de configuration propre à l'installation (<c>appsettings.local.json</c> : chaîne de
     /// connexion, état de l'assistant, clé de signature OAuth).
