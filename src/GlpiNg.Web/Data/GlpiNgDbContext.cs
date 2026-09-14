@@ -4,6 +4,7 @@ using GlpiNg.Modules.Cron.Models;
 using GlpiNg.Modules.Deployment.Models;
 using GlpiNg.Modules.Inventory.Models;
 using GlpiNg.Modules.KnowledgeBase.Models;
+using GlpiNg.Web.Models.Documents;
 using GlpiNg.Web.Models;
 using GlpiNg.Web.Models.Notifications;
 using GlpiNg.Web.Models.ExternalLinks;
@@ -161,6 +162,10 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<KnowledgeBaseArticleRevision> KnowledgeBaseArticleRevisions => Set<KnowledgeBaseArticleRevision>();
     public DbSet<KnowledgeBaseArticleTarget> KnowledgeBaseArticleTargets => Set<KnowledgeBaseArticleTarget>();
     public DbSet<KnowledgeBaseArticleHistoryEntry> KnowledgeBaseArticleHistoryEntries => Set<KnowledgeBaseArticleHistoryEntry>();
+
+    public DbSet<Document> Documents => Set<Document>();
+    public DbSet<DocumentCategory> DocumentCategories => Set<DocumentCategory>();
+    public DbSet<DocumentItem> DocumentItems => Set<DocumentItem>();
 
     public DbSet<EventLogEntry> EventLogEntries => Set<EventLogEntry>();
 
@@ -975,6 +980,8 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
 
         ConfigureKnowledgeBase(modelBuilder);
 
+        ConfigureDocuments(modelBuilder);
+
         ConfigureEntityScoping(modelBuilder);
     }
 
@@ -1047,6 +1054,54 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
         // La liste est rangée par catégorie à chaque ouverture de la page.
         modelBuilder.Entity<KnowledgeBaseArticle>()
             .HasIndex(article => article.CategoryId);
+    }
+
+    /// <summary>
+    /// Documents (voir Models/Documents/Document.cs) : arborescence des catégories, fiches et
+    /// rattachements polymorphes.
+    /// </summary>
+    private static void ConfigureDocuments(ModelBuilder modelBuilder)
+    {
+        // Supprimer une catégorie ne doit pas emporter les documents qu'elle rangeait — même
+        // choix que pour les catégories de la base de connaissances.
+        modelBuilder.Entity<DocumentCategory>()
+            .HasOne(category => category.Parent)
+            .WithMany(category => category.Children)
+            .HasForeignKey(category => category.ParentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Document>()
+            .HasOne(document => document.Category)
+            .WithMany(category => category.Documents)
+            .HasForeignKey(document => document.CategoryId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Un rattachement n'a pas d'existence sans son document : il part avec lui. L'objet
+        // rattaché, lui, n'est pas contraint (référence polymorphe) — supprimer un article laisse
+        // donc une ligne orpheline, que DocumentService ignore et que rien ne fait remonter.
+        modelBuilder.Entity<DocumentItem>()
+            .HasOne(link => link.Document)
+            .WithMany(document => document.Items)
+            .HasForeignKey(link => link.DocumentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Un même document ne se rattache qu'une fois au même objet.
+        modelBuilder.Entity<DocumentItem>()
+            .HasIndex(link => new { link.DocumentId, link.ItemType, link.ItemId })
+            .IsUnique();
+
+        // Lecture de référence : « les documents de cet objet », faite à chaque ouverture d'une
+        // fiche qui en porte.
+        modelBuilder.Entity<DocumentItem>()
+            .HasIndex(link => new { link.ItemType, link.ItemId });
+
+        // Déduplication par empreinte : UploadAsync cherche systématiquement un contenu déjà connu.
+        modelBuilder.Entity<Document>()
+            .HasIndex(document => document.Sha256);
+
+        // Idempotence de l'import.
+        modelBuilder.Entity<Document>()
+            .HasIndex(document => document.SourceGlpiId);
     }
 
     /// <summary>

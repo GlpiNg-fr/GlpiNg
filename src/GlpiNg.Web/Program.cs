@@ -8,6 +8,7 @@ using AnthoDingo.Setup;
 using GlpiNg.Modules.Abstractions.Cron;
 using GlpiNg.Modules.Abstractions.Deployment;
 using GlpiNg.Modules.Abstractions.Directory;
+using GlpiNg.Modules.Abstractions.Documents;
 using GlpiNg.Modules.Abstractions.Entities;
 using GlpiNg.Modules.Abstractions.Import;
 using GlpiNg.Modules.Abstractions.Preferences;
@@ -23,6 +24,7 @@ using GlpiNg.Web.Import;
 using GlpiNg.Web.Middleware;
 using GlpiNg.Web.Options;
 using GlpiNg.Web.Services;
+using GlpiNg.Web.Services.Documents;
 using GlpiNg.Web.Services.Notifications;
 using GlpiNg.Modules.Abstractions.ExternalLinks;
 using GlpiNg.Web.Services.ExternalLinks;
@@ -371,6 +373,17 @@ public class Program
             // Émission des jetons OAuth2 (voir /oauth2/token, Controllers.OAuthController) pour
             // les clients gérés depuis /config/oauth-clients.
             builder.Services.AddSingleton<OAuthTokenIssuer>();
+
+            // Documents (voir Models/Documents) : entité de l'hôte, rendue aux modules via
+            // IDocumentAttachments — c'est ce contrat que la base de connaissances utilise pour
+            // son onglet « Documents », sans jamais voir le modèle ni le stockage sur disque.
+            // DocumentStorageService ne touche que le disque (IStoragePaths est un singleton) :
+            // il peut l'être aussi. DocumentService, lui, consomme la fabrique de DbContext, qui
+            // est enregistrée en scoped ici — d'où une portée scoped, comme les autres services
+            // qui lisent la base.
+            builder.Services.AddSingleton<DocumentStorageService>();
+            builder.Services.AddScoped<DocumentService>();
+            builder.Services.AddScoped<IDocumentAttachments>(sp => sp.GetRequiredService<DocumentService>());
 
             // Cache mémoire des sections de réglages /config (Valeurs par défaut, Parc, Assistance,
             // Modules, ...), lues/écrites dans la table AppSettings plutôt que dans appsettings.json

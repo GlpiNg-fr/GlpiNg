@@ -313,14 +313,42 @@ connaissances » de GLPI.
   articles les plus consultés » ne voudrait plus rien dire.
 - Un **rapport** « Base de connaissances » (voir ci-dessous) montre les articles par
   catégorie, les plus consultés et ceux que personne n'ouvre.
+- **Documents** : onglet de la fiche pour téléverser un fichier, rattacher un document déjà
+  présent, le détacher ou le télécharger — voir la section « Documents » ci-dessous. Détacher
+  ne supprime pas : un document est une fiche globale, partageable entre plusieurs objets.
 
 Limites connues : l'éditeur est un éditeur **Markdown** (barre d'outils et aperçu), pas
-un WYSIWYG, et le HTML n'y est jamais interprété ; il n'y a **ni commentaires, ni pièces
-jointes, ni corbeille** (la suppression d'un article est définitive, après confirmation)
-— les images doivent donc être hébergées ailleurs et référencées par URL, faute de
-gestion documentaire (voir « Manques transverses ») ; et le drapeau FAQ sert de filtre et
-de marquage éditorial plutôt que de publication vers une interface simplifiée, qui
-n'existe pas encore.
+un WYSIWYG, et le HTML n'y est jamais interprété ; il n'y a **ni commentaires, ni
+corbeille** (la suppression d'un article est définitive, après confirmation) ; les images
+du corps de l'article doivent être référencées par URL, le Markdown n'ayant pas de moyen
+de pointer une pièce jointe — celles-ci s'affichent dans l'onglet « Documents », pas dans
+le texte ; et le drapeau FAQ sert de filtre et de marquage éditorial plutôt que de
+publication vers une interface simplifiée, qui n'existe pas encore.
+
+### Documents (`/management/documents`)
+
+Équivalent de « Gestion > Documents » de GLPI, et **entité de l'hôte** plutôt que d'un
+module : comme dans GLPI, un document se rattache à n'importe quel type d'objet via une
+référence polymorphe (`DocumentItem` : `ItemType` + `ItemId`, les noms de types étant ceux
+de GLPI — `KnowbaseItem`, `Computer`). Seuls les articles de la base de connaissances
+l'exploitent pour l'instant ; un module qui voudra attacher des fichiers passera par le
+contrat `Abstractions/Documents/IDocumentAttachments`, sans voir ni le modèle ni le disque.
+
+- **Stockage** : sous `documents/` dans la racine de stockage, rangé par empreinte SHA-256
+  sur deux niveaux (`a/ab/abcdef…`), comme les fragments de paquets de déploiement. Deux
+  documents de contenu identique partagent donc le même fichier — téléverser deux fois le
+  même mode d'emploi ne crée qu'une fiche, et un import répété est inoffensif.
+- **Téléchargement** : `/documents/{id}/download`, toujours en pièce jointe et en
+  `application/octet-stream` quel que soit le type déclaré. Un fichier HTML ou SVG rendu en
+  ligne s'exécuterait dans l'origine de l'application, avec le cookie de session du lecteur.
+- **Suppression** : depuis l'écran de gestion, et définitive — elle retire le document de
+  tous les objets qui le portaient. Le fichier n'est effacé du disque que si plus aucune
+  fiche ne partage la même empreinte.
+- **Catégories** arborescentes, reprises de `glpi_documentcategories` à l'import.
+
+Limites connues : pas d'écran de fiche par document (l'écran de gestion liste, téléverse,
+télécharge et supprime), pas de vignettes ni d'aperçu, et le rattachement ne se fait que
+depuis les objets qui le proposent — aujourd'hui les seuls articles.
 
 ### Rapports (`/tools/reports`)
 
@@ -560,10 +588,27 @@ les entités), articles (`glpi_knowbaseitems` : sujet, contenu, FAQ, compteur de
 consultations, auteur, dates, période de visibilité `begin_date`/`end_date`),
 cibles de visibilité (`glpi_knowbaseitems_users`/`_groups`/`_profiles`/`_entities`,
 avec leur portée `entities_id`/`is_recursive`) et révisions
-(`glpi_knowbaseitems_revisions`, GLPI ≥ 9.2). Les colonnes apparues au fil des
-versions sont détectées via `information_schema` : sur une base plus ancienne,
-elles valent `NULL` et l'article arrive simplement sans borne ni portée.
-Idempotent par `SourceGlpiId` sur la catégorie et sur l'article.
+(`glpi_knowbaseitems_revisions`, GLPI ≥ 9.2), et **documents** rattachés aux
+articles (`glpi_documents`, `glpi_documents_items` en itemtype `KnowbaseItem`,
+`glpi_documentcategories`). Les colonnes apparues au fil des versions sont
+détectées via `information_schema` : sur une base plus ancienne, elles valent
+`NULL` et l'article arrive simplement sans borne ni portée. Idempotent par
+`SourceGlpiId` sur la catégorie, l'article et le document.
+
+Le **texte est réparé à la lecture** : beaucoup d'installations GLPI ont des
+colonnes déclarées `latin1` qui contiennent en réalité de l'UTF-8, ce qui fait
+arriver les articles en « ProcÃ©dure » ou « Câ€™est ». `Import/GlpiText` refait le
+chemin à l'envers (ré-encodage en Windows-1252 — le « latin1 » de MySQL en est —
+puis relecture en UTF-8) et ne corrige que si les octets retrouvés forment de
+l'UTF-8 valide, ce qui laisse intact un texte déjà correct.
+
+Les **fichiers des documents ne sont pas en base** : `glpi_documents.filepath` ne
+donne qu'un chemin relatif au dossier `files/` de GLPI. L'écran d'import propose
+donc un champ facultatif pour ce dossier (chemin local ou partage réseau, lisible
+par le service GlpiNg). Laissé vide ou inaccessible, les fiches et les
+rattachements sont créés sans contenu téléchargeable, comptés à part et signalés
+dans le compte rendu ; téléverser le fichier plus tard depuis l'article retombe
+sur la même empreinte et complète la fiche existante.
 
 Deux points à connaître avant de le lancer :
 
@@ -721,8 +766,8 @@ manques suivants sont connus et assumés à ce stade.
   flux RSS). Les rapports et la base de connaissances existent (voir leurs sections
   ci-dessus) ; côté rapports, ceux de GLPI qui portent sur des modules absents —
   contrats, licences, financier — n'ont pas d'équivalent, et côté base de
-  connaissances, le contenu est du Markdown (pas de WYSIWYG), sans commentaires ni pièces
-  jointes.
+  connaissances, le contenu est du Markdown (pas de WYSIWYG) et sans commentaires — les
+  pièces jointes, elles, existent (voir « Documents »).
 - **Administration** : formulaires.
 - **Configuration** : actifs personnalisés, niveaux de services (SLA/OLA),
   unicité des champs, collecteurs, plugins.

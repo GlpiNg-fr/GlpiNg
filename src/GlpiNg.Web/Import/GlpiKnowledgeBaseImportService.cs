@@ -2,7 +2,9 @@
 using GlpiNg.Modules.Abstractions.Import;
 using GlpiNg.Modules.KnowledgeBase.Models;
 using GlpiNg.Web.Data;
+using GlpiNg.Web.Models.Documents;
 using GlpiNg.Web.Services;
+using GlpiNg.Web.Services.Documents;
 using Microsoft.EntityFrameworkCore;
 using MySqlConnector;
 
@@ -32,12 +34,21 @@ namespace GlpiNg.Web.Import;
 /// les colonnes réellement présentes (information_schema), même principe que
 /// <c>GlpiMySqlImportService</c>.
 /// </summary>
-public sealed class GlpiKnowledgeBaseImportService(GlpiNgDbContext db, EntityTreeCache entityTree)
+public sealed class GlpiKnowledgeBaseImportService(
+    GlpiNgDbContext db,
+    EntityTreeCache entityTree,
+    DocumentStorageService documentStorage)
     : IGlpiKnowledgeBaseImportService
 {
     private const string CategoriesTable = "glpi_knowbaseitemcategories";
     private const string ArticlesTable = "glpi_knowbaseitems";
     private const string RevisionsTable = "glpi_knowbaseitems_revisions";
+    private const string DocumentsTable = "glpi_documents";
+    private const string DocumentItemsTable = "glpi_documents_items";
+    private const string DocumentCategoriesTable = "glpi_documentcategories";
+
+    /// <summary>Nom que GLPI donne aux articles dans ses références polymorphes.</summary>
+    private const string GlpiArticleItemType = "KnowbaseItem";
 
     /// <summary>Tables de visibilité de GLPI et type d'acteur correspondant côté GlpiNg.</summary>
     private static readonly (string Table, string ForeignKey, PrincipalKind Kind)[] TargetTables =
@@ -70,6 +81,8 @@ public sealed class GlpiKnowledgeBaseImportService(GlpiNgDbContext db, EntityTre
         {
             analysis.TargetsCount += await CountAsync(connection, table, cancellationToken);
         }
+
+        analysis.DocumentsCount = await CountDocumentLinksAsync(connection, cancellationToken);
 
         return analysis;
     }
@@ -124,6 +137,12 @@ public sealed class GlpiKnowledgeBaseImportService(GlpiNgDbContext db, EntityTre
         if (selection.ImportRevisions)
         {
             await ImportRevisionsAsync(connection, articleMap, result, progress, cancellationToken);
+        }
+
+        if (selection.ImportDocuments)
+        {
+            await ImportDocumentsAsync(connection, articleMap, entityMap, rootEntityId, selection.GlpiFilesPath,
+                result, progress, cancellationToken);
         }
 
         return result;
@@ -472,6 +491,373 @@ public sealed class GlpiKnowledgeBaseImportService(GlpiNgDbContext db, EntityTre
         }
     }
 
+    // ---- Documents ------------------------------------------------------------------------------
+
+    /// <summary>
+    /// Nombre de documents rattachés à un article dans la base source. Compté sur la table de
+    /// liaison et non sur <c>glpi_documents</c> : l'import ne reprend que ce qui sert à la base de
+    /// connaissances, pas le fonds documentaire entier d'une installation GLPI.
+    /// </summary>
+    private static async Task<int> CountDocumentLinksAsync(MySqlConnection connection, CancellationToken ct)
+    {
+        if (!await TableExistsAsync(connection, DocumentItemsTable, ct))
+        {
+            return 0;
+        }
+
+        await using MySqlCommand command = new(
+            $"SELECT COUNT(*) FROM `{DocumentItemsTable}` WHERE itemtype = @itemtype", connection);
+        command.Parameters.AddWithValue("@itemtype", GlpiArticleItemType);
+
+        object? value = await command.ExecuteScalarAsync(ct);
+        return value is null or DBNull ? 0 : Convert.ToInt32(value);
+    }
+
+    /// <summary>
+    /// Reprend les documents rattachés aux articles, leurs catégories, et — si le dossier
+    /// <c>files/</c> de GLPI est joignable — le contenu des fichiers.
+    ///
+    /// GLPI ne stocke pas les fichiers en base : <c>glpi_documents.filepath</c> ne donne qu'un
+    /// chemin relatif à ce dossier. Sans lui, l'import crée donc des fiches sans contenu plutôt
+    /// que de renoncer — perdre le rattachement ferait disparaître l'information « cet article
+    /// s'accompagne de ce mode d'emploi », qui vaut mieux que rien. Elles sont comptées à part et
+    /// réparables : téléverser le fichier depuis la fiche de l'article retombe sur la même
+    /// empreinte et complète la fiche existante (voir DocumentService.UploadAsync).
+    /// </summary>
+    private async Task ImportDocumentsAsync(
+        MySqlConnection connection, Dictionary<int, int> articleMap, Dictionary<int, int> entityMap,
+        int? rootEntityId, string? glpiFilesPath, GlpiKnowledgeBaseImportResult result,
+        IProgress<GlpiImportProgress>? progress, CancellationToken ct)
+    {
+        if (!await TableExistsAsync(connection, DocumentsTable, ct) ||
+            !await TableExistsAsync(connection, DocumentItemsTable, ct))
+        {
+            result.Warnings.Add($"Table « {DocumentsTable} » ou « {DocumentItemsTable} » absente : aucun document repris.");
+            return;
+        }
+
+        bool hasFiles = !string.IsNullOrWhiteSpace(glpiFilesPath) && Directory.Exists(glpiFilesPath);
+
+        if (!string.IsNullOrWhiteSpace(glpiFilesPath) && !hasFiles)
+        {
+            result.Warnings.Add(
+                $"Dossier « {glpiFilesPath} » introuvable : les documents sont repris sans leur fichier. "
+                + "Vérifiez le chemin (il doit désigner le dossier files/ de GLPI) et les droits de lecture du service.");
+        }
+
+        Dictionary<int, int> documentCategoryMap =
+            await ImportDocumentCategoriesAsync(connection, entityMap, rootEntityId, ct);
+
+        // Seuls les documents réellement rattachés à un article importé sont repris.
+        Dictionary<int, List<int>> articlesByDocument = await LoadDocumentLinksAsync(connection, articleMap, ct);
+
+        if (articlesByDocument.Count == 0)
+        {
+            return;
+        }
+
+        HashSet<string> columns = await GetColumnsAsync(connection, DocumentsTable, ct);
+
+        string sql = $"""
+            SELECT id,
+                   {ColumnOrNull(columns, "name")},
+                   {ColumnOrNull(columns, "filename")},
+                   {ColumnOrNull(columns, "filepath")},
+                   {ColumnOrNull(columns, "mime")},
+                   {ColumnOrNull(columns, "sha1sum")},
+                   {ColumnOrNull(columns, "link")},
+                   {ColumnOrNull(columns, "comment")},
+                   {ColumnOrNull(columns, "documentcategories_id")},
+                   {ColumnOrNull(columns, "entities_id")},
+                   {ColumnOrNull(columns, "is_recursive")}
+            FROM `{DocumentsTable}`
+            WHERE id IN ({string.Join(",", articlesByDocument.Keys)})
+            """;
+
+        Dictionary<int, Document> existing = await db.Documents
+            .Where(document => document.SourceGlpiId != null)
+            .ToDictionaryAsync(document => document.SourceGlpiId!.Value, ct);
+
+        // Les rattachements déjà en base, pour ne pas retomber sur l'index d'unicité au second import.
+        List<DocumentItem> existingLinks = await db.DocumentItems
+            .Where(link => link.ItemType == DocumentItemTypes.KnowledgeBaseArticle)
+            .ToListAsync(ct);
+
+        HashSet<(int DocumentId, int ArticleId)> knownLinks =
+            [.. existingLinks.Select(link => (link.DocumentId, link.ItemId))];
+
+        int seen = 0;
+
+        // Chemin GLPI d'origine par document, retenu le temps de la lecture : la copie du fichier
+        // est différée après la boucle, pour ne pas lire le disque tant que le lecteur MySQL tient
+        // la connexion ouverte.
+        List<(Document Document, string? SourceFilePath, List<int> ArticleIds)> pending = [];
+
+        await foreach (MySqlDataReader reader in ReadAsync(connection, sql, ct))
+        {
+            progress?.Report(new GlpiImportProgress(GlpiImportPhases.KnowledgeBaseDocuments, ++seen));
+
+            int sourceId = reader.GetInt32("id");
+            string fileName = GetNullableString(reader, "filename") ?? $"document-{sourceId}";
+
+            if (!existing.TryGetValue(sourceId, out Document? document))
+            {
+                document = new Document
+                {
+                    Name = GetNullableString(reader, "name") ?? fileName,
+                    FileName = fileName,
+                    // Renseignés plus bas, une fois le fichier lu — ou marqués absents.
+                    Sha256 = string.Empty,
+                    StoragePath = string.Empty,
+                    SourceGlpiId = sourceId,
+                    CreatedAt = DateTime.UtcNow,
+                };
+
+                db.Documents.Add(document);
+                existing[sourceId] = document;
+            }
+            else
+            {
+                document.Name = GetNullableString(reader, "name") ?? document.Name;
+                document.FileName = fileName;
+            }
+
+            document.MimeType = GetNullableString(reader, "mime");
+            document.Comment = GetNullableString(reader, "comment");
+            document.Link = GetNullableString(reader, "link");
+            document.SourceSha1 = GetNullableString(reader, "sha1sum");
+            document.EntityId = ResolveEntity(reader, entityMap, rootEntityId);
+            document.IsRecursive = GetNullableInt(reader, "is_recursive") == 1;
+
+            if (GetNullableInt(reader, "documentcategories_id") is int sourceCategoryId
+                && documentCategoryMap.TryGetValue(sourceCategoryId, out int categoryId))
+            {
+                document.CategoryId = categoryId;
+            }
+
+            pending.Add((document, GetNullableString(reader, "filepath"), articlesByDocument[sourceId]));
+        }
+
+        foreach ((Document document, string? sourceFilePath, List<int> articleIds) in pending)
+        {
+            await CopyDocumentContentAsync(document, sourceFilePath, hasFiles ? glpiFilesPath : null, result, ct);
+
+            foreach (int articleId in articleIds)
+            {
+                if (document.Id != 0 && knownLinks.Contains((document.Id, articleId)))
+                {
+                    continue;
+                }
+
+                // Posé par la navigation : l'identifiant du document n'est pas encore connu pour
+                // une fiche créée à l'instant, et EF s'en charge à l'enregistrement.
+                document.Items.Add(new DocumentItem
+                {
+                    ItemType = DocumentItemTypes.KnowledgeBaseArticle,
+                    ItemId = articleId,
+                });
+
+                result.DocumentLinksImported++;
+            }
+
+            result.DocumentsImported++;
+        }
+
+        await db.SaveChangesAsync(ct);
+
+        if (result.DocumentsWithoutContent > 0)
+        {
+            result.Warnings.Add(
+                $"{result.DocumentsWithoutContent} document(s) repris sans leur fichier : "
+                + (hasFiles
+                    ? "le fichier n'a pas été trouvé dans le dossier files/ indiqué."
+                    : "le dossier files/ de GLPI n'a pas été renseigné.")
+                + " Les fiches sont créées et rattachées, mais pas téléchargeables ; téléverser le fichier "
+                + "depuis l'article complète la fiche existante.");
+        }
+    }
+
+    /// <summary>
+    /// Copie le fichier depuis le dossier <c>files/</c> de GLPI vers la racine de stockage, et
+    /// renseigne empreinte, taille et chemin. Marque la fiche « sans contenu » si le fichier n'est
+    /// pas lisible, plutôt que de faire échouer l'import entier pour un document manquant.
+    /// </summary>
+    private async Task CopyDocumentContentAsync(
+        Document document, string? sourceFilePath, string? glpiFilesPath,
+        GlpiKnowledgeBaseImportResult result, CancellationToken ct)
+    {
+        // Déjà repris avec son contenu lors d'un passage précédent : ne pas relire le disque.
+        if (document.Id != 0 && !document.IsContentMissing && document.Sha256.Length > 0)
+        {
+            return;
+        }
+
+        if (glpiFilesPath is null || string.IsNullOrWhiteSpace(sourceFilePath))
+        {
+            MarkContentMissing(document, result);
+            return;
+        }
+
+        // Le chemin vient de la base : il est confiné sous le dossier indiqué, sans quoi un
+        // « ../../ » stocké côté GLPI ferait lire n'importe quel fichier du serveur.
+        string root = Path.TrimEndingDirectorySeparator(Path.GetFullPath(glpiFilesPath));
+        string fullPath = Path.GetFullPath(Path.Combine(root, sourceFilePath.Replace('\\', '/')));
+
+        if (!fullPath.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.Ordinal)
+            || !File.Exists(fullPath))
+        {
+            MarkContentMissing(document, result);
+            return;
+        }
+
+        try
+        {
+            await using FileStream source = File.OpenRead(fullPath);
+            (string sha256, long size, string storagePath) = await documentStorage.SaveAsync(source, ct);
+
+            document.Sha256 = sha256;
+            document.SizeBytes = size;
+            document.StoragePath = storagePath;
+            document.IsContentMissing = false;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            MarkContentMissing(document, result);
+        }
+    }
+
+    /// <summary>
+    /// Fiche sans fichier. Une empreinte reste obligatoire (colonne requise, et l'unicité du
+    /// contenu s'appuie dessus) : elle est dérivée de l'identifiant GLPI, avec un préfixe littéral
+    /// qui la rend impossible à confondre avec un vrai SHA-256 et donc à dédupliquer par erreur.
+    /// </summary>
+    private static void MarkContentMissing(Document document, GlpiKnowledgeBaseImportResult result)
+    {
+        if (document.IsContentMissing && document.Sha256.Length > 0)
+        {
+            return;
+        }
+
+        document.Sha256 = $"missing:glpi-{document.SourceGlpiId}";
+        document.StoragePath = string.Empty;
+        document.SizeBytes = 0;
+        document.IsContentMissing = true;
+
+        result.DocumentsWithoutContent++;
+    }
+
+    /// <summary>Rattachements document → articles importés, en identifiants GLPI côté document.</summary>
+    private static async Task<Dictionary<int, List<int>>> LoadDocumentLinksAsync(
+        MySqlConnection connection, Dictionary<int, int> articleMap, CancellationToken ct)
+    {
+        Dictionary<int, List<int>> byDocument = [];
+
+        await using MySqlCommand command = new(
+            $"SELECT documents_id, items_id FROM `{DocumentItemsTable}` WHERE itemtype = @itemtype", connection);
+        command.Parameters.AddWithValue("@itemtype", GlpiArticleItemType);
+
+        await using MySqlDataReader reader = await command.ExecuteReaderAsync(ct);
+
+        while (await reader.ReadAsync(ct))
+        {
+            int sourceDocumentId = reader.GetInt32("documents_id");
+            int sourceArticleId = reader.GetInt32("items_id");
+
+            // Article non importé (case « Articles » décochée, ou article absent) : le
+            // rattachement n'a personne à qui s'accrocher.
+            if (!articleMap.TryGetValue(sourceArticleId, out int articleId))
+            {
+                continue;
+            }
+
+            if (!byDocument.TryGetValue(sourceDocumentId, out List<int>? articles))
+            {
+                byDocument[sourceDocumentId] = articles = [];
+            }
+
+            if (!articles.Contains(articleId))
+            {
+                articles.Add(articleId);
+            }
+        }
+
+        return byDocument;
+    }
+
+    /// <summary>
+    /// Catégories de documents (<c>glpi_documentcategories</c>). Arborescentes comme celles de la
+    /// base de connaissances, et reconstruites de la même façon : à plat d'abord, parents ensuite,
+    /// une fille pouvant précéder sa mère dans la table.
+    /// </summary>
+    private async Task<Dictionary<int, int>> ImportDocumentCategoriesAsync(
+        MySqlConnection connection, Dictionary<int, int> entityMap, int? rootEntityId, CancellationToken ct)
+    {
+        if (!await TableExistsAsync(connection, DocumentCategoriesTable, ct))
+        {
+            return [];
+        }
+
+        HashSet<string> columns = await GetColumnsAsync(connection, DocumentCategoriesTable, ct);
+
+        string sql = $"""
+            SELECT id,
+                   {ColumnOrNull(columns, "name")},
+                   {ColumnOrNull(columns, "comment")},
+                   {ColumnOrNull(columns, "documentcategories_id")},
+                   {ColumnOrNull(columns, "entities_id")},
+                   {ColumnOrNull(columns, "is_recursive")}
+            FROM `{DocumentCategoriesTable}`
+            """;
+
+        Dictionary<int, DocumentCategory> existing = await db.DocumentCategories
+            .Where(category => category.SourceGlpiId != null)
+            .ToDictionaryAsync(category => category.SourceGlpiId!.Value, ct);
+
+        Dictionary<int, int> parentBySourceId = [];
+
+        await foreach (MySqlDataReader reader in ReadAsync(connection, sql, ct))
+        {
+            int sourceId = reader.GetInt32("id");
+            string name = GetNullableString(reader, "name") ?? $"Catégorie {sourceId}";
+
+            if (!existing.TryGetValue(sourceId, out DocumentCategory? category))
+            {
+                category = new DocumentCategory { Name = name, SourceGlpiId = sourceId };
+                db.DocumentCategories.Add(category);
+                existing[sourceId] = category;
+            }
+            else
+            {
+                category.Name = name;
+            }
+
+            category.Comment = GetNullableString(reader, "comment");
+            category.EntityId = ResolveEntity(reader, entityMap, rootEntityId);
+            category.IsRecursive = GetNullableInt(reader, "is_recursive") == 1;
+
+            if (GetNullableInt(reader, "documentcategories_id") is int parentSourceId && parentSourceId > 0)
+            {
+                parentBySourceId[sourceId] = parentSourceId;
+            }
+        }
+
+        await db.SaveChangesAsync(ct);
+
+        foreach ((int sourceId, int parentSourceId) in parentBySourceId)
+        {
+            if (existing.TryGetValue(sourceId, out DocumentCategory? category)
+                && existing.TryGetValue(parentSourceId, out DocumentCategory? parent)
+                && category.Id != parent.Id)
+            {
+                category.ParentId = parent.Id;
+            }
+        }
+
+        await db.SaveChangesAsync(ct);
+
+        return existing.ToDictionary(entry => entry.Key, entry => entry.Value.Id);
+    }
+
     // ---- Révisions ----------------------------------------------------------------------------
 
     private async Task ImportRevisionsAsync(
@@ -633,6 +1019,13 @@ public sealed class GlpiKnowledgeBaseImportService(GlpiNgDbContext db, EntityTre
         }
 
         string value = reader.GetValue(ordinal).ToString() ?? string.Empty;
+
+        // Toute chaîne venue de GLPI passe par le réparateur : les colonnes d'une base ancienne
+        // sont déclarées latin1 tout en contenant de l'UTF-8, et les articles arrivent alors en
+        // « ProcÃ©dure ». Fait ici plutôt qu'au cas par cas pour qu'aucune lecture n'y échappe —
+        // sujets, contenus, noms de catégories, commentaires et révisions y passent tous.
+        value = GlpiText.Repair(value) ?? string.Empty;
+
         return string.IsNullOrWhiteSpace(value) ? null : value;
     }
 
