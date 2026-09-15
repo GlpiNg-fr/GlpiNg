@@ -1,3 +1,4 @@
+using GlpiNg.Modules.Abstractions.Documents;
 using GlpiNg.Modules.Abstractions.Entities;
 
 namespace GlpiNg.Web.Models.Documents;
@@ -145,18 +146,4 @@ public class DocumentItem
     public int ItemId { get; set; }
 
     public DateTime AttachedAt { get; set; } = DateTime.UtcNow;
-}
-
-/// <summary>
-/// Noms de types rattachables, alignés sur ceux de GLPI. Constantes plutôt qu'une énumération :
-/// la colonne stocke du texte pour rester ouverte aux types qu'un module ajoutera, et une
-/// énumération obligerait à recompiler l'hôte pour chacun.
-/// </summary>
-public static class DocumentItemTypes
-{
-    /// <summary>Article de la base de connaissances (<c>KnowbaseItem</c> dans GLPI).</summary>
-    public const string KnowledgeBaseArticle = "KnowbaseItem";
-
-    /// <summary>Ordinateur du parc.</summary>
-    public const string Computer = "Computer";
 }

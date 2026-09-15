@@ -1,4 +1,5 @@
 ﻿using GlpiNg.Modules.Abstractions.Directory;
+using GlpiNg.Modules.Abstractions.Documents;
 using GlpiNg.Modules.Abstractions.Import;
 using GlpiNg.Modules.Abstractions.Storage;
 using GlpiNg.Modules.KnowledgeBase.Models;
@@ -49,7 +50,7 @@ public sealed class GlpiKnowledgeBaseImportService(
     private const string DocumentCategoriesTable = "glpi_documentcategories";
 
     /// <summary>Nom que GLPI donne aux articles dans ses références polymorphes.</summary>
-    private const string GlpiArticleItemType = "KnowbaseItem";
+    private const string GlpiArticleItemType = DocumentItemTypes.KnowledgeBaseArticle;
 
     /// <summary>Tables de visibilité de GLPI et type d'acteur correspondant côté GlpiNg.</summary>
     private static readonly (string Table, string ForeignKey, PrincipalKind Kind)[] TargetTables =
@@ -596,6 +597,17 @@ public sealed class GlpiKnowledgeBaseImportService(
 
         if (articlesByDocument.Count == 0)
         {
+            // Sortir en silence laissait croire l'import réussi alors qu'il n'avait rien fait, et
+            // ne disait pas laquelle des deux causes s'appliquait.
+            int totalLinks = await CountDocumentLinksAsync(connection, ct);
+
+            result.Warnings.Add(totalLinks == 0
+                ? $"Aucun document rattaché à un article dans la base source : « {DocumentItemsTable} » "
+                  + $"ne contient aucune ligne d'itemtype « {GlpiArticleItemType} »."
+                : $"{totalLinks} rattachement(s) document/article trouvé(s) dans la base source, mais aucun "
+                  + "article correspondant n'a été importé. Cochez « Articles » et relancez : un "
+                  + "rattachement ne peut se poser que sur un article déjà repris.");
+
             return;
         }
 
