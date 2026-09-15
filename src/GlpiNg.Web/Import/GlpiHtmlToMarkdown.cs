@@ -89,6 +89,26 @@ public static class GlpiHtmlToMarkdown
     private const int MaxUnescapePasses = 3;
 
     /// <summary>
+    /// Éléments HTML dont la présence trahit un contenu resté en HTML.
+    ///
+    /// Une liste nommée, et non « tout ce qui ressemble à une balise » : un article qui montre
+    /// légitimement <c>&lt;VirtualHost *:80&gt;</c> ou <c>&lt;stdio.h&gt;</c> ne doit pas être pris
+    /// pour du HTML, puis reconverti — ce qui effacerait son exemple.
+    /// </summary>
+    private static readonly Regex KnownHtmlElement = new(
+        @"</?(?:p|div|span|br|ol|ul|li|table|thead|tbody|tfoot|tr|td|th|strong|b|em|i|u|s|a|img|h[1-6]|pre|code|blockquote|font|hr|sup|sub)(?:\s[^>]*)?/?>",
+        RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+    /// <summary>
+    /// Vrai si <paramref name="content"/> porte encore du HTML.
+    ///
+    /// Sert à retrouver les articles repris avant que la conversion ne fonctionne, pour les
+    /// reconvertir sur place — voir <c>KnowledgeBaseHtmlReconversionCronTask</c>.
+    /// </summary>
+    public static bool ContainsHtml(string? content)
+        => !string.IsNullOrEmpty(content) && KnownHtmlElement.IsMatch(content);
+
+    /// <summary>
     /// Markdown équivalent, ou chaîne vide si l'article n'avait pas de réponse.
     ///
     /// Une conversion qui échoue ne fait pas échouer l'import : on retombe sur le texte dépouillé
