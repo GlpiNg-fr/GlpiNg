@@ -99,14 +99,27 @@ public static class GlpiHtmlToMarkdown
         @"</?(?:p|div|span|br|ol|ul|li|table|thead|tbody|tfoot|tr|td|th|strong|b|em|i|u|s|a|img|h[1-6]|pre|code|blockquote|font|hr|sup|sub)(?:\s[^>]*)?/?>",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+    /// <summary>Les mêmes éléments, mais échappés (<c>&amp;lt;ol&amp;gt;</c>).</summary>
+    private static readonly Regex KnownEscapedHtmlElement = new(
+        @"&(?:amp;)*lt;/?(?:p|div|span|br|ol|ul|li|table|thead|tbody|tfoot|tr|td|th|strong|b|em|i|u|s|a|img|h[1-6]|pre|code|blockquote|font|hr|sup|sub)(?:\s|&(?:amp;)*gt;|/)",
+        RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
     /// <summary>
-    /// Vrai si <paramref name="content"/> porte encore du HTML.
+    /// Vrai si <paramref name="content"/> porte encore du HTML, qu'il soit écrit en clair ou
+    /// échappé.
+    ///
+    /// Les deux formes comptent parce qu'on ne peut pas les distinguer à l'écran : le rendu
+    /// Markdown n'interprétant aucun HTML, <c>&lt;ol&gt;</c> et <c>&amp;lt;ol&amp;gt;</c>
+    /// s'affichent tous deux comme la même suite de caractères. Un article dont le contenu est
+    /// resté échappé est donc exactement aussi cassé, et se répare de la même façon —
+    /// <see cref="Convert"/> commence par défaire l'échappement.
     ///
     /// Sert à retrouver les articles repris avant que la conversion ne fonctionne, pour les
     /// reconvertir sur place — voir <c>KnowledgeBaseHtmlReconversionCronTask</c>.
     /// </summary>
     public static bool ContainsHtml(string? content)
-        => !string.IsNullOrEmpty(content) && KnownHtmlElement.IsMatch(content);
+        => !string.IsNullOrEmpty(content)
+            && (KnownHtmlElement.IsMatch(content) || KnownEscapedHtmlElement.IsMatch(content));
 
     /// <summary>
     /// Markdown équivalent, ou chaîne vide si l'article n'avait pas de réponse.
