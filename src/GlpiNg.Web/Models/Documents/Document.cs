@@ -1,4 +1,4 @@
-using GlpiNg.Modules.Abstractions.Documents;
+﻿using GlpiNg.Modules.Abstractions.Items;
 using GlpiNg.Modules.Abstractions.Entities;
 
 namespace GlpiNg.Web.Models.Documents;
@@ -133,7 +133,7 @@ public class DocumentCategory : IEntityScoped
 /// un fichier.
 ///
 /// <see cref="ItemType"/> reprend les noms de GLPI (<c>KnowbaseItem</c>, <c>Computer</c>...) pour
-/// que l'import se contente de recopier la colonne — voir <see cref="DocumentItemTypes"/>.
+/// que l'import se contente de recopier la colonne — voir <see cref="ItemTypes"/>.
 /// </summary>
 public class DocumentItem
 {

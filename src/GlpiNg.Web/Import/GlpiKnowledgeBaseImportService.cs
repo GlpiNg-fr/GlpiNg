@@ -1,5 +1,6 @@
 ﻿using GlpiNg.Modules.Abstractions.Directory;
 using GlpiNg.Modules.Abstractions.Documents;
+using GlpiNg.Modules.Abstractions.Items;
 using GlpiNg.Modules.Abstractions.Import;
 using GlpiNg.Modules.Abstractions.Storage;
 using GlpiNg.Modules.KnowledgeBase.Models;
@@ -50,7 +51,7 @@ public sealed class GlpiKnowledgeBaseImportService(
     private const string DocumentCategoriesTable = "glpi_documentcategories";
 
     /// <summary>Nom que GLPI donne aux articles dans ses références polymorphes.</summary>
-    private const string GlpiArticleItemType = DocumentItemTypes.KnowledgeBaseArticle;
+    private const string GlpiArticleItemType = ItemTypes.KnowledgeBaseArticle;
 
     /// <summary>Tables de visibilité de GLPI et type d'acteur correspondant côté GlpiNg.</summary>
     private static readonly (string Table, string ForeignKey, PrincipalKind Kind)[] TargetTables =
@@ -635,7 +636,7 @@ public sealed class GlpiKnowledgeBaseImportService(
 
         // Les rattachements déjà en base, pour ne pas retomber sur l'index d'unicité au second import.
         List<DocumentItem> existingLinks = await db.DocumentItems
-            .Where(link => link.ItemType == DocumentItemTypes.KnowledgeBaseArticle)
+            .Where(link => link.ItemType == ItemTypes.KnowledgeBaseArticle)
             .ToListAsync(ct);
 
         HashSet<(int DocumentId, int ArticleId)> knownLinks =
@@ -708,7 +709,7 @@ public sealed class GlpiKnowledgeBaseImportService(
                 // une fiche créée à l'instant, et EF s'en charge à l'enregistrement.
                 document.Items.Add(new DocumentItem
                 {
-                    ItemType = DocumentItemTypes.KnowledgeBaseArticle,
+                    ItemType = ItemTypes.KnowledgeBaseArticle,
                     ItemId = articleId,
                 });
 

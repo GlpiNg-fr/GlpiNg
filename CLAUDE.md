@@ -128,6 +128,13 @@ restart — it's `MapWhen`-mounted conditionally rather than statically register
 Changes made from either store are tracked by `ConfigHistoryService`, called separately
 by each Razor page after a successful save.
 
+**Notes** (`Models/Notes/Notepad`, `Services/Notes/NoteService`, `Abstractions/Notes/IItemNotes`):
+GLPI's notepad, polymorphic over `ItemType` + `ItemId` (names from `Abstractions/Items/ItemTypes`,
+the single source shared with documents). Wired to the Computer and knowledge-base article pages.
+`Notepad` deliberately does **not** implement `IEntityScoped` — see the attachment-visibility rule
+below, which it follows for the same reason. Entity and group notes still live in their own
+pre-existing tables (`GlpiEntityNote`, `GlpiGroupNote`); converging them is a follow-up.
+
 **Attachment visibility**: a document's own entity scope must not gate the *attachment list* of
 an item — `DocumentService.GetForItemAsync` (and the fallback in `GetAsync`) deliberately
 `IgnoreQueryFilters()`. The authorization boundary is the item: the knowledge-base page already

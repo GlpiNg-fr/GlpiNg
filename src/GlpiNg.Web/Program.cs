@@ -9,6 +9,7 @@ using GlpiNg.Modules.Abstractions.Cron;
 using GlpiNg.Modules.Abstractions.Deployment;
 using GlpiNg.Modules.Abstractions.Directory;
 using GlpiNg.Modules.Abstractions.Documents;
+using GlpiNg.Modules.Abstractions.Notes;
 using GlpiNg.Modules.Abstractions.Entities;
 using GlpiNg.Modules.Abstractions.Import;
 using GlpiNg.Modules.Abstractions.Preferences;
@@ -25,6 +26,7 @@ using GlpiNg.Web.Middleware;
 using GlpiNg.Web.Options;
 using GlpiNg.Web.Services;
 using GlpiNg.Web.Services.Documents;
+using GlpiNg.Web.Services.Notes;
 using GlpiNg.Web.Services.Notifications;
 using GlpiNg.Modules.Abstractions.ExternalLinks;
 using GlpiNg.Web.Services.ExternalLinks;
@@ -384,6 +386,12 @@ public class Program
             builder.Services.AddSingleton<DocumentStorageService>();
             builder.Services.AddScoped<DocumentService>();
             builder.Services.AddScoped<IDocumentAttachments>(sp => sp.GetRequiredService<DocumentService>());
+
+            // Notes libres (onglet « Notes » de GLPI) : même montage que les documents — entité de
+            // l'hôte, rendue aux modules par un contrat qui ne leur ouvre ni le modèle ni le
+            // DbContext concret.
+            builder.Services.AddScoped<NoteService>();
+            builder.Services.AddScoped<IItemNotes>(sp => sp.GetRequiredService<NoteService>());
 
             // Cache mémoire des sections de réglages /config (Valeurs par défaut, Parc, Assistance,
             // Modules, ...), lues/écrites dans la table AppSettings plutôt que dans appsettings.json

@@ -327,6 +327,33 @@ de pointer une pièce jointe — celles-ci s'affichent dans l'onglet « Document
 le texte ; et le drapeau FAQ sert de filtre et de marquage éditorial plutôt que de
 publication vers une interface simplifiée, qui n'existe pas encore.
 
+### Notes
+
+Équivalent de l'onglet « Notes » que GLPI pose sur ses fiches (`glpi_notepads`), et
+**entité de l'hôte** comme les documents : une note se rattache à n'importe quel type
+d'objet par une référence polymorphe (`Notepad` : `ItemType` + `ItemId`, les noms de
+types venant de `Abstractions/Items/ItemTypes`). Plusieurs notes par objet — pas une
+zone de texte unique — chacune avec son auteur, sa date de création et sa date de
+modification.
+
+Disponible sur la **fiche d'un ordinateur** et sur la **fiche d'un article** de la base
+de connaissances ; un module y accède par le contrat
+`Abstractions/Notes/IItemNotes`, sans voir ni le modèle ni le `DbContext`.
+
+La note **n'est pas cloisonnée par entité** : sa visibilité suit l'objet qui la porte,
+comme celle d'une pièce jointe. Lui donner sa propre entité reproduirait le défaut qui
+avait fait disparaître les documents des articles — un objet visible dont les annexes ne
+le sont pas, sans le moindre message.
+
+Sur un article, une note est rendue en Markdown par le même convertisseur que le contenu
+(donc sans interpréter le HTML) ; sur un ordinateur, elle est affichée en texte brut, la
+fiche n'ayant pas de rendu Markdown.
+
+Limites connues : les notes existantes des **entités** et des **groupes** restent sur
+leurs tables dédiées (`GlpiEntityNote`, `GlpiGroupNote`, antérieures à ce mécanisme) et
+n'ont pas été reprises — trois implémentations coexistent donc, là où GLPI n'en a
+qu'une ; et les notes ne sont pas reprises à l'import depuis GLPI.
+
 ### Documents (`/management/documents`)
 
 Équivalent de « Gestion > Documents » de GLPI, et **entité de l'hôte** plutôt que d'un

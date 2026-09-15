@@ -1,23 +1,6 @@
+using GlpiNg.Modules.Abstractions.Items;
+
 namespace GlpiNg.Modules.Abstractions.Documents;
-
-/// <summary>
-/// Noms de types rattachables, alignés sur ceux de GLPI.
-///
-/// Dans Abstractions et non chez l'hôte : l'hôte range les rattachements, les modules les
-/// demandent, et l'import les recopie depuis GLPI. Trois copies de la même chaîne littérale, c'est
-/// la façon dont une faute de frappe finit par vider un onglet sans que rien ne le signale.
-///
-/// Constantes plutôt qu'une énumération : la colonne stocke du texte pour rester ouverte aux types
-/// qu'un module ajoutera, et une énumération obligerait à recompiler l'hôte pour chacun.
-/// </summary>
-public static class DocumentItemTypes
-{
-    /// <summary>Article de la base de connaissances (<c>KnowbaseItem</c> dans GLPI).</summary>
-    public const string KnowledgeBaseArticle = "KnowbaseItem";
-
-    /// <summary>Ordinateur du parc.</summary>
-    public const string Computer = "Computer";
-}
 
 /// <summary>
 /// Projection d'un document telle qu'un module en a besoin pour l'afficher et le proposer.
@@ -44,9 +27,7 @@ public sealed record DocumentSummary(
 /// contrat leur donne le strict nécessaire — lister, téléverser, rattacher, détacher — sans leur
 /// ouvrir le modèle complet ni le stockage sur disque.
 ///
-/// Le paramètre <c>itemType</c> que portent ces méthodes reprend les noms de GLPI
-/// (<c>KnowbaseItem</c>, <c>Computer</c>...), pour que l'import se contente de recopier la
-/// colonne.
+/// Le paramètre <c>itemType</c> que portent ces méthodes vient de <see cref="ItemTypes"/>.
 /// </summary>
 public interface IDocumentAttachments
 {
