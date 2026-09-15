@@ -128,6 +128,15 @@ restart — it's `MapWhen`-mounted conditionally rather than statically register
 Changes made from either store are tracked by `ConfigHistoryService`, called separately
 by each Razor page after a successful save.
 
+**Attachment visibility**: a document's own entity scope must not gate the *attachment list* of
+an item — `DocumentService.GetForItemAsync` (and the fallback in `GetAsync`) deliberately
+`IgnoreQueryFilters()`. The authorization boundary is the item: the knowledge-base page already
+checks `IsVisible` on the article before rendering the tab. Without this, a non-recursive document
+in an ancestor entity vanished from the tab of an article that was itself visible because GLPI
+marks articles recursive and documents not — and it vanished silently, the join dropping the whole
+row. A document attached to nothing stays scoped, so `/management/documents` still honours the
+entity perimeter.
+
 **Collect task protocol**: a real GLPI-Agent's Collect task does *not* speak the single-POST
 `action` convention. It calls `GET /inventory?action=getConfig`, reads `schedule[].remote`, then
 hits that URL with `action=getJobs` (GET, query string) and `action=setAnswer` (POST,
