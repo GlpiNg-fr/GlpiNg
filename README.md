@@ -347,6 +347,11 @@ contrat `Abstractions/Documents/IDocumentAttachments`, sans voir ni le modèle n
   tous les objets qui le portaient. Le fichier n'est effacé du disque que si plus aucune
   fiche ne partage la même empreinte.
 - **Catégories** arborescentes, reprises de `glpi_documentcategories` à l'import.
+- **Visibilité** : dans la liste des pièces jointes d'un objet, c'est l'objet qui décide — voir
+  un article suffit à voir ce qui y est attaché, comme dans GLPI. Le cloisonnement par entité
+  du document lui-même ne s'applique qu'à l'écran de gestion. Sans cette règle, un document
+  non récursif rangé dans une entité ancêtre disparaissait de l'onglet d'un article pourtant
+  visible : à l'import, GLPI marque ses articles récursifs et ses documents non récursifs.
 
 Limites connues : pas d'écran de fiche par document (l'écran de gestion liste, téléverse,
 télécharge et supprime), pas de vignettes ni d'aperçu, et le rattachement ne se fait que

@@ -27,8 +27,19 @@ public sealed class DocumentService(
     {
         await using GlpiNgDbContext db = await dbFactory.CreateDbContextAsync(cancellationToken);
 
+        // IgnoreQueryFilters : la visibilité d'une pièce jointe suit l'objet auquel elle est
+        // rattachée, pas sa propre entité — c'est la règle de GLPI, où l'on voit un document
+        // parce qu'on voit l'article qui le porte. La frontière d'autorisation est donc l'objet,
+        // et l'appelant l'a déjà franchie : la fiche vérifie la visibilité de l'article avant
+        // d'afficher l'onglet.
+        //
+        // Sans cela, un document non récursif rangé dans une entité ancêtre disparaissait de
+        // l'onglet d'un article pourtant visible, lui, parce que récursif — et sans le moindre
+        // message, la ligne entière étant écartée par la jointure. C'est exactement ce que
+        // produisait l'import : GLPI marque ses articles récursifs et ses documents non récursifs.
         return await db.DocumentItems
             .AsNoTracking()
+            .IgnoreQueryFilters()
             .Where(link => link.ItemType == itemType && link.ItemId == itemId)
             .OrderByDescending(link => link.AttachedAt)
             .Select(link => new DocumentSummary(
@@ -183,14 +194,29 @@ public sealed class DocumentService(
             .ExecuteDeleteAsync(cancellationToken);
     }
 
-    /// <summary>Le document et ses rattachements, pour l'écran de téléchargement.</summary>
+    /// <summary>
+    /// Le document désigné, pour le téléchargement.
+    ///
+    /// Cherché d'abord dans le périmètre d'entité du lecteur, puis — à défaut — parmi les
+    /// documents <b>rattachés à au moins un objet</b>. Ce second essai est le pendant de
+    /// <see cref="GetForItemAsync"/> : un document listé dans l'onglet d'un article doit pouvoir
+    /// être téléchargé, sans quoi l'écran proposerait un lien qui répond 404.
+    ///
+    /// Un document rattaché nulle part, lui, reste cloisonné : il n'apparaît que dans l'écran de
+    /// gestion, où le périmètre d'entité fait foi.
+    /// </summary>
     public async Task<Document?> GetAsync(int documentId, CancellationToken cancellationToken = default)
     {
         await using GlpiNgDbContext db = await dbFactory.CreateDbContextAsync(cancellationToken);
 
-        return await db.Documents
+        Document? scoped = await db.Documents
             .AsNoTracking()
             .FirstOrDefaultAsync(document => document.Id == documentId, cancellationToken);
+
+        return scoped ?? await db.Documents
+            .AsNoTracking()
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(document => document.Id == documentId && document.Items.Count > 0, cancellationToken);
     }
 
     /// <summary>Ouvre le contenu d'un document, ou <c>null</c> si la fiche n'a pas de fichier.</summary>
