@@ -2,6 +2,7 @@ using GlpiNg.Modules.Abstractions.Cron;
 using GlpiNg.Modules.KnowledgeBase.Models;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Import;
+using GlpiNg.Web.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace GlpiNg.Web.Services;
@@ -22,6 +23,7 @@ namespace GlpiNg.Web.Services;
 /// </summary>
 public sealed class KnowledgeBaseHtmlReconversionCronTask(
     GlpiNgDbContext db,
+    EventLogService eventLog,
     ILogger<KnowledgeBaseHtmlReconversionCronTask> logger) : ICronTask
 {
     /// <summary>Auteur porté par la révision et l'entrée d'historique : ce n'est personne.</summary>
@@ -37,8 +39,9 @@ public sealed class KnowledgeBaseHtmlReconversionCronTask(
         + "depuis la fiche de l'article. Sans effet sur les articles déjà convertis.";
 
     /// <summary>
-    /// Quotidienne. La tâche ne coûte presque rien une fois le rattrapage fait : le pré-filtre SQL
-    /// écarte en base tout article sans le moindre chevron, et il n'en reste alors aucun à lire.
+    /// Quotidienne. La tâche ne coûte presque rien une fois le rattrapage fait : les pré-filtres
+    /// SQL écartent en base tout article ne portant ni chevron ni entité échappée, et il n'en
+    /// reste alors plus aucun à lire.
     /// </summary>
     public int DefaultFrequencyMinutes => 1440;
 
@@ -50,10 +53,13 @@ public sealed class KnowledgeBaseHtmlReconversionCronTask(
         // GlpiNg sont du Markdown par construction — l'éditeur n'en produit pas d'autre — et un
         // article qui documenterait volontairement du HTML n'a pas à être réécrit.
         //
-        // Contains("<") : pré-filtre traduit en LIKE, pour ne pas rapatrier toute la base à chaque
-        // passage. La vraie décision se prend ensuite, sur une liste d'éléments HTML nommés.
+        // Les deux pré-filtres, traduits en LIKE, pour ne pas rapatrier toute la base à chaque
+        // passage. Le second n'est pas un raffinement : un contenu resté échappé ne porte aucun
+        // chevron, et le seul « < » l'aurait écarté alors qu'il est exactement aussi cassé.
+        // La vraie décision se prend ensuite, sur une liste d'éléments HTML nommés.
         List<KnowledgeBaseArticle> candidates = await db.Set<KnowledgeBaseArticle>()
-            .Where(article => article.SourceGlpiId != null && article.Content.Contains("<"))
+            .Where(article => article.SourceGlpiId != null
+                              && (article.Content.Contains("<") || article.Content.Contains("&lt;")))
             .ToListAsync(cancellationToken);
 
         int converted = 0;
@@ -115,12 +121,21 @@ public sealed class KnowledgeBaseHtmlReconversionCronTask(
             await db.SaveChangesAsync(cancellationToken);
         }
 
-        if (converted > 0 || skipped > 0)
-        {
-            logger.LogInformation(
-                "Base de connaissances : {Converted} article(s) reconverti(s) du HTML vers le Markdown, "
-                + "{Skipped} laissé(s) tel(s) quel(s) faute d'une conversion exploitable.",
-                converted, skipped);
-        }
+        // Compte rendu dans le journal des évènements (/admin/logs), et pas seulement dans les
+        // traces : le journal d'exécution des actions automatiques n'enregistre un message qu'en
+        // cas d'échec, si bien qu'une tâche qui réussit sans rien convertir y est indiscernable
+        // d'une tâche qui a tout converti. Sans ce compte rendu, « la conversion ne fonctionne
+        // pas » n'a aucun moyen d'être instruit.
+        string summary =
+            $"Reconversion HTML : {candidates.Count} article(s) examiné(s), {converted} reconverti(s), "
+            + $"{skipped} laissé(s) tel(s) quel(s) faute d'une conversion exploitable.";
+
+        logger.LogInformation("Base de connaissances — {Summary}", summary);
+
+        await eventLog.LogAsync(
+            "knowledgebase",
+            converted == 0 && candidates.Count > 0 ? EventLogLevel.Warning : EventLogLevel.Info,
+            summary,
+            cancellationToken: cancellationToken);
     }
 }
