@@ -488,6 +488,11 @@ public class Program
             // service dépend du DbContext de base.
             builder.Services.AddScoped<ICronTask, HistoryPurgeCronTask>();
 
+            // Rattrapage des articles repris avant que la conversion HTML → Markdown ne
+            // fonctionne : relancer l'import les corrigerait aussi, mais en écrasant les
+            // retouches faites depuis et en exigeant que la base GLPI source soit joignable.
+            builder.Services.AddScoped<ICronTask, KnowledgeBaseHtmlReconversionCronTask>();
+
             // Notifications (voir /config/notifications, Models/Notifications et
             // Services/Notifications) : NotificationDispatchService dépose des QueuedNotification
             // au fil des événements réels de GlpiNg (nouvel ordinateur, nouvel agent, fin de

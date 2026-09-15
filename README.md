@@ -638,6 +638,20 @@ collé depuis Word) est retirée **sans emporter son contenu** ; seuls `script`,
 Un article déjà repris se corrige en relançant l'import : il est idempotent, et
 « Articles » réécrit le contenu — au prix des retouches faites depuis dans GlpiNg.
 
+Pour les articles importés **avant** que cette conversion ne fonctionne, l'action
+automatique **« Reconversion HTML de la base de connaissances »**
+(`/config/automatic-actions`, exécutable à la demande) les reconvertit sur place,
+sans relancer l'import ni exiger que la base GLPI source soit encore joignable.
+Elle archive l'état antérieur en révision avant chaque réécriture : l'opération se
+défait depuis la fiche de l'article. Elle ne touche que les articles issus de
+l'import (`SourceGlpiId`), et ne remplace un contenu que si la conversion rend
+quelque chose d'exploitable et de réellement dépourvu de balises.
+
+> Sa détection porte sur une liste d'éléments HTML nommés, pour qu'un article
+> montrant `<VirtualHost *:80>` ou `#include <stdio.h>` ne soit pas pris pour du
+> HTML. Un exemple de HTML placé dans un bloc de code, lui, sera reconverti — d'où
+> la révision d'avant, qui permet de le rétablir.
+
 Le **texte est réparé à la lecture** : beaucoup d'installations GLPI ont des
 colonnes déclarées `latin1` qui contiennent en réalité de l'UTF-8, ce qui fait
 arriver les articles en « ProcÃ©dure » ou « Câ€™est ». `Import/GlpiText` refait le
