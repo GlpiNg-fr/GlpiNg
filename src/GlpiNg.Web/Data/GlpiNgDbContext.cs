@@ -5,6 +5,7 @@ using GlpiNg.Modules.Deployment.Models;
 using GlpiNg.Modules.Inventory.Models;
 using GlpiNg.Modules.KnowledgeBase.Models;
 using GlpiNg.Web.Models.Documents;
+using GlpiNg.Web.Models.Notes;
 using GlpiNg.Web.Models;
 using GlpiNg.Web.Models.Notifications;
 using GlpiNg.Web.Models.ExternalLinks;
@@ -166,6 +167,8 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<Document> Documents => Set<Document>();
     public DbSet<DocumentCategory> DocumentCategories => Set<DocumentCategory>();
     public DbSet<DocumentItem> DocumentItems => Set<DocumentItem>();
+
+    public DbSet<Notepad> Notepads => Set<Notepad>();
 
     public DbSet<EventLogEntry> EventLogEntries => Set<EventLogEntry>();
 
@@ -982,6 +985,8 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
 
         ConfigureDocuments(modelBuilder);
 
+        ConfigureNotes(modelBuilder);
+
         ConfigureEntityScoping(modelBuilder);
     }
 
@@ -1102,6 +1107,17 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
         // Idempotence de l'import.
         modelBuilder.Entity<Document>()
             .HasIndex(document => document.SourceGlpiId);
+    }
+
+    /// <summary>
+    /// Notes libres rattachées aux objets (voir Models/Notes/Notepad.cs).
+    /// </summary>
+    private static void ConfigureNotes(ModelBuilder modelBuilder)
+    {
+        // Lecture de référence : « les notes de cet objet », faite à chaque ouverture d'une fiche
+        // qui en porte — y compris pour n'afficher que leur nombre sur l'onglet.
+        modelBuilder.Entity<Notepad>()
+            .HasIndex(note => new { note.ItemType, note.ItemId });
     }
 
     /// <summary>
