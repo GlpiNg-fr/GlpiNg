@@ -50,6 +50,7 @@ public static class GlpiImportPhases
     public const string KnowledgeBaseTargets = "Visibilité des articles";
     public const string KnowledgeBaseRevisions = "Révisions des articles";
     public const string KnowledgeBaseDocuments = "Documents des articles";
+    public const string KnowledgeBaseNotes = "Notes des articles";
 
     // Plugin d'inventaire (hôte).
     public const string IpRanges = "Plages IP";

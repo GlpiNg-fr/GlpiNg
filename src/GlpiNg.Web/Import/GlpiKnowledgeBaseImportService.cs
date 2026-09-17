@@ -2,10 +2,12 @@
 using GlpiNg.Modules.Abstractions.Documents;
 using GlpiNg.Modules.Abstractions.Items;
 using GlpiNg.Modules.Abstractions.Import;
+using GlpiNg.Modules.Abstractions.Notes;
 using GlpiNg.Modules.Abstractions.Storage;
 using GlpiNg.Modules.KnowledgeBase.Models;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models.Documents;
+using GlpiNg.Web.Models.Notes;
 using GlpiNg.Web.Services;
 using GlpiNg.Web.Services.Documents;
 using Microsoft.EntityFrameworkCore;
@@ -49,6 +51,7 @@ public sealed class GlpiKnowledgeBaseImportService(
     private const string DocumentsTable = "glpi_documents";
     private const string DocumentItemsTable = "glpi_documents_items";
     private const string DocumentCategoriesTable = "glpi_documentcategories";
+    private const string NotesTable = "glpi_notepads";
 
     /// <summary>Nom que GLPI donne aux articles dans ses références polymorphes.</summary>
     private const string GlpiArticleItemType = ItemTypes.KnowledgeBaseArticle;
@@ -86,6 +89,7 @@ public sealed class GlpiKnowledgeBaseImportService(
         }
 
         analysis.DocumentsCount = await CountDocumentLinksAsync(connection, cancellationToken);
+        analysis.NotesCount = await CountNotesAsync(connection, cancellationToken);
 
         return analysis;
     }
@@ -146,6 +150,11 @@ public sealed class GlpiKnowledgeBaseImportService(
         {
             await ImportDocumentsAsync(connection, articleMap, entityMap, rootEntityId, selection,
                 result, progress, cancellationToken);
+        }
+
+        if (selection.ImportNotes)
+        {
+            await ImportNotesAsync(connection, articleMap, result, progress, cancellationToken);
         }
 
         return result;
@@ -988,6 +997,143 @@ public sealed class GlpiKnowledgeBaseImportService(
         }
 
         await db.SaveChangesAsync(ct);
+    }
+
+    // ---- Notes ----------------------------------------------------------------------------------
+
+    /// <summary>Notes portées par un article dans la base source (<c>glpi_notepads</c> en itemtype KnowbaseItem).</summary>
+    private static async Task<int> CountNotesAsync(MySqlConnection connection, CancellationToken ct)
+    {
+        if (!await TableExistsAsync(connection, NotesTable, ct))
+        {
+            return 0;
+        }
+
+        await using MySqlCommand command = new(
+            $"SELECT COUNT(*) FROM `{NotesTable}` WHERE itemtype = @itemtype", connection);
+        command.Parameters.AddWithValue("@itemtype", GlpiArticleItemType);
+
+        object? value = await command.ExecuteScalarAsync(ct);
+        return value is null or DBNull ? 0 : Convert.ToInt32(value);
+    }
+
+    /// <summary>
+    /// Reprend les notes libres rattachées aux articles — l'onglet « Notes » que l'hôte rend aux
+    /// modules via <see cref="IItemNotes"/>. Corrélées par <see cref="Notepad.SourceGlpiId"/>,
+    /// comme le reste de l'import : relancer met à jour une note déjà reprise (contenu modifié
+    /// côté GLPI depuis) plutôt que d'en recréer une.
+    /// </summary>
+    private async Task ImportNotesAsync(
+        MySqlConnection connection, Dictionary<int, int> articleMap,
+        GlpiKnowledgeBaseImportResult result, IProgress<GlpiImportProgress>? progress, CancellationToken ct)
+    {
+        HashSet<string> columns = await GetColumnsAsync(connection, NotesTable, ct);
+
+        if (columns.Count == 0)
+        {
+            result.Warnings.Add($"Table « {NotesTable} » absente : aucune note reprise.");
+            return;
+        }
+
+        // Même changement de nom que sur les articles (voir ImportArticlesAsync).
+        string? createdColumn = FirstPresent(columns, "date_creation", "date");
+
+        string sql = $"""
+            SELECT id,
+                   items_id,
+                   {ColumnOrNull(columns, "content")},
+                   {ColumnOrNull(columns, "users_id")},
+                   {ColumnOrNull(columns, "users_id_lastupdater")},
+                   {ColumnOrNull(columns, "date_mod")},
+                   {(createdColumn is null ? "NULL AS `date_creation`" : $"`{createdColumn}` AS `date_creation`")}
+            FROM `{NotesTable}`
+            WHERE itemtype = @itemtype
+            """;
+
+        Dictionary<int, (int Id, string Name)> users = await db.Users
+            .Where(user => user.SourceGlpiId != null)
+            .Select(user => new { Source = user.SourceGlpiId!.Value, user.Id, Name = user.DisplayName ?? user.UserName })
+            .ToDictionaryAsync(user => user.Source, user => (user.Id, user.Name), ct);
+
+        Dictionary<int, Notepad> existing = await db.Notepads
+            .Where(note => note.SourceGlpiId != null)
+            .ToDictionaryAsync(note => note.SourceGlpiId!.Value, ct);
+
+        await using MySqlCommand command = new(sql, connection);
+        command.Parameters.AddWithValue("@itemtype", GlpiArticleItemType);
+        await using MySqlDataReader reader = await command.ExecuteReaderAsync(ct);
+
+        int seen = 0;
+
+        while (await reader.ReadAsync(ct))
+        {
+            progress?.Report(new GlpiImportProgress(GlpiImportPhases.KnowledgeBaseNotes, ++seen));
+
+            int sourceId = reader.GetInt32("id");
+            int sourceArticleId = reader.GetInt32("items_id");
+
+            if (!articleMap.TryGetValue(sourceArticleId, out int articleId))
+            {
+                // Case « Articles » décochée, ou article absent de la base source : la note n'a
+                // personne à qui s'accrocher.
+                result.NotesSkipped++;
+                continue;
+            }
+
+            string? content = GetNullableString(reader, "content");
+
+            if (content is null)
+            {
+                continue;
+            }
+
+            (int Id, string Name)? author = GetNullableInt(reader, "users_id") is int authorSourceId
+                && users.TryGetValue(authorSourceId, out (int Id, string Name) match)
+                    ? match
+                    : null;
+
+            string? lastEditorName = GetNullableInt(reader, "users_id_lastupdater") is int editorSourceId
+                && users.TryGetValue(editorSourceId, out (int Id, string Name) editor)
+                    ? editor.Name
+                    : null;
+
+            if (!existing.TryGetValue(sourceId, out Notepad? note))
+            {
+                note = new Notepad
+                {
+                    ItemType = ItemTypes.KnowledgeBaseArticle,
+                    ItemId = articleId,
+                    Content = content,
+                    AuthorName = author?.Name ?? "Import GLPI",
+                    SourceGlpiId = sourceId,
+                    CreatedAt = GetNullableDate(reader, "date_creation") ?? DateTime.UtcNow,
+                };
+
+                db.Notepads.Add(note);
+                existing[sourceId] = note;
+            }
+            else
+            {
+                note.ItemId = articleId;
+                note.Content = content;
+                note.AuthorName = author?.Name ?? note.AuthorName;
+            }
+
+            note.AuthorUserId = author?.Id;
+            note.UpdatedAt = GetNullableDate(reader, "date_mod");
+            note.LastEditorName = lastEditorName;
+
+            result.NotesImported++;
+        }
+
+        await db.SaveChangesAsync(ct);
+
+        if (result.NotesSkipped > 0)
+        {
+            result.Warnings.Add(
+                $"{result.NotesSkipped} note(s) ignorée(s) : l'article auquel elles se rattachent n'a pas été "
+                + "importé. Cochez « Articles » et relancez : une note ne peut se poser que sur un article déjà repris.");
+        }
     }
 
     // ---- Aides --------------------------------------------------------------------------------
