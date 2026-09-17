@@ -77,6 +77,7 @@ public partial class MainLayout : IDisposable
         new("outils", "ti-briefcase", "Outils",
         [
             new("Réservations", Icon: "ti-calendar-event"),
+            new("Notes", "/tools/notes", "ti-notes"),
             new("Rapports", "/tools/reports", "ti-report"),
         ]),
         new("administration", "ti-shield", "Administration",

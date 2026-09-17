@@ -1,0 +1,87 @@
+@page "/tools/notes"
+@rendermode InteractiveServer
+
+<PageTitle>Notes — GlpiNg</PageTitle>
+
+<div class="glpi-page-header">
+    <h1><i class="ti ti-notes me-2"></i>Notes</h1>
+</div>
+
+<p class="text-secondary">
+    Toutes les notes libres de l'installation, tous objets confondus. Une note se crée depuis
+    l'onglet « Notes » de la fiche qui la porte (ordinateur, article de la base de connaissances…) ;
+    cet écran sert à les retrouver et, au besoin, à les supprimer.
+</p>
+
+<div class="row g-2 align-items-end mb-3">
+    <div class="col-md-5">
+        <label class="form-label" for="note-search">Rechercher</label>
+        <div class="input-group">
+            <input id="note-search" class="form-control" @bind="_search" @bind:event="oninput"
+                   placeholder="Contenu ou auteur" />
+            <button type="button" class="btn" @onclick="LoadAsync"><i class="ti ti-search me-1"></i>Chercher</button>
+        </div>
+    </div>
+</div>
+
+@if (_notes.Count == 0)
+{
+    <div class="glpi-config-placeholder">
+        <i class="ti ti-notes-off"></i>
+        <p class="mb-0">Aucune note.</p>
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th>Objet</th>
+                    <th>Contenu</th>
+                    <th>Auteur</th>
+                    <th>Créée le</th>
+                    <th>Modifiée le</th>
+                    <th class="w-1"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (NoteRow row in _notes)
+                {
+                    <tr>
+                        <td>
+                            @if (row.ItemUrl is { } url)
+                            {
+                                <a href="@url">@row.ItemLabel</a>
+                            }
+                            else
+                            {
+                                <span class="text-secondary">@row.ItemLabel</span>
+                            }
+                        </td>
+                        <td class="text-truncate" style="max-width: 32rem;">@row.Note.Content</td>
+                        <td class="text-secondary text-nowrap">@row.Note.AuthorName</td>
+                        <td class="text-secondary text-nowrap">@row.Note.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                        <td class="text-secondary text-nowrap">@(row.Note.UpdatedAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "—")</td>
+                        <td class="text-nowrap">
+                            @if (_confirmDeleteId == row.Note.Id)
+                            {
+                                <button type="button" class="btn btn-sm btn-danger" @onclick="() => DeleteAsync(row.Note.Id)">
+                                    Confirmer
+                                </button>
+                                <button type="button" class="btn btn-sm" @onclick="() => _confirmDeleteId = null">Annuler</button>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-icon btn-ghost-danger" title="Supprimer"
+                                        @onclick="() => _confirmDeleteId = row.Note.Id">
+                                    <i class="ti ti-trash"></i>
+                                </button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
