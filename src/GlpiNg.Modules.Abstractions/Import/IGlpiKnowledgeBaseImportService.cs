@@ -39,6 +39,9 @@ public class GlpiKnowledgeBaseImportAnalysis
     /// <summary>Documents rattachés à un article (<c>glpi_documents_items</c> en itemtype KnowbaseItem).</summary>
     public int DocumentsCount { get; set; }
 
+    /// <summary>Notes libres rattachées à un article (<c>glpi_notepads</c> en itemtype KnowbaseItem).</summary>
+    public int NotesCount { get; set; }
+
     /// <summary>Vrai si la base source porte au moins la table des articles : sans elle, il n'y a
     /// rien à proposer, et l'écran le dit plutôt que d'afficher des zéros.</summary>
     public bool IsPresent { get; set; }
@@ -61,6 +64,9 @@ public class GlpiKnowledgeBaseImportSelection
 
     /// <summary>Documents rattachés aux articles, et leurs catégories.</summary>
     public bool ImportDocuments { get; set; }
+
+    /// <summary>Notes libres rattachées aux articles (onglet « Notes » — voir <c>IItemNotes</c>).</summary>
+    public bool ImportNotes { get; set; }
 
     /// <summary>
     /// Dossier <c>files/</c> de l'installation GLPI source (chemin local ou partage réseau), d'où
@@ -90,7 +96,7 @@ public class GlpiKnowledgeBaseImportSelection
     /// <inheritdoc cref="GlpiFilesUserName"/>
     public string? GlpiFilesPassword { get; set; }
 
-    public bool AnySelected => ImportCategories || ImportArticles || ImportTargets || ImportRevisions || ImportDocuments;
+    public bool AnySelected => ImportCategories || ImportArticles || ImportTargets || ImportRevisions || ImportDocuments || ImportNotes;
 }
 
 /// <summary>Résumé d'une exécution de l'import de la base de connaissances.</summary>
@@ -115,6 +121,16 @@ public class GlpiKnowledgeBaseImportResult
     /// fiche existe et paraît normale : sans ce chiffre, on croirait l'import complet.
     /// </summary>
     public int DocumentsWithoutContent { get; set; }
+
+    /// <summary>Notes reprises.</summary>
+    public int NotesImported { get; set; }
+
+    /// <summary>
+    /// Notes laissées de côté faute d'avoir retrouvé l'article visé côté GlpiNg (case « Articles »
+    /// décochée, ou article absent de la base source). Comptées à part pour la même raison que
+    /// <see cref="TargetsSkipped"/> : silence, ce serait laisser croire l'import complet.
+    /// </summary>
+    public int NotesSkipped { get; set; }
 
     /// <summary>
     /// Cibles laissées de côté faute d'avoir retrouvé l'objet visé côté GlpiNg (groupe, profil ou

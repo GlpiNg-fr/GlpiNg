@@ -644,12 +644,15 @@ les entités), articles (`glpi_knowbaseitems` : sujet, contenu, FAQ, compteur de
 consultations, auteur, dates, période de visibilité `begin_date`/`end_date`),
 cibles de visibilité (`glpi_knowbaseitems_users`/`_groups`/`_profiles`/`_entities`,
 avec leur portée `entities_id`/`is_recursive`) et révisions
-(`glpi_knowbaseitems_revisions`, GLPI ≥ 9.2), et **documents** rattachés aux
+(`glpi_knowbaseitems_revisions`, GLPI ≥ 9.2), **documents** rattachés aux
 articles (`glpi_documents`, `glpi_documents_items` en itemtype `KnowbaseItem`,
-`glpi_documentcategories`). Les colonnes apparues au fil des versions sont
+`glpi_documentcategories`), et **notes** libres rattachées aux articles
+(`glpi_notepads` en itemtype `KnowbaseItem` — l'onglet « Notes », voir
+ci-dessus ; une note ignorée faute d'article importé est comptée à part, pas
+silencieusement perdue). Les colonnes apparues au fil des versions sont
 détectées via `information_schema` : sur une base plus ancienne, elles valent
 `NULL` et l'article arrive simplement sans borne ni portée. Idempotent par
-`SourceGlpiId` sur la catégorie, l'article et le document.
+`SourceGlpiId` sur la catégorie, l'article, le document et la note.
 
 Le **contenu HTML est traduit en Markdown** par `Import/GlpiHtmlToMarkdown`, avec
 deux précautions apprises sur de vraies bases. D'abord, beaucoup de GLPI stockent
