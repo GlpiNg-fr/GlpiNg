@@ -91,26 +91,50 @@ public class AgentController(
 
         if (string.Equals(action, "getConfig", StringComparison.OrdinalIgnoreCase))
         {
+            // La tâche Collect passe par le client « Fusion », qui ne pose pas l'en-tête
+            // GLPI-Agent-ID : c'est le seul appel getConfig où l'agent peut donc être reconnu ici
+            // (par son machineid, qui vaut son deviceid), les autres tâches ne s'identifiant qu'au
+            // contact/getJobs suivant.
+            string? machineId = Request.Query["machineid"];
+            GlpiAgent? collectAgent = string.IsNullOrEmpty(machineId)
+                ? null
+                : await db.Agents.FirstOrDefaultAsync(a => a.DeviceId == machineId || a.AgentUuid == machineId, cancellationToken);
+
+            if (collectAgent is not null)
+            {
+                UpdateAgentRequestMetadata(collectAgent);
+                await db.SaveChangesAsync(cancellationToken);
+            }
+
             string expiration = await GetExpirationAsync(cancellationToken);
             string serverUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}/inventory";
 
-            return Ok(new
+            return Ok(new JsonObject
             {
-                status = "ok",
-                expiration,
-                schedule = new[]
+                ["status"] = "ok",
+                ["expiration"] = expiration,
+                ["schedule"] = new JsonArray
                 {
-                    new { task = "inventory", remote = serverUrl },
-                    new { task = "Deploy", remote = serverUrl },
+                    new JsonObject { ["task"] = "inventory", ["remote"] = serverUrl },
+                    new JsonObject { ["task"] = "Deploy", ["remote"] = serverUrl },
                     // Même mécanisme de gate que "Deploy" ci-dessus (voir le commentaire de
                     // HandleGet) appliqué aux tâches NetDiscovery/NetInventory de GLPI-Agent —
                     // adaptation non vérifiée en conditions réelles, voir le commentaire de classe
                     // d'AgentController sur netdiscovery/netinventory.
-                    new { task = "NetDiscovery", remote = serverUrl },
-                    new { task = "NetInventory", remote = serverUrl },
+                    new JsonObject { ["task"] = "NetDiscovery", ["remote"] = serverUrl },
+                    new JsonObject { ["task"] = "NetInventory", ["remote"] = serverUrl },
                     // Même mécanisme de gate, adaptation non vérifiée en conditions réelles, pour
                     // la tâche WakeOnLan de GLPI-Agent — voir la doc de WakeOnLanTask.
-                    new { task = "WakeOnLan", remote = serverUrl }
+                    new JsonObject { ["task"] = "WakeOnLan", ["remote"] = serverUrl },
+                    // La tâche Collect ne lit pas ses travaux sur la route unique : elle demande
+                    // cette configuration, y lit ce schedule, puis n'interroge plus que l'URL
+                    // "remote" qu'il porte — voir CollectEndpoint.
+                    new JsonObject
+                    {
+                        ["task"] = "Collect",
+                        ["remote"] = $"{Request.Scheme}://{Request.Host}{CollectRemotePath}",
+                        ["periodicity"] = 3600,
+                    },
                 }
             });
         }
@@ -545,7 +569,29 @@ public class AgentController(
             }
         }
 
-        return Ok(new JsonObject { ["jobs"] = jobs });
+        // GLPI::Agent::Task::Collect envoie "setAnswer" en GET, tous les champs en query string,
+        // sauf si cette réponse porte "postmethod": "POST" — c'est alors seulement qu'il bascule
+        // en POST application/x-www-form-urlencoded (voir Task/Collect.pm : "my $method =
+        // exists($answer->{postmethod}) && $answer->{postmethod} eq 'POST' ? 'POST' : 'GET'").
+        // Sans ce champ, un résultat de collecte arrivait en GET sur un point d'accès qui
+        // n'acceptait que le corps POST attendu ici — 400 "setAnswer expects a form body" pour
+        // chaque valeur remontée, constaté en conditions réelles (agent GLPI-Agent 1.18).
+        //
+        // "token" : ni le "action=setAnswer" en query string (en mode POST, seuls action/uuid/
+        // method y figurent) ni le corps du formulaire (qui ne porte que uuid/_sid/_cpt et le
+        // résultat lui-même) ne recontiennent jamais "machineid" — Collect.pm ne l'y met jamais
+        // (voir "args => $result" dans _processRemote, qui ne construit jamais cette clé). Sans
+        // moyen de retrouver l'agent, StoreCollectAnswersAsync tombait sur "agent est null" et
+        // rendait silencieusement 200 sans rien écrire — constaté en conditions réelles : la
+        // valeur remontait bien jusqu'à l'agent (log "Found REG_DWORD value: ..."), mais
+        // CollectResults restait vide. Le champ "token" de la réponse est repris tel quel par
+        // l'agent dans "_glpi_csrf_token" de chaque setAnswer suivant (Task/Collect.pm :
+        // "$result->{_glpi_csrf_token} = $token if $token"), ce qui sert ici à transporter
+        // l'identité de l'agent plutôt qu'un vrai jeton CSRF — adaptation, pas une reproduction
+        // du protocole d'origine. Il doit aussi être réémis dans chaque réponse de setAnswer
+        // (voir StoreCollectAnswersAsync), sous peine que l'agent traite son absence comme un
+        // échec CSRF et abandonne les entrées suivantes du même job.
+        return Ok(new JsonObject { ["jobs"] = jobs, ["postmethod"] = "POST", ["token"] = agent.AgentUuid });
     }
 
     /// <summary>
@@ -597,11 +643,13 @@ public class AgentController(
                 continue;
             }
 
+            CollectEntryContext? entryContext = await ResolveCollectEntryContextAsync(sid, cancellationToken);
+
             // Le nom vient de la définition, pas de la réponse : c'est lui qui s'affiche sur la
             // fiche et qui sert de clé d'unicité, et rien ne garantit que l'agent réémette les
             // champs qu'il n'utilise pas. Le "_name" reçu n'est qu'un repli, et le libellé de la
             // nature un dernier recours pour ne jamais perdre une valeur remontée.
-            string entryName = await ResolveEntryNameAsync(sid, cancellationToken)
+            string entryName = entryContext?.Name
                                ?? ReadString(answer, "_name")
                                ?? sid.Kind;
 
@@ -612,8 +660,13 @@ public class AgentController(
 
             existing ??= AddResult(computer.Id, sid, entryName);
 
-            existing.Key = ReadString(answer, "key") ?? ReadString(answer, "path") ?? ReadString(answer, "class");
-            existing.Value = ReadString(answer, "value") ?? ReadString(answer, "content") ?? RawValue(answer);
+            (string? extractedKey, string? extractedValue) = ExtractCollectValue(sid.Kind, answer, entryContext);
+
+            // Repli sur les noms de champs fixes puis sur le JSON brut seulement si rien de connu
+            // n'a matché — pour ne jamais perdre silencieusement une valeur remontée sous une
+            // forme imprévue.
+            existing.Key = extractedKey ?? ReadString(answer, "key") ?? ReadString(answer, "path") ?? ReadString(answer, "class");
+            existing.Value = extractedValue ?? ReadString(answer, "value") ?? ReadString(answer, "content") ?? RawValue(answer);
             existing.CollectedAt = DateTime.UtcNow;
             stored++;
         }
@@ -622,7 +675,9 @@ public class AgentController(
 
         logger.LogInformation("collect: agent {AgentUuid} — {Count} résultat(s) de collecte enregistré(s).", agentLabel, stored);
 
-        return Ok(new ProtocolAnswer { Status = "ok" });
+        // Réémis pour que l'agent le reprenne dans le prochain setAnswer du même job (plusieurs
+        // entrées WMI/registre) — voir le commentaire de "token" dans BuildCollectJobsAsync.
+        return Ok(new ProtocolAnswer { Status = "ok", Token = agent.AgentUuid });
     }
 
     // ---- Protocole natif de la tâche Collect ------------------------------------------------
@@ -633,53 +688,6 @@ public class AgentController(
     /// le plugin d'origine les distingue par leurs points d'accès, pas par l'action.
     /// </summary>
     private const string CollectRemotePath = "/inventory/collect";
-
-    /// <summary>
-    /// <c>GET /inventory?action=getConfig</c> — premier échange de la tâche Collect.
-    ///
-    /// La tâche ne lit pas ses travaux sur la route unique : elle demande d'abord une
-    /// configuration, y lit un <c>schedule</c>, et n'interroge ensuite que l'URL <c>remote</c>
-    /// qu'il porte. Sans cette réponse, elle s'arrête là et aucune collecte n'est jamais
-    /// exécutée — c'est ce qui laissait l'onglet « Informations de collecte » vide.
-    ///
-    /// En GET et sans en-tête <c>GLPI-Agent-ID</c> : la tâche passe par le client « Fusion » du
-    /// projet GLPI-Agent, qui envoie ses paramètres en query string et ne pose pas cet en-tête.
-    /// L'agent est donc reconnu par son <c>machineid</c>, qui vaut son <c>deviceid</c>.
-    /// </summary>
-    [HttpGet]
-    public async Task<IActionResult> GetConfig(
-        [FromQuery] string? action, [FromQuery] string? machineid, CancellationToken cancellationToken)
-    {
-        if (!string.Equals(action, "getConfig", StringComparison.OrdinalIgnoreCase))
-        {
-            return BadRequest(new ProtocolAnswer { Status = "error", Message = $"unsupported action '{action}'" });
-        }
-
-        GlpiAgent? agent = await FindAgentByMachineIdAsync(machineid, cancellationToken);
-
-        if (agent is not null)
-        {
-            UpdateAgentRequestMetadata(agent);
-            await db.SaveChangesAsync(cancellationToken);
-        }
-
-        // La périodicité est celle de la collecte, pas celle de l'inventaire : une heure suffit
-        // pour des valeurs de registre ou de WMI, et l'agent la respecte sans que le serveur ait à
-        // tenir un échéancier par poste.
-        return Ok(new JsonObject
-        {
-            ["configValidityPeriod"] = 600,
-            ["schedule"] = new JsonArray
-            {
-                new JsonObject
-                {
-                    ["task"] = "Collect",
-                    ["remote"] = $"{Request.Scheme}://{Request.Host}{CollectRemotePath}",
-                    ["periodicity"] = 3600,
-                },
-            },
-        });
-    }
 
     /// <summary>
     /// <c>GET|POST /inventory/collect</c> — travaux et résultats de la tâche Collect.
@@ -724,6 +732,11 @@ public class AgentController(
                 return BadRequest(new ProtocolAnswer { Status = "error", Message = "setAnswer expects a form body" });
             }
 
+            // setAnswer ne porte jamais de machineid (Collect.pm ne le met que dans les args de
+            // getJobs) : on retombe sur "_glpi_csrf_token", où getJobs avait placé l'AgentUuid —
+            // voir le commentaire de "token" dans BuildCollectJobsAsync.
+            agent ??= await ResolveAgentByCollectTokenAsync(form["_glpi_csrf_token"].FirstOrDefault(), cancellationToken);
+
             // Le formulaire est converti en objet JSON pour être rangé par le même code que
             // l'action setCollectAnswer : ce qui diffère est le transport, pas le résultat.
             JsonObject answer = [];
@@ -754,21 +767,83 @@ public class AgentController(
                 .Include(a => a.Computer)
                 .FirstOrDefaultAsync(a => a.DeviceId == machineId || a.AgentUuid == machineId, cancellationToken);
 
-    /// <summary>Nom de l'entrée de collecte désignée par le <c>_sid</c>, ou null si elle a été
-    /// supprimée depuis l'envoi du job.</summary>
-    private async Task<string?> ResolveEntryNameAsync((int CollectId, string Kind, int EntryId) sid, CancellationToken cancellationToken) =>
+    /// <summary>Retrouve l'agent pour un « setAnswer » de la tâche Collect à partir du jeton
+    /// renvoyé tel quel par l'agent — voir le commentaire de « token » dans
+    /// <see cref="BuildCollectJobsAsync"/>.</summary>
+    private async Task<GlpiAgent?> ResolveAgentByCollectTokenAsync(string? token, CancellationToken cancellationToken)
+        => string.IsNullOrWhiteSpace(token)
+            ? null
+            : await db.Agents
+                .Include(a => a.Computer)
+                .FirstOrDefaultAsync(a => a.AgentUuid == token, cancellationToken);
+
+    /// <summary>Ce qu'il faut de la définition d'une entrée de collecte pour interpréter sa
+    /// réponse : son nom d'affichage, et de quoi retrouver la donnée utile dans le JSON reçu
+    /// (voir <see cref="ExtractCollectValue"/>).</summary>
+    private sealed record CollectEntryContext(string? Name, string? RegistryKey, string? WmiProperties);
+
+    /// <summary>Contexte de l'entrée de collecte désignée par le <c>_sid</c>, ou null si elle a
+    /// été supprimée depuis l'envoi du job.</summary>
+    private async Task<CollectEntryContext?> ResolveCollectEntryContextAsync(
+        (int CollectId, string Kind, int EntryId) sid, CancellationToken cancellationToken) =>
         sid.Kind switch
         {
             "wmi" => await db.Set<CollectWmiEntry>()
                 .Where(entry => entry.Id == sid.EntryId && entry.CollectDefinitionId == sid.CollectId)
-                .Select(entry => entry.Name).FirstOrDefaultAsync(cancellationToken),
+                .Select(entry => new CollectEntryContext(entry.Name, null, entry.Properties))
+                .FirstOrDefaultAsync(cancellationToken),
             "file" => await db.Set<CollectFileSearchEntry>()
                 .Where(entry => entry.Id == sid.EntryId && entry.CollectDefinitionId == sid.CollectId)
-                .Select(entry => entry.Name).FirstOrDefaultAsync(cancellationToken),
+                .Select(entry => new CollectEntryContext(entry.Name, null, null))
+                .FirstOrDefaultAsync(cancellationToken),
             _ => await db.Set<CollectRegistryEntry>()
                 .Where(entry => entry.Id == sid.EntryId && entry.CollectDefinitionId == sid.CollectId)
-                .Select(entry => entry.Name).FirstOrDefaultAsync(cancellationToken),
+                .Select(entry => new CollectEntryContext(entry.Name, entry.RegistryKey, null))
+                .FirstOrDefaultAsync(cancellationToken),
         };
+
+    /// <summary>
+    /// La donnée collectée n'arrive jamais sous un champ fixe ("value"/"content") : elle est
+    /// nommée d'après ce qui a été demandé, exactement comme le fait GLPI-Agent lui-même —
+    /// constaté en conditions réelles, une réponse de registre ne portait que la paire
+    /// <c>{"UEFISecureBootEnabled": "0x00000001"}</c> au milieu des champs de protocole
+    /// (action/uuid/_sid/_cpt/_glpi_csrf_token), jamais de "value".
+    ///
+    /// - registre (<c>GLPI::Agent::Task::Collect::Registry::results</c>) : une seule clé
+    ///   dynamique, le dernier segment du chemin interrogé — c'est <c>RegistryKey</c> côté
+    ///   définition.
+    /// - WMI (<c>...::WMI::results</c>) : un objet par instance WMI, une clé par propriété
+    ///   demandée (<c>Properties</c>, liste séparée par virgules) — peut donc porter plusieurs
+    ///   valeurs à la fois, ce qu'un seul couple Clé/Valeur ne représente qu'en les concaténant.
+    /// - recherche de fichiers (<c>...::File::results</c>) : toujours les deux champs fixes
+    ///   <c>path</c>/<c>size</c>, eux bien nommés d'origine.
+    /// </summary>
+    private (string? Key, string? Value) ExtractCollectValue(string kind, JsonElement answer, CollectEntryContext? entry)
+    {
+        switch (kind)
+        {
+            case "wmi":
+                List<string> names = [.. (entry?.WmiProperties ?? string.Empty)
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Where(name => ReadString(answer, name) is not null)];
+
+                return names.Count switch
+                {
+                    0 => (null, null),
+                    1 => (names[0], ReadString(answer, names[0])),
+                    _ => (string.Join(", ", names),
+                          string.Join("; ", names.Select(name => $"{name}={ReadString(answer, name)}"))),
+                };
+
+            case "file":
+                return (ReadString(answer, "path"), ReadString(answer, "size"));
+
+            default: // "registry"
+                return entry?.RegistryKey is { } registryKey
+                    ? (registryKey, ReadString(answer, registryKey))
+                    : (null, null);
+        }
+    }
 
     private CollectResult AddResult(int computerId, (int CollectId, string Kind, int EntryId) sid, string entryName)
     {
@@ -815,11 +890,25 @@ public class AgentController(
     private static string? RawValue(JsonElement element) =>
         element.ValueKind is JsonValueKind.Object or JsonValueKind.Array ? element.GetRawText() : element.ToString();
 
-    /// <summary>Ruche, chemin et clé recollés en un seul chemin, sans doubler les séparateurs que
-    /// la saisie peut déjà porter aux extrémités.</summary>
+    /// <summary>
+    /// Ruche, chemin et clé recollés en un seul chemin, sans doubler les séparateurs que la saisie
+    /// peut déjà porter aux extrémités.
+    ///
+    /// Contrairement à l'usage Win32 courant, le champ « path » de la tâche Collect n'accepte pas
+    /// le séparateur « \ » : GLPI::Agent::Tools::Win32 configure son accès à Win32::TieRegistry
+    /// avec <c>Delimiter => '/'</c>, et <c>getRegistryValue</c> découpe explicitement le chemin sur
+    /// « / » (<c>m{^(HKEY_\w+.*)/([^/]+)/([^/]+)}</c>) pour en tirer la ruche, la clé et la valeur.
+    /// Joindre les segments avec « \ » — comme le faisait la première version — laisse le régex
+    /// découper au mauvais endroit dès que le chemin saisi contient lui-même des « / », et le
+    /// résultat corrompu part droit dans <c>$Registry->Open()</c> : constaté en conditions réelles,
+    /// un crash Perl (« Usage: Win32API::Registry::regConstant("CONST_NAME") ») là où l'agent
+    /// attendait justement <c>HKEY_LOCAL_MACHINE/SYSTEM/.../SecureBoot/State/UEFISecureBootEnabled</c>.
+    /// Toute saisie en « \ », plus naturelle pour un humain habitué au Registre, est donc convertie
+    /// ici plutôt que renvoyée telle quelle.
+    /// </summary>
     private static string RegistryPath(CollectRegistryEntry entry) =>
-        string.Join('\\', new[] { entry.Hive, entry.Path, entry.RegistryKey }
-            .Select(part => part.Trim('\\'))
+        string.Join('/', new[] { entry.Hive, entry.Path, entry.RegistryKey }
+            .Select(part => part.Replace('\\', '/').Trim('/'))
             .Where(part => part.Length > 0));
 
     private static string Sid(int collectId, string kind, int entryId) => $"{collectId}:{kind}:{entryId}";
@@ -1494,6 +1583,7 @@ public class ProtocolAnswer
     public required string Status { get; set; }
     public string? Message { get; set; }
     public string? Expiration { get; set; }
+    public string? Token { get; set; }
 }
 
 public class ContactRequest
