@@ -11,6 +11,7 @@ using GlpiNg.Modules.Abstractions.Directory;
 using GlpiNg.Modules.Abstractions.Documents;
 using GlpiNg.Modules.Abstractions.Notes;
 using GlpiNg.Modules.Abstractions.Entities;
+using GlpiNg.Modules.Abstractions.FieldUnicity;
 using GlpiNg.Modules.Abstractions.Import;
 using GlpiNg.Modules.Abstractions.Preferences;
 using GlpiNg.Modules.Abstractions.Storage;
@@ -27,6 +28,7 @@ using GlpiNg.Web.Options;
 using GlpiNg.Web.Services;
 using GlpiNg.Web.Services.Documents;
 using GlpiNg.Web.Services.Notes;
+using GlpiNg.Web.Services.FieldUnicity;
 using GlpiNg.Web.Services.Notifications;
 using GlpiNg.Modules.Abstractions.ExternalLinks;
 using GlpiNg.Web.Services.ExternalLinks;
@@ -510,6 +512,14 @@ public class Program
             builder.Services.AddScoped<NotificationDispatchService>();
             builder.Services.AddSingleton<SmtpMailSender>();
             builder.Services.AddScoped<ICronTask, QueuedNotificationSenderCronTask>();
+
+            // Unicité des champs (voir /config/field-unicity, Models/FieldUnicity et
+            // Services/FieldUnicity) : les modules ne connaissent que le contrat
+            // IFieldUnicityChecker, qu'ils appellent avant chaque création d'actif, et l'hôte porte
+            // seul la table des critères. Le catalogue suit IDbContextFactory, enregistré ici par
+            // requête ; sa lecture du modèle EF Core, elle, est mise en cache pour le processus.
+            builder.Services.AddScoped<FieldUnicityCatalog>();
+            builder.Services.AddScoped<IFieldUnicityChecker, FieldUnicityService>();
 
             // Webhooks (voir /config/webhooks, Models/Webhooks et Services/Webhooks) : second
             // canal branché sur les mêmes événements que les notifications ci-dessus —

@@ -26,4 +26,24 @@ public static class ItemTypes
 
     /// <summary>Groupe.</summary>
     public const string Group = "Group";
+
+    // Autres actifs du parc. Comme ci-dessus, ce sont les noms de GLPI — d'où « PDU » en capitales,
+    // qui ne suit pas la casse de la classe C# correspondante.
+    public const string Printer = "Printer";
+    public const string Peripheral = "Peripheral";
+    public const string NetworkEquipment = "NetworkEquipment";
+    public const string Phone = "Phone";
+    public const string Rack = "Rack";
+    public const string Enclosure = "Enclosure";
+    public const string Pdu = "PDU";
+    public const string PassiveEquipment = "PassiveEquipment";
+    public const string Cable = "Cable";
+    public const string CartridgeItem = "CartridgeItem";
+    public const string ConsumableItem = "ConsumableItem";
+
+    /// <summary>
+    /// Carte SIM. GLPI n'en fait pas un actif mais un composant (<c>DeviceSimcard</c>) ; GlpiNg lui
+    /// donne sa propre fiche, d'où un nom qui lui est propre plutôt qu'un nom de GLPI détourné.
+    /// </summary>
+    public const string SimCard = "SimCard";
 }

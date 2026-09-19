@@ -511,6 +511,16 @@ simplification assumée de la matrice très fine de GLPI.
 - Dictionnaires (`/admin/dictionaries`,
   `DictionaryRuleEngine`), règles d'import/affectation avec liste noire et
   journal des imports refusés (`/admin/import-rules`).
+- Unicité des champs (`/config/field-unicity`, équivalent de `FieldUnicity`) :
+  par type d'objet, la combinaison des champs cochés ne doit exister qu'une fois.
+  Un critère peut refuser la création et/ou envoyer une notification
+  (événement `Config.FieldUnicity/duplicate`). Le contrôle porte sur la création :
+  import d'inventaire pour les ordinateurs (le doublon part alors dans le journal
+  des imports refusés), saisie manuelle pour les autres types de parc. Un champ
+  laissé vide ne participe pas au contrôle, sans quoi deux actifs sans numéro de
+  série se verraient comme doublons l'un de l'autre. Les champs proposés sont lus
+  dans le modèle EF Core et limités au texte ; la modification d'un objet existant
+  n'est pas contrôlée, là où GLPI passe par `CommonDBTM`.
 - Recherche multi-critères sur toutes les listes du parc : critères enchaînés par
   ET/OU, opérateurs par type de champ (texte, nombre, date), tris multiples.
   Moteur et panneaux partagés (`Search/SearchEngine`, `Components/Search`) —

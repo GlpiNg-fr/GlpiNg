@@ -147,6 +147,7 @@ public static class ProfileSectionMap
             return type.Name switch
             {
                 nameof(AuthLdapServer) or nameof(AuthMailServer) or nameof(OAuthClient) or nameof(AppSetting)
+                    or nameof(Models.FieldUnicity.FieldUnicityCriterion) or nameof(Models.FieldUnicity.FieldUnicityField)
                     => ProfileSection.Configuration,
                 _ => ProfileSection.Administration,
             };

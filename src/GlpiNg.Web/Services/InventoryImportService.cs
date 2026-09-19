@@ -1,4 +1,6 @@
 ﻿using GlpiNg.Modules.Abstractions.Deployment;
+using GlpiNg.Modules.Abstractions.FieldUnicity;
+using GlpiNg.Modules.Abstractions.Items;
 using GlpiNg.Modules.Deployment.Models;
 using GlpiNg.Modules.Deployment.Services;
 using GlpiNg.Modules.Inventory.Models;
@@ -21,11 +23,15 @@ public class InventoryImportService(
     SettingsCacheService settingsStore,
     NotificationDispatchService notificationDispatch,
     IComputerDeploymentAssignmentService deploymentAssignmentService,
+    IFieldUnicityChecker fieldUnicity,
     EntityTreeCache entityTree,
     IHttpContextAccessor httpContextAccessor)
 {
     private const string HistoryUser = "inventory";
     private const string SettingsSection = "InventorySettings";
+
+    /// <summary>Un poste qui n'existe pas encore n'a aucun champ verrouillé : son identifiant n'existe pas, et il n'y a rien à protéger.</summary>
+    private static readonly IReadOnlySet<string> EmptyLockedFields = new HashSet<string>(StringComparer.Ordinal);
 
     /// <summary>Résultat null : l'inventaire a été rejeté par une règle d'affectation à l'import (action RefuseImport) — voir BuildImportAssignmentContext.</summary>
     public async Task<Computer?> ImportAsync(GlpiAgent agent, InventoryContent content, CancellationToken cancellationToken = default)
@@ -58,6 +64,13 @@ public class InventoryImportService(
             return null;
         }
 
+        // Dictionnaires et liste noire : chargés avant la résolution du poste, parce que le contrôle
+        // d'unicité ci-dessous compare des valeurs déjà normalisées. Les comparer avant passage des
+        // dictionnaires laisserait un modèle réécrit (« LATITUDE 5540 » → « Latitude 5540 ») ne pas
+        // se reconnaître comme doublon de ce qui est déjà en base.
+        Dictionary<DictionaryRuleType, List<DictionaryRule>> dictionaries = await LoadActiveDictionaryRulesAsync(cancellationToken);
+        Dictionary<ImportBlacklistType, HashSet<string>> blacklist = await LoadBlacklistAsync(cancellationToken);
+
         Computer? computer = await WithInventoryCollections(db.Computers)
             .FirstOrDefaultAsync(c => c.AgentId == agent.Id, cancellationToken);
 
@@ -85,6 +98,37 @@ public class InventoryImportService(
                 Name = content.Hardware?.Name ?? agent.Hostname ?? agent.DeviceId ?? "Inconnu",
                 EntityId = ResolveEntityId(agent, content),
             };
+
+            // Unicité des champs (voir FieldUnicityService) : contrôlée ici seulement, c'est-à-dire
+            // quand l'inventaire ne correspond à aucun poste connu. Une remontée d'un poste déjà
+            // enregistré n'est pas un doublon, et la contrôler ferait refuser chaque inventaire
+            // suivant d'un poste dont les valeurs viennent justement d'être enregistrées.
+            //
+            // Le poste candidat est renseigné avant tout écrit en base — ApplyHardware ne touche que
+            // l'objet qu'on lui passe — pour que le contrôle porte sur les valeurs réellement
+            // enregistrées plutôt que sur le seul nom.
+            ApplyHardware(computer, content, dictionaries, blacklist, EmptyLockedFields);
+
+            FieldUnicityVerdict verdict = await fieldUnicity.CheckAsync(
+                ItemTypes.Computer, db.Computers.AsNoTracking(), computer, cancellationToken: cancellationToken);
+
+            if (verdict.Refused)
+            {
+                db.Set<RefusedImportLog>().Add(new RefusedImportLog
+                {
+                    RuleName = $"Unicité des champs — {verdict.CriterionName}",
+                    ComputerName = importContext.ComputerName,
+                    SerialNumber = importContext.SerialNumber,
+                    Domain = importContext.Domain,
+                    Tag = importContext.Tag,
+                    IpAddress = importContext.IpAddresses.FirstOrDefault(ip => !string.IsNullOrWhiteSpace(ip)),
+                    AgentIdentifier = agent.DeviceId ?? agent.Hostname ?? agent.AgentUuid
+                });
+
+                await db.SaveChangesAsync(cancellationToken);
+                return null;
+            }
+
             db.Computers.Add(computer);
             isNew = true;
 
@@ -117,18 +161,14 @@ public class InventoryImportService(
 
         ComputerSnapshot before = ComputerSnapshot.Capture(computer);
 
-        Dictionary<DictionaryRuleType, List<DictionaryRule>> dictionaries = await LoadActiveDictionaryRulesAsync(cancellationToken);
-        Dictionary<ImportBlacklistType, HashSet<string>> blacklist = await LoadBlacklistAsync(cancellationToken);
-
-        // Verrous du poste : chargés avant toute écriture. Un poste qui vient d'être créé n'en a
-        // aucun — son identifiant n'existe pas encore, et il n'y a rien à protéger.
+        // Verrous du poste : chargés avant toute écriture.
         IReadOnlySet<string> lockedFields = computer.Id > 0
             ? (await db.Set<LockedField>()
                 .AsNoTracking()
                 .Where(lockedField => lockedField.ItemType == ComputerLockableFields.ItemType && lockedField.ItemId == computer.Id)
                 .Select(lockedField => lockedField.Field)
                 .ToListAsync(cancellationToken)).ToHashSet(StringComparer.Ordinal)
-            : new HashSet<string>(StringComparer.Ordinal);
+            : EmptyLockedFields;
 
         ApplyHardware(computer, content, dictionaries, blacklist, lockedFields);
         ApplyComponents(computer, content, settings);
