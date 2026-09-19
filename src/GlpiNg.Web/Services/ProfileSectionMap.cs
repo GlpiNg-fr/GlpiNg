@@ -148,7 +148,15 @@ public static class ProfileSectionMap
             {
                 nameof(AuthLdapServer) or nameof(AuthMailServer) or nameof(OAuthClient) or nameof(AppSetting)
                     or nameof(Models.FieldUnicity.FieldUnicityCriterion) or nameof(Models.FieldUnicity.FieldUnicityField)
+                    // Définir un type d'actif est de la configuration ; remplir le parc avec ces
+                    // actifs est du parc — d'où deux sections pour la même fonctionnalité.
+                    or nameof(Models.CustomAssets.CustomAssetDefinition) or nameof(Models.CustomAssets.CustomAssetField)
                     => ProfileSection.Configuration,
+
+                nameof(Models.CustomAssets.CustomAsset) or nameof(Models.CustomAssets.CustomAssetValue)
+                    or nameof(Models.CustomAssets.CustomAssetHistoryEntry)
+                    => ProfileSection.Parc,
+
                 _ => ProfileSection.Administration,
             };
         }

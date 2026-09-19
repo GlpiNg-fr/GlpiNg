@@ -8,6 +8,7 @@ using GlpiNg.Web.Models.Documents;
 using GlpiNg.Web.Models.Notes;
 using GlpiNg.Web.Models;
 using GlpiNg.Web.Models.Notifications;
+using GlpiNg.Web.Models.CustomAssets;
 using GlpiNg.Web.Models.ExternalLinks;
 using GlpiNg.Web.Models.FieldUnicity;
 using GlpiNg.Web.Models.Webhooks;
@@ -161,6 +162,12 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
 
     public DbSet<FieldUnicityCriterion> FieldUnicityCriteria => Set<FieldUnicityCriterion>();
     public DbSet<FieldUnicityField> FieldUnicityFields => Set<FieldUnicityField>();
+
+    public DbSet<CustomAssetDefinition> CustomAssetDefinitions => Set<CustomAssetDefinition>();
+    public DbSet<CustomAssetField> CustomAssetFields => Set<CustomAssetField>();
+    public DbSet<CustomAsset> CustomAssets => Set<CustomAsset>();
+    public DbSet<CustomAssetValue> CustomAssetValues => Set<CustomAssetValue>();
+    public DbSet<CustomAssetHistoryEntry> CustomAssetHistoryEntries => Set<CustomAssetHistoryEntry>();
 
     public DbSet<KnowledgeBaseCategory> KnowledgeBaseCategories => Set<KnowledgeBaseCategory>();
     public DbSet<KnowledgeBaseArticle> KnowledgeBaseArticles => Set<KnowledgeBaseArticle>();
@@ -986,6 +993,59 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
         // type ? ». Elle doit rester insignifiante, sans quoi elle se paierait sur chaque import.
         modelBuilder.Entity<FieldUnicityCriterion>()
             .HasIndex(criterion => new { criterion.ItemType, criterion.IsActive });
+
+        modelBuilder.Entity<CustomAssetDefinition>()
+            .HasMany(definition => definition.Fields)
+            .WithOne(field => field.Definition)
+            .HasForeignKey(field => field.CustomAssetDefinitionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Le nom technique est la clé publique du type : segment d'URL, et type d'objet des
+        // documents et des notes. Deux types homonymes partageraient leurs pièces jointes.
+        modelBuilder.Entity<CustomAssetDefinition>()
+            .HasIndex(definition => definition.SystemName)
+            .IsUnique();
+
+        modelBuilder.Entity<CustomAsset>()
+            .HasOne(asset => asset.Definition)
+            .WithMany()
+            .HasForeignKey(asset => asset.CustomAssetDefinitionId)
+            // Supprimer un type emporte ses actifs : ils n'ont plus ni champs ni écran pour les
+            // afficher, et l'écran de configuration prévient avant d'en arriver là.
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<CustomAsset>()
+            .HasMany(asset => asset.Values)
+            .WithOne(value => value.Asset)
+            .HasForeignKey(value => value.CustomAssetId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Supprimer un champ efface les valeurs saisies pour lui : sans cascade, elles resteraient
+        // en base sans rien pour les nommer ni les afficher.
+        modelBuilder.Entity<CustomAssetValue>()
+            .HasOne(value => value.Field)
+            .WithMany()
+            .HasForeignKey(value => value.CustomAssetFieldId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Une valeur par champ et par actif : deux lignes pour le même couple feraient dépendre la
+        // valeur affichée de l'ordre de lecture.
+        modelBuilder.Entity<CustomAssetValue>()
+            .HasIndex(value => new { value.CustomAssetId, value.CustomAssetFieldId })
+            .IsUnique();
+
+        // C'est la requête de chaque liste : « les actifs de ce type ».
+        modelBuilder.Entity<CustomAsset>()
+            .HasIndex(asset => asset.CustomAssetDefinitionId);
+
+        modelBuilder.Entity<CustomAssetHistoryEntry>()
+            .HasOne(entry => entry.Asset)
+            .WithMany()
+            .HasForeignKey(entry => entry.CustomAssetId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<CustomAssetHistoryEntry>()
+            .HasIndex(entry => new { entry.CustomAssetId, entry.OccurredAt });
 
         // Clé primaire textuelle (nom de section, ex. "ParcSettings") plutôt qu'un Id auto-incrémenté :
         // longueur bornée nécessaire pour qu'une clé primaire soit indexable sous MySQL (utf8mb4).
