@@ -9,6 +9,7 @@ using GlpiNg.Web.Models.Notes;
 using GlpiNg.Web.Models;
 using GlpiNg.Web.Models.Notifications;
 using GlpiNg.Web.Models.ExternalLinks;
+using GlpiNg.Web.Models.FieldUnicity;
 using GlpiNg.Web.Models.Webhooks;
 using GlpiNg.Web.Services;
 using Microsoft.Data.SqlClient;
@@ -157,6 +158,9 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
 
     public DbSet<ExternalLink> ExternalLinks => Set<ExternalLink>();
     public DbSet<ExternalLinkItemType> ExternalLinkItemTypes => Set<ExternalLinkItemType>();
+
+    public DbSet<FieldUnicityCriterion> FieldUnicityCriteria => Set<FieldUnicityCriterion>();
+    public DbSet<FieldUnicityField> FieldUnicityFields => Set<FieldUnicityField>();
 
     public DbSet<KnowledgeBaseCategory> KnowledgeBaseCategories => Set<KnowledgeBaseCategory>();
     public DbSet<KnowledgeBaseArticle> KnowledgeBaseArticles => Set<KnowledgeBaseArticle>();
@@ -965,6 +969,23 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
         // C'est la requête de chaque ouverture de fiche : « quels liens pour ce type ? »
         modelBuilder.Entity<ExternalLinkItemType>()
             .HasIndex(association => association.ItemType);
+
+        modelBuilder.Entity<FieldUnicityCriterion>()
+            .HasMany(criterion => criterion.Fields)
+            .WithOne(field => field.Criterion)
+            .HasForeignKey(field => field.FieldUnicityCriterionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Un même champ ne se coche qu'une fois dans un critère : deux lignes identiques
+        // ajouteraient la même condition deux fois à la recherche de doublon.
+        modelBuilder.Entity<FieldUnicityField>()
+            .HasIndex(field => new { field.FieldUnicityCriterionId, field.FieldName })
+            .IsUnique();
+
+        // C'est la requête faite avant chaque création d'objet : « quels critères actifs pour ce
+        // type ? ». Elle doit rester insignifiante, sans quoi elle se paierait sur chaque import.
+        modelBuilder.Entity<FieldUnicityCriterion>()
+            .HasIndex(criterion => new { criterion.ItemType, criterion.IsActive });
 
         // Clé primaire textuelle (nom de section, ex. "ParcSettings") plutôt qu'un Id auto-incrémenté :
         // longueur bornée nécessaire pour qu'une clé primaire soit indexable sous MySQL (utf8mb4).

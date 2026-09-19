@@ -30,10 +30,12 @@ public static class NotificationEventCatalog
     public const string NetworkTaskJob = "Deployment.NetworkTaskJob";
     public const string DiscoveredNetworkDevice = "Deployment.DiscoveredNetworkDevice";
     public const string WakeOnLanTaskJob = "Deployment.WakeOnLanTaskJob";
+    public const string FieldUnicity = "Config.FieldUnicity";
 
     public const string EventNew = "new";
     public const string EventSuccess = "success";
     public const string EventError = "error";
+    public const string EventDuplicate = "duplicate";
 
     public static readonly IReadOnlyList<NotificationEventDefinition> All =
     [
@@ -110,6 +112,18 @@ public static class NotificationEventCatalog
             new("job.status", "Statut"),
             new("job.log", "Dernière ligne du journal"),
             new("job.url", "Lien vers les tâches de réveil réseau"),
+        ]),
+
+        // Publié par FieldUnicityService pour un critère dont la case « Envoyer une notification »
+        // est cochée, que la création soit refusée ou seulement signalée : "unicity.refused" dit
+        // laquelle des deux, pour qu'un même gabarit puisse servir aux deux usages.
+        new(FieldUnicity, "Unicité des champs", EventDuplicate, "Doublon détecté",
+        [
+            new("unicity.criterion", "Nom du critère"),
+            new("unicity.itemtype", "Type d'objet"),
+            new("unicity.fields", "Champs en doublon"),
+            new("unicity.values", "Valeurs en doublon"),
+            new("unicity.refused", "Création refusée (oui/non)"),
         ]),
     ];
 

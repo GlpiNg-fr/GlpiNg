@@ -87,7 +87,7 @@ public partial class Index : ComponentBase
         try
         {
             await using GlpiNgDbContext db = await DbFactory.CreateDbContextAsync();
-            InventoryImportService importer = new(db, SettingsStore, NotificationDispatch, DeploymentAssignmentService, EntityTree, HttpContextAccessor);
+            InventoryImportService importer = new(db, SettingsStore, NotificationDispatch, DeploymentAssignmentService, FieldUnicity, EntityTree, HttpContextAccessor);
 
             foreach (IBrowserFile file in e.GetMultipleFiles(10))
             {
