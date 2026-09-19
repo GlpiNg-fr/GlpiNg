@@ -250,6 +250,31 @@ courante, leur état, qui a posé le verrou et depuis quand — les champs
 verrouillables que la fiche n'affiche pas (domaine, prise en main à distance) n'y
 sont accessibles que là.
 
+### Actifs personnalisés (`/config/custom-assets`, `/parc/custom/{type}`)
+
+Types d'actifs définis par un administrateur, équivalent des actifs génériques de
+GLPI 11 : un vidéoprojecteur, un véhicule, un badge — ce que le parc contient et
+qu'aucun type livré ne décrit.
+
+- **Configuration** : libellés (singulier/pluriel), nom technique (segment d'URL
+  et référence des pièces jointes, définitif après création), icône, actif ou
+  non, et les champs propres au type — libellé, nature (texte, texte long,
+  nombre, oui/non, date, date et heure, URL, liste déroulante), obligatoire ou
+  non, ordre d'affichage. Une liste déroulante puise dans les intitulés existants
+  (`/config/dropdowns`) plutôt que d'ouvrir une seconde liste de valeurs de
+  référence à tenir en parallèle.
+- **Parc** : chaque type actif prend sa place dans le menu Parc, avec sa liste
+  (recherche sur le nom, le commentaire et les valeurs affichées), sa fiche de
+  création/édition/suppression et le cloisonnement par entité des autres actifs.
+- **Onglets** activables par type, les « capacités » de GLPI : Documents, Notes
+  et Historique des modifications (champ par champ, comme les fiches livrées).
+
+Écart assumé : GLPI engendre une classe et une table par type, là où GlpiNg range
+les valeurs dans deux tables communes (`CustomAssets`, `CustomAssetValues`). Pas
+de colonne typée ni d'index par champ, donc, ce qui est sans effet à l'échelle
+visée — et la contrepartie serait de fabriquer des migrations au moment où un
+administrateur valide un formulaire.
+
 ### Déploiement et réseau (`/tools/deployments`)
 
 - Paquets et jobs de déploiement, fichiers stockés et servis par hash SHA512,
@@ -883,8 +908,7 @@ manques suivants sont connus et assumés à ce stade.
   connaissances, le contenu est du Markdown (pas de WYSIWYG) et sans commentaires — les
   pièces jointes, elles, existent (voir « Documents »).
 - **Administration** : formulaires.
-- **Configuration** : actifs personnalisés, niveaux de services (SLA/OLA),
-  unicité des champs, collecteurs, plugins.
+- **Configuration** : niveaux de services (SLA/OLA), collecteurs, plugins.
 
 À noter : les sections `Assistance`, `Helpdesk` et `Analyse d'impact` de
 `/config` configurent des fonctionnalités qui n'existent pas encore.

@@ -93,7 +93,7 @@ public partial class MainLayout : IDisposable
         new("configuration", "ti-settings", "Configuration",
         [
             new("Générale", "/config", "ti-settings"),
-            new("Actifs personnalisés", Icon: "ti-tool"),
+            new("Actifs personnalisés", "/config/custom-assets", "ti-tool"),
             new("Notifications", "/config/notifications", "ti-bell-ringing"),
             new("Webhooks", "/config/webhooks", "ti-webhook"),
             new("Niveaux de services", Icon: "ti-clipboard-check"),
@@ -147,7 +147,7 @@ public partial class MainLayout : IDisposable
     protected override async Task OnInitializedAsync()
     {
         var modules = await SettingsStore.ReadSectionAsync<ModulesSettings>("ModulesSettings");
-        Groups = BuildGroups(modules);
+        Groups = BuildGroups(modules, await LoadCustomAssetItemsAsync());
         Nav.LocationChanged += OnLocationChanged;
         Breadcrumb = BuildBreadcrumb();
         _expandedGroup = FindGroupForPath();
@@ -172,7 +172,28 @@ public partial class MainLayout : IDisposable
         }
     }
 
-    private List<NavGroup> BuildGroups(ModulesSettings modules)
+    /// <summary>
+    /// Entrées du menu Parc pour les types d'actifs personnalisés actifs (voir
+    /// <c>Models/CustomAssets</c>). Lues en base à chaque ouverture de circuit plutôt que déclarées
+    /// en dur ou par un <c>IMenuProvider</c> : ces types naissent d'un formulaire de configuration,
+    /// donc la liste change sans redémarrage ni recompilation.
+    /// </summary>
+    private async Task<List<NavItem>> LoadCustomAssetItemsAsync()
+    {
+        await using GlpiNgDbContext db = await DbFactory.CreateDbContextAsync();
+
+        return await db.Set<Models.CustomAssets.CustomAssetDefinition>()
+            .AsNoTracking()
+            .Where(definition => definition.IsActive)
+            .OrderBy(definition => definition.LabelPlural)
+            .Select(definition => new NavItem(
+                definition.LabelPlural,
+                "/parc/custom/" + definition.SystemName,
+                definition.Icon))
+            .ToListAsync();
+    }
+
+    private List<NavGroup> BuildGroups(ModulesSettings modules, List<NavItem> customAssetItems)
     {
         var byKey = new Dictionary<string, NavGroup>();
         var ordered = new List<NavGroup>();
@@ -213,6 +234,13 @@ public partial class MainLayout : IDisposable
             if (hostByKey.TryGetValue(key, out var hostGroup))
             {
                 AddOrMerge(hostGroup.Key, hostGroup.Icon, hostGroup.Label, hostGroup.Items);
+            }
+
+            // Les types d'actifs personnalisés ferment le groupe Parc, après les types livrés :
+            // ils s'ajoutent au parc plutôt que de s'y intercaler.
+            if (key == "parc" && customAssetItems.Count > 0)
+            {
+                AddOrMerge("parc", "ti-server", "Parc", customAssetItems);
             }
 
             foreach (var moduleGroup in moduleGroups.Where(g => g.Key == key))
