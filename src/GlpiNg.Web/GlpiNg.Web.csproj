@@ -45,6 +45,8 @@
     <ProjectReference Include="..\GlpiNg.Modules.Deployment\GlpiNg.Modules.Deployment.csproj" />
     <ProjectReference Include="..\GlpiNg.Modules.Scheduler\GlpiNg.Modules.Scheduler.csproj" />
     <ProjectReference Include="..\GlpiNg.Modules.KnowledgeBase\GlpiNg.Modules.KnowledgeBase.csproj" />
+    <ProjectReference Include="..\GlpiNg.Modules.Management\GlpiNg.Modules.Management.csproj" />
+    <ProjectReference Include="..\GlpiNg.Modules.Assistance\GlpiNg.Modules.Assistance.csproj" />
   </ItemGroup>
 
 </Project>

@@ -53,9 +53,12 @@ public sealed class FieldUnicityCatalog(IDbContextFactory<GlpiNgDbContext> dbFac
     /// <summary>
     /// Champs exclus des propositions : un mot de passe ou une empreinte ne décrit pas l'identité
     /// d'un objet, et les faire ressortir dans une notification de doublon serait une fuite.
+    ///
+    /// « Community » en fait partie : une communauté SNMP est un mot de passe, quel que soit le nom
+    /// que lui donne le protocole — constaté sur la fiche Imprimante, qui la proposait.
     /// </summary>
     private static readonly string[] ExcludedFieldMarkers =
-        ["Password", "Passphrase", "Secret", "Token", "Hash", "Json", "Xml"];
+        ["Password", "Passphrase", "Secret", "Token", "Hash", "Community", "Json", "Xml"];
 
     private static readonly Dictionary<string, string> FieldLabels = new(StringComparer.Ordinal)
     {
@@ -74,6 +77,8 @@ public sealed class FieldUnicityCatalog(IDbContextFactory<GlpiNgDbContext> dbFac
         ["OperatingSystem"] = "Système d'exploitation",
         ["OsVersion"] = "Version du système",
         ["AssignedUser"] = "Utilisateur",
+        ["TechnicianInCharge"] = "Technicien responsable",
+        ["SnmpUsername"] = "Utilisateur SNMP",
         ["LastLoggedUser"] = "Dernier utilisateur connecté",
         ["Contact"] = "Contact",
         ["ContactNumber"] = "Numéro du contact",

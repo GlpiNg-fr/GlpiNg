@@ -46,4 +46,26 @@ public static class ItemTypes
     /// donne sa propre fiche, d'où un nom qui lui est propre plutôt qu'un nom de GLPI détourné.
     /// </summary>
     public const string SimCard = "SimCard";
+
+    // Gestion administrative (module Management) : tiers, contrats, budgets.
+    public const string Supplier = "Supplier";
+    public const string Contact = "Contact";
+    public const string Contract = "Contract";
+    public const string Budget = "Budget";
+    public const string SoftwareLicense = "SoftwareLicense";
+    public const string PhoneLine = "Line";
+    public const string Certificate = "Certificate";
+    public const string Domain = "Domain";
+    public const string Datacenter = "Datacenter";
+    public const string Cluster = "Cluster";
+    public const string Appliance = "Appliance";
+    public const string DatabaseInstance = "DatabaseInstance";
+
+    // Assistance (module Assistance).
+
+    /// <summary>Ticket d'assistance.</summary>
+    public const string Ticket = "Ticket";
+
+    /// <summary>Problème : la cause commune d'un ou plusieurs incidents.</summary>
+    public const string Problem = "Problem";
 }

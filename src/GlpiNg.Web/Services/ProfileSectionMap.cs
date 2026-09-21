@@ -18,6 +18,12 @@ public static class ProfileSectionMap
     private static readonly (string Prefix, ProfileSection Section)[] RoutePrefixes =
     [
         ("/parc", ProfileSection.Parc),
+        // Gestion administrative : tiers, contrats, budgets (module Management) et documents, que
+        // l'hôte y porte déjà. Le menu masquait bien le groupe faute de droit, mais l'adresse
+        // restait atteignable — c'est ce préfixe qui referme l'écart.
+        ("/management", ProfileSection.Gestion),
+        // Assistance : tickets et catégories ITIL (module Assistance).
+        ("/assistance", ProfileSection.Assistance),
         ("/tools", ProfileSection.Outils),
         ("/admin", ProfileSection.Administration),
         ("/config", ProfileSection.Configuration),
@@ -134,6 +140,20 @@ public static class ProfileSectionMap
                     or nameof(Modules.Inventory.Models.ImportBlacklistEntry) or nameof(Modules.Inventory.Models.RefusedImportLog) => ProfileSection.Administration,
                 _ => ProfileSection.Parc,
             };
+        }
+
+        // Module Gestion : tiers, contrats, budgets et leurs liaisons relèvent tous du groupe
+        // « Gestion » du menu, sous lequel vivent leurs pages (/management/...).
+        if (ns.StartsWith("GlpiNg.Modules.Management", StringComparison.Ordinal))
+        {
+            return ProfileSection.Gestion;
+        }
+
+        // Module Assistance : tickets, suivis, tâches, catégories ITIL et leur historique relèvent
+        // du groupe « Assistance » du menu (/assistance/...).
+        if (ns.StartsWith("GlpiNg.Modules.Assistance", StringComparison.Ordinal))
+        {
+            return ProfileSection.Assistance;
         }
 
         if (ns.StartsWith("GlpiNg.Modules.Cron", StringComparison.Ordinal)

@@ -80,7 +80,7 @@ namespace GlpiNg.Web.Migrations
                         column: x => x.CustomAssetDefinitionId,
                         principalTable: "CustomAssetDefinitions",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_CustomAssets_Entities_EntityId",
                         column: x => x.EntityId,

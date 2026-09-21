@@ -32,6 +32,17 @@ public static class NotificationEventCatalog
     public const string WakeOnLanTaskJob = "Deployment.WakeOnLanTaskJob";
     public const string FieldUnicity = "Config.FieldUnicity";
 
+    /// <summary>
+    /// Ticket d'assistance. Sans préfixe de module, contrairement aux autres : le module Assistance
+    /// publie ses événements avec <c>Abstractions/Items/ItemTypes.Ticket</c>, le nom que GLPI donne
+    /// déjà à ce type et que portent aussi ses documents et ses notes. Un préfixe ici obligerait à
+    /// tenir deux noms pour le même objet, et le couple ne correspondrait plus à la publication.
+    /// </summary>
+    public const string AssistanceTicket = GlpiNg.Modules.Abstractions.Items.ItemTypes.Ticket;
+
+    /// <inheritdoc cref="AssistanceTicket"/>
+    public const string AssistanceProblem = GlpiNg.Modules.Abstractions.Items.ItemTypes.Problem;
+
     public const string EventNew = "new";
     public const string EventSuccess = "success";
     public const string EventError = "error";
@@ -124,6 +135,32 @@ public static class NotificationEventCatalog
             new("unicity.fields", "Champs en doublon"),
             new("unicity.values", "Valeurs en doublon"),
             new("unicity.refused", "Création refusée (oui/non)"),
+        ]),
+
+        // Publié à l'ouverture d'un ticket (module Assistance, Tickets/Index.CreateAsync), par le
+        // contrat INotificationPublisher.
+        new(AssistanceTicket, "Ticket (Assistance)", EventNew, "Nouveau ticket ouvert",
+        [
+            new("ticket.id", "Numéro du ticket"),
+            new("ticket.title", "Titre"),
+            new("ticket.type", "Type (incident/demande)"),
+            new("ticket.status", "Statut"),
+            new("ticket.priority", "Priorité"),
+            new("ticket.requester", "Demandeur"),
+            new("ticket.category", "Catégorie"),
+            new("ticket.url", "Lien vers la fiche"),
+        ]),
+
+        // Publié à l'ouverture d'un problème (module Assistance, Problems/Index.CreateAsync).
+        new(AssistanceProblem, "Problème (Assistance)", EventNew, "Nouveau problème ouvert",
+        [
+            new("problem.id", "Numéro du problème"),
+            new("problem.title", "Titre"),
+            new("problem.status", "Statut"),
+            new("problem.priority", "Priorité"),
+            new("problem.author", "Rédacteur"),
+            new("problem.category", "Catégorie"),
+            new("problem.url", "Lien vers la fiche"),
         ]),
     ];
 

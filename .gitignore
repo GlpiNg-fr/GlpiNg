@@ -25,9 +25,11 @@ src/GlpiNg.Web/config-history.json
 .DS_Store
 Thumbs.db
 
-## Racine du stockage (StoragePaths) : clés DataProtection, fragments de paquets, et
-## appsettings.local.json (déjà ignoré par son nom plus haut). Rien de tout cela ne se versionne.
+## Racine du stockage (StoragePaths) : clés DataProtection, fragments de paquets, fichiers
+## documentaires, et appsettings.local.json (déjà ignoré par son nom plus haut). Rien de tout cela
+## ne se versionne.
 ## Les deux orthographes sont couvertes : sous Windows, « data » se résout vers le dossier source
 ## « Data/ » déjà présent, alors qu'un système sensible à la casse crée bien « data/ ».
 src/GlpiNg.Web/[Dd]ata/keys/
 src/GlpiNg.Web/[Dd]ata/packages/
+src/GlpiNg.Web/[Dd]ata/documents/

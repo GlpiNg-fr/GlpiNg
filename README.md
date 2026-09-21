@@ -83,13 +83,30 @@ src/
                                      #   MarkdownRenderer (rendu sûr du Markdown des articles)
     Components/Pages/KnowledgeBase/ # Consultation, fiche d'article, gestion des catégories
     Reports/                        # Rapport « Base de connaissances »
+  GlpiNg.Modules.Management/        # Module Gestion (tiers, contrats, finance, licences, infrastructure)
+    Models/                         # Supplier, Contact, Contract(+Cost), Budget, SoftwareLicense, PhoneLine,
+                                     #   Certificate, Domain, Datacenter, Cluster, Appliance, DatabaseInstance,
+                                     #   ManagementHistoryEntry (historique polymorphe)
+    Components/Pages/               # Une liste + une fiche par type, onglets Documents/Notes/Historique
+    ManagementMenuProvider.cs       # Contribue les entrées du groupe "Gestion"
+  GlpiNg.Modules.Assistance/        # Module Assistance (tickets, problèmes)
+    Models/                         # Ticket, Problem(+ProblemTicket), TicketCategory,
+                                     #   ItilFollowup/ItilTask (polymorphes), ItilLabels + matrice
+                                     #   urgence×impact, AssistanceHistoryEntry
+    Components/Pages/Tickets/       # Liste et fiche (suivis, tâches, solution, Documents/Notes/Historique)
+    Components/Pages/Problems/      # Liste et fiche (analyse, incidents rattachés, suivis, tâches, solution)
+    Components/Pages/Categories/    # Catégories ITIL, hiérarchiques, communes aux deux
+    AssistanceMenuProvider.cs       # Contribue "Tickets", "Problèmes" et "Catégories ITIL"
   GlpiNg.Modules.Cron/              # Ordonnanceur applicatif : CronBackgroundService + AutomaticActionRunner
   GlpiNg.Modules.Scheduler/         # Tâches cron qui déclenchent déploiements / tâches réseau / WoL
   GlpiNg.Modules.Abstractions/      # Contrats de contribution : Menu (IMenuProvider / MenuGroup /
                                      #   MenuItem), Reports (IReportProvider / ReportDefinition /
                                      #   ReportResult), Directory (IPrincipalDirectory /
                                      #   IPrincipalContextProvider), Cron (ICronTask), Deployment (IDeploymentTargetDirectory,
-                                     #   ICurrentUserDeploymentContextProvider, ...), Import
+                                     #   ICurrentUserDeploymentContextProvider, ...), Import,
+                                     #   Documents (IDocumentAttachments), Notes (IItemNotes),
+                                     #   Items (ItemTypes), FieldUnicity (IFieldUnicityChecker),
+                                     #   Notifications (INotificationPublisher)
   GlpiNg.Console/                   # CLI d'administration (db:install, db:check, user:*)
 ```
 
@@ -99,8 +116,16 @@ extension `AddXxxModule(...)` appelée depuis `Program.cs`, enregistre ses propr
 contrôleurs (`AddApplicationPart`) et ne dépend que du `DbContext` EF Core de base
 (pas du `GlpiNgDbContext` concret de l'hôte). Un module contribue aussi son propre
 menu sidebar via `IMenuProvider` plutôt que de faire modifier `MainLayout`
-directement par le code hôte. Un futur module Tickets suivrait le même schéma dans
-`src/GlpiNg.Modules.Tickets/`.
+directement par le code hôte. Les modules Gestion et Assistance sont les derniers
+à avoir suivi ce schéma ; un futur module Problèmes/Changements s'y rangerait de
+la même façon.
+
+Un module ajouté doit être déclaré à **quatre** endroits : le `ProjectReference`
+du csproj hôte, l'appel `AddXxxModule()` dans `Program.cs`, la liste
+`AdditionalAssemblies` de `Routes.razor` (navigation interne au circuit) et
+`MapRazorComponents<App>().AddAdditionalAssemblies(...)` (entrée par l'URL :
+lien collé, favori, rechargement). En oublier un des deux derniers donne des
+pages qui s'ouvrent depuis le menu mais répondent 404 quand on colle leur adresse.
 
 ## État actuel
 
@@ -275,6 +300,87 @@ de colonne typée ni d'index par champ, donc, ce qui est sans effet à l'échell
 visée — et la contrepartie serait de fabriquer des migrations au moment où un
 administrateur valide un formulaire.
 
+### Assistance (`/assistance/tickets`)
+
+Le ticket, repris de GLPI (`glpi_tickets`), porté par le module
+`GlpiNg.Modules.Assistance`.
+
+- **Fiche** : titre, description, type (incident / demande), statut ITIL
+  (Nouveau, En cours attribué, En cours planifié, En attente, Résolu, Clos),
+  catégorie, demandeur (compte de l'application ou appelant externe), technicien
+  et groupe attribués, échéance.
+- **Priorité** déduite de l'urgence et de l'impact par la matrice par défaut de
+  GLPI (`TicketPriorityMatrix`). La forcer à la main la détache du calcul
+  (`IsPriorityManual`), faute de quoi le prochain changement d'urgence
+  l'écraserait sans prévenir ; un bouton « Recalculer » la raccroche.
+- **Suivis** : le fil des échanges, avec la distinction interne / visible du
+  demandeur — GlpiNg n'a pas encore d'interface demandeur, mais la question se
+  pose à l'écriture, pas après coup.
+- **Tâches** : travail à mener, planifiable et attribuable, distinct d'un suivi
+  qui ne fait que raconter. Cochée, elle est datée.
+- **Solution** : type et contenu ; « Marquer comme résolu » enregistre, passe le
+  ticket en « Résolu » et date la résolution. Les dates de résolution et de
+  clôture sont déduites du seul statut, par quelque chemin qu'on y arrive.
+- **Onglets** Documents, Notes et Historique (champ par champ), comme les autres
+  fiches.
+- **Notification** à l'ouverture (`Ticket` / `new` au catalogue d'événements),
+  publiée par le contrat `Abstractions/Notifications/INotificationPublisher` :
+  le module ne connaît ni les gabarits ni les destinataires.
+- **Catégories ITIL** (`/assistance/categories`), hiérarchiques et communes aux
+  tickets et aux problèmes. Une catégorie portée par un objet ou par une
+  sous-catégorie ne se supprime pas ; la désactiver la retire des listes de choix
+  sans toucher à ce qui la porte déjà.
+
+### Problèmes (`/assistance/problems`)
+
+Le problème, repris de GLPI (`glpi_problems`) : la cause commune d'un ou
+plusieurs incidents. Là où un ticket répare un cas, un problème cherche pourquoi
+il se répète. Il partage avec le ticket la catégorie, l'échelle
+urgence/impact/priorité, les suivis, les tâches et les onglets
+Documents/Notes/Historique ; ce qui lui est propre :
+
+- **Analyse en trois temps** : symptômes, cause, conséquences
+  (`symptomcontent`, `causecontent`, `impactcontent` de GLPI), plus un
+  **contournement** — ce qu'on applique aux incidents en attendant le correctif,
+  distinct de la solution qui, elle, traite la cause.
+- **Incidents rattachés** (`glpi_problems_tickets`) : c'est ce lien qui donne sa
+  mesure au problème. Il se pose depuis la fiche du problème et s'affiche des
+  deux côtés — l'onglet « Problèmes » d'un ticket dit à quelle cause connue il se
+  rattache. Supprimer l'un ne supprime jamais l'autre, seulement le lien.
+- **Deux statuts de plus** que le ticket, et ce ne sont pas des doublons :
+  « Accepté » (retenu pour analyse) et **« Sous observation »** (correctif posé,
+  effet pas encore confirmé — le problème reste *ouvert*). Clore un problème dont
+  des incidents rattachés sont encore ouverts est signalé, pas empêché.
+- Un **rédacteur** plutôt qu'un demandeur : un problème est ouvert par le
+  service, pas subi.
+
+Limites connues, communes aux tickets et aux problèmes : pas de rattachement à un
+actif du parc (il faudrait une colonne côté Inventory), pas de SLA/OLA, pas de
+gabarits, pas de règles métier, pas d'enquête de satisfaction, et pas de
+notification sur les transitions autres que l'ouverture. Côté problème, pas de
+création d'un problème depuis un incident en un geste, et pas de propagation de
+la solution aux incidents rattachés. Changements, planning et statistiques
+restent des entrées de menu sans page.
+
+**Suivis et tâches** vivent dans deux tables polymorphes (`ItilFollowups`,
+`ItilTasks` : `ItemType` + `ItemId`), comme `glpi_itilfollowups` : un objet ITIL
+de plus n'ajoute pas ses deux tables jumelles. La contrepartie est l'absence de
+clé étrangère, donc leur suppression explicite avec leur objet — c'est ce que
+font les pages de liste et de fiche.
+
+### Gestion (`/management/...`)
+
+Le socle administratif du parc, porté par le module `GlpiNg.Modules.Management` :
+fournisseurs, contacts, contrats (avec périodicité, reconduction, préavis et
+coûts), budgets, licences logicielles, lignes téléphoniques, certificats,
+domaines, data centers, clusters, applicatifs et bases de données. Chaque type a
+sa liste et sa fiche, avec les onglets Documents, Notes et Historique, le
+cloisonnement par entité et les montants en euros.
+
+Limites connues : ces fiches ne sont pas encore reliées aux actifs du parc (un
+contrat ne sait pas quels ordinateurs il couvre), et rien n'en est repris à
+l'import depuis GLPI.
+
 ### Déploiement et réseau (`/tools/deployments`)
 
 - Paquets et jobs de déploiement, fichiers stockés et servis par hash SHA512,
@@ -384,9 +490,10 @@ qu'une ; et les notes ne sont pas reprises à l'import depuis GLPI.
 Équivalent de « Gestion > Documents » de GLPI, et **entité de l'hôte** plutôt que d'un
 module : comme dans GLPI, un document se rattache à n'importe quel type d'objet via une
 référence polymorphe (`DocumentItem` : `ItemType` + `ItemId`, les noms de types étant ceux
-de GLPI — `KnowbaseItem`, `Computer`). Seuls les articles de la base de connaissances
-l'exploitent pour l'instant ; un module qui voudra attacher des fichiers passera par le
-contrat `Abstractions/Documents/IDocumentAttachments`, sans voir ni le modèle ni le disque.
+de GLPI — `KnowbaseItem`, `Computer`, `Ticket`). Les articles de la base de connaissances,
+les fiches de gestion, les actifs personnalisés et les tickets l'exploitent ; un module
+passe par le contrat `Abstractions/Documents/IDocumentAttachments`, sans voir ni le modèle
+ni le disque.
 
 - **Stockage** : sous `documents/` dans la racine de stockage, rangé par empreinte SHA-256
   sur deux niveaux (`a/ab/abcdef…`), comme les fragments de paquets de déploiement. Deux
@@ -407,7 +514,7 @@ contrat `Abstractions/Documents/IDocumentAttachments`, sans voir ni le modèle n
 
 Limites connues : pas d'écran de fiche par document (l'écran de gestion liste, téléverse,
 télécharge et supprime), pas de vignettes ni d'aperçu, et le rattachement ne se fait que
-depuis les objets qui le proposent — aujourd'hui les seuls articles.
+depuis les objets qui proposent l'onglet.
 
 ### Rapports (`/tools/reports`)
 
@@ -894,13 +1001,12 @@ manques suivants sont connus et assumés à ce stade.
 
 ### Modules fonctionnels absents
 
-- **Assistance** (groupe entier) : aucun modèle `Ticket`/`Problem`/`Change`
-  n'existe. Donc pas de tickets, problèmes, changements, planning,
-  statistiques, suivis/tâches, catégories ITIL, gabarits de tickets, enquêtes
-  de satisfaction.
-- **Gestion** (groupe entier) : licences, budgets, fournisseurs, contacts,
-  contrats, documents, lignes téléphoniques, certificats, data centers,
-  clusters, domaines, applicatifs, bases de données.
+- **Assistance** : les tickets et les problèmes existent (voir leurs sections
+  ci-dessus), avec suivis, tâches, solution, catégories ITIL et rattachement des
+  incidents à leur cause. Absents : changements, planning, statistiques,
+  gabarits, enquêtes de satisfaction, SLA/OLA et règles métier.
+- **Gestion** : le groupe est couvert (voir sa section ci-dessus), mais ses
+  fiches ne sont pas encore reliées aux actifs du parc.
 - **Outils** : réservations (et, absents même de la sidebar : projets, rappels,
   flux RSS). Les rapports et la base de connaissances existent (voir leurs sections
   ci-dessus) ; côté rapports, ceux de GLPI qui portent sur des modules absents —
@@ -911,15 +1017,15 @@ manques suivants sont connus et assumés à ce stade.
 - **Configuration** : niveaux de services (SLA/OLA), collecteurs, plugins.
 
 À noter : les sections `Assistance`, `Helpdesk` et `Analyse d'impact` de
-`/config` configurent des fonctionnalités qui n'existent pas encore.
+`/config` sont toujours inertes — tickets et problèmes existent, mais ils ne
+lisent aucun de ces réglages (matrice de priorité, gabarits, enquêtes) : la
+matrice appliquée est celle de GLPI par défaut, en dur.
 
 ### Manques transverses
 
 - **Pas d'API REST générique** — rien d'équivalent à `apirest.php` (CRUD et
   recherche par itemtype). Les seuls endpoints exposés sont `/inventory`,
   `/oauth2/token`, `/admin/import/glpi` et l'upload de fichiers de paquet.
-- **Pas de gestion documentaire** — aucune entité `Document`, donc pas de
-  pièces jointes sur les fiches.
 - **Pas d'internationalisation** — aucun `.resx` ni `IStringLocalizer`, l'UI est
   en français en dur.
 - **Actions massives limitées aux Ordinateurs** : statut, lieu et utilisateur
