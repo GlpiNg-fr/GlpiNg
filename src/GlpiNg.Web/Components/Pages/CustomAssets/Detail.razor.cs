@@ -211,6 +211,14 @@ public partial class Detail : ComponentBase
             return;
         }
 
+        // Les actifs partent d'abord, explicitement : la base ne les emporte pas en cascade avec
+        // leur type — voir le commentaire de la relation dans GlpiNgDbContext. Leurs valeurs et
+        // leur historique suivent, eux, par cascade.
+        List<CustomAsset> assets = await db.CustomAssets
+            .Where(asset => asset.CustomAssetDefinitionId == DefinitionId)
+            .ToListAsync();
+
+        db.CustomAssets.RemoveRange(assets);
         db.CustomAssetDefinitions.Remove(stored);
         await db.SaveChangesAsync();
 

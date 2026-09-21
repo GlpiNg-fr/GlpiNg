@@ -52,27 +52,18 @@ public partial class MainLayout : IDisposable
     [
         new("assistance", "ti-headset", "Assistance",
         [
-            new("Tickets", Icon: "ti-ticket"),
-            new("Problèmes", Icon: "ti-alert-triangle"),
+            // Tickets, Problèmes et Catégories ITIL viennent du module Assistance
+            // (AssistanceMenuProvider) ; ce qui reste ici n'a pas encore de page derrière.
             new("Changements", Icon: "ti-replace"),
             new("Planning", Icon: "ti-calendar"),
             new("Statistiques", Icon: "ti-chart-bar"),
         ]),
         new("gestion", "ti-wallet", "Gestion",
         [
-            new("Licences", Icon: "ti-license"),
-            new("Budgets", Icon: "ti-report-money"),
-            new("Fournisseurs", Icon: "ti-truck"),
-            new("Contacts", Icon: "ti-address-book"),
-            new("Contrats", Icon: "ti-file-text"),
+            // Tout le reste du groupe est apporté par le module Gestion (voir
+            // ManagementMenuProvider) : le déclarer ici aussi l'afficherait en double. Seuls les
+            // documents restent à l'hôte, qui les porte pour tous les types d'objets.
             new("Documents", "/management/documents", "ti-file"),
-            new("Lignes téléphoniques", Icon: "ti-phone-call"),
-            new("Certificats", Icon: "ti-certificate"),
-            new("Data centers", Icon: "ti-building-warehouse"),
-            new("Clusters", Icon: "ti-affiliate"),
-            new("Domaines", Icon: "ti-world-www"),
-            new("Applicatifs", Icon: "ti-apps"),
-            new("Bases de données", Icon: "ti-database"),
         ]),
         new("outils", "ti-briefcase", "Outils",
         [
@@ -236,16 +227,16 @@ public partial class MainLayout : IDisposable
                 AddOrMerge(hostGroup.Key, hostGroup.Icon, hostGroup.Label, hostGroup.Items);
             }
 
-            // Les types d'actifs personnalisés ferment le groupe Parc, après les types livrés :
-            // ils s'ajoutent au parc plutôt que de s'y intercaler.
-            if (key == "parc" && customAssetItems.Count > 0)
-            {
-                AddOrMerge("parc", "ti-server", "Parc", customAssetItems);
-            }
-
             foreach (var moduleGroup in moduleGroups.Where(g => g.Key == key))
             {
                 AddOrMerge(moduleGroup.Key, moduleGroup.Icon, moduleGroup.Label, moduleGroup.Items.Select(i => new NavItem(i.Label, i.Href, i.Icon)));
+            }
+
+            // Les types d'actifs personnalisés ferment le groupe Parc, après les types livrés par
+            // le module Inventory : ils s'ajoutent au parc plutôt que de s'y intercaler.
+            if (key == "parc" && customAssetItems.Count > 0)
+            {
+                AddOrMerge("parc", "ti-server", "Parc", customAssetItems);
             }
         }
 

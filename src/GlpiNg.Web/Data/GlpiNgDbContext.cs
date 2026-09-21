@@ -8,6 +8,8 @@ using GlpiNg.Web.Models.Documents;
 using GlpiNg.Web.Models.Notes;
 using GlpiNg.Web.Models;
 using GlpiNg.Web.Models.Notifications;
+using GlpiNg.Modules.Management.Models;
+using GlpiNg.Modules.Assistance.Models;
 using GlpiNg.Web.Models.CustomAssets;
 using GlpiNg.Web.Models.ExternalLinks;
 using GlpiNg.Web.Models.FieldUnicity;
@@ -162,6 +164,31 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
 
     public DbSet<FieldUnicityCriterion> FieldUnicityCriteria => Set<FieldUnicityCriterion>();
     public DbSet<FieldUnicityField> FieldUnicityFields => Set<FieldUnicityField>();
+
+    public DbSet<Supplier> Suppliers => Set<Supplier>();
+    public DbSet<SupplierContact> SupplierContacts => Set<SupplierContact>();
+    public DbSet<Contact> Contacts => Set<Contact>();
+    public DbSet<Contract> Contracts => Set<Contract>();
+    public DbSet<ContractSupplier> ContractSuppliers => Set<ContractSupplier>();
+    public DbSet<ContractCost> ContractCosts => Set<ContractCost>();
+    public DbSet<Budget> Budgets => Set<Budget>();
+    public DbSet<SoftwareLicense> SoftwareLicenses => Set<SoftwareLicense>();
+    public DbSet<PhoneLine> PhoneLines => Set<PhoneLine>();
+    public DbSet<Certificate> Certificates => Set<Certificate>();
+    public DbSet<Domain> Domains => Set<Domain>();
+    public DbSet<Datacenter> Datacenters => Set<Datacenter>();
+    public DbSet<Cluster> Clusters => Set<Cluster>();
+    public DbSet<Appliance> Appliances => Set<Appliance>();
+    public DbSet<DatabaseInstance> DatabaseInstances => Set<DatabaseInstance>();
+    public DbSet<ManagementHistoryEntry> ManagementHistoryEntries => Set<ManagementHistoryEntry>();
+
+    public DbSet<Ticket> Tickets => Set<Ticket>();
+    public DbSet<Problem> Problems => Set<Problem>();
+    public DbSet<ProblemTicket> ProblemTickets => Set<ProblemTicket>();
+    public DbSet<ItilFollowup> ItilFollowups => Set<ItilFollowup>();
+    public DbSet<ItilTask> ItilTasks => Set<ItilTask>();
+    public DbSet<TicketCategory> TicketCategories => Set<TicketCategory>();
+    public DbSet<AssistanceHistoryEntry> AssistanceHistoryEntries => Set<AssistanceHistoryEntry>();
 
     public DbSet<CustomAssetDefinition> CustomAssetDefinitions => Set<CustomAssetDefinition>();
     public DbSet<CustomAssetField> CustomAssetFields => Set<CustomAssetField>();
@@ -994,6 +1021,216 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
         modelBuilder.Entity<FieldUnicityCriterion>()
             .HasIndex(criterion => new { criterion.ItemType, criterion.IsActive });
 
+        // ---- Module Gestion : tiers, contrats, budgets ------------------------------------------
+
+        // Un tiers ne s'associe qu'une fois au même interlocuteur, et un contrat qu'une fois au
+        // même tiers : une ligne en double afficherait deux fois la même personne sur la fiche.
+        modelBuilder.Entity<SupplierContact>()
+            .HasIndex(link => new { link.SupplierId, link.ContactId })
+            .IsUnique();
+
+        modelBuilder.Entity<ContractSupplier>()
+            .HasIndex(link => new { link.ContractId, link.SupplierId })
+            .IsUnique();
+
+        modelBuilder.Entity<SupplierContact>()
+            .HasOne(link => link.Supplier)
+            .WithMany(supplier => supplier.Contacts)
+            .HasForeignKey(link => link.SupplierId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Pas de cascade depuis le contact : supprimer une personne ne doit pas emporter la ligne
+        // côté tiers sans qu'on le voie — et deux cascades vers la même table de liaison sont de
+        // toute façon refusées par SQL Server (voir CustomAssets plus bas).
+        modelBuilder.Entity<SupplierContact>()
+            .HasOne(link => link.Contact)
+            .WithMany(contact => contact.Suppliers)
+            .HasForeignKey(link => link.ContactId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ContractSupplier>()
+            .HasOne(link => link.Contract)
+            .WithMany(contract => contract.Suppliers)
+            .HasForeignKey(link => link.ContractId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ContractSupplier>()
+            .HasOne(link => link.Supplier)
+            .WithMany(supplier => supplier.Contracts)
+            .HasForeignKey(link => link.SupplierId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ContractCost>()
+            .HasOne(cost => cost.Contract)
+            .WithMany(contract => contract.Costs)
+            .HasForeignKey(cost => cost.ContractId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Un budget supprimé ne doit pas emporter les coûts qui lui étaient imputés : la dépense a
+        // bien eu lieu, c'est l'enveloppe qui disparaît. Le coût redevient simplement non imputé.
+        modelBuilder.Entity<ContractCost>()
+            .HasOne(cost => cost.Budget)
+            .WithMany(budget => budget.Costs)
+            .HasForeignKey(cost => cost.BudgetId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Montants : 2 décimales suffisent pour de la monnaie, et la précision doit être fixée ici
+        // sous peine d'un type flottant côté base, où 0,1 + 0,2 ne fait pas 0,3.
+        modelBuilder.Entity<ContractCost>()
+            .Property(cost => cost.Amount)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<Budget>()
+            .Property(budget => budget.Amount)
+            .HasPrecision(18, 2);
+
+        // Tiers et contrat sont facultatifs partout : leur suppression détache la fiche
+        // (SetNull) plutôt que de l'emporter — la licence achetée existe toujours.
+        modelBuilder.Entity<SoftwareLicense>()
+            .HasOne(item => item.Supplier)
+            .WithMany()
+            .HasForeignKey(item => item.SupplierId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<SoftwareLicense>()
+            .HasOne(item => item.Contract)
+            .WithMany()
+            .HasForeignKey(item => item.ContractId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<PhoneLine>()
+            .HasOne(item => item.Supplier)
+            .WithMany()
+            .HasForeignKey(item => item.SupplierId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<PhoneLine>()
+            .HasOne(item => item.Contract)
+            .WithMany()
+            .HasForeignKey(item => item.ContractId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Certificate>()
+            .HasOne(item => item.Supplier)
+            .WithMany()
+            .HasForeignKey(item => item.SupplierId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Certificate>()
+            .HasOne(item => item.Contract)
+            .WithMany()
+            .HasForeignKey(item => item.ContractId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Domain>()
+            .HasOne(item => item.Supplier)
+            .WithMany()
+            .HasForeignKey(item => item.SupplierId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Domain>()
+            .HasOne(item => item.Contract)
+            .WithMany()
+            .HasForeignKey(item => item.ContractId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Datacenter>()
+            .HasOne(item => item.Supplier)
+            .WithMany()
+            .HasForeignKey(item => item.SupplierId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Datacenter>()
+            .HasOne(item => item.Contract)
+            .WithMany()
+            .HasForeignKey(item => item.ContractId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Appliance>()
+            .HasOne(item => item.Supplier)
+            .WithMany()
+            .HasForeignKey(item => item.SupplierId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Appliance>()
+            .HasOne(item => item.Contract)
+            .WithMany()
+            .HasForeignKey(item => item.ContractId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // L'historique du module Gestion est polymorphe (une table pour ses douze types, comme
+        // glpi_logs) : c'est le couple type/identifiant qui est lu à chaque ouverture de fiche.
+        modelBuilder.Entity<ManagementHistoryEntry>()
+            .HasIndex(entry => new { entry.ItemType, entry.ItemId, entry.OccurredAt });
+
+        // Suivis et tâches sont polymorphes (ItemType + ItemId), comme glpi_itilfollowups : une
+        // seule table pour les tickets, les problèmes et ce qui viendra. Pas de clé étrangère, donc
+        // pas de cascade — ce sont les pages qui les suppriment avec leur objet.
+        modelBuilder.Entity<ItilFollowup>()
+            .HasIndex(entry => new { entry.ItemType, entry.ItemId, entry.CreatedAt });
+
+        modelBuilder.Entity<ItilTask>()
+            .HasIndex(entry => new { entry.ItemType, entry.ItemId });
+
+        // Une catégorie encore portée par un ticket ne peut pas disparaître sous lui : la liste des
+        // catégories refuse déjà la suppression, et cette contrainte le garantit en base.
+        modelBuilder.Entity<Ticket>()
+            .HasOne(ticket => ticket.Category)
+            .WithMany()
+            .HasForeignKey(ticket => ticket.CategoryId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Problem>()
+            .HasOne(problem => problem.Category)
+            .WithMany()
+            .HasForeignKey(problem => problem.CategoryId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Le rattachement d'un incident à un problème part avec l'un ou l'autre, et n'emporte
+        // jamais l'objet d'en face : supprimer un problème laisse ses incidents, supprimer un
+        // incident laisse le problème. Deux cascades vers la même table sont ici acceptées par SQL
+        // Server — Problems et Tickets ne se référencent pas, donc pas de chemin partagé (1785).
+        modelBuilder.Entity<ProblemTicket>()
+            .HasOne(link => link.Problem)
+            .WithMany()
+            .HasForeignKey(link => link.ProblemId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ProblemTicket>()
+            .HasOne(link => link.Ticket)
+            .WithMany()
+            .HasForeignKey(link => link.TicketId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Un incident ne se rattache qu'une fois au même problème : deux lignes feraient compter
+        // deux fois le même incident dans la mesure du problème.
+        modelBuilder.Entity<ProblemTicket>()
+            .HasIndex(link => new { link.ProblemId, link.TicketId })
+            .IsUnique();
+
+        modelBuilder.Entity<Problem>()
+            .HasIndex(problem => new { problem.Status, problem.OpenedAt });
+
+        modelBuilder.Entity<Problem>()
+            .HasIndex(problem => problem.AssignedUserId);
+
+        modelBuilder.Entity<TicketCategory>()
+            .HasOne(category => category.Parent)
+            .WithMany()
+            .HasForeignKey(category => category.ParentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Les requêtes de la liste : les tickets ouverts, et ceux d'un technicien.
+        modelBuilder.Entity<Ticket>()
+            .HasIndex(ticket => new { ticket.Status, ticket.OpenedAt });
+
+        modelBuilder.Entity<Ticket>()
+            .HasIndex(ticket => ticket.AssignedUserId);
+
+        // Même table polymorphe que l'historique de la Gestion, pour les mêmes raisons.
+        modelBuilder.Entity<AssistanceHistoryEntry>()
+            .HasIndex(entry => new { entry.ItemType, entry.ItemId, entry.OccurredAt });
+
         modelBuilder.Entity<CustomAssetDefinition>()
             .HasMany(definition => definition.Fields)
             .WithOne(field => field.Definition)
@@ -1010,9 +1247,14 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
             .HasOne(asset => asset.Definition)
             .WithMany()
             .HasForeignKey(asset => asset.CustomAssetDefinitionId)
-            // Supprimer un type emporte ses actifs : ils n'ont plus ni champs ni écran pour les
-            // afficher, et l'écran de configuration prévient avant d'en arriver là.
-            .OnDelete(DeleteBehavior.Cascade);
+            // Pas de cascade ici, alors que supprimer un type doit bien emporter ses actifs : la
+            // valeur d'un champ dépend à la fois de son actif et de son champ, tous deux rattachés
+            // au type. Deux chemins de cascade aboutiraient donc à CustomAssetValues, ce que SQL
+            // Server refuse (erreur 1785, constatée à l'application de la migration). La suppression
+            // des actifs est donc faite explicitement avant celle du type — voir
+            // Components/Pages/CustomAssets/Detail.DeleteAsync —, ce qui emporte leurs valeurs et
+            // leur historique par les cascades ci-dessous.
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<CustomAsset>()
             .HasMany(asset => asset.Values)

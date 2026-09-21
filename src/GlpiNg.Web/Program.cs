@@ -10,6 +10,7 @@ using GlpiNg.Modules.Abstractions.Deployment;
 using GlpiNg.Modules.Abstractions.Directory;
 using GlpiNg.Modules.Abstractions.Documents;
 using GlpiNg.Modules.Abstractions.Notes;
+using GlpiNg.Modules.Abstractions.Notifications;
 using GlpiNg.Modules.Abstractions.Entities;
 using GlpiNg.Modules.Abstractions.FieldUnicity;
 using GlpiNg.Modules.Abstractions.Import;
@@ -19,6 +20,8 @@ using GlpiNg.Modules.Cron;
 using GlpiNg.Modules.Deployment;
 using GlpiNg.Modules.Inventory;
 using GlpiNg.Modules.KnowledgeBase;
+using GlpiNg.Modules.Management;
+using GlpiNg.Modules.Assistance;
 using GlpiNg.Modules.Scheduler;
 using GlpiNg.Web.Components;
 using GlpiNg.Web.Data;
@@ -478,6 +481,16 @@ public class Program
             // raison que les modules ci-dessus : ses pages dépendent du DbContext de base.
             builder.Services.AddKnowledgeBaseModule();
 
+            // Module Gestion (voir
+            // GlpiNg.Modules.Management.ManagementModuleServiceCollectionExtensions) : tiers,
+            // contrats et budgets du groupe « Gestion ». Même raison que ci-dessus pour l'ordre.
+            builder.Services.AddManagementModule();
+
+            // Module Assistance (voir
+            // GlpiNg.Modules.Assistance.AssistanceModuleServiceCollectionExtensions) : les tickets
+            // du groupe « Assistance ». Même raison que ci-dessus pour l'ordre.
+            builder.Services.AddAssistanceModule();
+
             // Rapports (/tools/reports) : vue unique sur les IReportProvider contribués par les
             // modules ci-dessus (Inventory, Deployment, Base de connaissances). Enregistré après eux, pour que la
             // résolution d'IEnumerable<IReportProvider> les voie tous — l'hôte ne déclare lui-même
@@ -510,6 +523,12 @@ public class Program
             // QueuedNotificationSenderCronTask les expédie par SMTP (SmtpMailSender, MailKit) à
             // chaque tick du même service cron que HistoryPurgeCronTask ci-dessus.
             builder.Services.AddScoped<NotificationDispatchService>();
+
+            // Le même service, rendu aux modules par son contrat : c'est ainsi que le module
+            // Assistance notifie l'ouverture d'un ticket sans rien connaître des gabarits ni des
+            // destinataires.
+            builder.Services.AddScoped<INotificationPublisher, ModuleNotificationPublisher>();
+
             builder.Services.AddSingleton<SmtpMailSender>();
             builder.Services.AddScoped<ICronTask, QueuedNotificationSenderCronTask>();
 
@@ -613,9 +632,17 @@ public class Program
         // l'assembly distincte du projet hôte ne serait sinon pas découverte.
         app.MapRazorComponents<App>()
             .AddInteractiveServerRenderMode()
+            // Tout module apportant des pages @page doit figurer ici, en plus du Router de
+            // Routes.razor : ce dernier ne sert que la navigation interne au circuit, tandis que
+            // cette liste sert les entrées par l'URL (lien collé, favori, rechargement). Un module
+            // déclaré au seul Router donne des pages qui s'ouvrent depuis le menu mais répondent
+            // 404 quand on colle leur adresse — c'était le cas de la base de connaissances.
             .AddAdditionalAssemblies(
                 typeof(InventoryModuleServiceCollectionExtensions).Assembly,
-                typeof(DeploymentModuleServiceCollectionExtensions).Assembly)
+                typeof(DeploymentModuleServiceCollectionExtensions).Assembly,
+                typeof(KnowledgeBaseModuleServiceCollectionExtensions).Assembly,
+                typeof(ManagementModuleServiceCollectionExtensions).Assembly,
+                typeof(AssistanceModuleServiceCollectionExtensions).Assembly)
             .RequireAuthorization()
             // Les conventions posées ici (RequireAuthorization ci-dessus) ne s'appliquent pas
             // qu'aux pages : elles retombent aussi sur les endpoints du hub SignalR (/_blazor,
