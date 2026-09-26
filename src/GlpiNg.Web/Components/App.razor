@@ -1,6 +1,10 @@
 @using GlpiNg.Web.Components.Layout
 <!DOCTYPE html>
-<html lang="fr">
+@* Thème de l'utilisateur (préférences « Palette de couleur » et « Contraste élevé ») : les
+   palettes sont définies dans glpi-theme.css sous ces attributs, et data-bs-theme bascule Tabler en
+   mode sombre pour Darker et Midnight. Rendu côté serveur, donc sans flash au chargement. *@
+<html lang="fr" data-glpi-theme="@Display.Values.Palette" data-bs-theme="@(Display.Values.IsDarkPalette ? "dark" : "light")"
+      data-glpi-contrast="@(Display.Values.HighContrast ? "" : null)">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

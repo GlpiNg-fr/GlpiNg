@@ -43,10 +43,22 @@ public static class NotificationEventCatalog
     /// <inheritdoc cref="AssistanceTicket"/>
     public const string AssistanceProblem = GlpiNg.Modules.Abstractions.Items.ItemTypes.Problem;
 
+    /// <inheritdoc cref="AssistanceTicket"/>
+    public const string AssistanceChange = GlpiNg.Modules.Abstractions.Items.ItemTypes.Change;
+
     public const string EventNew = "new";
     public const string EventSuccess = "success";
     public const string EventError = "error";
     public const string EventDuplicate = "duplicate";
+
+    /// <summary>Un niveau d'escalade de niveau de service s'est appliqué à un ticket.</summary>
+    public const string EventEscalation = "escalation";
+
+    /// <summary>Une approbation est demandée sur un changement (clé « validation » de GLPI).</summary>
+    public const string EventValidation = "validation";
+
+    /// <summary>Un approbateur a répondu (clé « validation_answer » de GLPI).</summary>
+    public const string EventValidationAnswer = "validation_answer";
 
     public static readonly IReadOnlyList<NotificationEventDefinition> All =
     [
@@ -151,6 +163,15 @@ public static class NotificationEventCatalog
             new("ticket.url", "Lien vers la fiche"),
         ]),
 
+        // Publié par la tâche cron d'escalade des niveaux de service, quand un niveau portant
+        // l'action « Notifier » s'applique à un ticket.
+        new(AssistanceTicket, "Ticket (Assistance)", EventEscalation, "Escalade d'un niveau de service",
+        [
+            new("ticket.id", "Numéro du ticket"),
+            new("escalation.name", "Niveau d'escalade déclenché"),
+            new("ticket.url", "Lien vers la fiche"),
+        ]),
+
         // Publié à l'ouverture d'un problème (module Assistance, Problems/Index.CreateAsync).
         new(AssistanceProblem, "Problème (Assistance)", EventNew, "Nouveau problème ouvert",
         [
@@ -161,6 +182,40 @@ public static class NotificationEventCatalog
             new("problem.author", "Rédacteur"),
             new("problem.category", "Catégorie"),
             new("problem.url", "Lien vers la fiche"),
+        ]),
+
+        // Publié à l'ouverture d'un changement (module Assistance, Changes/Index.CreateAsync).
+        new(AssistanceChange, "Changement (Assistance)", EventNew, "Nouveau changement ouvert",
+        [
+            new("change.id", "Numéro du changement"),
+            new("change.title", "Titre"),
+            new("change.status", "Statut"),
+            new("change.priority", "Priorité"),
+            new("change.author", "Rédacteur"),
+            new("change.category", "Catégorie"),
+            new("change.url", "Lien vers la fiche"),
+        ]),
+
+        // Publié quand une approbation est demandée sur un changement (Changes/Detail).
+        new(AssistanceChange, "Changement (Assistance)", EventValidation, "Approbation demandée",
+        [
+            new("change.id", "Numéro du changement"),
+            new("change.title", "Titre"),
+            new("validation.validator", "Approbateur"),
+            new("validation.requester", "Demandeur de l'approbation"),
+            new("validation.comment", "Commentaire de la demande"),
+            new("change.url", "Lien vers la fiche"),
+        ]),
+
+        // Publié quand un approbateur répond (accord ou refus).
+        new(AssistanceChange, "Changement (Assistance)", EventValidationAnswer, "Réponse à une approbation",
+        [
+            new("change.id", "Numéro du changement"),
+            new("change.title", "Titre"),
+            new("validation.validator", "Approbateur"),
+            new("validation.status", "Réponse (Accepté / Refusé)"),
+            new("validation.answer", "Commentaire de l'approbateur"),
+            new("change.url", "Lien vers la fiche"),
         ]),
     ];
 

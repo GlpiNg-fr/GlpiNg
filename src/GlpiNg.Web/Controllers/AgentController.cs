@@ -323,9 +323,13 @@ public class AgentController(
     /// <summary>
     /// Téléchargement d'un fragment individuel d'un fichier de package (champ "multiparts" de
     /// associatedFiles dans le job renvoyé par getJobs) — voir <see cref="GetDeployFile"/> pour
-    /// le téléchargement du fichier entier reconstitué.
+    /// le téléchargement du fichier entier reconstitué. Un vrai agent n'appelle que la seconde
+    /// route : il ajoute toujours <c>{c1}/{c1c2}/{sha512}</c> à l'URL du miroir
+    /// (GLPI::Agent::Task::Deploy::File::_download) ; les deux segments de répartition ne servent
+    /// qu'à sa convention d'URL, le fragment est retrouvé par son sha512 seul.
     /// </summary>
     [HttpGet("deploy/file/part/{sha512}")]
+    [HttpGet("deploy/file/part/{shard1}/{shard2}/{sha512}")]
     public async Task<IActionResult> GetDeployFilePart(string sha512, CancellationToken cancellationToken)
     {
         DeploymentPackageFilePart? part = await db.DeploymentPackageFileParts
@@ -752,6 +756,16 @@ public class AgentController(
                 agent, document.RootElement, machineId ?? "(inconnu)", cancellationToken);
         }
 
+        // Envoyé une fois par job en fin de tâche (GLPI::Agent::Task::Collect::run). Le plugin
+        // d'origine y clôt l'état du job ; ici les collectes sont sans état (toutes les
+        // collectes actives, à chaque passage), il n'y a donc rien à clore. Répondu plutôt que
+        // rejeté : un 400 laissait une erreur « unsupported action 'jobsDone' » dans le journal de
+        // l'agent à chaque exécution. L'agent ne vérifie que la présence d'une réponse.
+        if (string.Equals(action, "jobsDone", StringComparison.OrdinalIgnoreCase))
+        {
+            return Ok(new JsonObject());
+        }
+
         return BadRequest(new ProtocolAnswer { Status = "error", Message = $"unsupported action '{action}'" });
     }
 
@@ -1111,11 +1125,15 @@ public class AgentController(
     /// <summary>Cœur commun aux deux façons dont un agent peut demander ses jobs de déploiement :
     /// "getJobs" en POST (identifié par l'en-tête GLPI-Agent-ID, voir <see cref="HandleGetJobsAsync"/>)
     /// et "getJobs" en GET (identifié par le paramètre "machineid", voir <see cref="HandleGet"/>).</summary>
+    /// <remarks>Sans job, la réponse est un objet vide : c'est la seule forme que
+    /// GLPI::Agent::Task::Deploy::processRemote lit comme « Nothing to do ». Un
+    /// <c>{"jobs":[]}</c> passait par _validateAnswer, qui le rejetait (« bad JSON: missing
+    /// associatedFiles key ») à chaque exécution de la tâche.</remarks>
     private async Task<IActionResult> HandleGetJobsCoreAsync(GlpiAgent? agent, CancellationToken cancellationToken)
     {
         if (agent is null)
         {
-            return Ok(new JsonObject { ["jobs"] = new JsonArray() });
+            return Ok(new JsonObject());
         }
 
         DeploymentJob? job = await db.DeploymentJobs
@@ -1128,11 +1146,13 @@ public class AgentController(
 
         if (job is null || job.Package is null)
         {
-            return Ok(new JsonObject { ["jobs"] = new JsonArray() });
+            return Ok(new JsonObject());
         }
 
         string jobUuid = job.Id.ToString("D8");
-        JsonObject payload = deployJobJsonBuilder.Build(job, job.Package, jobUuid);
+        // L'agent complète lui-même ce miroir en {c1}/{c1c2}/{sha512} — voir GetDeployFilePart.
+        string mirror = $"{Request.Scheme}://{Request.Host}{Request.PathBase}/inventory/deploy/file/part/";
+        JsonObject payload = deployJobJsonBuilder.Build(job, job.Package, jobUuid, [mirror]);
 
         job.Status = DeploymentStatus.Running;
         job.StartedAt = DateTime.UtcNow;

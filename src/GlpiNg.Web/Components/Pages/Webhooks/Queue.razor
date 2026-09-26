@@ -48,7 +48,7 @@
                         <tr>
                             <td>@item.WebhookName</td>
                             <td class="text-secondary">@EventLabel(item)</td>
-                            <td class="text-nowrap">@item.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="text-nowrap">@Display.DateTime(item.CreatedAt)</td>
                             <td class="text-secondary" style="word-break: break-all;">
                                 <span class="badge bg-secondary-lt me-1">@item.Method.ToString().ToUpperInvariant()</span>@item.Url
                             </td>

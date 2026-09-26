@@ -1,4 +1,5 @@
-﻿using GlpiNg.Web.Data;
+﻿using GlpiNg.Modules.Abstractions.Preferences;
+using GlpiNg.Web.Data;
 using GlpiNg.Web.Models.Notifications;
 using GlpiNg.Web.Services.Webhooks;
 using Microsoft.EntityFrameworkCore;
@@ -25,7 +26,8 @@ namespace GlpiNg.Web.Services.Notifications;
 public class NotificationDispatchService(
     GlpiNgDbContext db,
     SettingsCacheService settingsStore,
-    WebhookDispatchService webhookDispatch)
+    WebhookDispatchService webhookDispatch,
+    IUserPreferences preferences)
 {
     private const string SettingsSection = "NotificationSettings";
 
@@ -57,6 +59,8 @@ public class NotificationDispatchService(
             return;
         }
 
+        string? excludedEmail = await ExcludedActorEmailAsync(cancellationToken);
+
         foreach (Models.Notifications.Notification notification in notifications)
         {
             if (notification.Template is null)
@@ -68,7 +72,8 @@ public class NotificationDispatchService(
             string? text = Render(notification.Template.ContentText, variables);
             string? html = Render(notification.Template.ContentHtml, variables);
 
-            foreach (string email in await ResolveRecipientEmailsAsync(notification, cancellationToken))
+            foreach (string email in (await ResolveRecipientEmailsAsync(notification, cancellationToken))
+                         .Where(email => !string.Equals(email, excludedEmail, StringComparison.OrdinalIgnoreCase)))
             {
                 db.QueuedNotifications.Add(new QueuedNotification
                 {
@@ -85,6 +90,27 @@ public class NotificationDispatchService(
         }
 
         await db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Courriel de l'auteur de l'action à écarter des destinataires, quand sa préférence
+    /// « Notifications pour mes changements » vaut Non. L'auteur est l'utilisateur connecté qui a
+    /// déclenché la publication ; hors session (agent, tâche automatique), il n'y en a pas et
+    /// personne n'est écarté. Les webhooks ne sont pas concernés : une intégration n'est pas une
+    /// personne qu'on dérangerait.
+    /// </summary>
+    private async Task<string?> ExcludedActorEmailAsync(CancellationToken cancellationToken)
+    {
+        UserPreferenceValues actor = await preferences.GetAsync(cancellationToken);
+        if (actor.UserId is not { } userId || actor.NotifyOnMyChanges)
+        {
+            return null;
+        }
+
+        return await db.Users
+            .Where(user => user.Id == userId)
+            .Select(user => user.Email)
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     private async Task<List<string>> ResolveRecipientEmailsAsync(Models.Notifications.Notification notification, CancellationToken cancellationToken)

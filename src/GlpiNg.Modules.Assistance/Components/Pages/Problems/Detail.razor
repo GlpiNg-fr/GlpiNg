@@ -211,14 +211,14 @@ else
                                 <div class="glpi-fiche-field">
                                     <label>Ouvert le</label>
                                     <input class="form-control" disabled
-                                           value="@_problem.OpenedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")" />
+                                           value="@Display.DateTime(_problem.OpenedAt)" />
                                 </div>
                                 @if (_problem.SolvedAt is { } solved)
                                 {
                                     <div class="glpi-fiche-field">
                                         <label>Résolu le</label>
                                         <input class="form-control" disabled
-                                               value="@solved.ToLocalTime().ToString("dd/MM/yyyy HH:mm")" />
+                                               value="@Display.DateTime(solved)" />
                                     </div>
                                 }
                             </div>
@@ -338,7 +338,7 @@ else
                                                     </span>
                                                 </td>
                                                 <td class="text-secondary">
-                                                    @ticket.OpenedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                                    @Display.DateTime(ticket.OpenedAt)
                                                 </td>
                                                 <td>
                                                     <button type="button" class="btn btn-icon btn-sm text-danger" title="Détacher"
@@ -384,7 +384,7 @@ else
                         }
                         else
                         {
-                            @foreach (ItilFollowup followup in _followups)
+                            @foreach (ItilFollowup followup in Display.Chronological(_followups, followup => followup.CreatedAt))
                             {
                                 <div class="card mb-2 @(followup.IsPrivate ? "border-warning" : "")">
                                     <div class="card-body">
@@ -393,7 +393,7 @@ else
                                             <div class="text-secondary small">
                                                 <i class="ti ti-user me-1"></i>@followup.AuthorName
                                                 <span class="ms-2">
-                                                    <i class="ti ti-calendar me-1"></i>@followup.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                                    <i class="ti ti-calendar me-1"></i>@Display.DateTime(followup.CreatedAt)
                                                 </span>
                                                 @if (followup.IsPrivate)
                                                 {
@@ -484,7 +484,7 @@ else
                                                     @(task.AssignedUserId is { } id ? NameOfUser(id) : "—")
                                                 </td>
                                                 <td class="text-secondary">
-                                                    @(task.PlannedStart?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "—")
+                                                    @(Display.LocalDateTime(task.PlannedStart) ?? "—")
                                                 </td>
                                                 <td class="text-secondary">
                                                     @(task.DurationMinutes is { } minutes ? $"{minutes} min" : "—")
@@ -505,7 +505,7 @@ else
 
                     case "solution":
                         string solvedOn = _problem.SolvedAt is { } solvedDate
-                            ? $" le {solvedDate.ToLocalTime():dd/MM/yyyy HH:mm}"
+                            ? $" le {Display.DateTime(solvedDate)}"
                             : string.Empty;
 
                         @* Sous observation n'est pas un état d'arrivée : la solution est posée, le
@@ -566,6 +566,11 @@ else
                                 </p>
                             }
                         }
+                        break;
+
+                    case "changements":
+                        <LinkedChangesTab Changes="_changes"
+                                          Intro="Changements qui traitent la cause de ce problème. Le rattachement se fait depuis la fiche du changement." />
                         break;
 
                     case "documents":

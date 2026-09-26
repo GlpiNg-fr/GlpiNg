@@ -1,3 +1,4 @@
+@using GlpiNg.Web.Components.Shared
 @using GlpiNg.Web.Models
 @using GlpiNg.Web.Services
 @inject SettingsCacheService SettingsStore
@@ -150,16 +151,8 @@ else
 
         <div class="glpi-config-field">
             <label for="dv-palette">Palette de couleur</label>
-            <select id="dv-palette" @bind="_model.ColorPalette">
-                <option value="Auror">Auror</option>
-                <option value="Dark">Dark</option>
-                <option value="Darker">Darker</option>
-                <option value="Classic">Classic</option>
-                <option value="Midnight">Midnight</option>
-                <option value="Light Blue">Light Blue</option>
-                <option value="Vintage">Vintage</option>
-                <option value="Ice Cream">Ice Cream</option>
-            </select>
+            @* Avec aperçu de chaque palette : un <select> n'accepte que du texte. *@
+            <PaletteSelect Id="dv-palette" @bind-Value="_model.ColorPalette" />
         </div>
 
         <div class="glpi-config-field">

@@ -90,7 +90,7 @@ else
                         @foreach (AutomaticActionRunLog entry in _runLog)
                         {
                             <tr>
-                                <td>@entry.RanAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</td>
+                                <td>@Display.DateTime(entry.RanAt, seconds: true)</td>
                                 <td>
                                     @if (entry.Success)
                                     {

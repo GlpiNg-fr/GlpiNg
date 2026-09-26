@@ -106,7 +106,7 @@ else
             <div class="card-footer text-secondary">
                 @if (_generatedAt is DateTime generatedAt)
                 {
-                    <span>Généré le @generatedAt.ToString("dd/MM/yyyy à HH:mm")</span>
+                    <span>Généré le @Display.DateTime(generatedAt)</span>
                 }
                 else
                 {

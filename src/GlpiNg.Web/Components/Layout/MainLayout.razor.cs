@@ -50,14 +50,8 @@ public partial class MainLayout : IDisposable
     // pas cette liste.
     private static readonly List<NavGroup> HostGroups =
     [
-        new("assistance", "ti-headset", "Assistance",
-        [
-            // Tickets, Problèmes et Catégories ITIL viennent du module Assistance
-            // (AssistanceMenuProvider) ; ce qui reste ici n'a pas encore de page derrière.
-            new("Changements", Icon: "ti-replace"),
-            new("Planning", Icon: "ti-calendar"),
-            new("Statistiques", Icon: "ti-chart-bar"),
-        ]),
+        // « assistance » n'a plus d'entrée ici : tout le groupe vient du module Assistance
+        // (AssistanceMenuProvider), qui le crée lui-même.
         new("gestion", "ti-wallet", "Gestion",
         [
             // Tout le reste du groupe est apporté par le module Gestion (voir
@@ -87,7 +81,6 @@ public partial class MainLayout : IDisposable
             new("Actifs personnalisés", "/config/custom-assets", "ti-tool"),
             new("Notifications", "/config/notifications", "ti-bell-ringing"),
             new("Webhooks", "/config/webhooks", "ti-webhook"),
-            new("Niveaux de services", Icon: "ti-clipboard-check"),
             new("Unicité des champs", "/config/field-unicity", "ti-fingerprint"),
             new("Actions automatiques", "/config/automatic-actions", "ti-robot"),
             new("Authentification", "/config/auth", "ti-key"),
@@ -245,6 +238,19 @@ public partial class MainLayout : IDisposable
         foreach (var moduleGroup in moduleGroups.Where(g => !GroupOrder.Contains(g.Key) && modules.IsModuleEnabled(g.Key)))
         {
             AddOrMerge(moduleGroup.Key, moduleGroup.Icon, moduleGroup.Label, moduleGroup.Items.Select(i => new NavItem(i.Label, i.Href, i.Icon)));
+        }
+
+        // Les entrées sans adresse — ce qui reste à écrire — descendent en fin de groupe. Les
+        // entrées de l'hôte étant fusionnées avant celles des modules, une fonctionnalité reprise
+        // par un module se retrouvait sinon listée après les impasses qu'elle était venue
+        // remplacer : « Changements » avant « Tickets », « Plugins » avant « Niveaux de services ».
+        // Tri stable, donc l'ordre voulu est préservé de part et d'autre.
+        foreach (var group in ordered)
+        {
+            List<NavItem> sorted = [.. group.Items.OrderBy(item => item.Href is null)];
+
+            group.Items.Clear();
+            group.Items.AddRange(sorted);
         }
 
         return ordered;

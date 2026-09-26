@@ -95,7 +95,7 @@ public partial class AssetList : ComponentBase
     private string DisplayValue(CustomAsset asset, CustomAssetField field)
     {
         string? stored = asset.Values.FirstOrDefault(value => value.CustomAssetFieldId == field.Id)?.Value;
-        return CustomAssetValueFormat.ToDisplay(field, stored, DropdownName(field));
+        return CustomAssetValueFormat.ToDisplay(field, stored, DropdownName(field), Display.Values);
     }
 
     private Func<int, string?> DropdownName(CustomAssetField field) =>

@@ -16,6 +16,40 @@ window.glpiNg = {
         var closeButton = el.querySelector('[data-bs-dismiss="modal"]');
         if (closeButton) closeButton.click();
     },
+    // Fait suivre à un journal qui se remplit (job de déploiement en cours) ses dernières lignes :
+    // chaque rendu Blazor qui ajoute du contenu ramène en bas, sauf si l'utilisateur est remonté
+    // lire plus haut — il reprend alors la main, jusqu'à ce qu'il redescende en bas. Idempotente :
+    // appelée à chaque rendu, elle n'installe l'observateur qu'une fois par élément.
+    // « Était en bas » se juge contre la hauteur d'avant l'ajout, relue à chaque mutation, plutôt
+    // que sur l'événement scroll : le navigateur ne l'émet pas dans un onglet en arrière-plan, et
+    // la position de lecture de l'utilisateur était alors écrasée au rafraîchissement suivant.
+    followLog: function (el) {
+        if (!(el instanceof Element) || el._glpiFollowLog) return;
+        el._glpiFollowLog = true;
+        el.scrollTop = el.scrollHeight;
+        var previousHeight = el.scrollHeight;
+        new MutationObserver(function () {
+            var wasAtBottom = el.scrollTop + el.clientHeight >= previousHeight - 24;
+            if (wasAtBottom) el.scrollTop = el.scrollHeight;
+            previousHeight = el.scrollHeight;
+        }).observe(el, { childList: true, subtree: true, characterData: true });
+    },
+    // Transmet au composant la largeur réelle d'un élément, puis chacune de ses variations : un
+    // graphique SVG dessiné à sa vraie largeur garde un texte à sa vraie taille, là qu'un viewBox
+    // fixe étiré à la largeur de la carte grossissait les étiquettes d'axe avec l'écran.
+    // Idempotente par élément ; l'observateur disparaît avec l'élément.
+    observeWidth: function (el, dotNetRef, method) {
+        if (!(el instanceof Element) || el._glpiWidthObserver) return;
+        var last = 0;
+        el._glpiWidthObserver = new ResizeObserver(function (entries) {
+            var width = Math.round(entries[0].contentRect.width);
+            if (width > 0 && Math.abs(width - last) >= 4) {
+                last = width;
+                dotNetRef.invokeMethodAsync(method, width).catch(function () { });
+            }
+        });
+        el._glpiWidthObserver.observe(el);
+    },
     copyToClipboard: function (text) {
         return navigator.clipboard.writeText(text);
     },

@@ -97,6 +97,6 @@ public partial class Index : ComponentBase
 
     private static string FrequencyLabel(Row row) => FrequencyFormat.Label(row.State.FrequencyMinutes ?? row.Task.DefaultFrequencyMinutes);
 
-    private static string LastRunLabel(AutomaticActionState state) =>
-        state.LastRunAt is DateTime lastRunAt ? lastRunAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") : "Jamais exécutée";
+    private string LastRunLabel(AutomaticActionState state) =>
+        state.LastRunAt is DateTime lastRunAt ? Display.DateTime(lastRunAt)! : "Jamais exécutée";
 }

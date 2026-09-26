@@ -129,9 +129,9 @@
                                     <span class="badge bg-secondary-lt">@linked</span>
                                 }
                             </td>
-                            <td class="text-secondary">@problem.OpenedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="text-secondary">@Display.DateTime(problem.OpenedAt)</td>
                             <td class="@(problem.IsOverdue ? "text-danger fw-semibold" : "text-secondary")">
-                                @(problem.DueDate?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "—")
+                                @(Display.LocalDateTime(problem.DueDate) ?? "—")
                             </td>
                         </tr>
                     }

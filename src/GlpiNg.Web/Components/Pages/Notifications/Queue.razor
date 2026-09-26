@@ -52,7 +52,7 @@
                                     <div class="text-danger small">@item.LastError</div>
                                 }
                             </td>
-                            <td>@item.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@Display.DateTime(item.CreatedAt)</td>
                             <td>@item.RecipientEmail</td>
                             <td>@item.NotificationName</td>
                             <td><span class="badge @StatusBadgeClass(item.Status)">@StatusLabel(item.Status)</span></td>
