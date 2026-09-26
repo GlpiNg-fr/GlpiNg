@@ -1,17 +1,17 @@
 @using GlpiNg.Web.Models
 
-<div class="glpi-module-toggles">
+<div class="glping-module-toggles">
     @foreach (var item in Items)
     {
         var enabled = Modules.IsEnabled(GroupKey, item.Label);
-        <div class="glpi-module-toggle-item @(enabled && !Disabled ? "" : "disabled")">
-            <span class="glpi-module-toggle-label">
+        <div class="glping-module-toggle-item @(enabled && !Disabled ? "" : "disabled")">
+            <span class="glping-module-toggle-label">
                 <i class="ti @item.Icon"></i>
                 <span>@item.Label</span>
             </span>
-            <label class="glpi-switch">
+            <label class="glping-switch">
                 <input type="checkbox" checked="@enabled" disabled="@Disabled" @onchange="e => OnToggle.InvokeAsync((item.Label, (bool)e.Value!))" />
-                <span class="glpi-switch-slider"></span>
+                <span class="glping-switch-slider"></span>
             </label>
         </div>
     }

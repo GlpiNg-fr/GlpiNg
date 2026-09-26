@@ -10,21 +10,21 @@
 }
 else
 {
-    <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glpi-config-form">
-        <div class="glpi-config-divider">
+    <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
+        <div class="glping-config-divider">
             <span><i class="ti ti-key"></i> Enregistrement</span>
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="net-key">Clé d'enregistrement</label>
             <input id="net-key" @bind="_model.RegistrationKey" placeholder="XXXX-XXXX-XXXX-XXXX" />
         </div>
 
-        <div class="glpi-config-divider">
+        <div class="glping-config-divider">
             <span><i class="ti ti-apps"></i> Marketplace</span>
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="net-marketplace">Page des plugins</label>
             <select id="net-marketplace" @bind="_model.MarketplaceBehavior">
                 <option value="ask">Demander avant de remplacer</option>
@@ -33,7 +33,7 @@ else
             </select>
         </div>
 
-        <button type="submit" class="glpi-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
     </EditForm>
 }
 

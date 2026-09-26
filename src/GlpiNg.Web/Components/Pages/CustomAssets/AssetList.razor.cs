@@ -215,7 +215,7 @@ public partial class AssetList : ComponentBase
         _newComment = null;
         _newValues.Clear();
 
-        await JS.InvokeVoidAsync("glpiNg.hideModal", "newAssetModal");
+        await JS.InvokeVoidAsync("glping.hideModal", "newAssetModal");
         await LoadAsync();
     }
 }

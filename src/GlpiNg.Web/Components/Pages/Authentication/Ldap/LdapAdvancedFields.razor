@@ -5,7 +5,7 @@
 
 <div class="row">
     <div class="col-md-6">
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>STARTTLS</label>
             <select class="form-select" value="@(Server.UseStartTls ? "true" : "false")"
                     @onchange="@(e => Server.UseStartTls = e.Value?.ToString() == "true")"
@@ -25,12 +25,12 @@
             </div>
         </div>
 
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Délai d'attente (secondes)</label>
             <input type="number" min="1" class="form-control" @bind="Server.TimeoutSeconds" />
         </div>
 
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>TAG d'entité</label>
             <input class="form-control" @bind="Server.EntityAssignmentTag" />
             <div class="form-hint">
@@ -42,13 +42,13 @@
     </div>
 
     <div class="col-md-6">
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Taille de page des recherches</label>
             <input type="number" min="0" class="form-control" @bind="Server.PageSize" />
             <div class="form-hint">0 pour désactiver la pagination — tous les annuaires ne la gèrent pas.</div>
         </div>
 
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Nombre maximum de résultats</label>
             <input type="number" min="0" class="form-control" @bind="Server.MaxResults" />
             <div class="form-hint">0 pour ne pas limiter côté client.</div>

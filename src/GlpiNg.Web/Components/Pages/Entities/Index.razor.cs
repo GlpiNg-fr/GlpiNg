@@ -135,7 +135,7 @@ public partial class Index : ComponentBase
         await db.SaveChangesAsync();
 
         _newEntity = NewBlankEntity();
-        await JS.InvokeVoidAsync("glpiNg.hideModal", "newEntityModal");
+        await JS.InvokeVoidAsync("glping.hideModal", "newEntityModal");
         await LoadAsync();
     }
 

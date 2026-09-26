@@ -129,7 +129,7 @@ public partial class Index : ComponentBase
         _newHook = NewBlankWebhook();
         _newSecret = string.Empty;
 
-        await JS.InvokeVoidAsync("glpiNg.hideModal", "newWebhookModal");
+        await JS.InvokeVoidAsync("glping.hideModal", "newWebhookModal");
         await LoadAsync();
     }
 

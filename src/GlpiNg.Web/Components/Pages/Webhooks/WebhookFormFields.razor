@@ -4,19 +4,19 @@
 
 <div class="row">
     <div class="col-md-6">
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Nom</label>
             <input class="form-control" @bind="Hook.Name" @bind:event="oninput" @bind:after="NotifyChangedAsync" />
         </div>
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Activé</label>
             @YesNoSelect(Hook.IsActive, v => Hook.IsActive = v)
         </div>
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Commentaires</label>
             <textarea class="form-control" rows="2" @bind="Hook.Comment"></textarea>
         </div>
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Type d'objet</label>
             <select class="form-select" value="@Hook.ItemType" @onchange="OnItemTypeChanged">
                 @foreach ((string itemType, string label) in NotificationEventCatalog.ItemTypes)
@@ -25,7 +25,7 @@
                 }
             </select>
         </div>
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Événement</label>
             <select class="form-select" @bind="Hook.Event" @bind:after="NotifyChangedAsync">
                 @foreach (NotificationEventDefinition evt in NotificationEventCatalog.EventsFor(Hook.ItemType))
@@ -37,7 +37,7 @@
     </div>
 
     <div class="col-md-6">
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>URL cible</label>
             <input class="form-control" placeholder="https://exemple.org/hook" @bind="Hook.Url"
                    @bind:event="oninput" @bind:after="NotifyChangedAsync" />
@@ -47,7 +47,7 @@
             <p class="hint text-warning">@urlWarning</p>
         }
 
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Méthode HTTP</label>
             <select class="form-select" @bind="Hook.Method" @bind:after="NotifyChangedAsync">
                 <option value="@WebhookHttpMethod.Post">POST</option>
@@ -62,7 +62,7 @@
             <p class="hint">Un GET ne porte pas de corps : seules l'URL et les en-têtes partent.</p>
         }
 
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Secret partagé</label>
             <input type="password" class="form-control" value="@_secretPlain" @oninput="OnSecretInputAsync"
                    placeholder="@(HasStoredSecret ? "Laisser vide pour conserver le secret actuel" : "Optionnel")" />
@@ -72,7 +72,7 @@
             ce qui permet au destinataire de vérifier l'origine de l'appel.
         </p>
 
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Conserver la réponse</label>
             @YesNoSelect(Hook.SaveResponseBody, v => Hook.SaveResponseBody = v)
         </div>
@@ -85,11 +85,11 @@
 
 @if (Hook.Method != WebhookHttpMethod.Get)
 {
-    <div class="glpi-fiche-block-title mt-3"><i class="ti ti-code"></i>Corps de la requête</div>
+    <div class="glping-fiche-block-title mt-3"><i class="ti ti-code"></i>Corps de la requête</div>
 
     <div class="row">
         <div class="col-md-6">
-            <div class="glpi-fiche-field">
+            <div class="glping-fiche-field">
                 <label>Contenu</label>
                 <select class="form-select" @bind="Hook.PayloadMode" @bind:after="NotifyChangedAsync">
                     <option value="@WebhookPayloadMode.Default">Par défaut (JSON construit par GlpiNg)</option>
@@ -101,7 +101,7 @@
 
     @if (Hook.PayloadMode == WebhookPayloadMode.Custom)
     {
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Corps personnalisé</label>
             <textarea class="form-control font-monospace" rows="8" @bind="Hook.CustomPayload"
                       placeholder='{ "poste": "##computer.name##" }'></textarea>
@@ -120,7 +120,7 @@
         </p>
     }
 
-    <div class="glpi-fiche-block-title mt-3"><i class="ti ti-tags"></i>Balises disponibles</div>
+    <div class="glping-fiche-block-title mt-3"><i class="ti ti-tags"></i>Balises disponibles</div>
     <div class="d-flex flex-wrap gap-2">
         @foreach (NotificationTag tag in WebhookPayloadBuilder.TagsFor(Hook.ItemType, Hook.Event))
         {

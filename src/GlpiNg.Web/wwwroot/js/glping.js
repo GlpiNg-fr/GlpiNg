@@ -1,4 +1,4 @@
-window.glpiNg = {
+window.glping = {
     // Utilisé quand la modale doit être pré-remplie côté C# (état du composant mis à jour) avant
     // ouverture — un simple data-bs-toggle="modal" sur le bouton déclencheur ne permet pas ça, car
     // le contenu affiché serait celui du rendu précédent. bootstrap.Modal.getOrCreateInstance
@@ -24,8 +24,8 @@ window.glpiNg = {
     // que sur l'événement scroll : le navigateur ne l'émet pas dans un onglet en arrière-plan, et
     // la position de lecture de l'utilisateur était alors écrasée au rafraîchissement suivant.
     followLog: function (el) {
-        if (!(el instanceof Element) || el._glpiFollowLog) return;
-        el._glpiFollowLog = true;
+        if (!(el instanceof Element) || el._glpingFollowLog) return;
+        el._glpingFollowLog = true;
         el.scrollTop = el.scrollHeight;
         var previousHeight = el.scrollHeight;
         new MutationObserver(function () {
@@ -39,16 +39,84 @@ window.glpiNg = {
     // fixe étiré à la largeur de la carte grossissait les étiquettes d'axe avec l'écran.
     // Idempotente par élément ; l'observateur disparaît avec l'élément.
     observeWidth: function (el, dotNetRef, method) {
-        if (!(el instanceof Element) || el._glpiWidthObserver) return;
+        if (!(el instanceof Element) || el._glpingWidthObserver) return;
         var last = 0;
-        el._glpiWidthObserver = new ResizeObserver(function (entries) {
+        el._glpingWidthObserver = new ResizeObserver(function (entries) {
             var width = Math.round(entries[0].contentRect.width);
             if (width > 0 && Math.abs(width - last) >= 4) {
                 last = width;
                 dotNetRef.invokeMethodAsync(method, width).catch(function () { });
             }
         });
-        el._glpiWidthObserver.observe(el);
+        el._glpingWidthObserver.observe(el);
+    },
+    // Applique une palette à toute la page, sans rien enregistrer : mêmes attributs que ceux que
+    // pose App.razor au rendu. Darker et Midnight sont les deux palettes sombres (voir
+    // UserPreferenceValues.IsDarkPalette) — les seules qui basculent Tabler en mode sombre.
+    applyTheme: function (key) {
+        if (!key) return;
+        var root = document.documentElement;
+        root.setAttribute('data-glping-theme', key);
+        root.setAttribute('data-bs-theme', key === 'darker' || key === 'midnight' ? 'dark' : 'light');
+    },
+
+    // Aperçu des palettes au survol (préférences, onglet Apparence) : après `delay` ms sur une
+    // vignette, sa palette s'applique à toute la page ; en quittant la vignette sans avoir cliqué,
+    // on revient à la palette sélectionnée. Un clic l'applique aussitôt et la garde — elle devient
+    // la sélection, mais n'est enregistrée qu'avec le bouton Sauvegarder.
+    // Tout se joue ici, sans aller-retour avec le serveur : un aperçu qui attendrait le circuit
+    // Blazor à chaque mouvement de souris serait saccadé. Délégation sur la grille, idempotente.
+    themePreview: function (grid, delay) {
+        if (!(grid instanceof Element) || grid._glpingThemePreview) return;
+        grid._glpingThemePreview = true;
+
+        var timer = null;
+        var previewing = false;
+
+        // La sélection est lue dans le DOM au moment voulu (classe posée par Blazor), et non
+        // mémorisée : un clic vient de la changer quand la souris quitte la vignette.
+        function selectedKey() {
+            var selected = grid.querySelector('.glping-palette-card.selected');
+            return selected ? selected.getAttribute('data-palette-key') : null;
+        }
+
+        function cancel(card) {
+            if (timer) { clearTimeout(timer); timer = null; }
+            if (card) card.classList.remove('glping-palette-pending');
+        }
+
+        grid.addEventListener('mouseover', function (e) {
+            var card = e.target.closest('.glping-palette-card');
+            if (!card || card.contains(e.relatedTarget)) return;
+            cancel();
+            card.classList.add('glping-palette-pending');
+            timer = setTimeout(function () {
+                timer = null;
+                card.classList.remove('glping-palette-pending');
+                previewing = true;
+                glping.applyTheme(card.getAttribute('data-palette-key'));
+            }, delay);
+        });
+
+        grid.addEventListener('mouseout', function (e) {
+            var card = e.target.closest('.glping-palette-card');
+            if (!card || card.contains(e.relatedTarget)) return;
+            cancel(card);
+            if (previewing) {
+                previewing = false;
+                glping.applyTheme(selectedKey());
+            }
+        });
+
+        grid.addEventListener('click', function (e) {
+            var card = e.target.closest('.glping-palette-card');
+            if (!card) return;
+            cancel(card);
+            // Appliquée tout de suite : elle est désormais la sélection, et c'est vers elle que
+            // la sortie de la vignette « restaurera ».
+            previewing = false;
+            glping.applyTheme(card.getAttribute('data-palette-key'));
+        });
     },
     copyToClipboard: function (text) {
         return navigator.clipboard.writeText(text);

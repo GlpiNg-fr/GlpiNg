@@ -25,17 +25,17 @@ else
             <EditForm Model="_link" OnValidSubmit="SaveAsync">
                 <div class="row">
                     <div class="col-md-6">
-                        <div class="glpi-fiche-field">
+                        <div class="glping-fiche-field">
                             <label>Nom</label>
                             <input class="form-control" @bind="_link.Name" @bind:event="oninput" />
                         </div>
-                        <div class="glpi-fiche-field">
+                        <div class="glping-fiche-field">
                             <label>Commentaires</label>
                             <textarea class="form-control" rows="2" @bind="_link.Comment"></textarea>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="glpi-fiche-field">
+                        <div class="glping-fiche-field">
                             <label>Adresse</label>
                             <input class="form-control" @bind="_link.Url" @bind:event="oninput"
                                    placeholder="https://supervision.exemple.org/host/[NAME]" />
@@ -44,7 +44,7 @@ else
                         {
                             <p class="hint text-warning">@urlWarning</p>
                         }
-                        <div class="glpi-fiche-field">
+                        <div class="glping-fiche-field">
                             <label>Ouvrir dans un nouvel onglet</label>
                             <select class="form-select" value="@(_link.OpenInNewWindow ? "true" : "false")"
                                     @onchange="@(e => _link.OpenInNewWindow = e.Value?.ToString() == "true")">
@@ -78,18 +78,18 @@ else
                 Sans aucun type coché, il n'apparaît nulle part.
             </p>
 
-            <div class="glpi-switch-grid">
+            <div class="glping-switch-grid">
                 @foreach ((string itemType, string label, string icon) in ExternalLinkTagSource.Catalog)
                 {
-                    <div class="glpi-config-field checkbox">
+                    <div class="glping-config-field checkbox">
                         <label for="@($"itemtype-{itemType}")">
                             <i class="ti @icon me-1 text-secondary"></i>@label
                         </label>
-                        <label class="glpi-switch">
+                        <label class="glping-switch">
                             <input id="@($"itemtype-{itemType}")" type="checkbox"
                                    checked="@_selectedItemTypes.Contains(itemType)"
                                    @onchange="@((ChangeEventArgs e) => ToggleItemType(itemType, (bool)(e.Value ?? false)))" />
-                            <span class="glpi-switch-slider"></span>
+                            <span class="glping-switch-slider"></span>
                         </label>
                     </div>
                 }
@@ -111,14 +111,14 @@ else
         <div class="card-body">
             @if (_selectedItemTypes.Count == 0)
             {
-                <div class="glpi-config-placeholder">
+                <div class="glping-config-placeholder">
                     <i class="ti ti-category"></i>
                     <p class="mb-0">Cochez un type d'objet pour voir les balises qu'il fournit.</p>
                 </div>
             }
             else
             {
-                <div class="glpi-fiche-field">
+                <div class="glping-fiche-field">
                     <label>Type de référence</label>
                     <select class="form-select" @bind="_previewItemType">
                         @foreach (string itemType in _selectedItemTypes.OrderBy(t => ExternalLinkTagSource.LabelFor(t)))
@@ -131,7 +131,7 @@ else
                 @* Les balises dépendent du type : toutes les fiches ne portent pas une adresse IP
                    ou un numéro d'inventaire. Ne montrer que ce que ce type-là fournit évite de
                    composer une URL qui se remplirait de vide sur les fiches réelles. *@
-                <div class="glpi-fiche-block-title mt-3">
+                <div class="glping-fiche-block-title mt-3">
                     <i class="ti ti-tags"></i>Balises fournies par « @ExternalLinkTagSource.LabelFor(PreviewItemType) »
                 </div>
                 <div class="d-flex flex-wrap gap-2">
@@ -154,7 +154,7 @@ else
                     </div>
                 }
 
-                <div class="glpi-fiche-block-title mt-3"><i class="ti ti-eye"></i>Aperçu</div>
+                <div class="glping-fiche-block-title mt-3"><i class="ti ti-eye"></i>Aperçu</div>
                 <p class="hint" style="margin-left: 0;">
                     Avec des valeurs d'exemple, pour vérifier la forme de l'URL avant de l'éprouver
                     sur une vraie fiche.

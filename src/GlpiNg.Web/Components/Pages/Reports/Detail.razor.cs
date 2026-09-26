@@ -140,6 +140,6 @@ public partial class Detail : ComponentBase
 
         using MemoryStream stream = new(export.Bytes);
         using DotNetStreamReference streamRef = new(stream);
-        await JS.InvokeVoidAsync("glpiNg.downloadFileFromStream", fileName, export.ContentType, streamRef);
+        await JS.InvokeVoidAsync("glping.downloadFileFromStream", fileName, export.ContentType, streamRef);
     }
 }

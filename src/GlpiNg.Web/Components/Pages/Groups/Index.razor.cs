@@ -115,7 +115,7 @@ public partial class Index : ComponentBase
         await db.SaveChangesAsync();
 
         _newGroup = NewBlankGroup();
-        await JS.InvokeVoidAsync("glpiNg.hideModal", "newGroupModal");
+        await JS.InvokeVoidAsync("glping.hideModal", "newGroupModal");
         await LoadAsync();
     }
 

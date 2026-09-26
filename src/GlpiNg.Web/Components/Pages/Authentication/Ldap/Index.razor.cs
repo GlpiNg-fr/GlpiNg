@@ -144,7 +144,7 @@ public partial class Index : ComponentBase
         _newServer = NewBlankServer();
         _newBindPassword = string.Empty;
 
-        await JS.InvokeVoidAsync("glpiNg.hideModal", "newLdapServerModal");
+        await JS.InvokeVoidAsync("glping.hideModal", "newLdapServerModal");
         await LoadAsync();
     }
 

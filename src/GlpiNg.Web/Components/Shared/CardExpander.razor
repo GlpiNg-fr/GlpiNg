@@ -1,25 +1,25 @@
-<div class="glpi-card-expander @(_expanded ? "" : "collapsed")">
+<div class="glping-card-expander @(_expanded ? "" : "collapsed")">
     @* L'action d'en-tête est rendue à côté du bouton de repli, et non dedans : un interrupteur
        imbriqué dans un <button> est invalide en HTML, et son clic replierait la carte au passage. *@
-    <div class="glpi-card-expander-header-row">
-        <button type="button" class="glpi-card-expander-header" @onclick="Toggle">
-            <span class="glpi-card-expander-title">
+    <div class="glping-card-expander-header-row">
+        <button type="button" class="glping-card-expander-header" @onclick="Toggle">
+            <span class="glping-card-expander-title">
                 <i class="ti @Icon"></i>
                 <span>@Title</span>
             </span>
-            <i class="ti ti-chevron-down glpi-card-expander-chevron"></i>
+            <i class="ti ti-chevron-down glping-card-expander-chevron"></i>
         </button>
 
         @if (HeaderActions is not null)
         {
-            <div class="glpi-card-expander-header-actions">
+            <div class="glping-card-expander-header-actions">
                 @HeaderActions
             </div>
         }
     </div>
     @if (_expanded)
     {
-        <div class="glpi-card-expander-body">
+        <div class="glping-card-expander-body">
             @ChildContent
         </div>
     }

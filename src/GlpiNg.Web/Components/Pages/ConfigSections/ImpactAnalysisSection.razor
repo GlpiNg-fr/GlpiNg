@@ -10,24 +10,24 @@
 }
 else
 {
-    <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glpi-config-form">
+    <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
         <p class="hint" style="margin-left:0;">Types d'éléments proposés dans les graphes d'analyse d'impact.</p>
 
-        <div class="glpi-switch-grid">
+        <div class="glping-switch-grid">
             @foreach (var (key, label) in ImpactAnalysisSettings.AvailableItemTypes)
             {
                 var inputId = $"impact-{key}";
-                <div class="glpi-switch-grid-item">
-                    <label class="glpi-switch">
+                <div class="glping-switch-grid-item">
+                    <label class="glping-switch">
                         <input id="@inputId" type="checkbox" checked="@_model.EnabledItemTypes.Contains(key)" @onchange="e => Toggle(key, (bool)e.Value!)" />
-                        <span class="glpi-switch-slider"></span>
+                        <span class="glping-switch-slider"></span>
                     </label>
                     <label for="@inputId">@label</label>
                 </div>
             }
         </div>
 
-        <button type="submit" class="glpi-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
     </EditForm>
 }
 

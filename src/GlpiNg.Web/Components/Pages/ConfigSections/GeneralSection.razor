@@ -11,8 +11,8 @@
 }
 else
 {
-    <EditForm Model="_general" OnValidSubmit="SaveAsync" class="glpi-config-form">
-        <div class="glpi-config-field">
+    <EditForm Model="_general" OnValidSubmit="SaveAsync" class="glping-config-form">
+        <div class="glping-config-field">
             <label for="urls">Adresses d'écoute du serveur</label>
             <input id="urls" @bind="_server.Urls" placeholder="http://0.0.0.0:5000" />
         </div>
@@ -24,74 +24,74 @@ else
             l'emporte sur votre déploiement avant de vous fier uniquement à cette page.
         </p>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="app-url">URL de l'application</label>
             <input id="app-url" @bind="_general.ApplicationUrl" placeholder="http://localhost" />
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="login-message">Texte sur la page de connexion</label>
             <textarea id="login-message" rows="4" @bind="_general.LoginPageMessage"></textarea>
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="help-simplified">Lien d'aide dans l'interface simplifiée</label>
             <input id="help-simplified" @bind="_general.SimplifiedInterfaceHelpLink" />
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="help-standard">Lien d'aide dans l'interface standard</label>
             <input id="help-standard" @bind="_general.StandardInterfaceHelpLink" />
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="decimals">Nombre de décimales par défaut <span class="required">*</span></label>
-            <input id="decimals" type="number" min="0" max="8" class="glpi-config-input-sm" @bind="_general.DefaultDecimalsCount" />
+            <input id="decimals" type="number" min="0" max="8" class="glping-config-input-sm" @bind="_general.DefaultDecimalsCount" />
         </div>
 
-        <div class="glpi-config-field checkbox">
+        <div class="glping-config-field checkbox">
             <label for="anon-faq">Autoriser l'accès anonyme à la FAQ</label>
-            <label class="glpi-switch">
+            <label class="glping-switch">
                 <input id="anon-faq" type="checkbox" @bind="_general.AllowAnonymousFaqAccess" />
-                <span class="glpi-switch-slider"></span>
+                <span class="glping-switch-slider"></span>
             </label>
         </div>
 
-        <div class="glpi-config-field checkbox">
+        <div class="glping-config-field checkbox">
             <label for="anon-imports">
                 Autoriser les imports (de fichiers) anonymes
-                <i class="ti ti-help-circle glpi-config-help" title="Permet l'import de fichiers sans authentification préalable."></i>
+                <i class="ti ti-help-circle glping-config-help" title="Permet l'import de fichiers sans authentification préalable."></i>
             </label>
-            <label class="glpi-switch">
+            <label class="glping-switch">
                 <input id="anon-imports" type="checkbox" @bind="_general.AllowAnonymousFileImports" />
-                <span class="glpi-switch-slider"></span>
+                <span class="glping-switch-slider"></span>
             </label>
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="mac-format">Affichage adresse MAC</label>
-            <select id="mac-format" class="glpi-config-input" @bind="_general.MacAddressFormat">
+            <select id="mac-format" class="glping-config-input" @bind="_general.MacAddressFormat">
                 <option value="Windows">Windows (AA-BB-CC-DD-EE-FF)</option>
                 <option value="HP">HP (AABBCC-DDEEFF)</option>
                 <option value="Cisco">Cisco (aabb.ccdd.eeff)</option>
             </select>
         </div>
 
-        <div class="glpi-config-divider">
+        <div class="glping-config-divider">
             <span><i class="ti ti-list"></i> Affichage dynamique</span>
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="dropdown-limit">Taille par défaut pour les listes déroulantes <span class="required">*</span></label>
-            <input id="dropdown-limit" type="number" min="1" class="glpi-config-input-sm" @bind="_general.DefaultDropdownListLimit" />
+            <input id="dropdown-limit" type="number" min="1" class="glping-config-input-sm" @bind="_general.DefaultDropdownListLimit" />
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="search-threshold">
                 Ne pas utiliser le moteur de recherche dans les intitulés si le nombre d'éléments est inférieur à
                 <span class="required">*</span>
             </label>
-            <select id="search-threshold" class="glpi-config-input-sm" @bind="_general.SearchEngineDisableThreshold">
+            <select id="search-threshold" class="glping-config-input-sm" @bind="_general.SearchEngineDisableThreshold">
                 @foreach (var value in new[] { 0, 10, 20, 30, 40, 50, 75, 100, 150, 200, 500, 1000 })
                 {
                     <option value="@value">@value</option>
@@ -99,57 +99,57 @@ else
             </select>
         </div>
 
-        <div class="glpi-config-divider">
+        <div class="glping-config-divider">
             <span><i class="ti ti-search"></i> Moteur de recherche</span>
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="search-view">Éléments visualisés</label>
-            <select id="search-view" class="glpi-config-input-sm" @bind="_general.SearchViewMode">
+            <select id="search-view" class="glping-config-input-sm" @bind="_general.SearchViewMode">
                 <option value="0">Non</option>
                 <option value="1">Oui (dernier critère)</option>
                 <option value="2">Oui (critère par défaut)</option>
             </select>
         </div>
 
-        <div class="glpi-config-field checkbox">
+        <div class="glping-config-field checkbox">
             <label for="search-global">Recherche globale</label>
-            <label class="glpi-switch">
+            <label class="glping-switch">
                 <input id="search-global" type="checkbox" @bind="_general.AllowGlobalSearch" />
-                <span class="glpi-switch-slider"></span>
+                <span class="glping-switch-slider"></span>
             </label>
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="search-all">Tous</label>
-            <select id="search-all" class="glpi-config-input-sm" @bind="_general.SearchAllListMode">
+            <select id="search-all" class="glping-config-input-sm" @bind="_general.SearchAllListMode">
                 <option value="0">Non</option>
                 <option value="1">Oui (dernier critère)</option>
             </select>
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="search-max-results">Nombre maximum de résultats de recherche (par page) <span class="required">*</span></label>
-            <input id="search-max-results" type="number" min="1" class="glpi-config-input-sm" @bind="_general.MaxSearchResultsPerPage" />
+            <input id="search-max-results" type="number" min="1" class="glping-config-input-sm" @bind="_general.MaxSearchResultsPerPage" />
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="search-summary-length">Taille limite par défaut (zones de texte de résumés) <span class="required">*</span></label>
-            <input id="search-summary-length" type="number" min="1" class="glpi-config-input-sm" @bind="_general.SearchResultsSummaryLength" />
+            <input id="search-summary-length" type="number" min="1" class="glping-config-input-sm" @bind="_general.SearchResultsSummaryLength" />
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="search-url-length">Longueur maximale par défaut pour les URL <span class="required">*</span></label>
-            <input id="search-url-length" type="number" min="1" class="glpi-config-input-sm" @bind="_general.SearchResultsMaxUrlLength" />
+            <input id="search-url-length" type="number" min="1" class="glping-config-input-sm" @bind="_general.SearchResultsMaxUrlLength" />
         </div>
 
-        <div class="glpi-config-divider">
+        <div class="glping-config-divider">
             <span><i class="ti ti-fingerprint"></i> Identification automatique</span>
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="remember-me">Temps de rétention "se souvenir de moi"</label>
-            <select id="remember-me" class="glpi-config-input-sm" @bind="_general.RememberMeDuration">
+            <select id="remember-me" class="glping-config-input-sm" @bind="_general.RememberMeDuration">
                 @foreach (var duration in RememberMeDurations)
                 {
                     <option value="@duration.Seconds">@duration.Label</option>
@@ -157,23 +157,23 @@ else
             </select>
         </div>
 
-        <div class="glpi-config-field checkbox">
+        <div class="glping-config-field checkbox">
             <label for="remember-me-default">État par défaut de la case à cocher</label>
-            <label class="glpi-switch">
+            <label class="glping-switch">
                 <input id="remember-me-default" type="checkbox" @bind="_general.RememberMeDefaultChecked" />
-                <span class="glpi-switch-slider"></span>
+                <span class="glping-switch-slider"></span>
             </label>
         </div>
 
-        <div class="glpi-config-field checkbox">
+        <div class="glping-config-field checkbox">
             <label for="show-auth-sources">Afficher la liste des sources d'authentification sur la page de login</label>
-            <label class="glpi-switch">
+            <label class="glping-switch">
                 <input id="show-auth-sources" type="checkbox" @bind="_general.ShowAuthSourcesOnLoginPage" />
-                <span class="glpi-switch-slider"></span>
+                <span class="glping-switch-slider"></span>
             </label>
         </div>
 
-        <button type="submit" class="glpi-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
     </EditForm>
 }
 

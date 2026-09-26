@@ -13,62 +13,62 @@
 }
 else
 {
-    <div class="glpi-fiche-topbar">
-        <div class="glpi-fiche-crumb">
+    <div class="glping-fiche-topbar">
+        <div class="glping-fiche-crumb">
             <i class="ti ti-user"></i>
             <span>Utilisateur - @_user.UserName - ID @_user.Id</span>
-            <button type="button" class="glpi-fiche-favorite" title="Ajouter aux favoris">
+            <button type="button" class="glping-fiche-favorite" title="Ajouter aux favoris">
                 <i class="ti ti-star"></i>
             </button>
         </div>
-        <div class="glpi-fiche-toolbar">
+        <div class="glping-fiche-toolbar">
             @if (_total > 0)
             {
-                <span class="glpi-fiche-pager-count">@_position/@_total</span>
-                <a class="glpi-fiche-pager-btn @(_previousId is null ? "disabled" : "")" href="@(_previousId is { } prevId ? $"/admin/users/{prevId}" : "#")">
+                <span class="glping-fiche-pager-count">@_position/@_total</span>
+                <a class="glping-fiche-pager-btn @(_previousId is null ? "disabled" : "")" href="@(_previousId is { } prevId ? $"/admin/users/{prevId}" : "#")">
                     <i class="ti ti-chevron-left"></i>
                 </a>
-                <a class="glpi-fiche-pager-btn @(_nextId is null ? "disabled" : "")" href="@(_nextId is { } nextId ? $"/admin/users/{nextId}" : "#")">
+                <a class="glping-fiche-pager-btn @(_nextId is null ? "disabled" : "")" href="@(_nextId is { } nextId ? $"/admin/users/{nextId}" : "#")">
                     <i class="ti ti-chevron-right"></i>
                 </a>
             }
         </div>
     </div>
 
-    <div class="glpi-fiche-layout">
-        <aside class="glpi-fiche-sidebar">
+    <div class="glping-fiche-layout">
+        <aside class="glping-fiche-sidebar">
             @foreach (var tab in _tabs)
             {
-                <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == tab.Key ? "active" : "")" @onclick="() => SetTab(tab.Key)">
+                <button type="button" class="glping-fiche-tab-item @(_activeTabKey == tab.Key ? "active" : "")" @onclick="() => SetTab(tab.Key)">
                     <i class="ti @tab.Icon"></i>
                     <span>@tab.Label</span>
                     @if (tab.Count is { } count)
                     {
-                        <span class="glpi-fiche-tab-count">@count</span>
+                        <span class="glping-fiche-tab-count">@count</span>
                     }
                 </button>
             }
         </aside>
 
-        <div class="glpi-fiche-panel">
+        <div class="glping-fiche-panel">
             @switch (_activeTabKey)
             {
                 case "utilisateur":
                     <EditForm Model="_user" OnValidSubmit="SaveAsync">
                         <UserFormFields User="_user" />
 
-                        <div class="glpi-fiche-block-title mt-2"><i class="ti ti-key"></i>Mot de passe et jeton d'accès</div>
+                        <div class="glping-fiche-block-title mt-2"><i class="ti ti-key"></i>Mot de passe et jeton d'accès</div>
                         @if (_showPasswordFields)
                         {
                             <div class="row">
                                 <div class="col-md-6">
-                                    <div class="glpi-fiche-field">
+                                    <div class="glping-fiche-field">
                                         <label>Mot de passe</label>
                                         <input class="form-control" type="password" @bind="_newPassword" />
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="glpi-fiche-field">
+                                    <div class="glping-fiche-field">
                                         <label>Confirmer</label>
                                         <input class="form-control" type="password" @bind="_newPasswordConfirm" />
                                     </div>
@@ -78,7 +78,7 @@ else
                         }
                         else
                         {
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Mot de passe</label>
                                 <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="TogglePasswordFields">
                                     <i class="ti ti-lock me-1"></i>Modifier le mot de passe
@@ -98,11 +98,11 @@ else
                     break;
 
                 case "groupes":
-                    <div class="glpi-fiche-block">
-                        <div class="glpi-fiche-block-title"><i class="ti ti-users"></i>Groupes (@_user.GroupMemberships.Count)</div>
+                    <div class="glping-fiche-block">
+                        <div class="glping-fiche-block-title"><i class="ti ti-users"></i>Groupes (@_user.GroupMemberships.Count)</div>
                         @if (_user.GroupMemberships.Count == 0)
                         {
-                            <div class="glpi-config-placeholder">
+                            <div class="glping-config-placeholder">
                                 <i class="ti ti-users"></i>
                                 <p class="mb-0">Cet utilisateur n'appartient à aucun groupe.</p>
                             </div>
@@ -153,8 +153,8 @@ else
                     break;
 
                 case "habilitations":
-                    <div class="glpi-fiche-block">
-                        <div class="glpi-fiche-block-title"><i class="ti ti-plus"></i>Ajouter une habilitation</div>
+                    <div class="glping-fiche-block">
+                        <div class="glping-fiche-block-title"><i class="ti ti-plus"></i>Ajouter une habilitation</div>
                         <div class="table-responsive">
                             <table class="table table-vcenter card-table mb-0">
                                 <thead>
@@ -201,10 +201,10 @@ else
                             </table>
                         </div>
 
-                        <div class="glpi-fiche-block-title mt-3"><i class="ti ti-key"></i>Habilitations (@_userHabilitations.Count)</div>
+                        <div class="glping-fiche-block-title mt-3"><i class="ti ti-key"></i>Habilitations (@_userHabilitations.Count)</div>
                         @if (_userHabilitations.Count == 0)
                         {
-                            <div class="glpi-config-placeholder">
+                            <div class="glping-config-placeholder">
                                 <i class="ti ti-key"></i>
                                 <p class="mb-0">Aucune habilitation.</p>
                             </div>
@@ -250,11 +250,11 @@ else
 
                 case "preferences":
                     <EditForm Model="_user" OnValidSubmit="SaveAsync">
-                        <div class="glpi-fiche-block-title"><i class="ti ti-adjustments"></i>Personnalisation</div>
+                        <div class="glping-fiche-block-title"><i class="ti ti-adjustments"></i>Personnalisation</div>
                         <p class="text-secondary small">GlpiNg n'a pas (encore) les dizaines de préférences d'affichage de GLPI (langue, thème, tableaux de bord...) : seul le repli du menu latéral est une vraie préférence exploitée par l'application.</p>
                         <div class="row">
                             <div class="col-md-6">
-                                <div class="glpi-fiche-field">
+                                <div class="glping-fiche-field">
                                     <label>Réduire le menu latéral</label>
                                     <select class="form-select" value="@(_user.SidebarCollapsed ? "true" : "false")" @onchange="@(e => _user.SidebarCollapsed = e.Value?.ToString() == "true")">
                                         <option value="false">Non</option>
@@ -274,11 +274,11 @@ else
 
                 case "securite":
                     <EditForm Model="_user" OnValidSubmit="SaveAsync">
-                        <div class="glpi-fiche-block-title"><i class="ti ti-shield"></i>Double authentification (2FA)</div>
+                        <div class="glping-fiche-block-title"><i class="ti ti-shield"></i>Double authentification (2FA)</div>
                         <p class="text-secondary small">Si la double authentification est imposée par l'entité ou un groupe de cet utilisateur, cette dérogation individuelle permet de désactiver l'obligation.</p>
                         <div class="row">
                             <div class="col-md-6">
-                                <div class="glpi-fiche-field">
+                                <div class="glping-fiche-field">
                                     <label>Désactiver l'obligation du 2FA</label>
                                     <select class="form-select" value="@(_user.TwoFactorAuthDisabled ? "true" : "false")" @onchange="@(e => _user.TwoFactorAuthDisabled = e.Value?.ToString() == "true")">
                                         <option value="false">Non</option>
@@ -297,8 +297,8 @@ else
                     break;
 
                 case "synchronisation":
-                    <div class="glpi-fiche-block">
-                        <div class="glpi-fiche-block-title"><i class="ti ti-refresh"></i>Source d'authentification</div>
+                    <div class="glping-fiche-block">
+                        <div class="glping-fiche-block-title"><i class="ti ti-refresh"></i>Source d'authentification</div>
                         <p class="mb-1"><strong>Source :</strong> @(_user.AuthSource == UserAuthSource.Ldap ? "Annuaire LDAP" : "Locale (base GlpiNg)")</p>
                         @if (_user.AuthSource == UserAuthSource.Ldap)
                         {
@@ -327,11 +327,11 @@ else
                     break;
 
                 case "history":
-                    <div class="glpi-fiche-block">
-                        <div class="glpi-fiche-block-title"><i class="ti ti-history"></i>Historique (@_historyEntries.Count)</div>
+                    <div class="glping-fiche-block">
+                        <div class="glping-fiche-block-title"><i class="ti ti-history"></i>Historique (@_historyEntries.Count)</div>
                         @if (_historyEntries.Count == 0)
                         {
-                            <div class="glpi-config-placeholder">
+                            <div class="glping-config-placeholder">
                                 <i class="ti ti-history"></i>
                                 <p class="mb-0">Aucun historique.</p>
                             </div>
@@ -368,33 +368,33 @@ else
                     break;
 
                 case "all":
-                    <div class="glpi-fiche-block">
-                        <div class="glpi-fiche-block-title"><i class="ti ti-user"></i>Utilisateur</div>
+                    <div class="glping-fiche-block">
+                        <div class="glping-fiche-block-title"><i class="ti ti-user"></i>Utilisateur</div>
                         <p class="mb-1"><strong>Identifiant :</strong> @_user.UserName</p>
                         <p class="mb-1"><strong>Nom complet :</strong> @(_user.DisplayName ?? "—")</p>
                         <p class="mb-1"><strong>E-mail :</strong> @(_user.Email ?? "—")</p>
                         <p class="mb-0"><strong>Actif :</strong> @YesNo(_user.IsActive)</p>
                     </div>
-                    <div class="glpi-fiche-block">
-                        <div class="glpi-fiche-block-title"><i class="ti ti-key"></i>Habilitations (@_userHabilitations.Count)</div>
+                    <div class="glping-fiche-block">
+                        <div class="glping-fiche-block-title"><i class="ti ti-key"></i>Habilitations (@_userHabilitations.Count)</div>
                         @foreach (GlpiUserProfile h in _userHabilitations)
                         {
                             <p class="mb-1">@(h.Entity?.Name ?? "Entité inconnue") — @(h.Profile?.Name ?? "Profil inconnu")@(h.IsRecursive ? " (récursif)" : "")</p>
                         }
                     </div>
-                    <div class="glpi-fiche-block">
-                        <div class="glpi-fiche-block-title"><i class="ti ti-users"></i>Groupes (@_user.GroupMemberships.Count)</div>
+                    <div class="glping-fiche-block">
+                        <div class="glping-fiche-block-title"><i class="ti ti-users"></i>Groupes (@_user.GroupMemberships.Count)</div>
                         @foreach (GlpiGroupUser membership in _user.GroupMemberships)
                         {
                             <p class="mb-1">@(membership.Group?.Name ?? "Groupe inconnu")</p>
                         }
                     </div>
-                    <div class="glpi-fiche-block">
-                        <div class="glpi-fiche-block-title"><i class="ti ti-shield"></i>Sécurité</div>
+                    <div class="glping-fiche-block">
+                        <div class="glping-fiche-block-title"><i class="ti ti-shield"></i>Sécurité</div>
                         <p class="mb-0"><strong>Désactiver l'obligation du 2FA :</strong> @YesNo(_user.TwoFactorAuthDisabled)</p>
                     </div>
-                    <div class="glpi-fiche-block">
-                        <div class="glpi-fiche-block-title"><i class="ti ti-history"></i>Historique (@_historyEntries.Count)</div>
+                    <div class="glping-fiche-block">
+                        <div class="glping-fiche-block-title"><i class="ti ti-history"></i>Historique (@_historyEntries.Count)</div>
                         @foreach (GlpiUserHistoryEntry entry in Display.Chronological(_historyEntries, entry => entry.OccurredAt))
                         {
                             <p class="mb-1">@Display.DateTime(entry.OccurredAt) — @entry.User — @entry.Field : @entry.Description</p>
@@ -404,7 +404,7 @@ else
 
                 default:
                     var current = _tabs.First(t => t.Key == _activeTabKey);
-                    <div class="glpi-config-placeholder">
+                    <div class="glping-config-placeholder">
                         <i class="ti @current.Icon"></i>
                         <p class="mb-0">
                             @if (UnavailableReasons.TryGetValue(_activeTabKey, out string? reason))

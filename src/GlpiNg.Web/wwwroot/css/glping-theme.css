@@ -5,11 +5,11 @@
  *   - css/install.scss (valeurs --tblr-body-bg / --tblr-link-color)
  *
  * Valeurs vérifiées :
- *   --glpi-palette-color-1 : #1b2f62 (bleu marine — fond menu principal)
- *   --glpi-palette-color-2 : #fff
- *   --glpi-palette-color-3 : #3a5693 (bleu moyen)
- *   --glpi-palette-color-4 : #fec95c (jaune-or — liens/accent)
- *   --glpi-mainmenu-fg     : #f4f6fa (quasi-blanc, confirmé sur la variante sombre)
+ *   --glping-palette-color-1 : #1b2f62 (bleu marine — fond menu principal)
+ *   --glping-palette-color-2 : #fff
+ *   --glping-palette-color-3 : #3a5693 (bleu moyen)
+ *   --glping-palette-color-4 : #fec95c (jaune-or — liens/accent)
+ *   --glping-mainmenu-fg     : #f4f6fa (quasi-blanc, confirmé sur la variante sombre)
  *
  * Le reste (nuances de gris, ombres, arrondis) reprend les défauts de Tabler
  * tels quels : GLPI ne les redéfinit pas dans sa palette Auror, donc les
@@ -17,11 +17,11 @@
  */
 
 :root {
-  --glpi-mainmenu-bg: #1b2f62;
-  --glpi-mainmenu-fg: #f4f6fa;
-  --glpi-mainmenu-fg-muted: color-mix(in srgb, var(--glpi-mainmenu-fg) 65%, transparent);
-  --glpi-accent: #fec95c;
-  --glpi-accent-fg: #1b2f62;
+  --glping-mainmenu-bg: #1b2f62;
+  --glping-mainmenu-fg: #f4f6fa;
+  --glping-mainmenu-fg-muted: color-mix(in srgb, var(--glping-mainmenu-fg) 65%, transparent);
+  --glping-accent: #fec95c;
+  --glping-accent-fg: #1b2f62;
   --tblr-primary: #3a5693;
   --tblr-primary-rgb: 58, 86, 147;
   --tblr-primary-fg: #fff;
@@ -30,104 +30,104 @@
      --tblr-primary parce que plusieurs palettes ont une primaire claire, parfaite en fond de
      bouton et illisible en texte sur fond blanc — GLPI les distingue de la même façon
      (--tblr-link-color). */
-  --glpi-primary-text: var(--tblr-primary);
+  --glping-primary-text: var(--tblr-primary);
 
   /* Neutres de l'interface. Toute couleur de fond, de bordure ou de texte de cette feuille passe
      par eux, jamais par une valeur en dur : c'est ce qui permet aux palettes sombres (Darker,
      Midnight) de tout basculer d'un coup. Valeurs claires = celles qu'utilisait la feuille. */
-  --glpi-surface: #fff;
-  --glpi-surface-2: #f8f9fa;
-  --glpi-surface-3: #e9ecef;
-  --glpi-border: #e6e7e9;
-  --glpi-border-strong: #c3c9d3;
-  --glpi-text: #232629;
-  --glpi-text-2: #495057;
-  --glpi-text-muted: #6c737b;
-  --glpi-text-faint: #c3c8cf;
+  --glping-surface: #fff;
+  --glping-surface-2: #f8f9fa;
+  --glping-surface-3: #e9ecef;
+  --glping-border: #e6e7e9;
+  --glping-border-strong: #c3c9d3;
+  --glping-text: #232629;
+  --glping-text-2: #495057;
+  --glping-text-muted: #6c737b;
+  --glping-text-faint: #c3c8cf;
 }
 
 /* ---- Mode sombre (palettes Darker et Midnight) --------------------------------------------
    Posé par App.razor (data-bs-theme="dark") : Tabler bascule alors ses propres composants
    (cartes, tableaux, formulaires, menus), et nos neutres s'alignent sur ses variables. */
 :root[data-bs-theme="dark"] {
-  --glpi-surface: var(--tblr-bg-surface);
-  --glpi-surface-2: var(--tblr-bg-surface-secondary);
-  --glpi-surface-3: var(--tblr-gray-700);
-  --glpi-border: var(--tblr-border-color);
-  --glpi-border-strong: var(--tblr-gray-600);
-  --glpi-text: var(--tblr-body-color);
-  --glpi-text-2: var(--tblr-gray-300);
-  --glpi-text-muted: var(--tblr-gray-400);
-  --glpi-text-faint: var(--tblr-gray-500);
+  --glping-surface: var(--tblr-bg-surface);
+  --glping-surface-2: var(--tblr-bg-surface-secondary);
+  --glping-surface-3: var(--tblr-gray-700);
+  --glping-border: var(--tblr-border-color);
+  --glping-border-strong: var(--tblr-gray-600);
+  --glping-text: var(--tblr-body-color);
+  --glping-text-2: var(--tblr-gray-300);
+  --glping-text-muted: var(--tblr-gray-400);
+  --glping-text-faint: var(--tblr-gray-500);
 }
 
 /* ---- Palettes, reprises des sources de GLPI 11 (css/palettes/_*.scss) ----------------------
-   data-glpi-theme est posé par App.razor d'après la préférence « Palette de couleur ». Chaque
+   data-glping-theme est posé par App.razor d'après la préférence « Palette de couleur ». Chaque
    palette reprend le fond et le texte du menu, la primaire (--tblr-primary-rgb de GLPI) et la
    couleur des liens. Deux écarts assumés, faute de valeur utilisable chez GLPI :
    l'accent (icône de marque, groupe ouvert) est choisi pour ressortir sur le fond du menu, et le
    texte sur la primaire (--tblr-primary-fg) est foncé quand la primaire est claire. */
 
-:root[data-glpi-theme="auror"] {
+:root[data-glping-theme="auror"] {
   /* Valeurs de :root ci-dessus : Auror est la palette par défaut. */
 }
 
-:root[data-glpi-theme="dark"] {
+:root[data-glping-theme="dark"] {
   /* « Dark » chez GLPI est un thème clair au menu très sombre — pas un mode sombre. */
-  --glpi-mainmenu-bg: #161514;
-  --glpi-mainmenu-fg: #fff;
-  --glpi-accent: #c4c0bb;
-  --glpi-accent-fg: #161514;
+  --glping-mainmenu-bg: #161514;
+  --glping-mainmenu-fg: #fff;
+  --glping-accent: #c4c0bb;
+  --glping-accent-fg: #161514;
   --tblr-primary: #585957;
   --tblr-primary-rgb: 88, 89, 87;
   --tblr-primary-fg: #fff;
 }
 
-:root[data-glpi-theme="classic"] {
-  --glpi-mainmenu-bg: #98a458;
-  --glpi-mainmenu-fg: #000;
-  --glpi-accent: #fff;
-  --glpi-accent-fg: #000;
+:root[data-glping-theme="classic"] {
+  --glping-mainmenu-bg: #98a458;
+  --glping-mainmenu-fg: #000;
+  --glping-accent: #fff;
+  --glping-accent-fg: #000;
   --tblr-primary: #f2b265;
   --tblr-primary-rgb: 242, 178, 101;
   --tblr-primary-fg: #8f5a0a;
-  --glpi-primary-text: #4d7300;
+  --glping-primary-text: #4d7300;
 }
 
-:root[data-glpi-theme="lightblue"] {
-  --glpi-mainmenu-bg: #1a7ab2;
-  --glpi-mainmenu-fg: #f4f6fa;
-  --glpi-accent: #fff;
-  --glpi-accent-fg: #1a7ab2;
+:root[data-glping-theme="lightblue"] {
+  --glping-mainmenu-bg: #1a7ab2;
+  --glping-mainmenu-fg: #f4f6fa;
+  --glping-accent: #fff;
+  --glping-accent-fg: #1a7ab2;
   --tblr-primary: #c8eafd;
   --tblr-primary-rgb: 200, 234, 253;
   --tblr-primary-fg: #1a4f73;
-  --glpi-primary-text: #2c73a7;
+  --glping-primary-text: #2c73a7;
 }
 
-:root[data-glpi-theme="vintage"] {
-  --glpi-mainmenu-bg: #064260;
-  --glpi-mainmenu-fg: #fff;
-  --glpi-accent: #f2ef9f;
-  --glpi-accent-fg: #064260;
+:root[data-glping-theme="vintage"] {
+  --glping-mainmenu-bg: #064260;
+  --glping-mainmenu-fg: #fff;
+  --glping-accent: #f2ef9f;
+  --glping-accent-fg: #064260;
   --tblr-primary: #f9201d;
   --tblr-primary-rgb: 249, 32, 29;
   --tblr-primary-fg: #fff;
-  --glpi-primary-text: #bf0805;
+  --glping-primary-text: #bf0805;
 }
 
-:root[data-glpi-theme="icecream"] {
-  --glpi-mainmenu-bg: #113f59;
-  --glpi-mainmenu-fg: #f3edd3;
-  --glpi-accent: #19bec0;
-  --glpi-accent-fg: #113f59;
+:root[data-glping-theme="icecream"] {
+  --glping-mainmenu-bg: #113f59;
+  --glping-mainmenu-fg: #f3edd3;
+  --glping-accent: #19bec0;
+  --glping-accent-fg: #113f59;
   --tblr-primary: #d54f58;
   --tblr-primary-rgb: 213, 79, 88;
   --tblr-primary-fg: #f3edd3;
-  --glpi-primary-text: #127e80;
+  --glping-primary-text: #127e80;
 }
 
-:root[data-glpi-theme="darker"] {
+:root[data-glping-theme="darker"] {
   --tblr-body-bg: #1f1e1e;
   --tblr-body-color: #aaa;
   --tblr-bg-surface: #242323;
@@ -136,66 +136,66 @@
   --tblr-bg-surface-tertiary: #2d2c2b;
   --tblr-bg-forms: #1f1e1e;
   --tblr-border-color: #3a3938;
-  --glpi-surface-3: #3a3938;
-  --glpi-border-strong: #4a4948;
-  --glpi-text-2: #c4c4c4;
-  --glpi-text-muted: #8c8c8c;
-  --glpi-text-faint: #6b6b6b;
-  --glpi-mainmenu-bg: #242323;
-  --glpi-mainmenu-fg: #f4f6fa;
-  --glpi-accent: #c8c8c8;
-  --glpi-accent-fg: #242323;
+  --glping-surface-3: #3a3938;
+  --glping-border-strong: #4a4948;
+  --glping-text-2: #c4c4c4;
+  --glping-text-muted: #8c8c8c;
+  --glping-text-faint: #6b6b6b;
+  --glping-mainmenu-bg: #242323;
+  --glping-mainmenu-fg: #f4f6fa;
+  --glping-accent: #c8c8c8;
+  --glping-accent-fg: #242323;
   --tblr-primary: #6b6b6b;
   --tblr-primary-rgb: 107, 107, 107;
   --tblr-primary-fg: #f3f3f3;
-  --glpi-primary-text: #c8c8c8;
+  --glping-primary-text: #c8c8c8;
 }
 
-:root[data-glpi-theme="midnight"] {
+:root[data-glping-theme="midnight"] {
   --tblr-body-bg: #000;
-  --glpi-mainmenu-bg: #000;
-  --glpi-mainmenu-fg: var(--tblr-body-color);
-  --glpi-accent: #b6c3e0;
-  --glpi-accent-fg: #232e3c;
+  --glping-mainmenu-bg: #000;
+  --glping-mainmenu-fg: var(--tblr-body-color);
+  --glping-accent: #b6c3e0;
+  --glping-accent-fg: #232e3c;
   --tblr-primary: #b6c3e0;
   --tblr-primary-rgb: 182, 195, 224;
   --tblr-primary-fg: #232e3c;
-  --glpi-primary-text: #b6c3e0;
+  --glping-primary-text: #b6c3e0;
 }
 
 /* ---- Contraste élevé (préférence « Activer le contraste élevé ») ---------------------------
    Texte à pleine encre, bordures franches, liens soulignés et focus bien visible : ce qui compte
    pour une vue basse ou un écran lu en plein jour. S'ajoute à n'importe quelle palette. */
-:root[data-glpi-contrast] {
-  --glpi-text: #000;
-  --glpi-text-2: #1a1a1a;
-  --glpi-text-muted: #3d434a;
-  --glpi-text-faint: #5f666e;
-  --glpi-border: #767c84;
-  --glpi-border-strong: #4a4f55;
+:root[data-glping-contrast] {
+  --glping-text: #000;
+  --glping-text-2: #1a1a1a;
+  --glping-text-muted: #3d434a;
+  --glping-text-faint: #5f666e;
+  --glping-border: #767c84;
+  --glping-border-strong: #4a4f55;
   --tblr-body-color: #000;
   --tblr-secondary: #3d434a;
   --tblr-border-color: #767c84;
 }
 
-:root[data-glpi-contrast][data-bs-theme="dark"] {
-  --glpi-text: #fff;
-  --glpi-text-2: #f1f1f1;
-  --glpi-text-muted: #d1d5db;
-  --glpi-text-faint: #b0b6be;
-  --glpi-border: #9ca3af;
-  --glpi-border-strong: #d1d5db;
+:root[data-glping-contrast][data-bs-theme="dark"] {
+  --glping-text: #fff;
+  --glping-text-2: #f1f1f1;
+  --glping-text-muted: #d1d5db;
+  --glping-text-faint: #b0b6be;
+  --glping-border: #9ca3af;
+  --glping-border-strong: #d1d5db;
   --tblr-body-color: #fff;
   --tblr-secondary: #d1d5db;
   --tblr-border-color: #9ca3af;
 }
 
-:root[data-glpi-contrast] a:not(.btn):not(.glpi-nav-subitem):not(.glpi-brand) {
+:root[data-glping-contrast] a:not(.btn):not(.glping-nav-subitem):not(.glping-brand) {
   text-decoration: underline;
 }
 
-:root[data-glpi-contrast] :focus-visible {
-  outline: 3px solid var(--glpi-primary-text) !important;
+:root[data-glping-contrast] :focus-visible {
+  outline: 3px solid var(--glping-primary-text) !important;
   outline-offset: 2px;
 }
 
@@ -206,23 +206,23 @@ html, body {
   margin: 0 !important;
 }
 
-/* Sur les pages qui utilisent le shell applicatif (.glpi-app : sidebar + topbar +
+/* Sur les pages qui utilisent le shell applicatif (.glping-app : sidebar + topbar +
    contenu), la page elle-même ne doit jamais défiler : sidebar et topbar restent
-   fixes, seul .glpi-page-body (contenu central) scrolle. Les pages hors shell
+   fixes, seul .glping-page-body (contenu central) scrolle. Les pages hors shell
    (login, update...) gardent le défilement normal du document. */
-body:has(.glpi-app) {
+body:has(.glping-app) {
   overflow: hidden;
   height: 100vh;
 }
 
 body {
-  background: var(--glpi-surface-2);
+  background: var(--glping-surface-2);
 }
 
 /* --- Sidebar verticale (menu principal GLPI) --- */
-.glpi-sidebar {
-  background: var(--glpi-mainmenu-bg);
-  color: var(--glpi-mainmenu-fg);
+.glping-sidebar {
+  background: var(--glping-mainmenu-bg);
+  color: var(--glping-mainmenu-fg);
   width: 260px;
   height: 100vh;
   flex-shrink: 0;
@@ -230,25 +230,25 @@ body {
   flex-direction: column;
 }
 
-.glpi-sidebar .glpi-brand {
+.glping-sidebar .glping-brand {
   display: flex;
   align-items: center;
   gap: 0.6rem;
   padding: 1rem 1.25rem;
-  color: var(--glpi-mainmenu-fg);
+  color: var(--glping-mainmenu-fg);
   text-decoration: none;
   font-weight: 700;
   font-size: 1.1rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--glpi-mainmenu-fg) 12%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--glping-mainmenu-fg) 12%, transparent);
 }
 
-.glpi-sidebar .glpi-brand .ti {
-  color: var(--glpi-accent);
+.glping-sidebar .glping-brand .ti {
+  color: var(--glping-accent);
   font-size: 1.4rem;
 }
 
 /* --- Recherche dans le menu --- */
-.glpi-menu-search {
+.glping-menu-search {
   display: flex;
   align-items: center;
   gap: 0.6rem;
@@ -258,56 +258,56 @@ body {
   background: transparent;
   border: none;
   border-radius: 0.375rem;
-  color: var(--glpi-mainmenu-fg-muted);
+  color: var(--glping-mainmenu-fg-muted);
   font-size: 0.875rem;
   text-align: left;
   cursor: pointer;
 }
 
-.glpi-menu-search:hover {
-  color: var(--glpi-mainmenu-fg);
-  background: color-mix(in srgb, var(--glpi-mainmenu-fg) 6%, transparent);
+.glping-menu-search:hover {
+  color: var(--glping-mainmenu-fg);
+  background: color-mix(in srgb, var(--glping-mainmenu-fg) 6%, transparent);
 }
 
-.glpi-menu-search.open {
-  background: color-mix(in srgb, var(--glpi-mainmenu-fg) 8%, transparent);
+.glping-menu-search.open {
+  background: color-mix(in srgb, var(--glping-mainmenu-fg) 8%, transparent);
 }
 
-.glpi-menu-search input {
+.glping-menu-search input {
   flex: 1;
   min-width: 0;
   background: transparent;
   border: none;
   outline: none;
-  color: var(--glpi-mainmenu-fg);
+  color: var(--glping-mainmenu-fg);
   font-size: 0.875rem;
 }
 
-.glpi-menu-search input::placeholder {
-  color: var(--glpi-mainmenu-fg-muted);
+.glping-menu-search input::placeholder {
+  color: var(--glping-mainmenu-fg-muted);
 }
 
-.glpi-menu-search-close {
+.glping-menu-search-close {
   background: transparent;
   border: none;
-  color: var(--glpi-mainmenu-fg-muted);
+  color: var(--glping-mainmenu-fg-muted);
   cursor: pointer;
   display: flex;
   align-items: center;
 }
 
-.glpi-menu-search-close:hover {
-  color: var(--glpi-mainmenu-fg);
+.glping-menu-search-close:hover {
+  color: var(--glping-mainmenu-fg);
 }
 
 /* --- Menu principal (groupes dépliables) --- */
-.glpi-sidebar nav.glpi-nav {
+.glping-sidebar nav.glping-nav {
   padding: 0.5rem 0;
   flex: 1;
   overflow-y: auto;
 }
 
-.glpi-nav-group-toggle {
+.glping-nav-group-toggle {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -316,51 +316,51 @@ body {
   background: transparent;
   border: none;
   border-left: 3px solid transparent;
-  color: var(--glpi-mainmenu-fg-muted);
+  color: var(--glping-mainmenu-fg-muted);
   font-size: 0.925rem;
   text-align: left;
   cursor: pointer;
 }
 
-.glpi-nav-group-toggle .ti:first-child {
+.glping-nav-group-toggle .ti:first-child {
   font-size: 1.15rem;
   width: 1.25rem;
   text-align: center;
 }
 
-.glpi-nav-group-toggle span {
+.glping-nav-group-toggle span {
   flex: 1;
 }
 
-.glpi-chevron {
+.glping-chevron {
   font-size: 1rem !important;
   width: auto !important;
   transition: transform 0.15s ease;
 }
 
-.glpi-nav-group-toggle:hover {
-  color: var(--glpi-mainmenu-fg);
-  background: color-mix(in srgb, var(--glpi-mainmenu-fg) 6%, transparent);
+.glping-nav-group-toggle:hover {
+  color: var(--glping-mainmenu-fg);
+  background: color-mix(in srgb, var(--glping-mainmenu-fg) 6%, transparent);
 }
 
-.glpi-nav-group.open .glpi-nav-group-toggle {
-  color: var(--glpi-accent);
+.glping-nav-group.open .glping-nav-group-toggle {
+  color: var(--glping-accent);
   font-weight: 600;
-  border-left-color: var(--glpi-accent);
-  background: color-mix(in srgb, var(--glpi-accent) 8%, transparent);
+  border-left-color: var(--glping-accent);
+  background: color-mix(in srgb, var(--glping-accent) 8%, transparent);
 }
 
-.glpi-nav-group.open .glpi-chevron {
+.glping-nav-group.open .glping-chevron {
   transform: rotate(180deg);
 }
 
-.glpi-nav-group-items {
+.glping-nav-group-items {
   display: flex;
   flex-direction: column;
   padding: 0.25rem 0 0.5rem;
 }
 
-@keyframes glpi-nav-item-in {
+@keyframes glping-nav-item-in {
   from {
     opacity: 0;
     transform: translateX(-10px);
@@ -371,7 +371,7 @@ body {
   }
 }
 
-@keyframes glpi-spin {
+@keyframes glping-spin {
   from {
     transform: rotate(0deg);
   }
@@ -380,97 +380,97 @@ body {
   }
 }
 
-.glpi-spin {
+.glping-spin {
   display: inline-block;
-  animation: glpi-spin 0.6s linear infinite;
+  animation: glping-spin 0.6s linear infinite;
 }
 
-.glpi-nav-subitem {
+.glping-nav-subitem {
   display: flex;
   align-items: center;
   gap: 0.6rem;
   padding: 0.4rem 1.25rem 0.4rem 1.9rem;
-  color: var(--glpi-mainmenu-fg-muted);
+  color: var(--glping-mainmenu-fg-muted);
   font-size: 0.85rem;
   text-decoration: none;
-  animation: glpi-nav-item-in 0.18s ease-out both;
+  animation: glping-nav-item-in 0.18s ease-out both;
 }
 
-.glpi-nav-subitem .ti {
+.glping-nav-subitem .ti {
   font-size: 1rem;
   width: 1.1rem;
   text-align: center;
   flex-shrink: 0;
 }
 
-.glpi-nav-group-items > *:nth-child(1) { animation-delay: 0ms; }
-.glpi-nav-group-items > *:nth-child(2) { animation-delay: 25ms; }
-.glpi-nav-group-items > *:nth-child(3) { animation-delay: 50ms; }
-.glpi-nav-group-items > *:nth-child(4) { animation-delay: 75ms; }
-.glpi-nav-group-items > *:nth-child(5) { animation-delay: 100ms; }
-.glpi-nav-group-items > *:nth-child(6) { animation-delay: 125ms; }
-.glpi-nav-group-items > *:nth-child(7) { animation-delay: 150ms; }
-.glpi-nav-group-items > *:nth-child(8) { animation-delay: 175ms; }
-.glpi-nav-group-items > *:nth-child(9) { animation-delay: 200ms; }
-.glpi-nav-group-items > *:nth-child(10) { animation-delay: 225ms; }
-.glpi-nav-group-items > *:nth-child(n+11) { animation-delay: 250ms; }
+.glping-nav-group-items > *:nth-child(1) { animation-delay: 0ms; }
+.glping-nav-group-items > *:nth-child(2) { animation-delay: 25ms; }
+.glping-nav-group-items > *:nth-child(3) { animation-delay: 50ms; }
+.glping-nav-group-items > *:nth-child(4) { animation-delay: 75ms; }
+.glping-nav-group-items > *:nth-child(5) { animation-delay: 100ms; }
+.glping-nav-group-items > *:nth-child(6) { animation-delay: 125ms; }
+.glping-nav-group-items > *:nth-child(7) { animation-delay: 150ms; }
+.glping-nav-group-items > *:nth-child(8) { animation-delay: 175ms; }
+.glping-nav-group-items > *:nth-child(9) { animation-delay: 200ms; }
+.glping-nav-group-items > *:nth-child(10) { animation-delay: 225ms; }
+.glping-nav-group-items > *:nth-child(n+11) { animation-delay: 250ms; }
 
 @media (prefers-reduced-motion: reduce) {
-  .glpi-nav-subitem {
+  .glping-nav-subitem {
     animation: none;
   }
 }
 
-.glpi-nav-subitem:hover {
-  color: var(--glpi-mainmenu-fg);
-  background: color-mix(in srgb, var(--glpi-mainmenu-fg) 6%, transparent);
+.glping-nav-subitem:hover {
+  color: var(--glping-mainmenu-fg);
+  background: color-mix(in srgb, var(--glping-mainmenu-fg) 6%, transparent);
 }
 
-.glpi-nav-subitem.active {
-  color: var(--glpi-mainmenu-fg);
+.glping-nav-subitem.active {
+  color: var(--glping-mainmenu-fg);
   font-weight: 600;
   text-decoration: underline;
 }
 
-.glpi-nav-subitem.disabled {
-  color: color-mix(in srgb, var(--glpi-mainmenu-fg) 30%, transparent);
+.glping-nav-subitem.disabled {
+  color: color-mix(in srgb, var(--glping-mainmenu-fg) 30%, transparent);
   cursor: not-allowed;
 }
 
 /* --- Réduire le menu --- */
-.glpi-sidebar-collapse {
+.glping-sidebar-collapse {
   display: flex;
   align-items: center;
   gap: 0.6rem;
   padding: 0.75rem 1.25rem;
   background: transparent;
   border: none;
-  border-top: 1px solid color-mix(in srgb, var(--glpi-mainmenu-fg) 12%, transparent);
-  color: var(--glpi-mainmenu-fg-muted);
+  border-top: 1px solid color-mix(in srgb, var(--glping-mainmenu-fg) 12%, transparent);
+  color: var(--glping-mainmenu-fg-muted);
   font-size: 0.85rem;
   cursor: pointer;
 }
 
-.glpi-sidebar-collapse:hover {
-  color: var(--glpi-mainmenu-fg);
+.glping-sidebar-collapse:hover {
+  color: var(--glping-mainmenu-fg);
 }
 
 /* --- Sidebar réduite (icônes seules) --- */
-.glpi-sidebar.collapsed {
+.glping-sidebar.collapsed {
   width: 64px;
 }
 
-.glpi-sidebar.collapsed .glpi-brand span,
-.glpi-sidebar.collapsed .glpi-menu-search span,
-.glpi-sidebar.collapsed .glpi-nav-group-toggle span,
-.glpi-sidebar.collapsed .glpi-nav-group-items,
-.glpi-sidebar.collapsed .glpi-chevron {
+.glping-sidebar.collapsed .glping-brand span,
+.glping-sidebar.collapsed .glping-menu-search span,
+.glping-sidebar.collapsed .glping-nav-group-toggle span,
+.glping-sidebar.collapsed .glping-nav-group-items,
+.glping-sidebar.collapsed .glping-chevron {
   display: none;
 }
 
-.glpi-sidebar.collapsed .glpi-nav-group-toggle,
-.glpi-sidebar.collapsed .glpi-menu-search,
-.glpi-sidebar.collapsed .glpi-sidebar-collapse {
+.glping-sidebar.collapsed .glping-nav-group-toggle,
+.glping-sidebar.collapsed .glping-menu-search,
+.glping-sidebar.collapsed .glping-sidebar-collapse {
   justify-content: center;
   padding-left: 0;
   padding-right: 0;
@@ -478,19 +478,19 @@ body {
 }
 
 /* --- Sous-menu flottant (icône survolée en mode réduit) --- */
-.glpi-nav-flyout {
+.glping-nav-flyout {
   display: none;
 }
 
-.glpi-sidebar.collapsed .glpi-nav {
+.glping-sidebar.collapsed .glping-nav {
   overflow: visible;
 }
 
-.glpi-sidebar.collapsed .glpi-nav-group {
+.glping-sidebar.collapsed .glping-nav-group {
   position: relative;
 }
 
-.glpi-sidebar.collapsed .glpi-nav-group:hover .glpi-nav-flyout {
+.glping-sidebar.collapsed .glping-nav-group:hover .glping-nav-flyout {
   display: block;
   position: absolute;
   top: 0;
@@ -504,59 +504,59 @@ body {
   padding-bottom: 1rem;
 }
 
-.glpi-nav-flyout-panel {
+.glping-nav-flyout-panel {
   min-width: 200px;
   max-width: none;
   width: max-content;
-  background: var(--glpi-surface);
-  color: var(--glpi-text);
+  background: var(--glping-surface);
+  color: var(--glping-text);
   border-radius: 0.75rem;
   box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.25);
   padding: 0.85rem 1rem;
 }
 
-.glpi-nav-flyout-header {
+.glping-nav-flyout-header {
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--glpi-text-muted);
+  color: var(--glping-text-muted);
   margin-bottom: 0.5rem;
 }
 
-.glpi-nav-flyout-items {
+.glping-nav-flyout-items {
   display: grid;
   grid-auto-flow: column;
   grid-template-rows: repeat(6, auto);
   column-gap: 1.5rem;
 }
 
-.glpi-nav-flyout-items .glpi-nav-subitem {
+.glping-nav-flyout-items .glping-nav-subitem {
   padding: 0.35rem 0.25rem;
-  color: var(--glpi-text);
+  color: var(--glping-text);
   min-width: 180px;
   white-space: nowrap;
   animation: none;
 }
 
-.glpi-nav-flyout-items .glpi-nav-subitem:hover {
-  color: var(--glpi-primary-text);
+.glping-nav-flyout-items .glping-nav-subitem:hover {
+  color: var(--glping-primary-text);
   background: transparent;
 }
 
-.glpi-nav-flyout-items .glpi-nav-subitem.disabled {
-  color: var(--glpi-text-faint);
+.glping-nav-flyout-items .glping-nav-subitem.disabled {
+  color: var(--glping-text-faint);
 }
 
 /* --- Structure générale --- */
-/* .glpi-app occupe exactement la hauteur du viewport et ne scrolle jamais lui-même :
-   la sidebar et la topbar restent fixes, seul .glpi-page-body défile. */
-.glpi-app {
+/* .glping-app occupe exactement la hauteur du viewport et ne scrolle jamais lui-même :
+   la sidebar et la topbar restent fixes, seul .glping-page-body défile. */
+.glping-app {
   display: flex;
   height: 100vh;
 }
 
-.glpi-content {
+.glping-content {
   flex: 1;
   min-width: 0;
   height: 100vh;
@@ -564,9 +564,9 @@ body {
   flex-direction: column;
 }
 
-.glpi-topbar {
-  background: var(--glpi-surface);
-  border-bottom: 1px solid var(--glpi-border);
+.glping-topbar {
+  background: var(--glping-surface);
+  border-bottom: 1px solid var(--glping-border);
   padding: 0.6rem 1.5rem;
   min-height: 60px;
   display: flex;
@@ -575,22 +575,22 @@ body {
   flex-shrink: 0;
 }
 
-.glpi-breadcrumb {
+.glping-breadcrumb {
   display: flex;
   align-items: center;
   gap: 0.4rem;
   font-size: 0.9rem;
-  color: var(--glpi-text-muted);
+  color: var(--glping-text-muted);
   white-space: nowrap;
   flex: 1;
   min-width: 0;
 }
 
-.glpi-breadcrumb-sep {
-  color: var(--glpi-text-faint);
+.glping-breadcrumb-sep {
+  color: var(--glping-text-faint);
 }
 
-.glpi-breadcrumb-item {
+.glping-breadcrumb-item {
   display: flex;
   align-items: center;
   gap: 0.35rem;
@@ -598,54 +598,54 @@ body {
   text-decoration: none;
 }
 
-.glpi-breadcrumb-item .ti {
+.glping-breadcrumb-item .ti {
   font-size: 1rem;
 }
 
 /* Seul un lien réagit au survol : l'élément courant est un <span>, et le teinter promettait un
    clic qui ne menait nulle part. */
-a.glpi-breadcrumb-item:hover {
-  color: var(--glpi-primary-text);
+a.glping-breadcrumb-item:hover {
+  color: var(--glping-primary-text);
   text-decoration: underline;
 }
 
-.glpi-breadcrumb-item.active {
-  color: var(--glpi-text);
+.glping-breadcrumb-item.active {
+  color: var(--glping-text);
   font-weight: 600;
 }
 
-.glpi-topbar .glpi-search {
+.glping-topbar .glping-search {
   width: 280px;
   flex-shrink: 0;
 }
 
-.glpi-topbar-user {
+.glping-topbar-user {
   flex-shrink: 0;
 }
 
 /* Sélecteur d'entité active (voir Components/Layout/EntitySelector.razor). */
-.glpi-topbar-entity {
+.glping-topbar-entity {
   flex-shrink: 0;
 }
 
-.glpi-entity-toggle {
+.glping-entity-toggle {
   display: flex;
   align-items: center;
   gap: 0.4rem;
   padding: 0.35rem 0.6rem;
-  border: 1px solid var(--glpi-border);
+  border: 1px solid var(--glping-border);
   border-radius: 0.5rem;
   font-size: 0.8125rem;
-  color: var(--glpi-text);
+  color: var(--glping-text);
   text-decoration: none;
 }
 
-.glpi-entity-toggle:hover {
-  background: var(--glpi-surface-2);
-  color: var(--glpi-text);
+.glping-entity-toggle:hover {
+  background: var(--glping-surface-2);
+  color: var(--glping-text);
 }
 
-.glpi-entity-label {
+.glping-entity-label {
   /* Un nom d'entité peut être long : on le tronque plutôt que de laisser le bandeau s'étirer. */
   max-width: 14rem;
   overflow: hidden;
@@ -653,18 +653,18 @@ a.glpi-breadcrumb-item:hover {
   white-space: nowrap;
 }
 
-.glpi-entity-menu {
+.glping-entity-menu {
   max-height: 60vh;
   overflow-y: auto;
 }
 
 /* Les entrées du menu sont des <button> dans un <form> POST (réémission du cookie), pas des
    liens : on leur redonne l'apparence d'un dropdown-item pleine largeur. */
-.glpi-entity-menu form {
+.glping-entity-menu form {
   margin: 0;
 }
 
-.glpi-entity-menu .dropdown-item {
+.glping-entity-menu .dropdown-item {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -674,7 +674,7 @@ a.glpi-breadcrumb-item:hover {
   text-align: left;
 }
 
-.glpi-user-toggle {
+.glping-user-toggle {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -682,29 +682,29 @@ a.glpi-breadcrumb-item:hover {
   color: inherit;
 }
 
-.glpi-user-toggle::after {
+.glping-user-toggle::after {
   margin-left: 0.35rem;
 }
 
-.glpi-user-info {
+.glping-user-info {
   display: flex;
   flex-direction: column;
   text-align: right;
   line-height: 1.25;
 }
 
-.glpi-user-name {
+.glping-user-name {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--glpi-text);
+  color: var(--glping-text);
 }
 
-.glpi-user-entity {
+.glping-user-entity {
   font-size: 0.75rem;
-  color: var(--glpi-text-muted);
+  color: var(--glping-text-muted);
 }
 
-.glpi-avatar {
+.glping-avatar {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -717,7 +717,7 @@ a.glpi-breadcrumb-item:hover {
   flex-shrink: 0;
 }
 
-.glpi-page-body {
+.glping-page-body {
   padding: 1.5rem;
   flex: 1;
   min-height: 0;
@@ -725,21 +725,21 @@ a.glpi-breadcrumb-item:hover {
 }
 
 /* --- Pages de liste (tableau pleine hauteur, header/footer fixes) --- */
-.glpi-page-body:has(.glpi-list-page) {
+.glping-page-body:has(.glping-list-page) {
   overflow-y: hidden;
   display: flex;
   flex-direction: column;
 }
 
-.glpi-list-page {
+.glping-list-page {
   display: flex;
   flex-direction: column;
   flex: 1;
   min-height: 0;
 }
 
-.glpi-list-page > .card,
-.glpi-list-page > .glpi-computers-layout > .card {
+.glping-list-page > .card,
+.glping-list-page > .glping-computers-layout > .card {
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -747,38 +747,38 @@ a.glpi-breadcrumb-item:hover {
 }
 
 /* --- Pages de fiche (ex. détail Ordinateur) : cadre central pleine hauteur --- */
-.glpi-page-body:has(.glpi-fiche-layout) {
+.glping-page-body:has(.glping-fiche-layout) {
   display: flex;
   flex-direction: column;
   overflow-y: hidden;
   padding-top: 0.6rem;
 }
 
-.glpi-list-page .glpi-computers-layout {
+.glping-list-page .glping-computers-layout {
   flex: 1;
   min-height: 0;
   /* Les cartes de cette rangée doivent s'étirer sur toute sa hauteur : c'est ce qui borne le
      .table-responsive qu'elles contiennent, et donc ce qui le rend défilant. Un align-items-start
      ici (ou la classe utilitaire du même nom sur l'élément, qui passe en !important) fait grandir
-     la carte avec son contenu ; la liste déborde alors du cadre, que .glpi-page-body coupe en
+     la carte avec son contenu ; la liste déborde alors du cadre, que .glping-page-body coupe en
      overflow-y: hidden — plus aucun défilement passé quelques dizaines de lignes.
      Le panneau des recherches sauvegardées n'est pas concerné : épinglé il pose son propre
      align-self et sa hauteur, détaché il est en position: fixed. */
   align-items: stretch;
 }
 
-.glpi-list-page .card-header,
-.glpi-list-page .card-footer {
+.glping-list-page .card-header,
+.glping-list-page .card-footer {
   flex-shrink: 0;
 }
 
-.glpi-list-page .table-responsive {
+.glping-list-page .table-responsive {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
 }
 
-.glpi-list-page .table-responsive thead th {
+.glping-list-page .table-responsive thead th {
   position: sticky;
   top: 0;
   z-index: 1;
@@ -788,10 +788,10 @@ a.glpi-breadcrumb-item:hover {
 /* --- Base de connaissances : colonne des catégories + tableau des articles ---
    La page range ses articles à côté d'un arbre de catégories, ce qu'aucune autre liste ne fait.
    Sans ce conteneur en flex borné, le .table-responsive qu'il contient n'a pas de hauteur à
-   remplir : il grandit avec son contenu, déborde du cadre que .glpi-page-body coupe en
+   remplir : il grandit avec son contenu, déborde du cadre que .glping-page-body coupe en
    overflow-y: hidden, et emporte la pagination hors de l'écran — plus rien ne défile passé
    quelques dizaines d'articles. */
-.glpi-kb-layout {
+.glping-kb-layout {
   display: flex;
   flex: 1;
   min-height: 0;
@@ -801,11 +801,11 @@ a.glpi-breadcrumb-item:hover {
 
 /* min-width: 0 — sans lui, un sujet long élargirait la colonne du tableau au lieu de déclencher
    son propre défilement horizontal : l'élément flex prend par défaut la largeur de son contenu. */
-.glpi-kb-layout > .table-responsive {
+.glping-kb-layout > .table-responsive {
   min-width: 0;
 }
 
-.glpi-kb-categories {
+.glping-kb-categories {
   width: 260px;
   flex-shrink: 0;
   /* Les catégories défilent séparément : un arbre profond ne doit pas repousser le tableau. */
@@ -816,35 +816,35 @@ a.glpi-breadcrumb-item:hover {
 /* Sous la largeur d'une tablette, les deux colonnes s'empilent et c'est la page qui défile :
    côte à côte, chacune devient trop étroite pour être lisible. */
 @media (max-width: 767.98px) {
-  .glpi-kb-layout {
+  .glping-kb-layout {
     flex-direction: column;
     overflow-y: auto;
   }
 
-  .glpi-kb-categories {
+  .glping-kb-categories {
     width: auto;
     overflow-y: visible;
   }
 }
 
 /* --- Page de configuration (/config), sous-menu + formulaire type GLPI --- */
-.glpi-config {
+.glping-config {
   display: flex;
   align-items: stretch;
-  background: var(--glpi-surface);
-  border: 1px solid var(--glpi-border);
+  background: var(--glping-surface);
+  border: 1px solid var(--glping-border);
   border-radius: 0.5rem;
   overflow: hidden;
 }
 
-.glpi-config-sidebar {
+.glping-config-sidebar {
   width: 240px;
   flex-shrink: 0;
   padding: 0.5rem 0;
-  border-right: 1px solid var(--glpi-border);
+  border-right: 1px solid var(--glping-border);
 }
 
-.glpi-config-nav-item {
+.glping-config-nav-item {
   display: flex;
   align-items: center;
   gap: 0.6rem;
@@ -855,61 +855,61 @@ a.glpi-breadcrumb-item:hover {
   border-left: 3px solid transparent;
   text-align: left;
   font-size: 0.875rem;
-  color: var(--glpi-text-2);
+  color: var(--glping-text-2);
   cursor: pointer;
 }
 
-.glpi-config-nav-item .ti {
+.glping-config-nav-item .ti {
   font-size: 1.1rem;
   width: 1.1rem;
   text-align: center;
   flex-shrink: 0;
 }
 
-.glpi-config-nav-item:hover {
-  background: var(--glpi-surface-2);
+.glping-config-nav-item:hover {
+  background: var(--glping-surface-2);
 }
 
-.glpi-config-nav-item.active {
-  background: var(--glpi-surface-2);
-  color: var(--glpi-primary-text);
+.glping-config-nav-item.active {
+  background: var(--glping-surface-2);
+  color: var(--glping-primary-text);
   font-weight: 700;
   border-left-color: var(--tblr-primary);
 }
 
-.glpi-config-body {
+.glping-config-body {
   flex: 1;
   min-width: 0;
   padding: 1.5rem 2rem;
 }
 
-.glpi-config-form {
+.glping-config-form {
   max-width: 960px;
 }
 
 /* Formulaires trop denses pour tenir en une colonne de 960px (ex. /admin/inventory,
    dont l'écran GLPI équivalent répartit les options d'importation sur 2 colonnes). */
-.glpi-config-form.glpi-config-form-wide {
+.glping-config-form.glping-config-form-wide {
   max-width: 1400px;
 }
 
-.glpi-config-field-grid {
+.glping-config-field-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   column-gap: 2rem;
 }
 
-.glpi-config-field-grid .glpi-config-field {
+.glping-config-field-grid .glping-config-field {
   grid-template-columns: minmax(0, 1fr) auto;
 }
 
-.glpi-config-field-grid .glpi-config-field label:not(.glpi-switch) {
+.glping-config-field-grid .glping-config-field label:not(.glping-switch) {
   display: flex;
   align-items: center;
   text-align: left;
 }
 
-.glpi-config-field {
+.glping-config-field {
   display: grid;
   grid-template-columns: 340px 1fr;
   gap: 1rem;
@@ -917,76 +917,76 @@ a.glpi-breadcrumb-item:hover {
   padding: 0.6rem 0;
 }
 
-.glpi-config-field.checkbox {
+.glping-config-field.checkbox {
   grid-template-columns: 340px auto;
 }
 
-.glpi-config-field label {
+.glping-config-field label {
   font-size: 0.875rem;
-  color: var(--glpi-text);
+  color: var(--glping-text);
   text-align: right;
 }
 
-.glpi-config-field input:not([type="checkbox"]),
-.glpi-config-field textarea,
-.glpi-config-field select {
+.glping-config-field input:not([type="checkbox"]),
+.glping-config-field textarea,
+.glping-config-field select {
   width: 100%;
   max-width: 520px;
   padding: 0.45rem 0.6rem;
-  border: 1px solid var(--glpi-border);
+  border: 1px solid var(--glping-border);
   border-radius: 6px;
   font-size: 0.875rem;
   font-family: inherit;
 }
 
-.glpi-config-field textarea {
+.glping-config-field textarea {
   resize: vertical;
 }
 
-.glpi-config-input-sm {
+.glping-config-input-sm {
   max-width: 120px !important;
 }
 
-.glpi-config-field .required {
+.glping-config-field .required {
   color: #d63939;
   margin-left: 0.15rem;
 }
 
-.glpi-config-help {
-  color: var(--glpi-text-muted);
+.glping-config-help {
+  color: var(--glping-text-muted);
   font-size: 0.9rem;
   margin-left: 0.3rem;
   cursor: help;
 }
 
-.glpi-config-divider {
+.glping-config-divider {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   margin: 1.5rem 0 1rem;
-  color: var(--glpi-text-muted);
+  color: var(--glping-text-muted);
   font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
 
-.glpi-config-divider::before,
-.glpi-config-divider::after {
+.glping-config-divider::before,
+.glping-config-divider::after {
   content: "";
   flex: 1;
   height: 1px;
-  background: var(--glpi-surface-3);
+  background: var(--glping-surface-3);
 }
 
-.glpi-config-divider span {
+.glping-config-divider span {
   display: flex;
   align-items: center;
   gap: 0.4rem;
   white-space: nowrap;
 }
 
-.glpi-config-save {
+.glping-config-save {
   margin-top: 1rem;
   background: var(--tblr-primary);
   color: var(--tblr-primary-fg, #fff);
@@ -997,145 +997,145 @@ a.glpi-breadcrumb-item:hover {
   cursor: pointer;
 }
 
-.glpi-config-save:disabled {
+.glping-config-save:disabled {
   opacity: 0.6;
   cursor: default;
 }
 
-.glpi-config-placeholder {
+.glping-config-placeholder {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  color: var(--glpi-text-muted);
+  color: var(--glping-text-muted);
   padding: 4rem 1rem;
   text-align: center;
 }
 
-.glpi-config-placeholder .ti {
+.glping-config-placeholder .ti {
   font-size: 2.5rem;
 }
 
-.glpi-config-form .hint {
-  color: var(--glpi-text-muted);
+.glping-config-form .hint {
+  color: var(--glping-text-muted);
   font-size: 0.8rem;
   margin: 0.2rem 0 0 340px;
   max-width: 520px;
 }
 
-.glpi-config-form .status {
+.glping-config-form .status {
   color: #2fb344;
   font-weight: 600;
   margin: 0.75rem 0 0;
 }
 
 /* --- Card expansible (ex. bloc "Modules" des onglets Parc/Assistance/Gestion) --- */
-.glpi-card-expander {
-  border: 1px solid var(--glpi-border);
+.glping-card-expander {
+  border: 1px solid var(--glping-border);
   border-radius: 8px;
   margin: 1.5rem 0;
   overflow: hidden;
 }
 
-.glpi-card-expander-header-row {
+.glping-card-expander-header-row {
   display: flex;
   align-items: center;
-  background: var(--glpi-surface-2);
+  background: var(--glping-surface-2);
 }
 
 /* Le bouton de repli prend toute la place laissée par l'action d'en-tête (voir CardExpander) :
    sans ça, cliquer à droite du titre ne replierait plus la carte. */
-.glpi-card-expander-header-row > .glpi-card-expander-header {
+.glping-card-expander-header-row > .glping-card-expander-header {
   flex: 1;
   min-width: 0;
 }
 
-.glpi-card-expander-header-actions {
+.glping-card-expander-header-actions {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1rem 0.75rem 0;
 }
 
-.glpi-card-expander-header {
+.glping-card-expander-header {
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
   padding: 0.75rem 1rem;
-  background: var(--glpi-surface-2);
+  background: var(--glping-surface-2);
   border: none;
   cursor: pointer;
   font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: var(--glpi-text-muted);
+  color: var(--glping-text-muted);
 }
 
-.glpi-card-expander-title {
+.glping-card-expander-title {
   display: flex;
   align-items: center;
   gap: 0.4rem;
 }
 
-.glpi-card-expander-chevron {
+.glping-card-expander-chevron {
   transition: transform 0.15s ease;
 }
 
-.glpi-card-expander.collapsed .glpi-card-expander-chevron {
+.glping-card-expander.collapsed .glping-card-expander-chevron {
   transform: rotate(-90deg);
 }
 
-.glpi-card-expander-body {
+.glping-card-expander-body {
   padding: 1rem;
-  background: var(--glpi-surface);
+  background: var(--glping-surface);
 }
 
-.glpi-card-expander-body > *:last-child {
+.glping-card-expander-body > *:last-child {
   margin-bottom: 0;
 }
 
 /* --- Switch d'activation de module (onglets Parc/Assistance/Gestion) --- */
-.glpi-module-toggles {
+.glping-module-toggles {
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
   margin-bottom: 1.5rem;
-  border: 1px solid var(--glpi-border);
+  border: 1px solid var(--glping-border);
   border-radius: 8px;
   overflow: hidden;
 }
 
-.glpi-module-toggle-item {
+.glping-module-toggle-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   padding: 0.55rem 1rem;
-  background: var(--glpi-surface);
-  border-bottom: 1px solid var(--glpi-border);
+  background: var(--glping-surface);
+  border-bottom: 1px solid var(--glping-border);
 }
 
-.glpi-module-toggle-item:last-child {
+.glping-module-toggle-item:last-child {
   border-bottom: none;
 }
 
-.glpi-module-toggle-item .glpi-module-toggle-label {
+.glping-module-toggle-item .glping-module-toggle-label {
   display: flex;
   align-items: center;
   gap: 0.6rem;
   font-size: 0.875rem;
-  color: var(--glpi-text);
+  color: var(--glping-text);
 }
 
-.glpi-module-toggle-item.disabled .glpi-module-toggle-label {
-  color: var(--glpi-text-muted);
+.glping-module-toggle-item.disabled .glping-module-toggle-label {
+  color: var(--glping-text-muted);
 }
 
-.glpi-switch {
+.glping-switch {
   position: relative;
   display: inline-block;
   width: 38px;
@@ -1143,192 +1143,192 @@ a.glpi-breadcrumb-item:hover {
   flex-shrink: 0;
 }
 
-.glpi-switch input {
+.glping-switch input {
   opacity: 0;
   width: 0;
   height: 0;
 }
 
-.glpi-switch-slider {
+.glping-switch-slider {
   position: absolute;
   inset: 0;
-  background: var(--glpi-border-strong);
+  background: var(--glping-border-strong);
   border-radius: 999px;
   cursor: pointer;
   transition: background 0.15s ease;
 }
 
-.glpi-switch-slider::before {
+.glping-switch-slider::before {
   content: "";
   position: absolute;
   width: 15px;
   height: 15px;
   left: 3px;
   top: 3px;
-  background: var(--glpi-surface);
+  background: var(--glping-surface);
   border-radius: 50%;
   transition: transform 0.15s ease;
 }
 
-.glpi-switch input:checked + .glpi-switch-slider {
+.glping-switch input:checked + .glping-switch-slider {
   background: var(--tblr-primary);
 }
 
-.glpi-switch input:checked + .glpi-switch-slider::before {
+.glping-switch input:checked + .glping-switch-slider::before {
   transform: translateX(17px);
 }
 
-.glpi-switch.glpi-switch-danger input:checked + .glpi-switch-slider {
+.glping-switch.glping-switch-danger input:checked + .glping-switch-slider {
   background: var(--tblr-danger, #d63939);
 }
 
 /* --- Tables denses (Purge de l'historique, Historique) --- */
-.glpi-config-table-wrap {
+.glping-config-table-wrap {
   max-width: 720px;
-  border: 1px solid var(--glpi-border);
+  border: 1px solid var(--glping-border);
   border-radius: 8px;
   overflow: hidden;
   margin-bottom: 1rem;
 }
 
-.glpi-config-table {
+.glping-config-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.8rem;
 }
 
-.glpi-config-table th,
-.glpi-config-table td {
+.glping-config-table th,
+.glping-config-table td {
   padding: 0.45rem 0.7rem;
-  border-bottom: 1px solid var(--glpi-border);
+  border-bottom: 1px solid var(--glping-border);
   text-align: left;
 }
 
-.glpi-config-table th {
-  background: var(--glpi-surface-2);
-  color: var(--glpi-text-muted);
+.glping-config-table th {
+  background: var(--glping-surface-2);
+  color: var(--glping-text-muted);
   font-weight: 700;
   text-transform: uppercase;
   font-size: 0.7rem;
   letter-spacing: 0.03em;
 }
 
-.glpi-config-table tr:last-child td {
+.glping-config-table tr:last-child td {
   border-bottom: none;
 }
 
-.glpi-config-table select {
+.glping-config-table select {
   font-size: 0.8rem;
   padding: 0.3rem 0.4rem;
-  border: 1px solid var(--glpi-border);
+  border: 1px solid var(--glping-border);
   border-radius: 6px;
 }
 
 /* --- Matrice de priorité (onglet Assistance) --- */
-.glpi-priority-matrix {
+.glping-priority-matrix {
   border-collapse: collapse;
   margin-bottom: 1rem;
 }
 
-.glpi-priority-matrix th,
-.glpi-priority-matrix td {
-  border: 1px solid var(--glpi-border);
+.glping-priority-matrix th,
+.glping-priority-matrix td {
+  border: 1px solid var(--glping-border);
   padding: 0.35rem;
   text-align: center;
   font-size: 0.75rem;
 }
 
-.glpi-priority-matrix th {
-  background: var(--glpi-surface-2);
-  color: var(--glpi-text-muted);
+.glping-priority-matrix th {
+  background: var(--glping-surface-2);
+  color: var(--glping-text-muted);
 }
 
-.glpi-priority-matrix select {
+.glping-priority-matrix select {
   font-size: 0.75rem;
   padding: 0.2rem;
-  border: 1px solid var(--glpi-border);
+  border: 1px solid var(--glping-border);
   border-radius: 4px;
 }
 
-.glpi-priority-1 { background: #d3f2df; }
-.glpi-priority-2 { background: #eef8e0; }
-.glpi-priority-3 { background: #fff3cd; }
-.glpi-priority-4 { background: #fde3cf; }
-.glpi-priority-5 { background: #fbdcdc; }
+.glping-priority-1 { background: #d3f2df; }
+.glping-priority-2 { background: #eef8e0; }
+.glping-priority-3 { background: #fff3cd; }
+.glping-priority-4 { background: #fde3cf; }
+.glping-priority-5 { background: #fbdcdc; }
 
 /* --- Grille de cases à cocher (Analyse d'impact, Colonnes par défaut) --- */
-.glpi-itemtype-columns {
+.glping-itemtype-columns {
   max-width: 720px;
   margin-bottom: 1rem;
 }
 
-.glpi-itemtype-columns-row {
+.glping-itemtype-columns-row {
   display: grid;
   grid-template-columns: 180px 1fr;
   gap: 1rem;
   padding: 0.5rem 0;
-  border-bottom: 1px solid var(--glpi-border);
+  border-bottom: 1px solid var(--glping-border);
 }
 
-.glpi-itemtype-columns-row .itemtype-label {
+.glping-itemtype-columns-row .itemtype-label {
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--glpi-text);
+  color: var(--glping-text);
 }
 
 /* --- Diagnostics runtime (onglet Performance) --- */
-.glpi-diag-card {
+.glping-diag-card {
   max-width: 720px;
-  border: 1px solid var(--glpi-border);
+  border: 1px solid var(--glping-border);
   border-radius: 8px;
   padding: 0.9rem 1.1rem;
   margin-bottom: 1rem;
 }
 
-.glpi-diag-card h4 {
+.glping-diag-card h4 {
   margin: 0 0 0.6rem;
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: var(--glpi-text-muted);
+  color: var(--glping-text-muted);
 }
 
-.glpi-diag-row {
+.glping-diag-row {
   display: flex;
   justify-content: space-between;
   padding: 0.3rem 0;
   font-size: 0.85rem;
-  border-bottom: 1px dashed var(--glpi-border);
+  border-bottom: 1px dashed var(--glping-border);
 }
 
-.glpi-diag-row:last-child {
+.glping-diag-row:last-child {
   border-bottom: none;
 }
 
 /* --- Badges de statut de poste --- */
-.glpi-status-instock { background: #e9ecef; color: #495057; }
-.glpi-status-inproduction { background: #d3f2df; color: #1a7f4b; }
-.glpi-status-broken { background: #fbdcdc; color: #b42318; }
-.glpi-status-retired { background: #e6e7e9; color: #6c737b; }
+.glping-status-instock { background: #e9ecef; color: #495057; }
+.glping-status-inproduction { background: #d3f2df; color: #1a7f4b; }
+.glping-status-broken { background: #fbdcdc; color: #b42318; }
+.glping-status-retired { background: #e6e7e9; color: #6c737b; }
 
 /* --- En-têtes de colonnes triables --- */
-.glpi-sortable-th {
+.glping-sortable-th {
   cursor: pointer;
   user-select: none;
   white-space: nowrap;
 }
 
-.glpi-sortable-th:hover {
-  color: var(--glpi-primary-text);
+.glping-sortable-th:hover {
+  color: var(--glping-primary-text);
 }
 
-.glpi-sort-indicator {
+.glping-sort-indicator {
   display: inline-flex;
   align-items: center;
   gap: 0.15rem;
 }
 
-.glpi-sort-num {
+.glping-sort-num {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1343,11 +1343,11 @@ a.glpi-breadcrumb-item:hover {
 }
 
 /* --- Menu "Exporter" (page Ordinateurs) --- */
-.glpi-export-menu {
+.glping-export-menu {
   min-width: 260px;
 }
 
-.glpi-export-menu-heading {
+.glping-export-menu-heading {
   padding: 0.6rem 1rem 0.25rem;
   font-size: 0.7rem;
   font-weight: 600;
@@ -1356,13 +1356,13 @@ a.glpi-breadcrumb-item:hover {
   color: var(--tblr-secondary, #6c757d);
 }
 
-.glpi-export-menu .dropdown-item {
+.glping-export-menu .dropdown-item {
   display: flex;
   align-items: center;
   gap: 0.6rem;
 }
 
-.glpi-export-menu .dropdown-item i {
+.glping-export-menu .dropdown-item i {
   width: 1.1rem;
   text-align: center;
   color: var(--tblr-secondary, #6c757d);
@@ -1371,7 +1371,7 @@ a.glpi-breadcrumb-item:hover {
 /* --- Panneau "Recherches sauvegardées" (page Ordinateurs), calqué sur le panneau
    latéral fixe de GLPI (.saved-searches-panel : position fixed, du bas de la topbar
    jusqu'en bas du viewport, collé à droite de la sidebar) plutôt qu'un simple dropdown. */
-.glpi-saved-searches-panel {
+.glping-saved-searches-panel {
   position: fixed;
   top: 60px;
   bottom: 0;
@@ -1382,59 +1382,59 @@ a.glpi-breadcrumb-item:hover {
   max-width: 90vw;
   display: flex;
   flex-direction: column;
-  background: var(--glpi-surface);
-  border-right: 1px solid var(--tblr-border-color, var(--glpi-border));
+  background: var(--glping-surface);
+  border-right: 1px solid var(--tblr-border-color, var(--glping-border));
   box-shadow: 0.5rem 0 1.5rem rgba(0, 0, 0, 0.12);
   transition: left var(--tblr-transition, 0.2s ease);
 }
 
-.glpi-app:has(.glpi-sidebar.collapsed) .glpi-saved-searches-panel:not(.pinned) {
+.glping-app:has(.glping-sidebar.collapsed) .glping-saved-searches-panel:not(.pinned) {
   left: 64px;
 }
 
 /* Épinglé : le panneau quitte le survol en position fixed pour rejoindre le flux normal
-   (flex-shrink: 0 dans .glpi-computers-layout), comme le panneau GLPI en mode "pinned"
+   (flex-shrink: 0 dans .glping-computers-layout), comme le panneau GLPI en mode "pinned"
    qui repousse le contenu au lieu de le recouvrir. */
-.glpi-saved-searches-panel.pinned {
+.glping-saved-searches-panel.pinned {
   position: sticky;
   top: 0;
   left: auto;
   flex-shrink: 0;
   align-self: flex-start;
   height: calc(100vh - 60px - 3rem);
-  border-left: 1px solid var(--tblr-border-color, var(--glpi-border));
+  border-left: 1px solid var(--tblr-border-color, var(--glping-border));
   border-radius: var(--tblr-border-radius, 4px);
   box-shadow: none;
   transition: none;
 }
 
-.glpi-saved-searches-tabs {
+.glping-saved-searches-tabs {
   flex-shrink: 0;
   padding: 0 0.5rem;
   margin-bottom: 0;
 }
 
-.glpi-saved-searches-tabs .nav-link {
+.glping-saved-searches-tabs .nav-link {
   padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
   border: 0;
   background: transparent;
 }
 
-.glpi-saved-searches-heading {
+.glping-saved-searches-heading {
   padding: 0.75rem 1rem;
   font-weight: 600;
   flex-shrink: 0;
-  border-bottom: 1px solid var(--tblr-border-color, var(--glpi-border));
+  border-bottom: 1px solid var(--tblr-border-color, var(--glping-border));
 }
 
-.glpi-saved-searches-list {
+.glping-saved-searches-list {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
 }
 
-.glpi-saved-searches-list .list-group-item {
+.glping-saved-searches-list .list-group-item {
   padding: 0.5rem 1rem;
   border-left: 0;
   border-right: 0;
@@ -1443,7 +1443,7 @@ a.glpi-breadcrumb-item:hover {
 /* Poignée de glisser-déposer (réordonnancement des recherches sauvegardées, des colonnes du
    tableau) : masquée par défaut, révélée au survol de la ligne. Largeur fixe conservée dans
    les deux états pour ne pas décaler le titre au hover. */
-.glpi-draggable-row .glpi-drag-handle {
+.glping-draggable-row .glping-drag-handle {
   width: 1rem;
   flex-shrink: 0;
   text-align: center;
@@ -1453,28 +1453,28 @@ a.glpi-breadcrumb-item:hover {
   transition: opacity 0.15s ease;
 }
 
-.glpi-draggable-row:hover .glpi-drag-handle {
+.glping-draggable-row:hover .glping-drag-handle {
   opacity: 1;
 }
 
 /* --- Modale "Sélectionner les colonnes à afficher" (page Ordinateurs) --- */
-.glpi-columns-list .list-group-item {
+.glping-columns-list .list-group-item {
   padding: 0.6rem 0.75rem;
 }
 
-.glpi-columns-list .list-group-item:first-child {
+.glping-columns-list .list-group-item:first-child {
   color: var(--tblr-secondary, #6c757d);
   background: var(--tblr-bg-surface-secondary, #f4f6fa);
 }
 
-.glpi-saved-searches-filter {
+.glping-saved-searches-filter {
   padding: 0.5rem;
   flex-shrink: 0;
-  border-top: 1px solid var(--tblr-border-color, var(--glpi-border));
+  border-top: 1px solid var(--tblr-border-color, var(--glping-border));
 }
 
 /* --- Bouton "Se déconnecter" (formulaire dans le menu utilisateur, pas un <a>) --- */
-.glpi-logout-button {
+.glping-logout-button {
   width: 100%;
   background: transparent;
   border: none;
@@ -1484,41 +1484,41 @@ a.glpi-breadcrumb-item:hover {
 }
 
 /* --- Page de connexion (/login) --- */
-.glpi-login {
+.glping-login {
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: var(--glpi-mainmenu-bg);
+  background: var(--glping-mainmenu-bg);
   padding: 1.5rem;
 }
 
-.glpi-login-card {
+.glping-login-card {
   width: 100%;
   max-width: 360px;
-  background: var(--glpi-surface);
+  background: var(--glping-surface);
   border-radius: 0.5rem;
   padding: 2rem;
   box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.25);
 }
 
-.glpi-login-brand {
+.glping-login-brand {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.6rem;
   margin-bottom: 1.5rem;
-  color: var(--glpi-mainmenu-bg);
+  color: var(--glping-mainmenu-bg);
   font-weight: 700;
   font-size: 1.4rem;
 }
 
-.glpi-login-brand .ti {
-  color: var(--glpi-primary-text);
+.glping-login-brand .ti {
+  color: var(--glping-primary-text);
   font-size: 1.7rem;
 }
 
-.glpi-login-error {
+.glping-login-error {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -1530,44 +1530,44 @@ a.glpi-breadcrumb-item:hover {
   margin-bottom: 1rem;
 }
 
-.glpi-login-message {
+.glping-login-message {
   font-size: 0.85rem;
-  color: var(--glpi-text-2);
+  color: var(--glping-text-2);
   margin-bottom: 1rem;
 }
 
-.glpi-login-field {
+.glping-login-field {
   margin-bottom: 1rem;
 }
 
-.glpi-login-field label {
+.glping-login-field label {
   display: block;
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--glpi-text-2);
+  color: var(--glping-text-2);
   margin-bottom: 0.3rem;
 }
 
-.glpi-login-field input:not([type="checkbox"]) {
+.glping-login-field input:not([type="checkbox"]) {
   width: 100%;
   padding: 0.5rem 0.65rem;
-  border: 1px solid var(--glpi-border);
+  border: 1px solid var(--glping-border);
   border-radius: 6px;
   font-size: 0.9rem;
   font-family: inherit;
 }
 
-.glpi-login-field.checkbox {
+.glping-login-field.checkbox {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.glpi-login-field.checkbox label {
+.glping-login-field.checkbox label {
   margin-bottom: 0;
 }
 
-.glpi-login-submit {
+.glping-login-submit {
   width: 100%;
   background: var(--tblr-primary);
   color: var(--tblr-primary-fg, #fff);
@@ -1579,25 +1579,25 @@ a.glpi-breadcrumb-item:hover {
   cursor: pointer;
 }
 
-.glpi-login-submit:disabled {
+.glping-login-submit:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
 /* --- Page de mise à niveau (/update) --- */
-.glpi-update-card {
+.glping-update-card {
   max-width: 480px;
 }
 
-.glpi-update-migration-list {
+.glping-update-migration-list {
   font-size: 0.85rem;
-  color: var(--glpi-text-2);
+  color: var(--glping-text-2);
   margin: 0 0 1rem;
   padding-left: 1.25rem;
 }
 
 /* --- En-tête du tableau de bord (titre + actions à droite) --- */
-.glpi-dashboard-header {
+.glping-dashboard-header {
   display: flex !important;
   flex-wrap: nowrap !important;
   align-items: center;
@@ -1605,7 +1605,7 @@ a.glpi-breadcrumb-item:hover {
   gap: 1rem;
 }
 
-.glpi-dashboard-header-actions {
+.glping-dashboard-header-actions {
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
@@ -1615,7 +1615,7 @@ a.glpi-breadcrumb-item:hover {
 }
 
 /* --- Fiche d'un objet (ex. Ordinateur) : en-tête, onglets latéraux et blocs façon GLPI --- */
-.glpi-fiche-topbar {
+.glping-fiche-topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1625,90 +1625,90 @@ a.glpi-breadcrumb-item:hover {
   flex-shrink: 0;
 }
 
-.glpi-fiche-crumb {
+.glping-fiche-crumb {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.3rem 0.75rem;
-  border: 1px solid var(--glpi-border);
+  border: 1px solid var(--glping-border);
   border-radius: 6px;
-  background: var(--glpi-surface);
+  background: var(--glping-surface);
   font-size: 0.875rem;
-  color: var(--glpi-text);
+  color: var(--glping-text);
 }
 
-.glpi-fiche-crumb .ti-device-desktop {
-  color: var(--glpi-primary-text);
+.glping-fiche-crumb .ti-device-desktop {
+  color: var(--glping-primary-text);
 }
 
-.glpi-fiche-favorite {
+.glping-fiche-favorite {
   background: transparent;
   border: none;
-  color: var(--glpi-text-faint);
+  color: var(--glping-text-faint);
   font-size: 1rem;
   cursor: pointer;
   padding: 0;
   margin-left: 0.3rem;
 }
 
-.glpi-fiche-favorite:hover,
-.glpi-fiche-favorite.active {
-  color: var(--glpi-accent);
+.glping-fiche-favorite:hover,
+.glping-fiche-favorite.active {
+  color: var(--glping-accent);
 }
 
-.glpi-fiche-toolbar {
+.glping-fiche-toolbar {
   display: flex;
   align-items: center;
   gap: 0.6rem;
 }
 
-.glpi-fiche-pager-count {
+.glping-fiche-pager-count {
   font-size: 0.8rem;
-  color: var(--glpi-text-muted);
+  color: var(--glping-text-muted);
 }
 
-.glpi-fiche-pager-btn {
+.glping-fiche-pager-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 1.75rem;
   height: 1.75rem;
-  border: 1px solid var(--glpi-border);
+  border: 1px solid var(--glping-border);
   border-radius: 6px;
-  color: var(--glpi-text-2);
+  color: var(--glping-text-2);
   text-decoration: none;
 }
 
-.glpi-fiche-pager-btn:hover {
-  background: var(--glpi-surface-2);
+.glping-fiche-pager-btn:hover {
+  background: var(--glping-surface-2);
 }
 
-.glpi-fiche-pager-btn.disabled {
+.glping-fiche-pager-btn.disabled {
   pointer-events: none;
   opacity: 0.4;
 }
 
 /* Colonne d'onglets latérale de la fiche */
-.glpi-fiche-layout {
+.glping-fiche-layout {
   display: flex;
   align-items: stretch;
-  background: var(--glpi-surface);
-  border: 1px solid var(--glpi-border);
+  background: var(--glping-surface);
+  border: 1px solid var(--glping-border);
   border-radius: 8px;
   overflow: hidden;
   flex: 1;
   min-height: 0;
 }
 
-.glpi-fiche-sidebar {
+.glping-fiche-sidebar {
   width: 230px;
   flex-shrink: 0;
-  border-right: 1px solid var(--glpi-border);
+  border-right: 1px solid var(--glping-border);
   padding: 0.4rem 0;
   overflow-y: auto;
 }
 
-.glpi-fiche-tab-item {
+.glping-fiche-tab-item {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -1719,39 +1719,39 @@ a.glpi-breadcrumb-item:hover {
   border-left: 3px solid transparent;
   text-align: left;
   font-size: 0.8rem;
-  color: var(--glpi-text-2);
+  color: var(--glping-text-2);
   cursor: pointer;
 }
 
-.glpi-fiche-tab-item:hover {
-  background: var(--glpi-surface-2);
+.glping-fiche-tab-item:hover {
+  background: var(--glping-surface-2);
 }
 
-.glpi-fiche-tab-item.active {
-  background: var(--glpi-surface-2);
-  color: var(--glpi-primary-text);
+.glping-fiche-tab-item.active {
+  background: var(--glping-surface-2);
+  color: var(--glping-primary-text);
   font-weight: 700;
   border-left-color: var(--tblr-primary);
 }
 
-.glpi-fiche-tab-item .ti {
+.glping-fiche-tab-item .ti {
   font-size: 1rem;
   width: 1.1rem;
   text-align: center;
   flex-shrink: 0;
 }
 
-.glpi-fiche-tab-item span:first-of-type {
+.glping-fiche-tab-item span:first-of-type {
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.glpi-fiche-tab-count {
+.glping-fiche-tab-count {
   flex: 0 0 auto;
-  background: var(--glpi-surface-3);
-  color: var(--glpi-text-2);
+  background: var(--glping-surface-3);
+  color: var(--glping-text-2);
   font-size: 0.7rem;
   font-weight: 700;
   padding: 0.05rem 0.4rem;
@@ -1759,12 +1759,12 @@ a.glpi-breadcrumb-item:hover {
   flex-shrink: 0;
 }
 
-.glpi-fiche-tab-item.active .glpi-fiche-tab-count {
+.glping-fiche-tab-item.active .glping-fiche-tab-count {
   background: var(--tblr-primary);
   color: var(--tblr-primary-fg, #fff);
 }
 
-.glpi-fiche-panel {
+.glping-fiche-panel {
   flex: 1;
   min-width: 0;
   padding: 1.25rem 1.5rem;
@@ -1774,13 +1774,13 @@ a.glpi-breadcrumb-item:hover {
 /* Variante d'un onglet de fiche dont le contenu doit occuper toute la hauteur du panneau
    (ex. onglet "Logiciels") : le bloc s'étire, seul le corps du tableau défile, l'entête
    et le pied (pagination) restent fixes. */
-.glpi-fiche-panel-fill {
+.glping-fiche-panel-fill {
   display: flex;
   flex-direction: column;
   overflow-y: hidden;
 }
 
-.glpi-fiche-panel-fill .glpi-fiche-block {
+.glping-fiche-panel-fill .glping-fiche-block {
   flex: 1;
   min-height: 0;
   margin-bottom: 0;
@@ -1788,18 +1788,18 @@ a.glpi-breadcrumb-item:hover {
   flex-direction: column;
 }
 
-.glpi-fiche-panel-fill .glpi-fiche-block-title,
-.glpi-fiche-panel-fill .glpi-fiche-block > .card-footer {
+.glping-fiche-panel-fill .glping-fiche-block-title,
+.glping-fiche-panel-fill .glping-fiche-block > .card-footer {
   flex-shrink: 0;
 }
 
-.glpi-fiche-panel-fill .glpi-fiche-block > .table-responsive {
+.glping-fiche-panel-fill .glping-fiche-block > .table-responsive {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
 }
 
-.glpi-fiche-panel-fill .glpi-fiche-block > .table-responsive thead th {
+.glping-fiche-panel-fill .glping-fiche-block > .table-responsive thead th {
   position: sticky;
   top: 0;
   z-index: 1;
@@ -1807,7 +1807,7 @@ a.glpi-breadcrumb-item:hover {
 }
 
 /* Formulaire de lecture (ex. onglets "Ordinateur", "Systèmes d'exploitation") */
-.glpi-fiche-field {
+.glping-fiche-field {
   display: grid;
   grid-template-columns: 150px 1fr;
   gap: 0.75rem;
@@ -1815,122 +1815,122 @@ a.glpi-breadcrumb-item:hover {
   padding: 0.4rem 0;
 }
 
-.glpi-fiche-field label {
+.glping-fiche-field label {
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--glpi-text-2);
+  color: var(--glping-text-2);
   text-align: right;
 }
 
-.glpi-fiche-value-box {
+.glping-fiche-value-box {
   display: flex;
   align-items: center;
   min-height: 2.1rem;
-  border: 1px solid var(--glpi-border);
+  border: 1px solid var(--glping-border);
   border-radius: 6px;
-  background: var(--glpi-surface-2);
+  background: var(--glping-surface-2);
   padding: 0.4rem 0.6rem;
   font-size: 0.8rem;
-  color: var(--glpi-text);
+  color: var(--glping-text);
 }
 
-.glpi-fiche-inventory-panel {
+.glping-fiche-inventory-panel {
   margin-top: 1.5rem;
   border: 1px solid rgba(var(--tblr-primary-rgb), 0.3);
   border-radius: 8px;
   overflow: hidden;
 }
 
-.glpi-fiche-inventory-title {
+.glping-fiche-inventory-title {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.6rem 1rem;
   background: rgba(var(--tblr-primary-rgb), 0.12);
-  color: var(--glpi-primary-text);
+  color: var(--glping-primary-text);
   font-weight: 700;
   font-size: 0.85rem;
 }
 
-.glpi-fiche-inventory-panel .row {
+.glping-fiche-inventory-panel .row {
   padding: 1rem;
   margin: 0;
   row-gap: 1.25rem;
 }
 
-.glpi-fiche-inventory-label {
+.glping-fiche-inventory-label {
   font-size: 0.75rem;
-  color: var(--glpi-text-muted);
+  color: var(--glping-text-muted);
   margin-bottom: 0.3rem;
 }
 
-.glpi-fiche-inventory-label .ti-refresh {
+.glping-fiche-inventory-label .ti-refresh {
   font-size: 0.75rem;
   margin-left: 0.15rem;
 }
 
-.glpi-fiche-inventory-agent-link {
+.glping-fiche-inventory-agent-link {
   margin-left: 0.4rem;
-  color: var(--glpi-text-muted);
+  color: var(--glping-text-muted);
 }
 
-.glpi-fiche-inventory-agent-link:hover {
-  color: var(--glpi-primary-text);
+.glping-fiche-inventory-agent-link:hover {
+  color: var(--glping-primary-text);
 }
 
-.glpi-fiche-inventory-footer {
+.glping-fiche-inventory-footer {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
   padding: 0.5rem 1rem;
-  background: var(--glpi-surface-2);
-  border-top: 1px solid var(--glpi-border);
+  background: var(--glping-surface-2);
+  border-top: 1px solid var(--glping-border);
   font-size: 0.8rem;
-  color: var(--glpi-text-muted);
+  color: var(--glping-text-muted);
 }
 
 /* Blocs de champs (ex. groupes de "Composants", "Logiciels", "Connexions") */
-.glpi-fiche-block {
-  border: 1px solid var(--glpi-border);
+.glping-fiche-block {
+  border: 1px solid var(--glping-border);
   border-radius: 8px;
   overflow: hidden;
   margin-bottom: 1.25rem;
-  background: var(--glpi-surface);
+  background: var(--glping-surface);
 }
 
-.glpi-fiche-block-title {
+.glping-fiche-block-title {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.6rem 1rem;
-  background: var(--glpi-surface-2);
-  color: var(--glpi-primary-text);
+  background: var(--glping-surface-2);
+  color: var(--glping-primary-text);
   font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
 
-/* Champ de filtre optionnel dans l'entête d'un .glpi-fiche-block (ex. onglet "Logiciels") :
+/* Champ de filtre optionnel dans l'entête d'un .glping-fiche-block (ex. onglet "Logiciels") :
    collé à droite du titre, normalisé (non gras/majuscule) car il ne fait pas partie du
    libellé du bloc. */
-.glpi-fiche-block-filter {
+.glping-fiche-block-filter {
   display: flex;
   align-items: center;
   gap: 0.4rem;
   margin-left: auto;
   padding: 0.25rem 0.6rem;
-  background: var(--glpi-surface);
-  border: 1px solid var(--glpi-border);
+  background: var(--glping-surface);
+  border: 1px solid var(--glping-border);
   border-radius: 6px;
-  color: var(--glpi-text-muted);
+  color: var(--glping-text-muted);
 }
 
-.glpi-fiche-block-filter .ti {
+.glping-fiche-block-filter .ti {
   font-size: 0.9rem;
 }
 
-.glpi-fiche-block-filter input {
+.glping-fiche-block-filter input {
   border: none;
   outline: none;
   background: transparent;
@@ -1939,79 +1939,79 @@ a.glpi-breadcrumb-item:hover {
   font-weight: 400;
   text-transform: none;
   letter-spacing: normal;
-  color: var(--glpi-text);
+  color: var(--glping-text);
 }
 
-.glpi-fiche-block-filter input::placeholder {
-  color: var(--glpi-text-faint);
+.glping-fiche-block-filter input::placeholder {
+  color: var(--glping-text-faint);
 }
 
-/* Contenu d'un .glpi-fiche-block, en dessous du bandeau .glpi-fiche-block-title : marge
+/* Contenu d'un .glping-fiche-block, en dessous du bandeau .glping-fiche-block-title : marge
    intérieure pour que tableaux/formulaires ne touchent pas les bords du bloc. */
-.glpi-fiche-block-body {
+.glping-fiche-block-body {
   padding: 1rem 1.25rem 1.25rem;
 }
 
 /* Sous-panneau "ajouter un élément" en bas d'un bloc à liste (audits, actions...) : fond
    légèrement teinté + séparateur, pour le distinguer visuellement de la liste au-dessus. */
-.glpi-fiche-add-row {
+.glping-fiche-add-row {
   margin: 0 -1.25rem -1.25rem;
   padding: 0.9rem 1.25rem;
-  background: var(--glpi-surface-2);
-  border-top: 1px solid var(--glpi-border);
+  background: var(--glping-surface-2);
+  border-top: 1px solid var(--glping-border);
 }
 
 /* Sélecteur multi-valeurs façon GLPI (ex. "Sélectionner les paquets à installer") : une zone
    bordée listant les valeurs choisies sous forme de tags retirables, avec un <select> "furtif"
    collé à la suite pour en ajouter d'autres — pas de dépendance JS, juste du HTML natif. */
-.glpi-tag-select {
+.glping-tag-select {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.375rem;
   min-height: calc(1.4285714em + 0.7rem + 2px);
   padding: 0.35rem 0.5rem;
-  background: var(--glpi-surface);
-  border: 1px solid var(--glpi-border);
+  background: var(--glping-surface);
+  border: 1px solid var(--glping-border);
   border-radius: 4px;
 }
 
-.glpi-tag {
+.glping-tag {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
   padding: 0.15rem 0.55rem;
-  background: var(--glpi-surface-2);
-  border: 1px solid var(--glpi-border);
+  background: var(--glping-surface-2);
+  border: 1px solid var(--glping-border);
   border-radius: 999px;
   font-size: 0.8125rem;
-  color: var(--glpi-text);
+  color: var(--glping-text);
   white-space: nowrap;
 }
 
-.glpi-tag-remove {
+.glping-tag-remove {
   display: inline-flex;
   align-items: center;
   padding: 0;
   border: none;
   background: none;
-  color: var(--glpi-text-muted);
+  color: var(--glping-text-muted);
   cursor: pointer;
   line-height: 1;
 }
 
-.glpi-tag-remove:hover {
+.glping-tag-remove:hover {
   color: var(--tblr-danger);
 }
 
-.glpi-tag-select-input {
+.glping-tag-select-input {
   flex: 0 0 auto;
   max-width: 100%;
   padding: 0.15rem 0.6rem;
-  background: var(--glpi-surface);
-  border: 1px dashed var(--glpi-border-strong);
+  background: var(--glping-surface);
+  border: 1px dashed var(--glping-border-strong);
   border-radius: 999px;
-  color: var(--glpi-text-2);
+  color: var(--glping-text-2);
   font-size: 0.8125rem;
   cursor: pointer;
 }
@@ -2020,7 +2020,7 @@ a.glpi-breadcrumb-item:hover {
    terminal (fond sombre, mono, contraste élevé) plutôt qu'un <pre> brut sur fond gris clair peu
    lisible. Chaque ligne est un <div> distinct (voir RenderLog côté C#) pour pouvoir coder
    visuellement le statut sans reconstruire le texte via des regex CSS. */
-.glpi-job-log {
+.glping-job-log {
   max-height: 420px;
   overflow-y: auto;
   margin: 0;
@@ -2033,60 +2033,60 @@ a.glpi-breadcrumb-item:hover {
   color: #d3d8e2;
 }
 
-.glpi-log-line {
+.glping-log-line {
   white-space: pre-wrap;
   word-break: break-word;
 }
 
-.glpi-log-line:empty::before {
+.glping-log-line:empty::before {
   content: "\00a0";
 }
 
-.glpi-log-time {
-  color: var(--glpi-text-muted);
+.glping-log-time {
+  color: var(--glping-text-muted);
 }
 
-.glpi-log-tag {
+.glping-log-tag {
   color: #6cb6ff;
   font-weight: 600;
 }
 
-.glpi-log-line.glpi-log-ok {
+.glping-log-line.glping-log-ok {
   color: #7ee2a8;
 }
 
-.glpi-log-line.glpi-log-error {
+.glping-log-line.glping-log-error {
   color: #ff9494;
   font-weight: 600;
 }
 
-.glpi-log-line.glpi-log-sep {
+.glping-log-line.glping-log-sep {
   color: #454c5a;
 }
 
-.glpi-tag-select-input:hover:not(:disabled) {
+.glping-tag-select-input:hover:not(:disabled) {
   border-color: var(--tblr-primary);
-  color: var(--glpi-primary-text);
+  color: var(--glping-primary-text);
 }
 
-.glpi-tag-select-input:disabled {
-  color: var(--glpi-text-muted);
-  border-color: var(--glpi-border);
+.glping-tag-select-input:disabled {
+  color: var(--glping-text-muted);
+  border-color: var(--glping-border);
   cursor: default;
 }
 
 /* Barre de taux d'utilisation (onglet Volumes) */
-.glpi-usage-bar {
+.glping-usage-bar {
   position: relative;
   width: 100%;
   max-width: 140px;
   height: 1.15rem;
-  background: var(--glpi-surface-3);
+  background: var(--glping-surface-3);
   border-radius: 999px;
   overflow: hidden;
 }
 
-.glpi-usage-bar-fill {
+.glping-usage-bar-fill {
   position: absolute;
   inset: 0;
   width: 0;
@@ -2094,7 +2094,7 @@ a.glpi-breadcrumb-item:hover {
   border-radius: 999px;
 }
 
-.glpi-usage-bar span {
+.glping-usage-bar span {
   position: absolute;
   left: 0.45rem;
   top: 50%;
@@ -2106,16 +2106,16 @@ a.glpi-breadcrumb-item:hover {
 }
 
 /* Barre de progression d'upload (bloc Fichiers d'un paquet de déploiement) */
-.glpi-upload-progress {
+.glping-upload-progress {
   position: relative;
   width: 100%;
   height: 0.6rem;
-  background: var(--glpi-surface-3);
+  background: var(--glping-surface-3);
   border-radius: 999px;
   overflow: hidden;
 }
 
-.glpi-upload-progress-fill {
+.glping-upload-progress-fill {
   position: absolute;
   inset: 0;
   width: 0;
@@ -2125,40 +2125,40 @@ a.glpi-breadcrumb-item:hover {
 }
 
 /* --- Cartes de tableau de bord réordonnables --- */
-.glpi-dashboard-card-col {
+.glping-dashboard-card-col {
   width: 75%;
 }
 
 @media (min-width: 576px) {
-  .glpi-dashboard-card-col {
+  .glping-dashboard-card-col {
     width: 37.5%;
   }
 }
 
 @media (min-width: 992px) {
-  .glpi-dashboard-card-col {
+  .glping-dashboard-card-col {
     width: 18.75%;
   }
 }
 
-.glpi-dashboard-card {
+.glping-dashboard-card {
   transition: opacity 0.15s ease, box-shadow 0.15s ease;
 }
 
-.glpi-dashboard-card[draggable="true"] {
+.glping-dashboard-card[draggable="true"] {
   cursor: grab;
 }
 
-.glpi-dashboard-card:has(.stretched-link):hover {
+.glping-dashboard-card:has(.stretched-link):hover {
   box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.08);
 }
 
-.glpi-dashboard-card.dragging {
+.glping-dashboard-card.dragging {
   opacity: 0.4;
 }
 
-.glpi-dashboard-drag-handle {
-  color: var(--glpi-text-muted);
+.glping-dashboard-drag-handle {
+  color: var(--glping-text-muted);
   margin-right: 0.5rem;
   cursor: grab;
 }
@@ -2166,14 +2166,14 @@ a.glpi-breadcrumb-item:hover {
 /* Cadenas de verrouillage d'un champ de fiche. Volontairement discret tant que le champ n'est pas
    verrouillé : sa présence signale un champ alimenté par l'inventaire — donc réécrit à la prochaine
    remontée si on ne le verrouille pas — sans encombrer la lecture de la fiche. */
-.glpi-fiche-field label:has(.glpi-field-lock) {
+.glping-fiche-field label:has(.glping-field-lock) {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 0.2rem;
 }
 
-.glpi-field-lock {
+.glping-field-lock {
   border: 0;
   background: none;
   padding: 0 0.1rem;
@@ -2184,20 +2184,20 @@ a.glpi-breadcrumb-item:hover {
 /* L'atténuation ne vaut que dans la fiche, où le cadenas accompagne un champ sans être le sujet.
    Dans l'onglet « Verrous », il est la colonne d'action : le laisser à 30 % d'opacité en ferait
    un bouton qu'on croirait désactivé. */
-.glpi-fiche-field .glpi-field-lock {
+.glping-fiche-field .glping-field-lock {
   opacity: 0.3;
 }
 
-.glpi-fiche-field:hover .glpi-field-lock,
-.glpi-fiche-field .glpi-field-lock:focus-visible,
-.glpi-fiche-field .glpi-field-lock.text-warning {
+.glping-fiche-field:hover .glping-field-lock,
+.glping-fiche-field .glping-field-lock:focus-visible,
+.glping-fiche-field .glping-field-lock.text-warning {
   opacity: 1;
 }
 
 /* Grille d'interrupteurs (onglets « Analyse d'impact », « Colonnes par défaut » et « Assistance »).
    Chaque entrée est faite de deux éléments — l'interrupteur et son libellé, tous deux cliquables —
    là où la grille de cases à cocher qu'elle remplace n'avait qu'un label enveloppant sa case. */
-.glpi-switch-grid {
+.glping-switch-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 0.4rem 1rem;
@@ -2205,28 +2205,28 @@ a.glpi-breadcrumb-item:hover {
   margin: 0.5rem 0 1.5rem;
 }
 
-.glpi-switch-grid-item {
+.glping-switch-grid-item {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   min-height: 1.75rem;
 }
 
-.glpi-switch-grid-item label:not(.glpi-switch) {
+.glping-switch-grid-item label:not(.glping-switch) {
   font-size: 0.8rem;
-  color: var(--glpi-text);
+  color: var(--glping-text);
   cursor: pointer;
 }
 
 /* Barre de progression sans pourcentage connu (import GLPI dont l'analyse n'a rien pu chiffrer).
    Classe propre plutôt que celle de Tabler : elle vient d'un CDN, et une barre invisible parce
    qu'une classe a changé de nom serait pire que pas de barre du tout. */
-.glpi-progress-indeterminate {
+.glping-progress-indeterminate {
   width: 40% !important;
-  animation: glpi-progress-slide 1.4s ease-in-out infinite;
+  animation: glping-progress-slide 1.4s ease-in-out infinite;
 }
 
-@keyframes glpi-progress-slide {
+@keyframes glping-progress-slide {
   0% { margin-left: 0; }
   50% { margin-left: 60%; }
   100% { margin-left: 0; }
@@ -2235,7 +2235,7 @@ a.glpi-breadcrumb-item:hover {
 /* Onglets de la page d'import : chaque titre porte son interrupteur « tout activer », d'où un
    nav-link disposé en ligne. Le <span> tient lieu d'onglet plutôt qu'un <button> : un <label>
    interactif ne peut pas vivre à l'intérieur d'un bouton. */
-.glpi-import-tabs .nav-link {
+.glping-import-tabs .nav-link {
   display: flex;
   align-items: center;
   gap: 0.4rem;
@@ -2243,30 +2243,30 @@ a.glpi-breadcrumb-item:hover {
   user-select: none;
 }
 
-.glpi-import-tabs .nav-link .glpi-switch {
+.glping-import-tabs .nav-link .glping-switch {
   margin-left: 0.15rem;
 }
 
 /* Entête de l'onglet « Plugin d'inventaire » : ce qui a été trouvé sur la base source. Un simple
    bandeau et non une alerte — la couleur d'alerte laissait croire à un avertissement, alors que ce
    bloc ne fait que présenter un constat. */
-.glpi-import-plugin-head {
+.glping-import-plugin-head {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   padding: 0.6rem 0.85rem;
   margin-bottom: 1rem;
-  border: 1px solid var(--tblr-border-color, var(--glpi-border));
+  border: 1px solid var(--tblr-border-color, var(--glping-border));
   border-radius: 8px;
-  background: var(--glpi-surface-2);
+  background: var(--glping-surface-2);
 }
 
-.glpi-import-plugin-head > .ti {
+.glping-import-plugin-head > .ti {
   font-size: 1.4rem;
-  color: var(--glpi-text-muted);
+  color: var(--glping-text-muted);
 }
 
-.glpi-import-plugin-name {
+.glping-import-plugin-name {
   display: flex;
   align-items: center;
   gap: 0.4rem;
@@ -2282,31 +2282,31 @@ a.glpi-breadcrumb-item:hover {
 }
 
 /* --- Base de connaissances : éditeur Markdown et rendu d'un article --- */
-.glpi-md-editor {
-  border: 1px solid var(--glpi-border);
+.glping-md-editor {
+  border: 1px solid var(--glping-border);
   border-radius: 8px;
   overflow: hidden;
 }
 
-.glpi-md-editor-bar {
+.glping-md-editor-bar {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 0.5rem;
   padding: 0.35rem 0.5rem;
-  background: var(--glpi-surface-2);
-  border-bottom: 1px solid var(--glpi-border);
+  background: var(--glping-surface-2);
+  border-bottom: 1px solid var(--glping-border);
 }
 
-.glpi-md-editor-sep {
+.glping-md-editor-sep {
   width: 1px;
   align-self: stretch;
   margin: 0.15rem 0.25rem;
-  background: var(--glpi-surface-3);
+  background: var(--glping-surface-3);
 }
 
-/* Le textarea est déjà encadré par .glpi-md-editor : sa propre bordure ferait un double trait. */
-.glpi-md-editor-input.form-control {
+/* Le textarea est déjà encadré par .glping-md-editor : sa propre bordure ferait un double trait. */
+.glping-md-editor-input.form-control {
   border: none;
   border-radius: 0;
   resize: vertical;
@@ -2314,102 +2314,102 @@ a.glpi-breadcrumb-item:hover {
   font-size: 0.85rem;
 }
 
-.glpi-md-editor-input.form-control:focus {
+.glping-md-editor-input.form-control:focus {
   box-shadow: none;
 }
 
-.glpi-md-editor-preview {
+.glping-md-editor-preview {
   padding: 0.75rem 1rem;
   min-height: 12rem;
-  background: var(--glpi-surface);
+  background: var(--glping-surface);
 }
 
 /* Rendu d'un article : le HTML vient de Markdig (voir MarkdownRenderer), donc d'un jeu de
    balises connu et fermé — pas besoin de styler au-delà. */
-.glpi-kb-content > *:first-child {
+.glping-kb-content > *:first-child {
   margin-top: 0;
 }
 
-.glpi-kb-content > *:last-child {
+.glping-kb-content > *:last-child {
   margin-bottom: 0;
 }
 
-.glpi-kb-content h1,
-.glpi-kb-content h2,
-.glpi-kb-content h3,
-.glpi-kb-content h4 {
+.glping-kb-content h1,
+.glping-kb-content h2,
+.glping-kb-content h3,
+.glping-kb-content h4 {
   margin: 1.4rem 0 0.6rem;
   font-weight: 600;
 }
 
-.glpi-kb-content h1 { font-size: 1.5rem; }
-.glpi-kb-content h2 { font-size: 1.25rem; }
-.glpi-kb-content h3 { font-size: 1.1rem; }
-.glpi-kb-content h4 { font-size: 1rem; }
+.glping-kb-content h1 { font-size: 1.5rem; }
+.glping-kb-content h2 { font-size: 1.25rem; }
+.glping-kb-content h3 { font-size: 1.1rem; }
+.glping-kb-content h4 { font-size: 1rem; }
 
-.glpi-kb-content p,
-.glpi-kb-content ul,
-.glpi-kb-content ol,
-.glpi-kb-content table {
+.glping-kb-content p,
+.glping-kb-content ul,
+.glping-kb-content ol,
+.glping-kb-content table {
   margin-bottom: 0.9rem;
 }
 
-.glpi-kb-content ul,
-.glpi-kb-content ol {
+.glping-kb-content ul,
+.glping-kb-content ol {
   padding-left: 1.4rem;
 }
 
-.glpi-kb-content code {
+.glping-kb-content code {
   padding: 0.1rem 0.3rem;
-  background: var(--glpi-surface-2);
+  background: var(--glping-surface-2);
   border-radius: 4px;
   font-size: 0.85em;
 }
 
-.glpi-kb-content pre {
+.glping-kb-content pre {
   padding: 0.75rem 1rem;
-  background: var(--glpi-surface-2);
-  border: 1px solid var(--glpi-border);
+  background: var(--glping-surface-2);
+  border: 1px solid var(--glping-border);
   border-radius: 6px;
   overflow-x: auto;
 }
 
-.glpi-kb-content pre code {
+.glping-kb-content pre code {
   padding: 0;
   background: none;
 }
 
-.glpi-kb-content blockquote {
+.glping-kb-content blockquote {
   margin: 0 0 0.9rem;
   padding: 0.25rem 0 0.25rem 0.9rem;
-  border-left: 3px solid var(--glpi-border-strong);
-  color: var(--glpi-text-muted);
+  border-left: 3px solid var(--glping-border-strong);
+  color: var(--glping-text-muted);
 }
 
-.glpi-kb-content table {
+.glping-kb-content table {
   width: auto;
   border-collapse: collapse;
 }
 
-.glpi-kb-content th,
-.glpi-kb-content td {
+.glping-kb-content th,
+.glping-kb-content td {
   padding: 0.35rem 0.7rem;
-  border: 1px solid var(--glpi-border);
+  border: 1px solid var(--glping-border);
 }
 
-.glpi-kb-content th {
-  background: var(--glpi-surface-2);
+.glping-kb-content th {
+  background: var(--glping-surface-2);
 }
 
 /* Une image trop large ne doit pas élargir la fiche et faire défiler toute la page. */
-.glpi-kb-content img {
+.glping-kb-content img {
   max-width: 100%;
   height: auto;
 }
 
-.glpi-kb-content hr {
+.glping-kb-content hr {
   margin: 1.2rem 0;
-  border-top: 1px solid var(--glpi-border);
+  border-top: 1px solid var(--glping-border);
 }
 
 /* ---- Assistance : planning (/assistance/planning) -----------------------------------------
@@ -2419,70 +2419,70 @@ a.glpi-breadcrumb-item:hover {
    (bleu, orange, aqua — validées pour la vision des couleurs) : en liseré et en fond léger,
    jamais sur le texte, qui reste à l'encre normale. */
 
-.glpi-planning {
-  --glpi-series-1: #2a78d6;
-  --glpi-series-2: #eb6834;
-  --glpi-series-3: #1baf7a;
-  --glpi-planning-line: var(--glpi-border);
+.glping-planning {
+  --glping-series-1: #2a78d6;
+  --glping-series-2: #eb6834;
+  --glping-series-3: #1baf7a;
+  --glping-planning-line: var(--glping-border);
 }
 
-.glpi-planning-body {
+.glping-planning-body {
   display: flex;
   align-items: flex-start;
 }
 
-.glpi-planning-grid {
+.glping-planning-grid {
   flex: 1 1 auto;
   min-width: 0;
   overflow-x: auto;
 }
 
-.glpi-planning-head,
-.glpi-planning-hours {
+.glping-planning-head,
+.glping-planning-hours {
   display: grid;
   grid-template-columns: 3.5rem repeat(7, minmax(7.5rem, 1fr));
 }
 
-.glpi-planning-head {
+.glping-planning-head {
   position: sticky;
   top: 0;
   z-index: 2;
-  background: var(--glpi-surface);
-  border-bottom: 1px solid var(--glpi-planning-line);
+  background: var(--glping-surface);
+  border-bottom: 1px solid var(--glping-planning-line);
 }
 
-.glpi-planning-dayname {
+.glping-planning-dayname {
   padding: 0.5rem;
   font-weight: 600;
   text-transform: capitalize;
   text-align: center;
-  color: var(--glpi-text-2);
+  color: var(--glping-text-2);
 }
 
-.glpi-planning-dayname.is-today {
-  color: var(--glpi-primary-text);
+.glping-planning-dayname.is-today {
+  color: var(--glping-primary-text);
 }
 
-.glpi-planning-hourlabel {
+.glping-planning-hourlabel {
   padding-right: 0.4rem;
   text-align: right;
   font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
-  color: var(--glpi-text-muted);
+  color: var(--glping-text-muted);
   transform: translateY(-0.5em);
 }
 
-.glpi-planning-day {
+.glping-planning-day {
   position: relative;
-  border-left: 1px solid var(--glpi-planning-line);
-  background-image: linear-gradient(to bottom, var(--glpi-planning-line) 1px, transparent 1px);
+  border-left: 1px solid var(--glping-planning-line);
+  background-image: linear-gradient(to bottom, var(--glping-planning-line) 1px, transparent 1px);
 }
 
-.glpi-planning-day.is-today {
+.glping-planning-day.is-today {
   background-color: rgba(var(--tblr-primary-rgb), 0.035);
 }
 
-.glpi-planning-now {
+.glping-planning-now {
   position: absolute;
   left: 0;
   right: 0;
@@ -2492,110 +2492,110 @@ a.glpi-breadcrumb-item:hover {
   pointer-events: none;
 }
 
-.glpi-planning-event,
-.glpi-planning-unplanned {
+.glping-planning-event,
+.glping-planning-unplanned {
   display: flex;
   flex-direction: column;
   gap: 1px;
   overflow: hidden;
   padding: 0.2rem 0.35rem 0.2rem 0.5rem;
   border: 0;
-  border-left: 3px solid var(--glpi-event-color, #6c737b);
+  border-left: 3px solid var(--glping-event-color, #6c737b);
   border-radius: 4px;
-  background: color-mix(in srgb, var(--glpi-event-color, #6c737b) 10%, var(--glpi-surface));
-  color: var(--glpi-text);
+  background: color-mix(in srgb, var(--glping-event-color, #6c737b) 10%, var(--glping-surface));
+  color: var(--glping-text);
   font-size: 0.75rem;
   line-height: 1.25;
   text-align: left;
   cursor: pointer;
 }
 
-.glpi-planning-event {
+.glping-planning-event {
   position: absolute;
 }
 
-.glpi-planning-event:hover,
-.glpi-planning-unplanned:hover,
-.glpi-planning-event:focus-visible,
-.glpi-planning-unplanned:focus-visible {
-  background: color-mix(in srgb, var(--glpi-event-color, #6c737b) 20%, var(--glpi-surface));
+.glping-planning-event:hover,
+.glping-planning-unplanned:hover,
+.glping-planning-event:focus-visible,
+.glping-planning-unplanned:focus-visible {
+  background: color-mix(in srgb, var(--glping-event-color, #6c737b) 20%, var(--glping-surface));
   outline: none;
 }
 
-.glpi-planning-event.is-done {
+.glping-planning-event.is-done {
   opacity: 0.55;
 }
 
-.glpi-planning-event.is-done .glpi-planning-title {
+.glping-planning-event.is-done .glping-planning-title {
   text-decoration: line-through;
 }
 
-.glpi-planning-ticket { --glpi-event-color: var(--glpi-series-1); }
-.glpi-planning-problem { --glpi-event-color: var(--glpi-series-2); }
-.glpi-planning-change { --glpi-event-color: var(--glpi-series-3); }
+.glping-planning-ticket { --glping-event-color: var(--glping-series-1); }
+.glping-planning-problem { --glping-event-color: var(--glping-series-2); }
+.glping-planning-change { --glping-event-color: var(--glping-series-3); }
 
-.glpi-planning-time {
+.glping-planning-time {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
-.glpi-planning-title {
+.glping-planning-title {
   font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.glpi-planning-parent {
-  color: var(--glpi-text-2);
+.glping-planning-parent {
+  color: var(--glping-text-2);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.glpi-planning-side {
+.glping-planning-side {
   flex: 0 0 16rem;
   padding: 0.75rem;
-  border-left: 1px solid var(--glpi-planning-line);
+  border-left: 1px solid var(--glping-planning-line);
 }
 
-.glpi-planning-side-title {
+.glping-planning-side-title {
   margin-bottom: 0.6rem;
   font-weight: 600;
 }
 
-.glpi-planning-unplanned {
+.glping-planning-unplanned {
   width: 100%;
   margin-bottom: 0.4rem;
 }
 
-.glpi-planning-legend {
+.glping-planning-legend {
   display: flex;
   gap: 0.75rem;
   font-size: 0.8125rem;
-  color: var(--glpi-text-2);
+  color: var(--glping-text-2);
 }
 
-.glpi-planning-swatch {
+.glping-planning-swatch {
   display: inline-block;
   width: 0.7rem;
   height: 0.7rem;
   margin-right: 0.3rem;
   border-radius: 2px;
   vertical-align: -1px;
-  background: var(--glpi-event-color);
+  background: var(--glping-event-color);
 }
 
 @media (max-width: 991.98px) {
-  .glpi-planning-body {
+  .glping-planning-body {
     flex-direction: column;
   }
 
-  .glpi-planning-side {
+  .glping-planning-side {
     flex-basis: auto;
     width: 100%;
     border-left: 0;
-    border-top: 1px solid var(--glpi-planning-line);
+    border-top: 1px solid var(--glping-planning-line);
   }
 }
 
@@ -2605,99 +2605,99 @@ a.glpi-breadcrumb-item:hover {
    3:1 de contraste : légende, étiquettes de fin et vue tableau compensent, comme le veut la
    règle. Traits fins, grille en filet, le texte jamais à la couleur des séries. */
 
-.glpi-stats {
-  --glpi-series-1: #2a78d6;
-  --glpi-series-2: #eb6834;
-  --glpi-series-3: #1baf7a;
-  --glpi-stats-grid: var(--glpi-border);
-  --glpi-stats-ink: var(--glpi-text);
-  --glpi-stats-ink-2: var(--glpi-text-2);
-  --glpi-stats-ink-3: var(--glpi-text-muted);
+.glping-stats {
+  --glping-series-1: #2a78d6;
+  --glping-series-2: #eb6834;
+  --glping-series-3: #1baf7a;
+  --glping-stats-grid: var(--glping-border);
+  --glping-stats-ink: var(--glping-text);
+  --glping-stats-ink-2: var(--glping-text-2);
+  --glping-stats-ink-3: var(--glping-text-muted);
 }
 
-.glpi-stats-num {
+.glping-stats-num {
   font-variant-numeric: tabular-nums;
 }
 
-.glpi-stats-tiles {
+.glping-stats-tiles {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
   gap: 0.75rem;
 }
 
-.glpi-stats-tile {
+.glping-stats-tile {
   padding: 0.9rem 1rem;
-  border: 1px solid var(--tblr-border-color, var(--glpi-border));
+  border: 1px solid var(--tblr-border-color, var(--glping-border));
   border-radius: 6px;
-  background: var(--glpi-surface);
+  background: var(--glping-surface);
 }
 
-.glpi-stats-tile-label {
+.glping-stats-tile-label {
   font-size: 0.8125rem;
-  color: var(--glpi-stats-ink-2);
+  color: var(--glping-stats-ink-2);
 }
 
-.glpi-stats-tile-value {
+.glping-stats-tile-value {
   margin-top: 0.15rem;
   font-size: 1.6rem;
   font-weight: 600;
   line-height: 1.2;
-  color: var(--glpi-stats-ink);
+  color: var(--glping-stats-ink);
 }
 
-.glpi-stats-tile-note {
+.glping-stats-tile-note {
   margin-top: 0.15rem;
   font-size: 0.8125rem;
 }
 
-.glpi-stats-legend {
+.glping-stats-legend {
   display: flex;
   gap: 0.9rem;
   font-size: 0.8125rem;
-  color: var(--glpi-stats-ink-2);
+  color: var(--glping-stats-ink-2);
 }
 
 /* Clé de légende en trait court, comme la marque qu'elle désigne. */
-.glpi-stats-key {
+.glping-stats-key {
   display: inline-block;
   width: 0.9rem;
   height: 2px;
   margin-right: 0.35rem;
   border-radius: 1px;
   vertical-align: middle;
-  background: var(--glpi-stats-color);
+  background: var(--glping-stats-color);
 }
 
-.glpi-stats-s1 { --glpi-stats-color: var(--glpi-series-1); }
-.glpi-stats-s2 { --glpi-stats-color: var(--glpi-series-2); }
-.glpi-stats-s3 { --glpi-stats-color: var(--glpi-series-3); }
+.glping-stats-s1 { --glping-stats-color: var(--glping-series-1); }
+.glping-stats-s2 { --glping-stats-color: var(--glping-series-2); }
+.glping-stats-s3 { --glping-stats-color: var(--glping-series-3); }
 
-.glpi-stats-chart {
+.glping-stats-chart {
   position: relative;
 }
 
-.glpi-stats-chart svg {
+.glping-stats-chart svg {
   display: block;
   width: 100%;
   height: auto;
   overflow: visible;
 }
 
-.glpi-stats-grid {
-  stroke: var(--glpi-stats-grid);
+.glping-stats-grid {
+  stroke: var(--glping-stats-grid);
   stroke-width: 1;
   shape-rendering: crispEdges;
 }
 
-.glpi-stats-axis {
+.glping-stats-axis {
   font-size: 11px;
-  fill: var(--glpi-stats-ink-3);
+  fill: var(--glping-stats-ink-3);
   font-variant-numeric: tabular-nums;
 }
 
-.glpi-stats-line {
+.glping-stats-line {
   fill: none;
-  stroke: var(--glpi-stats-color);
+  stroke: var(--glping-stats-color);
   stroke-width: 2;
   stroke-linejoin: round;
   stroke-linecap: round;
@@ -2705,88 +2705,88 @@ a.glpi-breadcrumb-item:hover {
 }
 
 /* Anneau à la couleur du fond : le point reste lisible là où il croise une autre courbe. */
-.glpi-stats-dot {
-  fill: var(--glpi-stats-color);
-  stroke: var(--glpi-surface);
+.glping-stats-dot {
+  fill: var(--glping-stats-color);
+  stroke: var(--glping-surface);
   stroke-width: 2;
 }
 
-.glpi-stats-endlabel {
+.glping-stats-endlabel {
   font-size: 12px;
-  fill: var(--glpi-stats-ink-2);
+  fill: var(--glping-stats-ink-2);
 }
 
-.glpi-stats-crosshair {
-  stroke: var(--glpi-border-strong);
+.glping-stats-crosshair {
+  stroke: var(--glping-border-strong);
   stroke-width: 1;
   shape-rendering: crispEdges;
 }
 
-.glpi-stats-hit {
+.glping-stats-hit {
   fill: transparent;
   cursor: crosshair;
 }
 
-.glpi-stats-tooltip {
+.glping-stats-tooltip {
   position: absolute;
   top: 0.5rem;
   z-index: 2;
   min-width: 10rem;
   padding: 0.5rem 0.7rem;
-  border: 1px solid var(--tblr-border-color, var(--glpi-border));
+  border: 1px solid var(--tblr-border-color, var(--glping-border));
   border-radius: 6px;
-  background: var(--glpi-surface);
+  background: var(--glping-surface);
   box-shadow: 0 4px 14px rgba(27, 31, 36, 0.12);
   font-size: 0.8125rem;
-  color: var(--glpi-stats-ink);
+  color: var(--glping-stats-ink);
   pointer-events: none;
 }
 
-.glpi-stats-tooltip > div:not(:first-child) {
+.glping-stats-tooltip > div:not(:first-child) {
   display: flex;
   align-items: center;
 }
 
-.glpi-stats-tooltip .glpi-stats-num {
+.glping-stats-tooltip .glping-stats-num {
   margin-left: auto;
   padding-left: 1rem;
 }
 
-.glpi-stats-breakdown {
+.glping-stats-breakdown {
   height: 100%;
 }
 
-.glpi-stats-barcell {
+.glping-stats-barcell {
   display: flex;
   align-items: center;
   gap: 0.6rem;
 }
 
-.glpi-stats-bartrack {
+.glping-stats-bartrack {
   flex: 1 1 auto;
   height: 8px;
 }
 
-.glpi-stats-bar {
+.glping-stats-bar {
   display: block;
   height: 100%;
   min-width: 2px;
   border-radius: 0 4px 4px 0;
-  background: var(--glpi-series-1);
+  background: var(--glping-series-1);
 }
 
-.glpi-stats-barcell .glpi-stats-num {
+.glping-stats-barcell .glping-stats-num {
   flex: 0 0 2.5rem;
   text-align: right;
 }
 
 /* Tâches courtes du planning : voir Planning/Index.SizeCss. */
-.glpi-planning-event.is-short .glpi-planning-parent,
-.glpi-planning-event.is-tiny .glpi-planning-parent {
+.glping-planning-event.is-short .glping-planning-parent,
+.glping-planning-event.is-tiny .glping-planning-parent {
   display: none;
 }
 
-.glpi-planning-event.is-tiny {
+.glping-planning-event.is-tiny {
   flex-direction: row;
   align-items: baseline;
   gap: 0.35rem;
@@ -2794,92 +2794,92 @@ a.glpi-breadcrumb-item:hover {
   padding-bottom: 0.1rem;
 }
 
-.glpi-planning-event.is-tiny .glpi-planning-time {
+.glping-planning-event.is-tiny .glping-planning-time {
   flex: 0 0 auto;
 }
 
 /* Le libellé d'une heure est remonté d'une demi-ligne pour s'aligner sur son trait ; sans cette
    marge, celui de la première heure sortait par le haut de la grille. */
-.glpi-planning-hours {
+.glping-planning-hours {
   padding-top: 0.6rem;
 }
 
 /* Largeur figée : un titre de tâche insécable élargissait la colonne, et la grille bougeait
    d'une semaine à l'autre selon ce qui restait à planifier. */
-.glpi-planning-side {
+.glping-planning-side {
   width: 16rem;
   min-width: 16rem;
   max-width: 16rem;
 }
 
-.glpi-planning-unplanned {
+.glping-planning-unplanned {
   min-width: 0;
 }
 
 /* Le SVG est dessiné à la largeur mesurée de sa carte (voir glpiNg.observeWidth) : on le laisse
    à cette taille plutôt que de l'étirer, qui grossissait le texte des axes. */
-.glpi-stats-chart {
+.glping-stats-chart {
   overflow-x: auto;
 }
 
-.glpi-stats-chart svg {
+.glping-stats-chart svg {
   width: auto;
   max-width: none;
 }
 
 /* Préférence « Afficher les compteurs » sur Non : la classe est posée par MainLayout. */
-.glpi-hide-tab-counts .glpi-fiche-tab-count {
+.glping-hide-tab-counts .glping-fiche-tab-count {
   display: none;
 }
 
 /* Séries des graphiques et du planning en mode sombre : les mêmes teintes, un cran ajustées pour
    le fond sombre — validées elles aussi (écart daltonien ≥ 9, contraste ≥ 3:1 sur les surfaces
    de Tabler et de Darker). */
-:root[data-bs-theme="dark"] .glpi-stats,
-:root[data-bs-theme="dark"] .glpi-planning {
-  --glpi-series-1: #3987e5;
-  --glpi-series-2: #d95926;
-  --glpi-series-3: #199e70;
+:root[data-bs-theme="dark"] .glping-stats,
+:root[data-bs-theme="dark"] .glping-planning {
+  --glping-series-1: #3987e5;
+  --glping-series-2: #d95926;
+  --glping-series-3: #199e70;
 }
 
 /* ---- Préférences : choix de la palette ---------------------------------------------------- */
-.glpi-palette-grid {
+.glping-palette-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr));
   gap: 0.75rem;
 }
 
-.glpi-palette-card {
+.glping-palette-card {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
   padding: 0.5rem;
-  border: 2px solid var(--glpi-border);
+  border: 2px solid var(--glping-border);
   border-radius: 8px;
-  background: var(--glpi-surface);
-  color: var(--glpi-text);
+  background: var(--glping-surface);
+  color: var(--glping-text);
   text-align: left;
   cursor: pointer;
 }
 
-.glpi-palette-card:hover {
-  border-color: var(--glpi-border-strong);
+.glping-palette-card:hover {
+  border-color: var(--glping-border-strong);
 }
 
-.glpi-palette-card.selected {
-  border-color: var(--glpi-primary-text);
+.glping-palette-card.selected {
+  border-color: var(--glping-primary-text);
 }
 
-.glpi-palette-preview {
+.glping-palette-preview {
   position: relative;
   display: flex;
   height: 4.5rem;
   overflow: hidden;
-  border: 1px solid var(--glpi-border);
+  border: 1px solid var(--glping-border);
   border-radius: 5px;
 }
 
-.glpi-palette-menu {
+.glping-palette-menu {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
@@ -2887,19 +2887,19 @@ a.glpi-breadcrumb-item:hover {
   padding: 0.4rem 0.35rem;
 }
 
-.glpi-palette-dot {
+.glping-palette-dot {
   width: 0.55rem;
   height: 0.55rem;
   border-radius: 50%;
 }
 
-.glpi-palette-line {
+.glping-palette-line {
   height: 3px;
   border-radius: 2px;
   opacity: 0.7;
 }
 
-.glpi-palette-button {
+.glping-palette-button {
   position: absolute;
   right: 0.5rem;
   bottom: 0.5rem;
@@ -2909,82 +2909,109 @@ a.glpi-breadcrumb-item:hover {
   font-weight: 600;
 }
 
-.glpi-palette-name {
+.glping-palette-name {
   font-size: 0.8125rem;
   font-weight: 600;
 }
 
-.glpi-palette-card.selected .glpi-palette-name .ti {
-  color: var(--glpi-primary-text);
+.glping-palette-card.selected .glping-palette-name .ti {
+  color: var(--glping-primary-text);
 }
 
 /* ---- Liste déroulante de palettes (Configuration > Valeurs par défaut) ----------------------
    Même gabarit que les <select> des champs de configuration, à côté desquels elle se range. */
-.glpi-palette-select {
+.glping-palette-select {
   width: 100%;
   max-width: 520px;
 }
 
-.glpi-palette-select-toggle {
+.glping-palette-select-toggle {
   display: flex;
   align-items: center;
   gap: 0.6rem;
   width: 100%;
   padding: 0.35rem 0.6rem;
-  border: 1px solid var(--glpi-border);
+  border: 1px solid var(--glping-border);
   border-radius: 6px;
-  background: var(--glpi-surface);
-  color: var(--glpi-text);
+  background: var(--glping-surface);
+  color: var(--glping-text);
   font-size: 0.875rem;
   text-align: left;
 }
 
-.glpi-palette-select-toggle:focus-visible {
-  outline: 2px solid var(--glpi-primary-text);
+.glping-palette-select-toggle:focus-visible {
+  outline: 2px solid var(--glping-primary-text);
   outline-offset: 1px;
 }
 
-.glpi-palette-select-menu {
+.glping-palette-select-menu {
   width: 100%;
   max-width: 520px;
 }
 
-.glpi-palette-select-item {
+.glping-palette-select-item {
   display: flex;
   align-items: center;
   gap: 0.6rem;
 }
 
 /* Aperçu : bande de menu avec son point d'accent, fond de page et pastille de la primaire. */
-.glpi-palette-swatch {
+.glping-palette-swatch {
   position: relative;
   display: inline-flex;
   flex: 0 0 auto;
   width: 2.6rem;
   height: 1.4rem;
   overflow: hidden;
-  border: 1px solid var(--glpi-border-strong);
+  border: 1px solid var(--glping-border-strong);
   border-radius: 4px;
 }
 
-.glpi-palette-swatch-menu {
+.glping-palette-swatch-menu {
   display: flex;
   justify-content: center;
   width: 38%;
   padding-top: 0.25rem;
 }
 
-.glpi-palette-swatch-dot {
+.glping-palette-swatch-dot {
   width: 0.4rem;
   height: 0.4rem;
   border-radius: 50%;
 }
 
-.glpi-palette-swatch-primary {
+.glping-palette-swatch-primary {
   position: absolute;
   right: 0.25rem;
   bottom: 0.25rem;
   width: 0.85rem;
   height: 0.45rem;
   border-radius: 2px;
+}
+
+/* Aperçu au survol (glpiNg.themePreview) : une barre se remplit pendant les deux secondes
+   d'attente, pour dire qu'il va se passer quelque chose — sans elle, la page qui change de
+   couleur « toute seule » surprendrait. Même durée que PalettePreviewDelayMs. */
+.glping-palette-card.glping-palette-pending .glping-palette-preview::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 100%;
+  background: var(--glping-primary-text);
+  transform-origin: left;
+  animation: glping-palette-pending 2s linear forwards;
+}
+
+@keyframes glping-palette-pending {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glping-palette-card.glping-palette-pending .glping-palette-preview::after {
+    animation: none;
+    display: none;
+  }
 }

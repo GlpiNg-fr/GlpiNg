@@ -803,7 +803,7 @@ public sealed class GlpiKnowledgeBaseImportService(
             return;
         }
 
-        document.Sha256 = $"missing:glpi-{document.SourceGlpiId}";
+        document.Sha256 = $"missing:glping-{document.SourceGlpiId}";
         document.StoragePath = string.Empty;
         document.SizeBytes = 0;
         document.IsContentMissing = true;

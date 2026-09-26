@@ -14,57 +14,57 @@
 else
 {
     <div class="card">
-        <div class="glpi-config">
-            <div class="glpi-config-body">
-                <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glpi-config-form">
-                    <div class="glpi-config-field">
+        <div class="glping-config">
+            <div class="glping-config-body">
+                <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
+                    <div class="glping-config-field">
                         <label for="cfg-retention">Supprimer les logs des tâches après (jours)</label>
                         <input id="cfg-retention" type="number" min="1" @bind="_model.TaskLogRetentionDays" />
                     </div>
 
-                    <div class="glpi-config-field checkbox">
+                    <div class="glping-config-field checkbox">
                         <label for="cfg-repare">Préparer de nouveau les jobs réussis</label>
-                        <label class="glpi-switch">
+                        <label class="glping-switch">
                             <input id="cfg-repare" type="checkbox" @bind="_model.RepareSuccessfulJobs" />
-                            <span class="glpi-switch-slider"></span>
+                            <span class="glping-switch-slider"></span>
                         </label>
                     </div>
 
-                    <div class="glpi-config-field">
+                    <div class="glping-config-field">
                         <label for="cfg-wake">Nombre maximum d'agents à réveiller dans une tâche</label>
                         <input id="cfg-wake" type="number" min="1" @bind="_model.MaxAgentsToWakePerTask" />
                     </div>
 
-                    <div class="glpi-config-field checkbox">
+                    <div class="glping-config-field checkbox">
                         <label for="cfg-debug">Extra-debug</label>
-                        <label class="glpi-switch">
+                        <label class="glping-switch">
                             <input id="cfg-debug" type="checkbox" @bind="_model.ExtraDebug" />
-                            <span class="glpi-switch-slider"></span>
+                            <span class="glping-switch-slider"></span>
                         </label>
                     </div>
 
-                    <div class="glpi-config-divider">
+                    <div class="glping-config-divider">
                         <span><i class="ti ti-server-2"></i> Gestion de paquets</span>
                     </div>
 
-                    <div class="glpi-config-field checkbox">
+                    <div class="glping-config-field checkbox">
                         <label for="cfg-mirror">Utiliser ce serveur GlpiNg comme un serveur miroir</label>
-                        <label class="glpi-switch">
+                        <label class="glping-switch">
                             <input id="cfg-mirror" type="checkbox" @bind="_model.UseCentralServerAsMirror" />
-                            <span class="glpi-switch-slider"></span>
+                            <span class="glping-switch-slider"></span>
                         </label>
                     </div>
 
-                    <div class="glpi-config-field">
+                    <div class="glping-config-field">
                         <label for="cfg-mirror-match">Faire correspondre un miroir aux agents</label>
-                        <select id="cfg-mirror-match" class="glpi-config-input" @bind="_model.MirrorMatchMode">
+                        <select id="cfg-mirror-match" class="glping-config-input" @bind="_model.MirrorMatchMode">
                             <option value="@DeploymentMirrorMatchMode.Location">en se basant sur le lieu</option>
                             <option value="@DeploymentMirrorMatchMode.Entity">en se basant sur l'entité</option>
                             <option value="@DeploymentMirrorMatchMode.Both">en se basant sur les deux</option>
                         </select>
                     </div>
 
-                    <button type="submit" class="glpi-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+                    <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
                 </EditForm>
             </div>
         </div>

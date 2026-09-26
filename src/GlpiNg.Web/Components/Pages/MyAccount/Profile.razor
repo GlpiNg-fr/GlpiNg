@@ -14,38 +14,38 @@
 }
 else
 {
-    <div class="glpi-fiche-topbar">
-        <div class="glpi-fiche-crumb">
+    <div class="glping-fiche-topbar">
+        <div class="glping-fiche-crumb">
             <i class="ti ti-user"></i>
             <span>Mon profil - @_user.UserName</span>
         </div>
     </div>
 
-    <div class="glpi-fiche-panel glpi-fiche-panel-fill">
+    <div class="glping-fiche-panel glping-fiche-panel-fill">
         <EditForm Model="_user" OnValidSubmit="SaveAsync">
-            <div class="glpi-fiche-block">
-                <div class="glpi-fiche-block-title"><i class="ti ti-id"></i>Identité</div>
+            <div class="glping-fiche-block">
+                <div class="glping-fiche-block-title"><i class="ti ti-id"></i>Identité</div>
                 <div class="row">
                     <div class="col-md-6">
-                        <div class="glpi-fiche-field">
+                        <div class="glping-fiche-field">
                             <label>Identifiant</label>
                             <input class="form-control" value="@_user.UserName" disabled />
                         </div>
-                        <div class="glpi-fiche-field">
+                        <div class="glping-fiche-field">
                             <label>Prénom</label>
                             <input class="form-control" @bind="_user.FirstName" />
                         </div>
-                        <div class="glpi-fiche-field">
+                        <div class="glping-fiche-field">
                             <label>Lieu</label>
                             <input class="form-control" @bind="_user.Location" />
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="glpi-fiche-field">
+                        <div class="glping-fiche-field">
                             <label>Image</label>
                             <span style="display:inline-flex;align-items:center;justify-content:center;width:2.5rem;height:2.5rem;border-radius:6px;color:#fff;font-size:1rem;font-weight:600;background:@UserAvatar.Color(_user)">@UserAvatar.Initials(_user)</span>
                         </div>
-                        <div class="glpi-fiche-field">
+                        <div class="glping-fiche-field">
                             <label>Nom de famille</label>
                             <input class="form-control" @bind="_user.LastName" />
                         </div>
@@ -53,17 +53,17 @@ else
                 </div>
             </div>
 
-            <div class="glpi-fiche-block">
-                <div class="glpi-fiche-block-title"><i class="ti ti-address-book"></i>Coordonnées</div>
+            <div class="glping-fiche-block">
+                <div class="glping-fiche-block-title"><i class="ti ti-address-book"></i>Coordonnées</div>
                 <div class="row">
                     <div class="col-md-6">
-                        <div class="glpi-fiche-field">
+                        <div class="glping-fiche-field">
                             <label>E-mail</label>
                             <input class="form-control" type="email" @bind="_user.Email" />
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="glpi-fiche-field">
+                        <div class="glping-fiche-field">
                             <label>Téléphone</label>
                             <input class="form-control" @bind="_user.Phone" />
                         </div>
@@ -71,8 +71,8 @@ else
                 </div>
             </div>
 
-            <div class="glpi-fiche-block">
-                <div class="glpi-fiche-block-title"><i class="ti ti-key"></i>Mot de passe</div>
+            <div class="glping-fiche-block">
+                <div class="glping-fiche-block-title"><i class="ti ti-key"></i>Mot de passe</div>
                 @if (_user.AuthSource == UserAuthSource.Ldap)
                 {
                     <p class="text-secondary small mb-0">
@@ -85,19 +85,19 @@ else
                 {
                     <div class="row">
                         <div class="col-md-4">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Mot de passe actuel</label>
                                 <input class="form-control" type="password" @bind="_currentPassword" />
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Nouveau mot de passe</label>
                                 <input class="form-control" type="password" @bind="_newPassword" />
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Confirmer</label>
                                 <input class="form-control" type="password" @bind="_newPasswordConfirm" />
                             </div>

@@ -75,7 +75,7 @@ public sealed record UserPreferenceValues
     /// <summary>
     /// Palette de couleur (« Palette de couleur » de GLPI), sous sa clé CSS : « auror », « dark »,
     /// « darker », « classic », « midnight », « lightblue », « vintage » ou « icecream » — voir
-    /// glpi-theme.css, où chacune est définie.
+    /// glping-theme.css, où chacune est définie.
     /// </summary>
     public string Palette { get; init; } = "auror";
 

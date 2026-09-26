@@ -142,7 +142,7 @@ public partial class Index : ComponentBase
 
         _newDefinition = NewBlankDefinition();
 
-        await JS.InvokeVoidAsync("glpiNg.hideModal", "newDefinitionModal");
+        await JS.InvokeVoidAsync("glping.hideModal", "newDefinitionModal");
         await LoadAsync();
     }
 

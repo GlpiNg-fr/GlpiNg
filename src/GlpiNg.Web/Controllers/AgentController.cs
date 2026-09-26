@@ -20,9 +20,9 @@ namespace GlpiNg.Web.Controllers;
 /// <summary>
 /// Endpoint compatible protocole JSON GLPI-Agent.
 /// Références utilisées pour l'implémentation :
-///  - COMMON:   https://glpi-json-protocol.readthedocs.io/en/latest/common.html
-///  - CONTACT:  https://glpi-json-protocol.readthedocs.io/en/latest/contact.html
-///  - INVENTORY: https://glpi-json-protocol.readthedocs.io/en/latest/inventory.html
+///  - COMMON:   https://glping-json-protocol.readthedocs.io/en/latest/common.html
+///  - CONTACT:  https://glping-json-protocol.readthedocs.io/en/latest/contact.html
+///  - INVENTORY: https://glping-json-protocol.readthedocs.io/en/latest/inventory.html
 ///
 /// Traite aussi "getJobs" (récupération d'une tâche de déploiement) et "setStatus"
 /// (rapport d'exécution), et expose le téléchargement des fichiers de package associés.

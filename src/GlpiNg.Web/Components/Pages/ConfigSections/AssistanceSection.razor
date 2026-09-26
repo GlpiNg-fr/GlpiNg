@@ -15,9 +15,9 @@ else
        la carte contient, et reste donc accessible sans la déplier. *@
     <CardExpander Title="Module Assistance" Icon="ti-headset" Expanded="false">
         <HeaderActions>
-            <label class="glpi-switch" title="Activer ou désactiver tout le module Assistance">
+            <label class="glping-switch" title="Activer ou désactiver tout le module Assistance">
                 <input type="checkbox" checked="@_moduleEnabled" @onchange="OnModuleMasterToggled" />
-                <span class="glpi-switch-slider"></span>
+                <span class="glping-switch-slider"></span>
             </label>
         </HeaderActions>
         <ChildContent>
@@ -25,14 +25,14 @@ else
         </ChildContent>
     </CardExpander>
 
-    <div class="glpi-config-divider">
+    <div class="glping-config-divider">
         <span><i class="ti ti-headset"></i> Réglages de l'assistance</span>
     </div>
 
-    <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glpi-config-form">
-        <div class="glpi-config-field">
+    <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
+        <div class="glping-config-field">
             <label for="as-time-step">Pas pour les heures (en minutes)</label>
-            <select id="as-time-step" class="glpi-config-input-sm" @bind="_model.TimeStepMinutes">
+            <select id="as-time-step" class="glping-config-input-sm" @bind="_model.TimeStepMinutes">
                 <option value="1">1</option>
                 <option value="5">5</option>
                 <option value="10">10</option>
@@ -42,26 +42,26 @@ else
             </select>
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="as-planning-begin">Début du planning</label>
-            <input id="as-planning-begin" type="text" placeholder="HH:mm" pattern="[0-2][0-9]:[0-5][0-9]" class="glpi-config-input-sm" @bind="_model.PlanningBegin" />
+            <input id="as-planning-begin" type="text" placeholder="HH:mm" pattern="[0-2][0-9]:[0-5][0-9]" class="glping-config-input-sm" @bind="_model.PlanningBegin" />
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="as-planning-end">Fin du planning</label>
-            <input id="as-planning-end" type="text" placeholder="HH:mm" pattern="[0-2][0-9]:[0-5][0-9]" class="glpi-config-input-sm" @bind="_model.PlanningEnd" />
+            <input id="as-planning-end" type="text" placeholder="HH:mm" pattern="[0-2][0-9]:[0-5][0-9]" class="glping-config-input-sm" @bind="_model.PlanningEnd" />
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label>Planification des journées ouvrées</label>
-            <div class="glpi-switch-grid" style="margin:0;grid-template-columns:repeat(auto-fill, minmax(130px, 1fr));">
+            <div class="glping-switch-grid" style="margin:0;grid-template-columns:repeat(auto-fill, minmax(130px, 1fr));">
                 @foreach (var day in WorkDays)
                 {
                     var inputId = $"as-workday-{day.Value}";
-                    <div class="glpi-switch-grid-item">
-                        <label class="glpi-switch">
+                    <div class="glping-switch-grid-item">
+                        <label class="glping-switch">
                             <input id="@inputId" type="checkbox" checked="@_model.PlanningWorkDays.Contains(day.Value)" @onchange="e => ToggleWorkDay(day.Value, (bool)e.Value!)" />
-                            <span class="glpi-switch-slider"></span>
+                            <span class="glping-switch-slider"></span>
                         </label>
                         <label for="@inputId">@day.Label</label>
                     </div>
@@ -69,7 +69,7 @@ else
             </div>
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="as-mailcollector-size">Taille max. des pièces jointes du collecteur de mails</label>
             <select id="as-mailcollector-size" @bind="_model.MailCollectorMaxFileSize">
                 <option value="0">Pas d'import</option>
@@ -83,54 +83,54 @@ else
             </select>
         </div>
 
-        <div class="glpi-config-field checkbox">
+        <div class="glping-config-field checkbox">
             <label for="as-software-linkable">Par défaut, un logiciel peut être associé à un ticket</label>
-            <label class="glpi-switch">
+            <label class="glping-switch">
                 <input id="as-software-linkable" type="checkbox" @bind="_model.SoftwareLinkableToTicketByDefault" />
-                <span class="glpi-switch-slider"></span>
+                <span class="glping-switch-slider"></span>
             </label>
         </div>
 
-        <div class="glpi-config-field checkbox">
+        <div class="glping-config-field checkbox">
             <label for="as-keep-tickets">Conserver les tickets à la purge d'un élément de l'inventaire</label>
-            <label class="glpi-switch">
+            <label class="glping-switch">
                 <input id="as-keep-tickets" type="checkbox" @bind="_model.KeepTicketsOnAssetPurge" />
-                <span class="glpi-switch-slider"></span>
+                <span class="glping-switch-slider"></span>
             </label>
         </div>
 
-        <div class="glpi-config-field checkbox">
+        <div class="glping-config-field checkbox">
             <label for="as-show-personal">Afficher les informations personnelles dans le formulaire de nouveau ticket (interface simplifiée)</label>
-            <label class="glpi-switch">
+            <label class="glping-switch">
                 <input id="as-show-personal" type="checkbox" @bind="_model.ShowPersonalInfoOnSimplifiedTicketForm" />
-                <span class="glpi-switch-slider"></span>
+                <span class="glping-switch-slider"></span>
             </label>
         </div>
 
-        <div class="glpi-config-field checkbox">
+        <div class="glping-config-field checkbox">
             <label for="as-anon-tickets">Autoriser les ouvertures de tickets anonymes (collecteur)</label>
-            <label class="glpi-switch">
+            <label class="glping-switch">
                 <input id="as-anon-tickets" type="checkbox" @bind="_model.AllowAnonymousTicketCreation" />
-                <span class="glpi-switch-slider"></span>
+                <span class="glping-switch-slider"></span>
             </label>
         </div>
 
-        <div class="glpi-config-field checkbox">
+        <div class="glping-config-field checkbox">
             <label for="as-anon-followups">Autoriser les suivis anonymes (collecteur)</label>
-            <label class="glpi-switch">
+            <label class="glping-switch">
                 <input id="as-anon-followups" type="checkbox" @bind="_model.AllowAnonymousFollowups" />
-                <span class="glpi-switch-slider"></span>
+                <span class="glping-switch-slider"></span>
             </label>
         </div>
 
-        <div class="glpi-config-divider">
+        <div class="glping-config-divider">
             <span><i class="ti ti-flag"></i> Matrice de priorité</span>
         </div>
 
         <p class="hint" style="margin-left:0;">Priorité = f(urgence, impact). Cliquez sur les niveaux pour les activer/désactiver (le niveau "Moyenne" reste toujours actif).</p>
 
         <div style="overflow-x:auto;">
-            <table class="glpi-priority-matrix">
+            <table class="glping-priority-matrix">
                 <thead>
                     <tr>
                         <th></th>
@@ -173,7 +173,7 @@ else
                             {
                                 var key = $"{urgency.Value}_{impact.Value}";
                                 var priority = _model.PriorityMatrix.GetValueOrDefault(key, 3);
-                                <td class="glpi-priority-@priority">
+                                <td class="glping-priority-@priority">
                                     <select @bind="_model.PriorityMatrix[key]">
                                         @foreach (var p in Levels)
                                         {
@@ -188,7 +188,7 @@ else
             </table>
         </div>
 
-        <button type="submit" class="glpi-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
     </EditForm>
 }
 

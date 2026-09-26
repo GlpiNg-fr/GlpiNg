@@ -12,48 +12,48 @@
 
 <div class="row">
     <div class="col-md-6">
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Champ de l'identifiant</label>
             <input class="form-control" @bind="Server.LoginField" />
         </div>
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Filtre de connexion (optionnel)</label>
             <textarea class="form-control" rows="2" @bind="Server.LoginFilter"
-                      placeholder="(memberOf=cn=glpi-users,ou=groups,dc=example,dc=com)"></textarea>
+                      placeholder="(memberOf=cn=glping-users,ou=groups,dc=example,dc=com)"></textarea>
         </div>
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Champ de synchronisation (optionnel)</label>
             <input class="form-control" @bind="Server.SyncField" placeholder="objectguid" />
         </div>
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Nom de famille</label>
             <input class="form-control" @bind="Server.LastNameField" placeholder="sn" />
         </div>
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Prénom</label>
             <input class="form-control" @bind="Server.FirstNameField" placeholder="givenname" />
         </div>
     </div>
     <div class="col-md-6">
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Nom affiché</label>
             <input class="form-control" @bind="Server.DisplayNameField" placeholder="displayname" />
             <div class="form-hint">Vide : reconstitué à partir du prénom et du nom.</div>
         </div>
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Courriel</label>
             <input class="form-control" @bind="Server.EmailField" placeholder="mail" />
         </div>
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Téléphone</label>
             <input class="form-control" @bind="Server.PhoneField" placeholder="telephonenumber" />
         </div>
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Téléphone mobile</label>
             <input class="form-control" @bind="Server.MobileField" placeholder="mobile" />
             <div class="form-hint">Utilisé si le téléphone fixe est absent.</div>
         </div>
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Localisation</label>
             <input class="form-control" @bind="Server.LocationField" placeholder="physicaldeliveryofficename" />
         </div>
@@ -62,13 +62,13 @@
 
 <div class="row">
     <div class="col-md-6">
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Titre</label>
             <input class="form-control" @bind="Server.TitleField" placeholder="title" />
         </div>
     </div>
     <div class="col-md-6">
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Commentaires</label>
             <input class="form-control" @bind="Server.CommentField" placeholder="description" />
         </div>

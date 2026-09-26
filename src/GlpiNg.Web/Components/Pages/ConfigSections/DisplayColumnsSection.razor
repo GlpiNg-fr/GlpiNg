@@ -10,31 +10,31 @@
 }
 else
 {
-    <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glpi-config-form">
+    <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
         <p class="hint" style="margin-left:0;">
             Colonnes affichées par défaut dans les listes, par type d'objet. GLPI propose ce
             réglage pour une centaine de types ; GlpiNg le limite aux types déjà présents dans
             l'application ou son menu.
         </p>
 
-        <div class="glpi-itemtype-columns">
+        <div class="glping-itemtype-columns">
             @foreach (var (itemType, label) in DisplayColumnsSettings.ItemTypes)
             {
                 var selected = _model.ColumnsByItemType.TryGetValue(itemType, out var cols) ? cols : [];
-                <div class="glpi-itemtype-columns-row">
+                <div class="glping-itemtype-columns-row">
                     <div class="itemtype-label">@label</div>
-                    <div class="glpi-switch-grid" style="margin:0;">
+                    <div class="glping-switch-grid" style="margin:0;">
                         @foreach (var (columnKey, columnLabel) in DisplayColumnsSettings.AvailableColumns)
                         {
                             @* L'identifiant porte le type d'objet : la même colonne est proposée
                                sur chaque ligne, et un id répété rendrait le libellé de la première
                                ligne cliquable pour toutes les autres. *@
                             var inputId = $"cols-{itemType}-{columnKey}";
-                            <div class="glpi-switch-grid-item">
-                                <label class="glpi-switch">
+                            <div class="glping-switch-grid-item">
+                                <label class="glping-switch">
                                     <input id="@inputId" type="checkbox" checked="@selected.Contains(columnKey)"
                                            @onchange="e => Toggle(itemType, columnKey, (bool)e.Value!)" />
-                                    <span class="glpi-switch-slider"></span>
+                                    <span class="glping-switch-slider"></span>
                                 </label>
                                 <label for="@inputId">@columnLabel</label>
                             </div>
@@ -44,7 +44,7 @@ else
             }
         </div>
 
-        <button type="submit" class="glpi-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
     </EditForm>
 }
 

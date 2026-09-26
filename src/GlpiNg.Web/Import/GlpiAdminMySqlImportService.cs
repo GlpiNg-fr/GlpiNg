@@ -436,7 +436,7 @@ public class GlpiAdminMySqlImportService(GlpiNgDbContext db, SettingsCacheServic
             {
                 rows.Add(new GlpiUserRow(
                     reader.GetInt32("id"),
-                    reader.IsDBNull(reader.GetOrdinal("name")) ? $"glpi-{reader.GetInt32("id")}" : reader.GetString("name"),
+                    reader.IsDBNull(reader.GetOrdinal("name")) ? $"glping-{reader.GetInt32("id")}" : reader.GetString("name"),
                     ReadNullableString(reader, "realname"),
                     ReadNullableString(reader, "firstname"),
                     ReadNullableString(reader, "phone"),

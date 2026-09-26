@@ -10,11 +10,11 @@
 }
 else
 {
-    <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glpi-config-form">
+    <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
         <p class="hint" style="margin-left:0;">Délai de conservation avant purge définitive, par type d'entrée d'historique.</p>
 
-        <div class="glpi-config-table-wrap" style="max-width:100%;">
-            <table class="glpi-config-table">
+        <div class="glping-config-table-wrap" style="max-width:100%;">
+            <table class="glping-config-table">
                 <thead>
                     <tr>
                         <th>Type d'entrée</th>
@@ -40,7 +40,7 @@ else
             </table>
         </div>
 
-        <button type="submit" class="glpi-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
     </EditForm>
 }
 

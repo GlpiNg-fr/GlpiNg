@@ -2,11 +2,11 @@
 
 <div class="row">
     <div class="col-md-6">
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Nom</label>
             <input class="form-control" @bind="Profile.Name" @bind:event="oninput" @bind:after="NotifyChangedAsync" />
         </div>
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Profil par défaut pour les nouveaux comptes</label>
             <select class="form-select" value="@(Profile.IsDefault ? "true" : "false")" @onchange="@(e => Profile.IsDefault = e.Value?.ToString() == "true")">
                 <option value="false">Non</option>
@@ -15,7 +15,7 @@
         </div>
     </div>
     <div class="col-md-6">
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Commentaires</label>
             <textarea class="form-control" rows="4" @bind="Profile.Comment"></textarea>
         </div>

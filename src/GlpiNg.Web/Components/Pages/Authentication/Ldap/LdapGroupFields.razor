@@ -6,7 +6,7 @@
 
 <div class="row">
     <div class="col-md-6">
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Synchroniser les groupes à la connexion</label>
             <select class="form-select" value="@(Server.SynchronizeGroups ? "true" : "false")"
                     @onchange="@(e => Server.SynchronizeGroups = e.Value?.ToString() == "true")">
@@ -19,7 +19,7 @@
             </div>
         </div>
 
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Rechercher dans</label>
             <select class="form-select" value="@Server.GroupSearchType"
                     @onchange="@(e => Server.GroupSearchType = Enum.Parse<LdapGroupSearchType>((string)e.Value!))"
@@ -30,7 +30,7 @@
             </select>
         </div>
 
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Attribut des utilisateurs contenant les groupes</label>
             <input class="form-control" @bind="Server.GroupMemberOfField" placeholder="memberof"
                    disabled="@(!Server.SynchronizeGroups || Server.GroupSearchType == LdapGroupSearchType.InGroups)" />
@@ -38,25 +38,25 @@
     </div>
 
     <div class="col-md-6">
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Filtre de recherche des groupes</label>
             <textarea class="form-control" rows="2" @bind="Server.GroupFilter" placeholder="(objectClass=groupOfNames)"
                       disabled="@(!Server.SynchronizeGroups || Server.GroupSearchType == LdapGroupSearchType.InUsers)"></textarea>
         </div>
 
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Attribut du nom du groupe</label>
             <input class="form-control" @bind="Server.GroupNameField" placeholder="cn"
                    disabled="@(!Server.SynchronizeGroups)" />
         </div>
 
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Attribut des membres du groupe</label>
             <input class="form-control" @bind="Server.GroupMemberField" placeholder="member"
                    disabled="@(!Server.SynchronizeGroups || Server.GroupSearchType == LdapGroupSearchType.InUsers)" />
         </div>
 
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Utiliser le DN dans la recherche</label>
             <select class="form-select" value="@(Server.UseDnForGroupSearch ? "true" : "false")"
                     @onchange="@(e => Server.UseDnForGroupSearch = e.Value?.ToString() == "true")"

@@ -18,38 +18,38 @@
 }
 else
 {
-    <div class="glpi-config">
-        <div class="glpi-config-body">
-            <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glpi-config-form">
-                <div class="glpi-config-field checkbox">
+    <div class="glping-config">
+        <div class="glping-config-body">
+            <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
+                <div class="glping-config-field checkbox">
                     <label for="notif-use">Activer les notifications</label>
-                    <label class="glpi-switch">
+                    <label class="glping-switch">
                         <input id="notif-use" type="checkbox" @bind="_model.UseNotifications" />
-                        <span class="glpi-switch-slider"></span>
+                        <span class="glping-switch-slider"></span>
                     </label>
                 </div>
 
-                <div class="glpi-config-field checkbox">
+                <div class="glping-config-field checkbox">
                     <label for="notif-mailing">Activer l'envoi par e-mail</label>
-                    <label class="glpi-switch">
+                    <label class="glping-switch">
                         <input id="notif-mailing" type="checkbox" @bind="_model.MailingEnabled" />
-                        <span class="glpi-switch-slider"></span>
+                        <span class="glping-switch-slider"></span>
                     </label>
                 </div>
 
-                <div class="glpi-fiche-block-title mt-3"><i class="ti ti-server-2"></i>Serveur SMTP</div>
+                <div class="glping-fiche-block-title mt-3"><i class="ti ti-server-2"></i>Serveur SMTP</div>
 
-                <div class="glpi-config-field">
+                <div class="glping-config-field">
                     <label for="notif-host">Serveur</label>
-                    <input id="notif-host" class="glpi-config-input-sm" @bind="_model.SmtpHost" placeholder="smtp.example.com" />
+                    <input id="notif-host" class="glping-config-input-sm" @bind="_model.SmtpHost" placeholder="smtp.example.com" />
                 </div>
 
-                <div class="glpi-config-field">
+                <div class="glping-config-field">
                     <label for="notif-port">Port</label>
-                    <input id="notif-port" type="number" class="glpi-config-input-sm" @bind="_model.SmtpPort" />
+                    <input id="notif-port" type="number" class="glping-config-input-sm" @bind="_model.SmtpPort" />
                 </div>
 
-                <div class="glpi-config-field">
+                <div class="glping-config-field">
                     <label for="notif-enc">Chiffrement</label>
                     <select id="notif-enc" @bind="_model.Encryption">
                         <option value="@SmtpEncryptionMode.None">Aucun</option>
@@ -58,52 +58,52 @@ else
                     </select>
                 </div>
 
-                <div class="glpi-config-field checkbox">
+                <div class="glping-config-field checkbox">
                     <label for="notif-auth">Authentification requise</label>
-                    <label class="glpi-switch">
+                    <label class="glping-switch">
                         <input id="notif-auth" type="checkbox" @bind="_model.RequiresAuthentication" />
-                        <span class="glpi-switch-slider"></span>
+                        <span class="glping-switch-slider"></span>
                     </label>
                 </div>
 
                 @if (_model.RequiresAuthentication)
                 {
-                    <div class="glpi-config-field">
+                    <div class="glping-config-field">
                         <label for="notif-user">Utilisateur SMTP</label>
-                        <input id="notif-user" class="glpi-config-input-sm" @bind="_model.SmtpUsername" />
+                        <input id="notif-user" class="glping-config-input-sm" @bind="_model.SmtpUsername" />
                     </div>
 
-                    <div class="glpi-config-field">
+                    <div class="glping-config-field">
                         <label for="notif-pass">Mot de passe SMTP</label>
-                        <input id="notif-pass" type="password" class="glpi-config-input-sm" @bind="_smtpPasswordPlain"
+                        <input id="notif-pass" type="password" class="glping-config-input-sm" @bind="_smtpPasswordPlain"
                                placeholder="@(string.IsNullOrEmpty(_model.SmtpPasswordProtected) ? "" : "Laisser vide pour conserver le mot de passe actuel")" />
                     </div>
                 }
 
-                <div class="glpi-fiche-block-title mt-3"><i class="ti ti-send"></i>Expéditeur</div>
+                <div class="glping-fiche-block-title mt-3"><i class="ti ti-send"></i>Expéditeur</div>
 
-                <div class="glpi-config-field">
+                <div class="glping-config-field">
                     <label for="notif-sender-email">Adresse d'expédition</label>
-                    <input id="notif-sender-email" type="email" class="glpi-config-input-sm" @bind="_model.SenderEmail" placeholder="glpi@example.com" />
+                    <input id="notif-sender-email" type="email" class="glping-config-input-sm" @bind="_model.SenderEmail" placeholder="glpi@example.com" />
                 </div>
 
-                <div class="glpi-config-field">
+                <div class="glping-config-field">
                     <label for="notif-sender-name">Nom d'expéditeur</label>
-                    <input id="notif-sender-name" class="glpi-config-input-sm" @bind="_model.SenderName" />
+                    <input id="notif-sender-name" class="glping-config-input-sm" @bind="_model.SenderName" />
                 </div>
 
-                <div class="glpi-config-field">
+                <div class="glping-config-field">
                     <label for="notif-reply-to">Adresse de réponse (optionnel)</label>
-                    <input id="notif-reply-to" type="email" class="glpi-config-input-sm" @bind="_model.ReplyToEmail" />
+                    <input id="notif-reply-to" type="email" class="glping-config-input-sm" @bind="_model.ReplyToEmail" />
                 </div>
 
-                <button type="submit" class="glpi-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+                <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
             </EditForm>
 
-            <div class="glpi-fiche-block-title mt-4"><i class="ti ti-mail-forward"></i>Tester l'envoi</div>
-            <div class="glpi-config-field">
+            <div class="glping-fiche-block-title mt-4"><i class="ti ti-mail-forward"></i>Tester l'envoi</div>
+            <div class="glping-config-field">
                 <label for="notif-test-email">Adresse de test</label>
-                <input id="notif-test-email" type="email" class="glpi-config-input-sm" @bind="_testEmail" placeholder="vous@example.com" />
+                <input id="notif-test-email" type="email" class="glping-config-input-sm" @bind="_testEmail" placeholder="vous@example.com" />
             </div>
             <button type="button" class="btn btn-outline-primary" disabled="@(_isTesting || string.IsNullOrWhiteSpace(_testEmail))" @onclick="SendTestAsync">
                 <i class="ti ti-send me-1"></i>@(_isTesting ? "Envoi…" : "Envoyer un e-mail de test")

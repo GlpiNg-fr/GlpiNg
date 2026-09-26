@@ -4,9 +4,9 @@
 
 <PageTitle>Actions automatiques — GlpiNg</PageTitle>
 
-<div class="glpi-list-page">
+<div class="glping-list-page">
 <div class="card">
-    <div class="card-header d-flex align-items-center justify-content-between glpi-list-toolbar">
+    <div class="card-header d-flex align-items-center justify-content-between glping-list-toolbar">
         <span class="fw-semibold">@_rows.Count action(s)</span>
         <div class="btn-list align-items-center">
             <button type="button" class="btn btn-icon" @onclick="LoadAsync" title="Rafraîchir">
@@ -61,9 +61,9 @@
                                 }
                             </td>
                             <td>
-                                <label class="glpi-switch">
+                                <label class="glping-switch">
                                     <input type="checkbox" checked="@row.State.IsEnabled" @onchange="() => ToggleEnabledAsync(row)" />
-                                    <span class="glpi-switch-slider"></span>
+                                    <span class="glping-switch-slider"></span>
                                 </label>
                             </td>
                             <td>

@@ -6,35 +6,35 @@
 
 <PageTitle>Connexion — GlpiNg</PageTitle>
 
-<div class="glpi-login">
-    <div class="glpi-login-card">
-        <div class="glpi-login-brand">
+<div class="glping-login">
+    <div class="glping-login-card">
+        <div class="glping-login-brand">
             <i class="ti ti-server-2"></i>
             <span>GlpiNg</span>
         </div>
 
         @if (!string.IsNullOrWhiteSpace(_general?.LoginPageMessage))
         {
-            <p class="glpi-login-message">@_general.LoginPageMessage</p>
+            <p class="glping-login-message">@_general.LoginPageMessage</p>
         }
 
-        <form method="post" action="/Account/Login" class="glpi-login-form">
+        <form method="post" action="/Account/Login" class="glping-login-form">
             <AntiforgeryToken />
             <input type="hidden" name="returnUrl" value="@ReturnUrl" />
 
-            <div class="glpi-login-field">
+            <div class="glping-login-field">
                 <label for="userName">Nom d'utilisateur</label>
                 <input id="userName" name="userName" autocomplete="username" required autofocus />
             </div>
 
-            <div class="glpi-login-field">
+            <div class="glping-login-field">
                 <label for="password">Mot de passe</label>
                 <input id="password" name="password" type="password" autocomplete="current-password" required />
             </div>
 
             @if (_general?.ShowAuthSourcesOnLoginPage == true && _ldapServers.Count > 0)
             {
-                <div class="glpi-login-field">
+                <div class="glping-login-field">
                     <label for="authSource">Source d'authentification</label>
                     @* « Automatique » en premier, donc sélectionné par défaut : la valeur vide ne
                        poste rien, et le serveur enchaîne mot de passe local puis annuaires. Avec
@@ -54,13 +54,13 @@
 
             @if (_general is null || _general.RememberMeDuration > 0)
             {
-                <div class="glpi-login-field checkbox">
+                <div class="glping-login-field checkbox">
                     <input id="rememberMe" name="rememberMe" type="checkbox" value="true" checked="@(_general?.RememberMeDefaultChecked ?? true)" />
                     <label for="rememberMe">Se souvenir de moi</label>
                 </div>
             }
 
-            <button type="submit" class="glpi-login-submit">Se connecter</button>
+            <button type="submit" class="glping-login-submit">Se connecter</button>
         </form>
     </div>
 </div>

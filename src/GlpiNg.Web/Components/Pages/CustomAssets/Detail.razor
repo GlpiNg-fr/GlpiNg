@@ -13,7 +13,7 @@
 }
 else
 {
-    <div class="glpi-fiche">
+    <div class="glping-fiche">
         <div class="card">
             <div class="card-header d-flex align-items-center justify-content-between">
                 <h3 class="card-title mb-0">
@@ -53,15 +53,15 @@ else
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6">
-                        <div class="glpi-fiche-field">
+                        <div class="glping-fiche-field">
                             <label>Libellé au singulier</label>
                             <input class="form-control" @bind="_definition.LabelSingular" />
                         </div>
-                        <div class="glpi-fiche-field">
+                        <div class="glping-fiche-field">
                             <label>Libellé au pluriel</label>
                             <input class="form-control" @bind="_definition.LabelPlural" />
                         </div>
-                        <div class="glpi-fiche-field">
+                        <div class="glping-fiche-field">
                             <label>Nom technique</label>
                             <input class="form-control" value="@_definition.SystemName" disabled />
                             <p class="hint">
@@ -70,7 +70,7 @@ else
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="glpi-fiche-field">
+                        <div class="glping-fiche-field">
                             <label>Icône</label>
                             <div class="d-flex align-items-center gap-2">
                                 <i class="ti @_definition.Icon fs-2"></i>
@@ -82,7 +82,7 @@ else
                                 </select>
                             </div>
                         </div>
-                        <div class="glpi-fiche-field">
+                        <div class="glping-fiche-field">
                             <label>Actif</label>
                             <select class="form-select" value="@(_definition.IsActive ? "true" : "false")"
                                     @onchange="@(e => _definition.IsActive = e.Value?.ToString() == "true")">
@@ -90,7 +90,7 @@ else
                                 <option value="false">Non</option>
                             </select>
                         </div>
-                        <div class="glpi-fiche-field">
+                        <div class="glping-fiche-field">
                             <label>Commentaires</label>
                             <textarea class="form-control" rows="2" @bind="_definition.Comment"></textarea>
                         </div>
@@ -143,7 +143,7 @@ else
 
                 @if (_fields.Count == 0)
                 {
-                    <div class="glpi-config-placeholder">
+                    <div class="glping-config-placeholder">
                         <i class="ti ti-forms"></i>
                         <p class="mb-0">Aucun champ : les actifs de ce type n'auront qu'un nom et un commentaire.</p>
                     </div>

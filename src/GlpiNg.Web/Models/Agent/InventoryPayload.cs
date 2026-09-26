@@ -61,7 +61,7 @@ public class FlexibleBoolConverter : JsonConverter<bool?>
 
 /// <summary>
 /// Requête "inventory" du protocole JSON GLPI-Agent.
-/// Référence: https://glpi-json-protocol.readthedocs.io/en/latest/inventory.html
+/// Référence: https://glping-json-protocol.readthedocs.io/en/latest/inventory.html
 /// et https://github.com/glpi-project/inventory_format (inventory.schema.json)
 /// </summary>
 public class InventoryRequest

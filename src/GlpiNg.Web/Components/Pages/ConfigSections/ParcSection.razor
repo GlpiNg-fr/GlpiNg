@@ -15,9 +15,9 @@ else
        la carte contient, et reste donc accessible sans la déplier. *@
     <CardExpander Title="Module Inventaire" Icon="ti-box" Expanded="false">
         <HeaderActions>
-            <label class="glpi-switch" title="Activer ou désactiver tout le module Inventaire">
+            <label class="glping-switch" title="Activer ou désactiver tout le module Inventaire">
                 <input type="checkbox" checked="@_moduleEnabled" @onchange="OnModuleMasterToggled" />
-                <span class="glpi-switch-slider"></span>
+                <span class="glping-switch-slider"></span>
             </label>
         </HeaderActions>
         <ChildContent>
@@ -25,20 +25,20 @@ else
         </ChildContent>
     </CardExpander>
 
-    <div class="glpi-config-divider">
+    <div class="glping-config-divider">
         <span><i class="ti ti-box"></i> Réglages du parc</span>
     </div>
 
-    <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glpi-config-form">
-        <div class="glpi-config-field checkbox">
+    <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
+        <div class="glping-config-field checkbox">
             <label for="parc-infocoms">Activer les informations financières et administratives par défaut</label>
-            <label class="glpi-switch">
+            <label class="glping-switch">
                 <input id="parc-infocoms" type="checkbox" @bind="_model.AutoCreateFinancialInfo" />
-                <span class="glpi-switch-slider"></span>
+                <span class="glping-switch-slider"></span>
             </label>
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="parc-monitors-restrict">Restreindre la gestion des moniteurs</label>
             <select id="parc-monitors-restrict" @bind="_model.MonitorsManagementRestrict">
                 <option value="0">Oui - Restreint à la gestion unitaire</option>
@@ -47,7 +47,7 @@ else
             </select>
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="parc-peripherals-restrict">Restreindre la gestion des périphériques</label>
             <select id="parc-peripherals-restrict" @bind="_model.PeripheralsManagementRestrict">
                 <option value="0">Oui - Restreint à la gestion unitaire</option>
@@ -56,7 +56,7 @@ else
             </select>
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="parc-phones-restrict">Restreindre la gestion des téléphones</label>
             <select id="parc-phones-restrict" @bind="_model.PhonesManagementRestrict">
                 <option value="0">Oui - Restreint à la gestion unitaire</option>
@@ -65,7 +65,7 @@ else
             </select>
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="parc-printers-restrict">Restreindre la gestion des imprimantes</label>
             <select id="parc-printers-restrict" @bind="_model.PrintersManagementRestrict">
                 <option value="0">Oui - Restreint à la gestion unitaire</option>
@@ -74,7 +74,7 @@ else
             </select>
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="parc-autoname">Champs automatiques (marqués par *)</label>
             <select id="parc-autoname" @bind="_model.AutonameScope">
                 <option value="0">Global</option>
@@ -82,7 +82,7 @@ else
             </select>
         </div>
 
-        <button type="submit" class="glpi-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
     </EditForm>
 }
 

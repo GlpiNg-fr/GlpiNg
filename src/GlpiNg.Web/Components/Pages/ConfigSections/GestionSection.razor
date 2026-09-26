@@ -15,9 +15,9 @@ else
        la carte contient, et reste donc accessible sans la déplier. *@
     <CardExpander Title="Module Gestion" Icon="ti-wallet" Expanded="false">
         <HeaderActions>
-            <label class="glpi-switch" title="Activer ou désactiver tout le module Gestion">
+            <label class="glping-switch" title="Activer ou désactiver tout le module Gestion">
                 <input type="checkbox" checked="@_moduleEnabled" @onchange="OnModuleMasterToggled" />
-                <span class="glpi-switch-slider"></span>
+                <span class="glping-switch-slider"></span>
             </label>
         </HeaderActions>
         <ChildContent>
@@ -25,17 +25,17 @@ else
         </ChildContent>
     </CardExpander>
 
-    <div class="glpi-config-divider">
+    <div class="glping-config-divider">
         <span><i class="ti ti-wallet"></i> Réglages de gestion</span>
     </div>
 
-    <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glpi-config-form">
-        <div class="glpi-config-field">
+    <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
+        <div class="glping-config-field">
             <label for="ge-doc-size">Taille maximale des documents (Mio)</label>
-            <input id="ge-doc-size" type="number" min="1" class="glpi-config-input-sm" @bind="_model.DocumentMaxSizeMib" />
+            <input id="ge-doc-size" type="number" min="1" class="glping-config-input-sm" @bind="_model.DocumentMaxSizeMib" />
         </div>
 
-        <button type="submit" class="glpi-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
     </EditForm>
 }
 
