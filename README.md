@@ -189,11 +189,11 @@ pages qui s'ouvrent depuis le menu mais répondent 404 quand on colle leur adres
   Darker, Midnight, Light Blue, Vintage, Ice Cream —, reprises de ses sources
   (`css/palettes/_*.scss`), et le **contraste élevé**. Darker et Midnight sont de
   vrais thèmes sombres (mode sombre de Tabler) ; « Dark », comme chez GLPI, garde
-  des pages claires sous un menu très sombre. `App.razor` pose `data-glpi-theme`,
-  `data-bs-theme` et `data-glpi-contrast` sur `<html>` au rendu serveur, donc sans
+  des pages claires sous un menu très sombre. `App.razor` pose `data-glping-theme`,
+  `data-bs-theme` et `data-glping-contrast` sur `<html>` au rendu serveur, donc sans
   flash au chargement ; la page de connexion prend la palette de l'instance.
-  Toutes les couleurs de `glpi-theme.css` passent par des jetons (`--glpi-surface`,
-  `--glpi-text`, `--glpi-border`…) que les palettes et le mode sombre redéfinissent.
+  Toutes les couleurs de `glping-theme.css` passent par des jetons (`--glping-surface`,
+  `--glping-text`, `--glping-border`…) que les palettes et le mode sombre redéfinissent.
   Les séries des graphiques et du planning ont leur variante sombre, validée comme
   la claire (lisibles par les daltoniens).
 - Sources d'authentification externes : annuaires LDAP (CRUD sous
@@ -473,7 +473,7 @@ changements, sur une période prédéfinie ou libre :
   en cours par statut. Au-delà de dix lignes, le reste est regroupé sous « Autres ».
 
 Les calculs vivent dans `Services/ItilStatistics` ; le graphique est un SVG dessiné
-à la largeur mesurée de sa carte (`glpiNg.observeWidth`), sans bibliothèque. Seuls
+à la largeur mesurée de sa carte (`glping.observeWidth`), sans bibliothèque. Seuls
 les objets du périmètre d'entités de l'utilisateur sont comptés.
 
 Limites : pas de statistiques par demandeur ni par groupe, pas d'export, pas de

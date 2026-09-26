@@ -3,9 +3,9 @@
 
 <PageTitle>Tableau de bord — GlpiNg</PageTitle>
 
-<div class="page-header glpi-dashboard-header mb-3">
+<div class="page-header glping-dashboard-header mb-3">
     <h2 class="page-title mb-0">Tableau de bord</h2>
-    <div class="glpi-dashboard-header-actions">
+    <div class="glping-dashboard-header-actions">
         @if (_isEditMode)
         {
             <select class="form-select w-auto" disabled="@(AvailableCards.Count == 0)" @bind="_selectedCardKeyToAdd">
@@ -39,8 +39,8 @@
     {
         var index = i;
         var card = _cards[i];
-        <div class="glpi-dashboard-card-col">
-            <div class="card glpi-dashboard-card @(_draggedIndex == index ? "dragging" : "")"
+        <div class="glping-dashboard-card-col">
+            <div class="card glping-dashboard-card @(_draggedIndex == index ? "dragging" : "")"
                  draggable="@_isEditMode"
                  @ondragstart="() => OnCardDragStart(index)"
                  @ondragend="OnCardDragEnd"
@@ -54,7 +54,7 @@
                     <div class="d-flex align-items-center">
                         @if (_isEditMode)
                         {
-                            <span class="glpi-dashboard-drag-handle" title="Glisser pour réorganiser">
+                            <span class="glping-dashboard-drag-handle" title="Glisser pour réorganiser">
                                 <i class="ti ti-grip-vertical"></i>
                             </span>
                         }

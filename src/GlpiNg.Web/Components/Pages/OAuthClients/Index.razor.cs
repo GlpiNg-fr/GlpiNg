@@ -131,7 +131,7 @@ public partial class Index : ComponentBase
 
         _newClient = NewBlankClient();
 
-        await JS.InvokeVoidAsync("glpiNg.hideModal", "newOAuthClientModal");
+        await JS.InvokeVoidAsync("glping.hideModal", "newOAuthClientModal");
         await LoadAsync();
 
         _revealSecret = plainSecret;
@@ -141,7 +141,7 @@ public partial class Index : ComponentBase
     {
         if (_revealSecret is not null)
         {
-            await JS.InvokeVoidAsync("glpiNg.copyToClipboard", _revealSecret);
+            await JS.InvokeVoidAsync("glping.copyToClipboard", _revealSecret);
         }
     }
 

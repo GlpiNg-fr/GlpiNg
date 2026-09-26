@@ -22,11 +22,11 @@
 }
 else
 {
-    <EditForm Model="this" OnValidSubmit="SaveAsync" class="glpi-config-form">
-        <div class="glpi-config-field">
+    <EditForm Model="this" OnValidSubmit="SaveAsync" class="glping-config-form">
+        <div class="glping-config-field">
             <label for="cron-interval">Intervalle d'exécution du service cron (minutes)</label>
             <input id="cron-interval" type="number" min="@CronIntervalState.MinMinutes" max="@CronIntervalState.MaxMinutes"
-                   class="glpi-config-input-sm" @bind="_intervalMinutes" />
+                   class="glping-config-input-sm" @bind="_intervalMinutes" />
         </div>
         <p class="hint">
             Fréquence à laquelle le service principal exécute ses tâches planifiées (purge de
@@ -34,9 +34,9 @@ else
             redémarrage.
         </p>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="storage-root">Emplacement de stockage des fichiers</label>
-            <input id="storage-root" class="glpi-config-input" @bind="_storageRootPath"
+            <input id="storage-root" class="glping-config-input" @bind="_storageRootPath"
                    placeholder="@_defaultRootHint" />
         </div>
         <p class="hint">
@@ -57,7 +57,7 @@ else
         @* Les chemins effectifs sont affichés parce que plusieurs sources peuvent les décider —
            valeur configurée, défaut, et pour les paquets un éventuel PackageStorage:RootPath
            hérité. Sans ça, « où sont mes fichiers » se répond en lisant le code. *@
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label>Emplacements effectifs (au dernier démarrage)</label>
             <ul class="mb-0">
                 <li><code>@StoragePaths.Root</code> — racine</li>
@@ -67,7 +67,7 @@ else
             </ul>
         </div>
 
-        <button type="submit" class="glpi-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
     </EditForm>
 }
 

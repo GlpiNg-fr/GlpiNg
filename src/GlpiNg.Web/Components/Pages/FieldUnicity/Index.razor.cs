@@ -130,7 +130,7 @@ public partial class Index : ComponentBase
 
         _newCriterion = NewBlankCriterion();
 
-        await JS.InvokeVoidAsync("glpiNg.hideModal", "newCriterionModal");
+        await JS.InvokeVoidAsync("glping.hideModal", "newCriterionModal");
         await LoadAsync();
     }
 

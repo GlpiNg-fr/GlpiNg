@@ -6,9 +6,9 @@
 
 <WebhooksTabStrip Current="queue" />
 
-<div class="glpi-list-page">
+<div class="glping-list-page">
 <div class="card">
-    <div class="card-header d-flex align-items-center justify-content-between glpi-list-toolbar">
+    <div class="card-header d-flex align-items-center justify-content-between glping-list-toolbar">
         <span class="fw-semibold">@_items.Count livraison(s)</span>
         <div class="btn-list align-items-center">
             <button type="button" class="btn btn-icon" @onclick="LoadAsync" title="Rafraîchir">
@@ -101,23 +101,23 @@
             </button>
         </div>
         <div class="card-body">
-            <div class="glpi-fiche-field">
+            <div class="glping-fiche-field">
                 <label>Cible</label>
-                <div class="glpi-fiche-value-box">@inspected.Method.ToString().ToUpperInvariant() @inspected.Url</div>
+                <div class="glping-fiche-value-box">@inspected.Method.ToString().ToUpperInvariant() @inspected.Url</div>
             </div>
 
             @if (!string.IsNullOrEmpty(inspected.HeadersJson))
             {
-                <div class="glpi-fiche-block-title mt-3"><i class="ti ti-list-details"></i>En-têtes supplémentaires</div>
+                <div class="glping-fiche-block-title mt-3"><i class="ti ti-list-details"></i>En-têtes supplémentaires</div>
                 <pre class="small mb-0" style="white-space: pre-wrap; word-break: break-all;">@FormatHeaders(inspected.HeadersJson)</pre>
             }
 
-            <div class="glpi-fiche-block-title mt-3"><i class="ti ti-code"></i>Corps envoyé</div>
+            <div class="glping-fiche-block-title mt-3"><i class="ti ti-code"></i>Corps envoyé</div>
             <pre class="small mb-0" style="white-space: pre-wrap; word-break: break-all;">@(inspected.Payload ?? "(aucun corps — méthode GET)")</pre>
 
             @if (!string.IsNullOrEmpty(inspected.ResponseBody))
             {
-                <div class="glpi-fiche-block-title mt-3"><i class="ti ti-arrow-back"></i>Réponse du destinataire</div>
+                <div class="glping-fiche-block-title mt-3"><i class="ti ti-arrow-back"></i>Réponse du destinataire</div>
                 <pre class="small mb-0" style="white-space: pre-wrap; word-break: break-all;">@inspected.ResponseBody</pre>
             }
             else

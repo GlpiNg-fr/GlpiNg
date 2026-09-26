@@ -13,7 +13,7 @@
 }
 else
 {
-    <div class="glpi-fiche">
+    <div class="glping-fiche">
         <div class="card">
             <div class="card-header d-flex align-items-center justify-content-between">
                 <h3 class="card-title mb-0">
@@ -42,11 +42,11 @@ else
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6">
-                        <div class="glpi-fiche-field">
+                        <div class="glping-fiche-field">
                             <label>Nom</label>
                             <input class="form-control" @bind="_criterion.Name" />
                         </div>
-                        <div class="glpi-fiche-field">
+                        <div class="glping-fiche-field">
                             <label>Type d'objet</label>
                             <select class="form-select" value="@_criterion.ItemType" @onchange="OnItemTypeChanged">
                                 @foreach ((string itemType, string label) in FieldUnicityCatalog.ItemTypes)
@@ -55,7 +55,7 @@ else
                                 }
                             </select>
                         </div>
-                        <div class="glpi-fiche-field">
+                        <div class="glping-fiche-field">
                             <label>Sous-entités visibles</label>
                             <select class="form-select" value="@(_criterion.IsRecursive ? "true" : "false")"
                                     @onchange="@(e => _criterion.IsRecursive = e.Value?.ToString() == "true")">
@@ -65,7 +65,7 @@ else
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="glpi-fiche-field">
+                        <div class="glping-fiche-field">
                             <label>Actif</label>
                             <select class="form-select" value="@(_criterion.IsActive ? "true" : "false")"
                                     @onchange="@(e => _criterion.IsActive = e.Value?.ToString() == "true")">
@@ -73,7 +73,7 @@ else
                                 <option value="false">Non</option>
                             </select>
                         </div>
-                        <div class="glpi-fiche-field">
+                        <div class="glping-fiche-field">
                             <label>Commentaires</label>
                             <textarea class="form-control" rows="3" @bind="_criterion.Comment"></textarea>
                         </div>

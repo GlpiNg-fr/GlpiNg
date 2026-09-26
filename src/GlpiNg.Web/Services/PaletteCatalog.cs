@@ -6,7 +6,7 @@ public sealed record PalettePreview(string MenuBg, string MenuFg, string Accent,
 /// <summary>
 /// Les palettes de couleur proposées (« Palette de couleur » de GLPI) : leur libellé, tel que le
 /// stockent la configuration (DefaultValuesSettings) et le compte (GlpiUser), leur clé CSS (voir
-/// glpi-theme.css, qui les définit sous <c>data-glpi-theme</c>), et de quoi en dessiner un aperçu.
+/// glping-theme.css, qui les définit sous <c>data-glping-theme</c>), et de quoi en dessiner un aperçu.
 /// Un seul endroit, pour que la liste des Valeurs par défaut, les vignettes des préférences et la
 /// résolution des préférences ne divergent jamais.
 /// </summary>
@@ -26,7 +26,7 @@ public static class PaletteCatalog
 
     /// <summary>
     /// Couleurs des aperçus : fond et texte du menu, accent, primaire, texte sur la primaire et fond
-    /// de page. Mêmes valeurs que glpi-theme.css — un aperçu qui mentirait sur la palette serait
+    /// de page. Mêmes valeurs que glping-theme.css — un aperçu qui mentirait sur la palette serait
     /// pire que pas d'aperçu.
     /// </summary>
     public static readonly IReadOnlyDictionary<string, PalettePreview> Previews = new Dictionary<string, PalettePreview>

@@ -90,7 +90,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
     {
         if (_client is not null)
         {
-            await JS.InvokeVoidAsync("glpiNg.copyToClipboard", _client.ClientId);
+            await JS.InvokeVoidAsync("glping.copyToClipboard", _client.ClientId);
         }
     }
 
@@ -98,7 +98,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
     {
         if (_revealSecret is not null)
         {
-            await JS.InvokeVoidAsync("glpiNg.copyToClipboard", _revealSecret);
+            await JS.InvokeVoidAsync("glping.copyToClipboard", _revealSecret);
         }
     }
 

@@ -145,10 +145,17 @@ and must never be converted. History and timelines go through `Display.Chronolog
 components, take `UserPreferenceValues` from `IUserPreferences`. History *texts* written at save
 time stay in a fixed format on purpose (shared by all readers).
 
-**Colors / themes**: `glpi-theme.css` must not hard-code neutral colors. Backgrounds, borders and
-text go through the tokens at the top of the file (`--glpi-surface`, `--glpi-surface-2/3`,
-`--glpi-border(-strong)`, `--glpi-text`, `--glpi-text-2`, `--glpi-text-muted`, `--glpi-text-faint`),
-primary-as-text through `--glpi-primary-text`, and text on a primary background through
+**Naming (front end)**: our own CSS classes, custom properties, `data-*` attributes, DOM ids and the
+JS global are prefixed `glping` (`glping-fiche`, `--glping-surface`, `data-glping-theme`,
+`window.glping`), never `glpi` — the project avoids using the GLPI name for its own identifiers.
+Names that belong to GLPI itself stay as they are, because they are wire or storage contracts:
+GLPI database tables (`glpi_users`...), the GLPI-Agent protocol (`GLPI-Agent-ID`, `_glpi_csrf_token`)
+and links to GLPI's sources.
+
+**Colors / themes**: `glping-theme.css` must not hard-code neutral colors. Backgrounds, borders and
+text go through the tokens at the top of the file (`--glping-surface`, `--glping-surface-2/3`,
+`--glping-border(-strong)`, `--glping-text`, `--glping-text-2`, `--glping-text-muted`, `--glping-text-faint`),
+primary-as-text through `--glping-primary-text`, and text on a primary background through
 `--tblr-primary-fg` — several GLPI palettes have a *light* primary. A hard-coded `#fff` background
 is what breaks the dark palettes (Darker, Midnight), which `App.razor` switches on via
 `data-bs-theme="dark"`.

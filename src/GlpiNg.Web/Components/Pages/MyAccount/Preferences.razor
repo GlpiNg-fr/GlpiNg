@@ -5,8 +5,8 @@
 
 <PageTitle>Préférences — GlpiNg</PageTitle>
 
-<div class="glpi-fiche-topbar">
-    <div class="glpi-fiche-crumb">
+<div class="glping-fiche-topbar">
+    <div class="glping-fiche-crumb">
         <i class="ti ti-adjustments"></i>
         <span>Préférences</span>
     </div>
@@ -15,18 +15,18 @@
 @* Même disposition que les fiches (ordinateur...) : une catégorie par onglet. Tous les onglets
    éditent le même formulaire — le bouton Sauvegarder enregistre l'ensemble, quel que soit
    l'onglet affiché, et changer d'onglet ne perd rien de ce qui a été modifié. *@
-<div class="glpi-fiche-layout">
-    <aside class="glpi-fiche-sidebar">
+<div class="glping-fiche-layout">
+    <aside class="glping-fiche-sidebar">
         @foreach ((string key, string icon, string label) in Tabs)
         {
-            <button type="button" class="glpi-fiche-tab-item @(_activeTab == key ? "active" : "")" @onclick="() => _activeTab = key">
+            <button type="button" class="glping-fiche-tab-item @(_activeTab == key ? "active" : "")" @onclick="() => _activeTab = key">
                 <i class="ti @icon"></i>
                 <span>@label</span>
             </button>
         }
     </aside>
 
-    <div class="glpi-fiche-panel glpi-fiche-panel-fill">
+    <div class="glping-fiche-panel glping-fiche-panel-fill">
         <p class="text-secondary small">
             Chaque réglage laissé sur « Réglage de l'instance » suit Configuration &gt; Valeurs par défaut,
             et en suivra les changements. La langue n'est pas proposée : GlpiNg n'existe qu'en français.
@@ -35,18 +35,18 @@
         @switch (_activeTab)
         {
             case "affichage":
-                <div class="glpi-fiche-block">
-                    <div class="glpi-fiche-block-title"><i class="ti ti-layout-sidebar"></i>Affichage</div>
+                <div class="glping-fiche-block">
+                    <div class="glping-fiche-block-title"><i class="ti ti-layout-sidebar"></i>Affichage</div>
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Réduire le menu latéral</label>
                                 <select class="form-select" value="@(_sidebarCollapsed ? "true" : "false")" @onchange="@(e => _sidebarCollapsed = e.Value?.ToString() == "true")">
                                     <option value="false">Non</option>
                                     <option value="true">Oui</option>
                                 </select>
                             </div>
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Éléments par page</label>
                                 <select class="form-select" value="@_itemsPerPage.ToString()"
                                         @onchange="@(e => _itemsPerPage = int.TryParse((string?)e.Value, out int size) ? size : 0)">
@@ -57,7 +57,7 @@
                                     }
                                 </select>
                             </div>
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Format des adresses MAC</label>
                                 <select class="form-select" value="@((int)_macAddressFormat)"
                                         @onchange="@(e => _macAddressFormat = int.TryParse((string?)e.Value, out int format) && Enum.IsDefined((MacAddressFormat)format) ? (MacAddressFormat)format : MacAddressFormat.Default)">
@@ -75,7 +75,7 @@
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Afficher les compteurs</label>
                                 <select class="form-select" value="@_showCounters" disabled="@CountersForbidden" @onchange="@(e => _showCounters = e.Value?.ToString() ?? string.Empty)">
                                     <option value="">Réglage de l'instance (@InstanceCountersLabel)</option>
@@ -87,7 +87,7 @@
                             {
                                 <p class="hint">L'instance les interdit à tous (« Jamais ») : ce choix ne peut pas être changé ici.</p>
                             }
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Afficher les ID</label>
                                 <select class="form-select" value="@_showIds" @onchange="@(e => _showIds = e.Value?.ToString() ?? string.Empty)">
                                     <option value="">Réglage de l'instance (@YesNo(_instance.ShowGlpiIds))</option>
@@ -107,9 +107,9 @@
                 break;
 
             case "apparence":
-                <div class="glpi-fiche-block">
-                    <div class="glpi-fiche-block-title"><i class="ti ti-palette"></i>Palette de couleur</div>
-                    <div class="glpi-palette-grid" role="radiogroup" aria-label="Palette de couleur">
+                <div class="glping-fiche-block">
+                    <div class="glping-fiche-block-title"><i class="ti ti-palette"></i>Palette de couleur</div>
+                    <div class="glping-palette-grid" role="radiogroup" aria-label="Palette de couleur" @ref="_paletteGrid">
                         @{
                             string instanceKey = PaletteCatalog.KeyOf(_instance.ColorPalette);
                         }
@@ -123,16 +123,16 @@
                     </div>
                     <p class="text-secondary small mt-2 mb-0">
                         Palettes de GLPI. Darker et Midnight passent toute l'interface en sombre ; « Dark »,
-                        comme dans GLPI, garde des pages claires sous un menu très sombre. La palette
-                        s'applique après l'enregistrement.
+                        comme dans GLPI, garde des pages claires sous un menu très sombre. Laissez la souris deux
+                        secondes sur une palette pour l'essayer sur toute la page ; elle n'est gardée qu'avec Sauvegarder.
                     </p>
                 </div>
 
-                <div class="glpi-fiche-block">
-                    <div class="glpi-fiche-block-title"><i class="ti ti-contrast"></i>Accessibilité</div>
+                <div class="glping-fiche-block">
+                    <div class="glping-fiche-block-title"><i class="ti ti-contrast"></i>Accessibilité</div>
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Contraste élevé</label>
                                 <select class="form-select" value="@_highContrast" @onchange="@(e => _highContrast = e.Value?.ToString() ?? string.Empty)">
                                     <option value="">Réglage de l'instance (@YesNo(_instance.HighContrast))</option>
@@ -150,11 +150,11 @@
                 break;
 
             case "dates":
-                <div class="glpi-fiche-block">
-                    <div class="glpi-fiche-block-title"><i class="ti ti-calendar-time"></i>Dates et heures</div>
+                <div class="glping-fiche-block">
+                    <div class="glping-fiche-block-title"><i class="ti ti-calendar-time"></i>Dates et heures</div>
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Format des dates</label>
                                 <select class="form-select" value="@_dateFormat" @onchange="@(e => _dateFormat = e.Value?.ToString() ?? string.Empty)">
                                     <option value="">Réglage de l'instance (@DateFormatLabel(_instance.DateFormat))</option>
@@ -165,7 +165,7 @@
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Fuseau horaire</label>
                                 <select class="form-select" value="@_timezone" @onchange="@(e => _timezone = e.Value?.ToString() ?? string.Empty)">
                                     <option value="">Réglage de l'instance (@TimezoneLabel(_instance.Timezone))</option>
@@ -187,11 +187,11 @@
                 break;
 
             case "personnes":
-                <div class="glpi-fiche-block">
-                    <div class="glpi-fiche-block-title"><i class="ti ti-users"></i>Personnes</div>
+                <div class="glping-fiche-block">
+                    <div class="glping-fiche-block-title"><i class="ti ti-users"></i>Personnes</div>
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Ordre d'affichage du nom complet</label>
                                 <select class="form-select" value="@_nameOrder" @onchange="@(e => _nameOrder = e.Value?.ToString() ?? string.Empty)">
                                     <option value="">Réglage de l'instance (@NameOrderLabel(_instance.FullNameOrder))</option>
@@ -206,11 +206,11 @@
                 break;
 
             case "historique":
-                <div class="glpi-fiche-block">
-                    <div class="glpi-fiche-block-title"><i class="ti ti-history"></i>Historique</div>
+                <div class="glping-fiche-block">
+                    <div class="glping-fiche-block-title"><i class="ti ti-history"></i>Historique</div>
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Ordre de l'historique</label>
                                 <select class="form-select" value="@_historyOrder" @onchange="@(e => _historyOrder = e.Value?.ToString() ?? string.Empty)">
                                     <option value="">Réglage de l'instance (@HistoryOrderLabel(_instance.HistoryOrder))</option>
@@ -225,11 +225,11 @@
                 break;
 
             case "exports":
-                <div class="glpi-fiche-block">
-                    <div class="glpi-fiche-block-title"><i class="ti ti-file-export"></i>Exports</div>
+                <div class="glping-fiche-block">
+                    <div class="glping-fiche-block-title"><i class="ti ti-file-export"></i>Exports</div>
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Délimiteur CSV</label>
                                 <select class="form-select" value="@_csvDelimiter" @onchange="@(e => _csvDelimiter = e.Value?.ToString() ?? string.Empty)">
                                     <option value="">Réglage de l'instance (@_instance.CsvDelimiter)</option>
@@ -244,11 +244,11 @@
                 break;
 
             case "notifications":
-                <div class="glpi-fiche-block">
-                    <div class="glpi-fiche-block-title"><i class="ti ti-bell"></i>Notifications</div>
+                <div class="glping-fiche-block">
+                    <div class="glping-fiche-block-title"><i class="ti ti-bell"></i>Notifications</div>
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="glpi-fiche-field">
+                            <div class="glping-fiche-field">
                                 <label>Notifications pour mes changements</label>
                                 <select class="form-select" value="@_notifyOnMyChanges" @onchange="@(e => _notifyOnMyChanges = e.Value?.ToString() ?? string.Empty)">
                                     <option value="">Réglage de l'instance (@YesNo(_instance.NotifyOnMyChanges))</option>
@@ -283,17 +283,17 @@
         (string menuBg, string menuFg, string accent, string primary, string primaryFg, string pageBg) = PaletteCatalog.Previews[key];
         bool selected = string.Equals(_colorPalette, value, StringComparison.OrdinalIgnoreCase);
 
-        <button type="button" class="glpi-palette-card @(selected ? "selected" : "")" role="radio" aria-checked="@(selected ? "true" : "false")"
+        <button type="button" class="glping-palette-card @(selected ? "selected" : "")" data-palette-key="@key" role="radio" aria-checked="@(selected ? "true" : "false")"
                 @onclick="() => _colorPalette = value">
-            <span class="glpi-palette-preview" style="background: @pageBg;" aria-hidden="true">
-                <span class="glpi-palette-menu" style="background: @menuBg;">
-                    <span class="glpi-palette-dot" style="background: @accent;"></span>
-                    <span class="glpi-palette-line" style="background: @menuFg;"></span>
-                    <span class="glpi-palette-line" style="background: @menuFg;"></span>
+            <span class="glping-palette-preview" style="background: @pageBg;" aria-hidden="true">
+                <span class="glping-palette-menu" style="background: @menuBg;">
+                    <span class="glping-palette-dot" style="background: @accent;"></span>
+                    <span class="glping-palette-line" style="background: @menuFg;"></span>
+                    <span class="glping-palette-line" style="background: @menuFg;"></span>
                 </span>
-                <span class="glpi-palette-button" style="background: @primary; color: @primaryFg;">Aa</span>
+                <span class="glping-palette-button" style="background: @primary; color: @primaryFg;">Aa</span>
             </span>
-            <span class="glpi-palette-name">
+            <span class="glping-palette-name">
                 @if (selected)
                 {
                     <i class="ti ti-circle-check-filled me-1"></i>

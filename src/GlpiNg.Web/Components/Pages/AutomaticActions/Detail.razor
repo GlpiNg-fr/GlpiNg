@@ -24,18 +24,18 @@ else
         <div class="card-body">
             <p class="text-secondary">@_task.Description</p>
 
-            <div class="glpi-config-field checkbox">
+            <div class="glping-config-field checkbox">
                 <label for="action-enabled">Activée</label>
-                <label class="glpi-switch">
+                <label class="glping-switch">
                     <input id="action-enabled" type="checkbox" checked="@_state.IsEnabled" @onchange="ToggleEnabledAsync" />
-                    <span class="glpi-switch-slider"></span>
+                    <span class="glping-switch-slider"></span>
                 </label>
             </div>
 
-            <div class="glpi-config-field">
+            <div class="glping-config-field">
                 <label for="action-frequency">Fréquence d'exécution (minutes)</label>
                 <input id="action-frequency" type="number" min="@CronIntervalState.MinMinutes" max="@CronIntervalState.MaxMinutes"
-                       class="glpi-config-input-sm" @bind="_frequencyMinutes" />
+                       class="glping-config-input-sm" @bind="_frequencyMinutes" />
             </div>
             <p class="hint">
                 Une exécution planifiée n'a lieu que si cette tâche est due <em>et</em> qu'un tick du

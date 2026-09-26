@@ -15,15 +15,15 @@
 }
 else
 {
-    <div class="glpi-config">
-        <div class="glpi-config-body">
-            <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glpi-config-form">
-                <div class="glpi-fiche-block-title"><i class="ti ti-shield-lock"></i>Authentification par CAS</div>
-                <div class="glpi-config-field">
+    <div class="glping-config">
+        <div class="glping-config-body">
+            <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
+                <div class="glping-fiche-block-title"><i class="ti ti-shield-lock"></i>Authentification par CAS</div>
+                <div class="glping-config-field">
                     <label for="cas-host">Hôte CAS</label>
                     <input id="cas-host" @bind="_model.CasHost" />
                 </div>
-                <div class="glpi-config-field">
+                <div class="glping-config-field">
                     <label for="cas-version">Version CAS</label>
                     <select id="cas-version" @bind="_model.CasVersion">
                         <option value="1">Version 1</option>
@@ -31,70 +31,70 @@ else
                         <option value="3">Version 3</option>
                     </select>
                 </div>
-                <div class="glpi-config-field">
+                <div class="glping-config-field">
                     <label for="cas-port">Port</label>
                     <input id="cas-port" type="number" @bind="_model.CasPort" />
                 </div>
-                <div class="glpi-config-field">
+                <div class="glping-config-field">
                     <label for="cas-base-dir">Répertoire de base (optionnel)</label>
                     <input id="cas-base-dir" @bind="_model.CasBaseDirectory" />
                 </div>
-                <div class="glpi-config-field">
+                <div class="glping-config-field">
                     <label for="cas-logout">Adresse web de retour à la déconnexion (logout)</label>
                     <input id="cas-logout" @bind="_model.CasLogoutUrl" />
                 </div>
 
-                <div class="glpi-fiche-block-title mt-3"><i class="ti ti-certificate"></i>Authentification par certificat x509</div>
-                <div class="glpi-config-field">
+                <div class="glping-fiche-block-title mt-3"><i class="ti ti-certificate"></i>Authentification par certificat x509</div>
+                <div class="glping-config-field">
                     <label for="x509-email">Attribut de l'email pour authentification par certificat x509</label>
                     <input id="x509-email" @bind="_model.X509EmailAttribute" />
                 </div>
-                <div class="glpi-config-field">
+                <div class="glping-config-field">
                     <label for="x509-ou">Restreindre le champ OU (séparateur $)</label>
                     <input id="x509-ou" @bind="_model.X509RestrictOu" />
                 </div>
-                <div class="glpi-config-field">
+                <div class="glping-config-field">
                     <label for="x509-cn">Restreindre le champ CN (séparateur $)</label>
                     <input id="x509-cn" @bind="_model.X509RestrictCn" />
                 </div>
-                <div class="glpi-config-field">
+                <div class="glping-config-field">
                     <label for="x509-o">Restreindre le champ O (séparateur $)</label>
                     <input id="x509-o" @bind="_model.X509RestrictO" />
                 </div>
 
-                <div class="glpi-fiche-block-title mt-3"><i class="ti ti-world-www"></i>Autre authentification transmise dans la requête HTTP (SSO)</div>
-                <div class="glpi-config-field">
+                <div class="glping-fiche-block-title mt-3"><i class="ti ti-world-www"></i>Autre authentification transmise dans la requête HTTP (SSO)</div>
+                <div class="glping-config-field">
                     <label for="sso-field">Champ de stockage de l'identifiant dans la requête HTTP</label>
                     <input id="sso-field" @bind="_model.HttpAuthField" />
                 </div>
-                <div class="glpi-config-field">
+                <div class="glping-config-field">
                     <label for="sso-logout">URL de déconnexion SSO</label>
                     <input id="sso-logout" @bind="_model.SsoLogoutUrl" />
                 </div>
-                <div class="glpi-config-field checkbox">
+                <div class="glping-config-field checkbox">
                     <label for="sso-strip-domain">Supprimer le domaine des identifiants de la forme identifiant@@domaine</label>
-                    <label class="glpi-switch">
+                    <label class="glping-switch">
                         <input id="sso-strip-domain" type="checkbox" @bind="_model.StripDomainFromLogin" />
-                        <span class="glpi-switch-slider"></span>
+                        <span class="glping-switch-slider"></span>
                     </label>
                 </div>
-                <div class="glpi-config-field">
+                <div class="glping-config-field">
                     <label for="sso-lastname">Champ HTTP — Nom de famille</label>
                     <input id="sso-lastname" @bind="_model.HttpAuthLastNameField" />
                 </div>
-                <div class="glpi-config-field">
+                <div class="glping-config-field">
                     <label for="sso-firstname">Champ HTTP — Prénom</label>
                     <input id="sso-firstname" @bind="_model.HttpAuthFirstNameField" />
                 </div>
-                <div class="glpi-config-field">
+                <div class="glping-config-field">
                     <label for="sso-comment">Champ HTTP — Commentaires</label>
                     <input id="sso-comment" @bind="_model.HttpAuthCommentField" />
                 </div>
-                <div class="glpi-config-field">
+                <div class="glping-config-field">
                     <label for="sso-email">Champ HTTP — E-mail</label>
                     <input id="sso-email" @bind="_model.HttpAuthEmailField" />
                 </div>
-                <div class="glpi-config-field">
+                <div class="glping-config-field">
                     <label for="sso-phone">Champ HTTP — Téléphone</label>
                     <input id="sso-phone" @bind="_model.HttpAuthPhoneField" />
                 </div>
@@ -105,7 +105,7 @@ else
                     de validation de certificat x509 client, ni de lecture d'en-tête SSO.
                 </p>
 
-                <button type="submit" class="glpi-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+                <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
             </EditForm>
         </div>
     </div>

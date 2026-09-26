@@ -2,15 +2,15 @@
 
 <div class="row">
     <div class="col-md-6">
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Nom</label>
             <input class="form-control" @bind="Client.Name" @bind:event="oninput" @bind:after="NotifyChangedAsync" />
         </div>
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Activé</label>
             @YesNoSelect(Client.IsActive, v => Client.IsActive = v)
         </div>
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Grants</label>
             <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column gap-1">
                 @GrantCheckbox(OAuthGrantTypes.ClientCredentials, "Client credentials", "Machine à machine — fonctionnel.")
@@ -18,7 +18,7 @@
                 @GrantCheckbox(OAuthGrantTypes.AuthorizationCode, "Code d'autorisation", "Non fonctionnel dans GlpiNg (pas d'écran de consentement) — conservé pour la fidélité avec GLPI.")
             </div>
         </div>
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Scopes</label>
             <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column gap-1">
                 @ScopeCheckbox(OAuthScopes.Api, "api")
@@ -29,18 +29,18 @@
                 @ScopeCheckbox(OAuthScopes.GraphQl, "graphql")
             </div>
         </div>
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Commentaires</label>
             <textarea class="form-control" rows="2" @bind="Client.Comment"></textarea>
         </div>
     </div>
     <div class="col-md-6">
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>URI de redirection autorisées (une par ligne)</label>
             <textarea class="form-control" rows="3" @bind="RedirectUris" placeholder="https://exemple.tld/callback"></textarea>
             <span class="text-secondary small">Utilisées seulement par le grant "Code d'autorisation" (non fonctionnel — voir ci-dessus).</span>
         </div>
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Restrictions d'IP (une par ligne, IP ou CIDR, optionnel)</label>
             <textarea class="form-control" rows="3" @bind="IpRestrictions" placeholder="203.0.113.0/24"></textarea>
         </div>

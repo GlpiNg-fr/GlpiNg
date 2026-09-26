@@ -1,33 +1,33 @@
 ﻿@inherits LayoutComponentBase
 
 @* « Afficher les compteurs » (préférences) : une classe ici masque ceux de tous les onglets de fiche. *@
-<div class="glpi-app @(Display.ShowTabCounters ? "" : "glpi-hide-tab-counts")">
-    <aside class="glpi-sidebar @(_collapsed ? "collapsed" : "")">
-        <a href="/" class="glpi-brand">
+<div class="glping-app @(Display.ShowTabCounters ? "" : "glping-hide-tab-counts")">
+    <aside class="glping-sidebar @(_collapsed ? "collapsed" : "")">
+        <a href="/" class="glping-brand">
             <i class="ti ti-server-2"></i>
             <span>GlpiNg</span>
         </a>
 
         @if (_searchOpen)
         {
-            <div class="glpi-menu-search open">
+            <div class="glping-menu-search open">
                 <i class="ti ti-search"></i>
                 <input type="text" placeholder="Chercher dans le menu"
                        value="@_searchTerm" @oninput="OnSearchInput" />
-                <button type="button" class="glpi-menu-search-close" @onclick="ToggleSearch">
+                <button type="button" class="glping-menu-search-close" @onclick="ToggleSearch">
                     <i class="ti ti-x"></i>
                 </button>
             </div>
         }
         else
         {
-            <button type="button" class="glpi-menu-search" @onclick="ToggleSearch">
+            <button type="button" class="glping-menu-search" @onclick="ToggleSearch">
                 <i class="ti ti-arrow-right"></i>
                 <span>Chercher dans le menu</span>
             </button>
         }
 
-        <nav class="glpi-nav">
+        <nav class="glping-nav">
             @foreach (var group in Groups)
             {
                 if (!GroupMatches(group))
@@ -36,27 +36,27 @@
                 }
 
                 var isOpen = IsGroupOpen(group);
-                <div class="glpi-nav-group @(isOpen ? "open" : "")">
-                    <button type="button" class="glpi-nav-group-toggle" @onclick="() => ToggleGroup(group.Key)">
+                <div class="glping-nav-group @(isOpen ? "open" : "")">
+                    <button type="button" class="glping-nav-group-toggle" @onclick="() => ToggleGroup(group.Key)">
                         <i class="ti @group.Icon"></i>
                         <span>@group.Label</span>
-                        <i class="ti ti-chevron-down glpi-chevron"></i>
+                        <i class="ti ti-chevron-down glping-chevron"></i>
                     </button>
                     @if (isOpen)
                     {
-                        <div class="glpi-nav-group-items">
+                        <div class="glping-nav-group-items">
                             @foreach (var item in FilteredItems(group))
                             {
                                 if (item.Href is not null)
                                 {
-                                    <NavLink href="@item.Href" Match="@(item.Href == "/" ? NavLinkMatch.All : NavLinkMatch.Prefix)" class="glpi-nav-subitem">
+                                    <NavLink href="@item.Href" Match="@(item.Href == "/" ? NavLinkMatch.All : NavLinkMatch.Prefix)" class="glping-nav-subitem">
                                         <i class="ti @(item.Icon ?? "ti-point")"></i>
                                         <span>@item.Label</span>
                                     </NavLink>
                                 }
                                 else
                                 {
-                                    <span class="glpi-nav-subitem disabled" title="Pas encore disponible">
+                                    <span class="glping-nav-subitem disabled" title="Pas encore disponible">
                                         <i class="ti @(item.Icon ?? "ti-point")"></i>
                                         <span>@item.Label</span>
                                     </span>
@@ -64,22 +64,22 @@
                             }
                         </div>
                     }
-                    <div class="glpi-nav-flyout">
-                        <div class="glpi-nav-flyout-panel">
-                            <div class="glpi-nav-flyout-header">@group.Label</div>
-                            <div class="glpi-nav-flyout-items">
+                    <div class="glping-nav-flyout">
+                        <div class="glping-nav-flyout-panel">
+                            <div class="glping-nav-flyout-header">@group.Label</div>
+                            <div class="glping-nav-flyout-items">
                                 @foreach (var item in FilteredItems(group))
                                 {
                                     if (item.Href is not null)
                                     {
-                                        <NavLink href="@item.Href" Match="@(item.Href == "/" ? NavLinkMatch.All : NavLinkMatch.Prefix)" class="glpi-nav-subitem">
+                                        <NavLink href="@item.Href" Match="@(item.Href == "/" ? NavLinkMatch.All : NavLinkMatch.Prefix)" class="glping-nav-subitem">
                                             <i class="ti @(item.Icon ?? "ti-point")"></i>
                                             <span>@item.Label</span>
                                         </NavLink>
                                     }
                                     else
                                     {
-                                        <span class="glpi-nav-subitem disabled" title="Pas encore disponible">
+                                        <span class="glping-nav-subitem disabled" title="Pas encore disponible">
                                             <i class="ti @(item.Icon ?? "ti-point")"></i>
                                             <span>@item.Label</span>
                                         </span>
@@ -92,7 +92,7 @@
             }
         </nav>
 
-        <button type="button" class="glpi-sidebar-collapse" @onclick="ToggleSidebarCollapse">
+        <button type="button" class="glping-sidebar-collapse" @onclick="ToggleSidebarCollapse">
             <i class="ti @(_collapsed ? "ti-chevrons-right" : "ti-chevrons-left")"></i>
             @if (!_collapsed)
             {
@@ -101,28 +101,28 @@
         </button>
     </aside>
 
-    <div class="glpi-content">
-        <header class="glpi-topbar">
-            <nav class="glpi-breadcrumb">
+    <div class="glping-content">
+        <header class="glping-topbar">
+            <nav class="glping-breadcrumb">
                 @for (int i = 0; i < Breadcrumb.Count; i++)
                 {
                     var crumb = Breadcrumb[i];
                     if (i > 0)
                     {
-                        <span class="glpi-breadcrumb-sep">/</span>
+                        <span class="glping-breadcrumb-sep">/</span>
                     }
                     @* Cliquable dès qu'il mène ailleurs que là où l'on est : c'est la destination
                        qui décide, pas la position dans le fil. *@
                     if (crumb.Href is null || IsCurrentPage(crumb.Href))
                     {
-                        <span class="glpi-breadcrumb-item active">
+                        <span class="glping-breadcrumb-item active">
                             <i class="ti @crumb.Icon"></i>
                             <span>@crumb.Label</span>
                         </span>
                     }
                     else
                     {
-                        <a href="@crumb.Href" class="glpi-breadcrumb-item">
+                        <a href="@crumb.Href" class="glping-breadcrumb-item">
                             <i class="ti @crumb.Icon"></i>
                             <span>@crumb.Label</span>
                         </a>
@@ -130,7 +130,7 @@
                 }
             </nav>
 
-            <div class="input-icon glpi-search">
+            <div class="input-icon glping-search">
                 <span class="input-icon-addon">
                     <i class="ti ti-search"></i>
                 </span>
@@ -139,12 +139,12 @@
 
             <EntitySelector />
 
-            <div class="glpi-topbar-user dropdown">
-                <a href="#" class="glpi-user-toggle dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                    <span class="glpi-user-info">
-                        <span class="glpi-user-name">@_userName</span>
+            <div class="glping-topbar-user dropdown">
+                <a href="#" class="glping-user-toggle dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="glping-user-info">
+                        <span class="glping-user-name">@_userName</span>
                     </span>
-                    <span class="glpi-avatar">@_userInitial</span>
+                    <span class="glping-avatar">@_userInitial</span>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li><a class="dropdown-item" href="/mon-profil"><i class="ti ti-user"></i> Mon profil</a></li>
@@ -153,14 +153,14 @@
                     <li>
                         <form method="post" action="/Account/Logout">
                             <AntiforgeryToken />
-                            <button type="submit" class="dropdown-item glpi-logout-button"><i class="ti ti-logout"></i> Se déconnecter</button>
+                            <button type="submit" class="dropdown-item glping-logout-button"><i class="ti ti-logout"></i> Se déconnecter</button>
                         </form>
                     </li>
                 </ul>
             </div>
         </header>
 
-        <main class="glpi-page-body">
+        <main class="glping-page-body">
             @* Droits par profil : pendant, côté circuit Blazor, du SectionAccessMiddleware, qui ne
                voit passer que les entrées par l'URL. Sans ça, un lien interne mènerait quand même
                à la page. *@

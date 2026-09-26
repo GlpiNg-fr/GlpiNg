@@ -11,8 +11,8 @@
 }
 else
 {
-    <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glpi-config-form">
-        <div class="glpi-config-field">
+    <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
+        <div class="glping-config-field">
             <label for="dv-language">Langue par défaut</label>
             <select id="dv-language" @bind="_model.Language">
                 <option value="fr_FR">Français</option>
@@ -33,16 +33,16 @@ else
             </select>
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="dv-date-format">Format des dates</label>
-            <select id="dv-date-format" class="glpi-config-input-sm" @bind="_model.DateFormat">
+            <select id="dv-date-format" class="glping-config-input-sm" @bind="_model.DateFormat">
                 <option value="ymd">AAAA-MM-JJ</option>
                 <option value="dmy">JJ-MM-AAAA</option>
                 <option value="mdy">MM-JJ-AAAA</option>
             </select>
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="dv-name-order">Ordre d'affichage du nom complet</label>
             <select id="dv-name-order" @bind="_model.FullNameOrder">
                 <option value="NomPrenom">Nom, Prénom</option>
@@ -50,7 +50,7 @@ else
             </select>
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="dv-number-format">Format des nombres</label>
             <select id="dv-number-format" @bind="_model.NumberFormat">
                 <option value="1 234.56">1 234.56</option>
@@ -61,74 +61,74 @@ else
             </select>
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="dv-results-per-page">Nombre de résultats par page</label>
-            <input id="dv-results-per-page" type="number" min="1" class="glpi-config-input-sm" @bind="_model.ResultsPerPage" />
+            <input id="dv-results-per-page" type="number" min="1" class="glping-config-input-sm" @bind="_model.ResultsPerPage" />
         </div>
 
-        <div class="glpi-config-field checkbox">
+        <div class="glping-config-field checkbox">
             <label for="dv-goto-created">Après la création, aller à l'élément créé</label>
-            <label class="glpi-switch">
+            <label class="glping-switch">
                 <input id="dv-goto-created" type="checkbox" @bind="_model.GoToCreatedItem" />
-                <span class="glpi-switch-slider"></span>
+                <span class="glping-switch-slider"></span>
             </label>
         </div>
 
-        <div class="glpi-config-field checkbox">
+        <div class="glping-config-field checkbox">
             <label for="dv-full-dropdown">Afficher le nom complet des intitulés dans les listes déroulantes</label>
-            <label class="glpi-switch">
+            <label class="glping-switch">
                 <input id="dv-full-dropdown" type="checkbox" @bind="_model.ShowFullNameInDropdowns" />
-                <span class="glpi-switch-slider"></span>
+                <span class="glping-switch-slider"></span>
             </label>
         </div>
 
-        <div class="glpi-config-field checkbox">
+        <div class="glping-config-field checkbox">
             <label for="dv-full-search">Afficher le nom complet des intitulés dans les résultats de recherche</label>
-            <label class="glpi-switch">
+            <label class="glping-switch">
                 <input id="dv-full-search" type="checkbox" @bind="_model.ShowFullNameInSearchResults" />
-                <span class="glpi-switch-slider"></span>
+                <span class="glping-switch-slider"></span>
             </label>
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="dv-counters">Afficher les compteurs</label>
-            <select id="dv-counters" class="glpi-config-input-sm" @bind="_model.ShowCounters">
+            <select id="dv-counters" class="glping-config-input-sm" @bind="_model.ShowCounters">
                 <option value="0">Non</option>
                 <option value="1">Oui</option>
                 <option value="2">Jamais</option>
             </select>
         </div>
 
-        <div class="glpi-config-field checkbox">
-            <label for="dv-glpi-ids">Afficher les ID GLPI</label>
-            <label class="glpi-switch">
-                <input id="dv-glpi-ids" type="checkbox" @bind="_model.ShowGlpiIds" />
-                <span class="glpi-switch-slider"></span>
+        <div class="glping-config-field checkbox">
+            <label for="dv-glping-ids">Afficher les ID GLPI</label>
+            <label class="glping-switch">
+                <input id="dv-glping-ids" type="checkbox" @bind="_model.ShowGlpiIds" />
+                <span class="glping-switch-slider"></span>
             </label>
         </div>
 
-        <div class="glpi-config-field checkbox">
+        <div class="glping-config-field checkbox">
             <label for="dv-keep-devices">Garder les composants lors de la suppression définitive d'un élément</label>
-            <label class="glpi-switch">
+            <label class="glping-switch">
                 <input id="dv-keep-devices" type="checkbox" @bind="_model.KeepDevicesOnPurge" />
-                <span class="glpi-switch-slider"></span>
+                <span class="glping-switch-slider"></span>
             </label>
         </div>
 
-        <div class="glpi-config-field checkbox">
+        <div class="glping-config-field checkbox">
             <label for="dv-notify-changes">Notifications pour mes changements</label>
-            <label class="glpi-switch">
+            <label class="glping-switch">
                 <input id="dv-notify-changes" type="checkbox" @bind="_model.NotifyOnMyChanges" />
-                <span class="glpi-switch-slider"></span>
+                <span class="glping-switch-slider"></span>
             </label>
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="dv-homepage-count">Résultats à afficher sur la page d'accueil</label>
-            <input id="dv-homepage-count" type="number" min="1" class="glpi-config-input-sm" @bind="_model.HomepageResultsCount" />
+            <input id="dv-homepage-count" type="number" min="1" class="glping-config-input-sm" @bind="_model.HomepageResultsCount" />
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="dv-pdf-font">Police pour l'export PDF</label>
             <select id="dv-pdf-font" @bind="_model.PdfExportFont">
                 <option value="DejaVuSans">DejaVuSans</option>
@@ -141,21 +141,21 @@ else
             </select>
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="dv-csv-delimiter">Délimiteur CSV</label>
-            <select id="dv-csv-delimiter" class="glpi-config-input-sm" @bind="_model.CsvDelimiter">
+            <select id="dv-csv-delimiter" class="glping-config-input-sm" @bind="_model.CsvDelimiter">
                 <option value=";">;</option>
                 <option value=",">,</option>
             </select>
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="dv-palette">Palette de couleur</label>
             @* Avec aperçu de chaque palette : un <select> n'accepte que du texte. *@
             <PaletteSelect Id="dv-palette" @bind-Value="_model.ColorPalette" />
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="dv-layout">Mise en page</label>
             <select id="dv-layout" @bind="_model.Layout">
                 <option value="horizontal">Horizontal (menu dans l'en-tête)</option>
@@ -163,7 +163,7 @@ else
             </select>
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="dv-richtext">Disposition des champs de texte riche</label>
             <select id="dv-richtext" @bind="_model.RichTextLayout">
                 <option value="embedded">Intégrée (sans barre d'outils)</option>
@@ -171,15 +171,15 @@ else
             </select>
         </div>
 
-        <div class="glpi-config-field checkbox">
+        <div class="glping-config-field checkbox">
             <label for="dv-contrast">Activer le contraste élevé</label>
-            <label class="glpi-switch">
+            <label class="glping-switch">
                 <input id="dv-contrast" type="checkbox" @bind="_model.HighContrast" />
-                <span class="glpi-switch-slider"></span>
+                <span class="glping-switch-slider"></span>
             </label>
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="dv-timezone">Fuseau horaire</label>
             <select id="dv-timezone" @bind="_model.Timezone">
                 <option value="server">Utiliser la configuration serveur</option>
@@ -191,7 +191,7 @@ else
             </select>
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="dv-central-tab">Onglet central par défaut</label>
             <select id="dv-central-tab" @bind="_model.DefaultCentralTab">
                 <option value="dashboard">Tableau de bord</option>
@@ -202,7 +202,7 @@ else
             </select>
         </div>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="dv-history-order">Ordre de l'historique</label>
             <select id="dv-history-order" @bind="_model.HistoryOrder">
                 <option value="natural">Ordre naturel (anciennes entrées en premier)</option>
@@ -210,7 +210,7 @@ else
             </select>
         </div>
 
-        <button type="submit" class="glpi-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
     </EditForm>
 }
 

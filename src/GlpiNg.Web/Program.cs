@@ -629,7 +629,7 @@ public class Program
         // Exclut l'upload de fichiers de paquet (DeploymentPackageFilesController) du middleware
         // antiforgery, en plus de [IgnoreAntiforgeryToken] sur le contrôleur (qui suffirait déjà
         // via les métadonnées d'endpoint) : ceinture et bretelles pour cette route jamais atteinte
-        // via un <form>/<AntiforgeryToken /> Blazor (appelée en XHR depuis glpi-ng.js) — protection
+        // via un <form>/<AntiforgeryToken /> Blazor (appelée en XHR depuis glping.js) — protection
         // CSRF assurée par SameSite=Lax des cookies d'authentification (voir la doc du contrôleur).
         // La vraie cause de "Unexpected end of Stream, the content may have already been read by
         // another component." sur les gros uploads n'était pas l'antiforgery mais le model binding

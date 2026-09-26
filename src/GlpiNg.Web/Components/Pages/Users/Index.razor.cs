@@ -84,7 +84,7 @@ public partial class Index : ComponentBase
         // Rechargé à l'ouverture : un annuaire a pu être ajouté ou désactivé depuis l'affichage
         // de la page.
         await LoadLdapServersAsync();
-        await JS.InvokeVoidAsync("glpiNg.showModal", "ldapImportModal");
+        await JS.InvokeVoidAsync("glping.showModal", "ldapImportModal");
     }
 
     private async Task SearchLdapAsync()
@@ -164,7 +164,7 @@ public partial class Index : ComponentBase
                 ToastService.Notify(new ToastMessage(ToastType.Warning, warning));
             }
 
-            await JS.InvokeVoidAsync("glpiNg.hideModal", "ldapImportModal");
+            await JS.InvokeVoidAsync("glping.hideModal", "ldapImportModal");
             await LoadAsync();
         }
         finally
@@ -271,7 +271,7 @@ public partial class Index : ComponentBase
         _newPassword = string.Empty;
         _newPasswordConfirm = string.Empty;
 
-        await JS.InvokeVoidAsync("glpiNg.hideModal", "newUserModal");
+        await JS.InvokeVoidAsync("glping.hideModal", "newUserModal");
         await LoadAsync();
     }
 

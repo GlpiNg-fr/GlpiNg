@@ -7,51 +7,51 @@
 
 <div class="row">
     <div class="col-md-6">
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Nom</label>
             <input class="form-control" @bind="Server.Name" @bind:event="oninput" @bind:after="NotifyChangedAsync" />
         </div>
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Serveur par défaut</label>
             @YesNoSelect(Server.IsDefault, v => Server.IsDefault = v)
         </div>
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Activé</label>
             @YesNoSelect(Server.IsActive, v => Server.IsActive = v)
         </div>
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Serveur</label>
             <input class="form-control" @bind="Server.Host" @bind:event="oninput" @bind:after="NotifyChangedAsync" placeholder="ldap.example.com" />
         </div>
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Port (par défaut 389)</label>
             <input type="number" class="form-control" @bind="Server.Port" />
         </div>
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>SSL/TLS</label>
             @YesNoSelect(Server.UseSsl, v => Server.UseSsl = v)
         </div>
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Commentaires</label>
             <textarea class="form-control" rows="2" @bind="Server.Comment"></textarea>
         </div>
     </div>
     <div class="col-md-6">
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>BaseDN</label>
             <input class="form-control" @bind="Server.BaseDn" @bind:event="oninput" @bind:after="NotifyChangedAsync" placeholder="dc=example,dc=com" />
         </div>
-        <div class="glpi-fiche-field">
+        <div class="glping-fiche-field">
             <label>Utiliser un compte de connexion (bind)</label>
             @YesNoSelect(Server.UseBind, v => Server.UseBind = v)
         </div>
         @if (Server.UseBind)
         {
-            <div class="glpi-fiche-field">
+            <div class="glping-fiche-field">
                 <label>DN du compte (pour les connexions non anonymes)</label>
                 <input class="form-control" @bind="Server.BindDn" placeholder="cn=admin,dc=example,dc=com" />
             </div>
-            <div class="glpi-fiche-field">
+            <div class="glping-fiche-field">
                 <label>Mot de passe du compte</label>
                 <input type="password" class="form-control" value="@BindPasswordPlain" @oninput="OnPasswordInput"
                        placeholder="@(HasStoredPassword ? "•••••••• (laisser vide pour conserver)" : "")" />

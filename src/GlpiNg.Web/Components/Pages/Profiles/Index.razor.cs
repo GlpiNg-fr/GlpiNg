@@ -113,7 +113,7 @@ public partial class Index : ComponentBase
         await db.SaveChangesAsync();
 
         _newProfile = NewBlankProfile();
-        await JS.InvokeVoidAsync("glpiNg.hideModal", "newProfileModal");
+        await JS.InvokeVoidAsync("glping.hideModal", "newProfileModal");
         await LoadAsync();
     }
 

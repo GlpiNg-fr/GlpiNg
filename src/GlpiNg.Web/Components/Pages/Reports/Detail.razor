@@ -17,9 +17,9 @@
 }
 else
 {
-    <div class="glpi-list-page">
+    <div class="glping-list-page">
         <div class="card">
-            <div class="card-header d-flex align-items-center justify-content-between glpi-list-toolbar">
+            <div class="card-header d-flex align-items-center justify-content-between glping-list-toolbar">
                 <div>
                     <h3 class="card-title mb-0"><i class="ti @_definition.Icon me-1"></i>@_definition.Title</h3>
                     <div class="text-secondary">@_definition.Description</div>
@@ -27,7 +27,7 @@ else
 
                 <div class="btn-list align-items-center">
                     <button type="button" class="btn btn-icon" @onclick="RunAsync" disabled="@_isRunning" title="Rafraîchir">
-                        <i class="ti ti-refresh @(_isRunning ? "glpi-spin" : "")"></i>
+                        <i class="ti ti-refresh @(_isRunning ? "glping-spin" : "")"></i>
                     </button>
 
                     <div class="dropdown">
@@ -35,7 +35,7 @@ else
                                 disabled="@(_result is null || _isRunning)" title="Exporter">
                             <i class="ti ti-download"></i>
                         </button>
-                        <div class="dropdown-menu dropdown-menu-end p-0 glpi-export-menu">
+                        <div class="dropdown-menu dropdown-menu-end p-0 glping-export-menu">
                             <button type="button" class="dropdown-item" @onclick='() => ExportAsync("pdf-landscape")'>
                                 <i class="ti ti-file-type-pdf"></i>PDF paysage
                             </button>

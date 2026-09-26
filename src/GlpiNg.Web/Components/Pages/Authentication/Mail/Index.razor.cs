@@ -122,7 +122,7 @@ public partial class Index : ComponentBase
 
         _newServer = NewBlankServer();
 
-        await JS.InvokeVoidAsync("glpiNg.hideModal", "newMailServerModal");
+        await JS.InvokeVoidAsync("glping.hideModal", "newMailServerModal");
         await LoadAsync();
     }
 

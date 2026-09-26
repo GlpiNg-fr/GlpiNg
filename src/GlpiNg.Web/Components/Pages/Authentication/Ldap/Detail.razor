@@ -15,34 +15,34 @@
 }
 else
 {
-    <div class="glpi-fiche-topbar">
-        <div class="glpi-fiche-crumb">
+    <div class="glping-fiche-topbar">
+        <div class="glping-fiche-crumb">
             <i class="ti ti-address-book"></i>
             <span>Annuaire LDAP - @_server.Name - ID @_server.Id</span>
         </div>
     </div>
 
-    <div class="glpi-fiche-layout">
-        <aside class="glpi-fiche-sidebar">
-            <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "main" ? "active" : "")" @onclick='() => SetTab("main")'>
+    <div class="glping-fiche-layout">
+        <aside class="glping-fiche-sidebar">
+            <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "main" ? "active" : "")" @onclick='() => SetTab("main")'>
                 <i class="ti ti-address-book"></i>
                 <span>Annuaire LDAP</span>
             </button>
-            <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "users" ? "active" : "")" @onclick='() => SetTab("users")'>
+            <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "users" ? "active" : "")" @onclick='() => SetTab("users")'>
                 <i class="ti ti-user"></i>
                 <span>Utilisateurs</span>
             </button>
-            <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "groups" ? "active" : "")" @onclick='() => SetTab("groups")'>
+            <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "groups" ? "active" : "")" @onclick='() => SetTab("groups")'>
                 <i class="ti ti-users"></i>
                 <span>Groupes</span>
             </button>
-            <button type="button" class="glpi-fiche-tab-item @(_activeTabKey == "advanced" ? "active" : "")" @onclick='() => SetTab("advanced")'>
+            <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "advanced" ? "active" : "")" @onclick='() => SetTab("advanced")'>
                 <i class="ti ti-adjustments"></i>
                 <span>Informations avancées</span>
             </button>
         </aside>
 
-        <div class="glpi-fiche-panel">
+        <div class="glping-fiche-panel">
             @* Un seul EditForm pour les quatre onglets : ils éditent le même annuaire, et changer
                d'onglet ne doit pas obliger à enregistrer entre-temps. Les boutons restent donc
                visibles quel que soit l'onglet affiché. *@

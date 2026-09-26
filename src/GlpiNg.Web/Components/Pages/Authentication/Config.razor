@@ -15,26 +15,26 @@
 }
 else
 {
-    <div class="glpi-config">
-        <div class="glpi-config-body">
-            <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glpi-config-form">
-                <div class="glpi-config-field checkbox">
+    <div class="glping-config">
+        <div class="glping-config-body">
+            <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
+                <div class="glping-config-field checkbox">
                     <label for="auth-auto-add">Ajout automatique des utilisateurs à partir des sources externes d'authentification</label>
-                    <label class="glpi-switch">
+                    <label class="glping-switch">
                         <input id="auth-auto-add" type="checkbox" @bind="_model.AutoAddUsersFromExternalAuth" />
-                        <span class="glpi-switch-slider"></span>
+                        <span class="glping-switch-slider"></span>
                     </label>
                 </div>
 
-                <div class="glpi-config-field checkbox">
+                <div class="glping-config-field checkbox">
                     <label for="auth-add-without-right">Ajouter un utilisateur sans habilitation depuis un annuaire LDAP</label>
-                    <label class="glpi-switch">
+                    <label class="glping-switch">
                         <input id="auth-add-without-right" type="checkbox" @bind="_model.AddUserWithoutRightFromLdap" />
-                        <span class="glpi-switch-slider"></span>
+                        <span class="glping-switch-slider"></span>
                     </label>
                 </div>
 
-                <div class="glpi-config-field">
+                <div class="glping-config-field">
                     <label for="auth-restored">Action quand un utilisateur est restauré dans l'annuaire LDAP</label>
                     <select id="auth-restored" @bind="_model.RestoredUserAction">
                         @foreach (LdapUserPresenceAction action in Enum.GetValues<LdapUserPresenceAction>())
@@ -44,9 +44,9 @@ else
                     </select>
                 </div>
 
-                <div class="glpi-fiche-block-title mt-3"><i class="ti ti-user-x"></i>Action lorsqu'un utilisateur est supprimé de l'annuaire LDAP</div>
+                <div class="glping-fiche-block-title mt-3"><i class="ti ti-user-x"></i>Action lorsqu'un utilisateur est supprimé de l'annuaire LDAP</div>
 
-                <div class="glpi-config-field">
+                <div class="glping-config-field">
                     <label for="auth-deleted-user">Utilisateur</label>
                     <select id="auth-deleted-user" @bind="_model.DeletedUserAction">
                         @foreach (LdapUserPresenceAction action in Enum.GetValues<LdapUserPresenceAction>())
@@ -56,7 +56,7 @@ else
                     </select>
                 </div>
 
-                <div class="glpi-config-field">
+                <div class="glping-config-field">
                     <label for="auth-deleted-groups">Groupes</label>
                     <select id="auth-deleted-groups" @bind="_model.DeletedUserGroupsAction">
                         @foreach (LdapUserPresenceAction action in Enum.GetValues<LdapUserPresenceAction>())
@@ -66,7 +66,7 @@ else
                     </select>
                 </div>
 
-                <div class="glpi-config-field">
+                <div class="glping-config-field">
                     <label for="auth-deleted-hab">Habilitations</label>
                     <select id="auth-deleted-hab" @bind="_model.DeletedUserHabilitationsAction">
                         @foreach (LdapUserPresenceAction action in Enum.GetValues<LdapUserPresenceAction>())
@@ -82,7 +82,7 @@ else
                     synchronisation — GlpiNg n'a pas de tâche planifiée de synchronisation LDAP.
                 </p>
 
-                <button type="submit" class="glpi-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+                <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
             </EditForm>
         </div>
     </div>

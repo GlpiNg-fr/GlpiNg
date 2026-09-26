@@ -4,18 +4,18 @@
    ses options n'acceptant que du texte. Menu déroulant Bootstrap (flèches du clavier, Échap), au
    gabarit des champs de configuration pour se ranger parmi eux. *@
 
-<div class="dropdown glpi-palette-select">
-    <button type="button" id="@Id" class="glpi-palette-select-toggle" data-bs-toggle="dropdown" aria-expanded="false"
+<div class="dropdown glping-palette-select">
+    <button type="button" id="@Id" class="glping-palette-select-toggle" data-bs-toggle="dropdown" aria-expanded="false"
             aria-haspopup="listbox">
         @Swatch(PaletteCatalog.KeyOf(Value))
-        <span class="glpi-palette-select-label">@PaletteCatalog.LabelOf(Value)</span>
+        <span class="glping-palette-select-label">@PaletteCatalog.LabelOf(Value)</span>
         <i class="ti ti-chevron-down ms-auto"></i>
     </button>
-    <div class="dropdown-menu glpi-palette-select-menu" role="listbox" aria-labelledby="@Id">
+    <div class="dropdown-menu glping-palette-select-menu" role="listbox" aria-labelledby="@Id">
         @foreach ((string label, string key) in PaletteCatalog.Palettes)
         {
             bool selected = PaletteCatalog.KeyOf(Value) == key;
-            <button type="button" class="dropdown-item glpi-palette-select-item @(selected ? "active" : "")"
+            <button type="button" class="dropdown-item glping-palette-select-item @(selected ? "active" : "")"
                     role="option" aria-selected="@(selected ? "true" : "false")" @onclick="() => SelectAsync(label)">
                 @Swatch(key)
                 <span>@label</span>
@@ -51,11 +51,11 @@
     {
         PalettePreview preview = PaletteCatalog.Previews[key];
 
-        <span class="glpi-palette-swatch" style="background: @preview.Page;" aria-hidden="true">
-            <span class="glpi-palette-swatch-menu" style="background: @preview.MenuBg;">
-                <span class="glpi-palette-swatch-dot" style="background: @preview.Accent;"></span>
+        <span class="glping-palette-swatch" style="background: @preview.Page;" aria-hidden="true">
+            <span class="glping-palette-swatch-menu" style="background: @preview.MenuBg;">
+                <span class="glping-palette-swatch-dot" style="background: @preview.Accent;"></span>
             </span>
-            <span class="glpi-palette-swatch-primary" style="background: @preview.Primary;"></span>
+            <span class="glping-palette-swatch-primary" style="background: @preview.Primary;"></span>
         </span>
     };
 }

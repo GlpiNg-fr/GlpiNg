@@ -4,12 +4,12 @@
 
 <PageTitle>Configuration — GlpiNg</PageTitle>
 
-<div class="glpi-config">
-    <aside class="glpi-config-sidebar">
+<div class="glping-config">
+    <aside class="glping-config-sidebar">
         @foreach (var section in Sections)
         {
             <button type="button"
-                    class="glpi-config-nav-item @(section.Key == _activeSection ? "active" : "")"
+                    class="glping-config-nav-item @(section.Key == _activeSection ? "active" : "")"
                     @onclick="() => SelectSection(section.Key)">
                 <i class="ti @section.Icon"></i>
                 <span>@section.Label</span>
@@ -17,7 +17,7 @@
         }
     </aside>
 
-    <div class="glpi-config-body">
+    <div class="glping-config-body">
         @switch (_activeSection)
         {
             case "generale":

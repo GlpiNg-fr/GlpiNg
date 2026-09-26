@@ -124,7 +124,7 @@ public partial class Index : ComponentBase
 
         _newRule = NewBlankRule();
 
-        await JS.InvokeVoidAsync("glpiNg.hideModal", "newRuleModal");
+        await JS.InvokeVoidAsync("glping.hideModal", "newRuleModal");
         await LoadAsync();
     }
 

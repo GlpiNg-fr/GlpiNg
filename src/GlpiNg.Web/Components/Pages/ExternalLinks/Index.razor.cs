@@ -122,7 +122,7 @@ public partial class Index : ComponentBase
 
         _newLink = NewBlankLink();
 
-        await JS.InvokeVoidAsync("glpiNg.hideModal", "newLinkModal");
+        await JS.InvokeVoidAsync("glping.hideModal", "newLinkModal");
         await LoadAsync();
     }
 

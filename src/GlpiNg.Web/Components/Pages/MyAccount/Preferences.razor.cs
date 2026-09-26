@@ -7,6 +7,7 @@ using GlpiNg.Web.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.JSInterop;
 
 namespace GlpiNg.Web.Components.Pages.MyAccount;
 
@@ -36,6 +37,16 @@ public partial class Preferences : ComponentBase, IAsyncDisposable
 
     [Inject]
     private SettingsCacheService SettingsStore { get; set; } = null!;
+
+    [Inject]
+    private IJSRuntime JS { get; set; } = null!;
+
+    /// <summary>Grille des vignettes de palette, où s'installe l'aperçu au survol (glping.themePreview).</summary>
+    private ElementReference _paletteGrid;
+
+    /// <summary>Délai de survol avant d'essayer une palette : assez long pour ne pas repeindre la page
+    /// au simple passage de la souris.</summary>
+    private const int PalettePreviewDelayMs = 2000;
 
     [CascadingParameter]
     private Task<AuthenticationState>? AuthStateTask { get; set; }
@@ -256,8 +267,39 @@ public partial class Preferences : ComponentBase, IAsyncDisposable
         }
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // La grille n'existe que sur l'onglet Apparence ; l'appel est idempotent par élément, on le
+        // refait donc à chaque rendu de cet onglet.
+        if (_activeTab == "apparence")
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("glping.themePreview", _paletteGrid, PalettePreviewDelayMs);
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+        }
+    }
+
     public async ValueTask DisposeAsync()
     {
+        // Une palette essayée ou cliquée sans être enregistrée ne doit pas survivre à la page : la
+        // navigation interne ne recharge pas <html>, où elle est posée. On remet celle du compte.
+        try
+        {
+            await JS.InvokeVoidAsync("glping.applyTheme", Display.Values.Palette);
+        }
+        catch (JSDisconnectedException)
+        {
+        }
+        catch (InvalidOperationException)
+        {
+            // Instance du prérendu (rendu statique, sans JS) : elle n'a jamais appliqué d'aperçu,
+            // il n'y a rien à restaurer.
+        }
+
         if (_db is not null)
         {
             await _db.DisposeAsync();

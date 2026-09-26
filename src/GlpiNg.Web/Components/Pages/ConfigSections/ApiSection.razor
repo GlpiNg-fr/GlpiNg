@@ -11,33 +11,33 @@
 }
 else
 {
-    <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glpi-config-form">
-        <div class="glpi-config-field checkbox">
+    <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
+        <div class="glping-config-field checkbox">
             <label for="api-hlapi">Activer l'API</label>
-            <label class="glpi-switch">
+            <label class="glping-switch">
                 <input id="api-hlapi" type="checkbox" @bind="_model.EnableHighLevelApi" />
-                <span class="glpi-switch-slider"></span>
+                <span class="glping-switch-slider"></span>
             </label>
         </div>
 
-        <div class="glpi-config-field checkbox">
+        <div class="glping-config-field checkbox">
             <label for="api-legacy">Activer l'API REST legacy</label>
-            <label class="glpi-switch">
+            <label class="glping-switch">
                 <input id="api-legacy" type="checkbox" @bind="_model.EnableLegacyRestApi" />
-                <span class="glpi-switch-slider"></span>
+                <span class="glping-switch-slider"></span>
             </label>
         </div>
 
-        <div class="glpi-config-field checkbox">
+        <div class="glping-config-field checkbox">
             <label for="swagger">Activer Swagger (/swagger)</label>
-            <label class="glpi-switch">
+            <label class="glping-switch">
                 <input id="swagger" type="checkbox" @bind="_server.SwaggerEnabled" />
-                <span class="glpi-switch-slider"></span>
+                <span class="glping-switch-slider"></span>
             </label>
         </div>
         <p class="hint">Pris en compte immédiatement, sans redémarrage.</p>
 
-        <div class="glpi-config-field">
+        <div class="glping-config-field">
             <label for="api-url">URL de l'API</label>
             <input id="api-url" @bind="_model.LegacyApiUrl" />
         </div>
@@ -47,23 +47,23 @@ else
             endpoint.
         </p>
 
-        <div class="glpi-config-field checkbox">
+        <div class="glping-config-field checkbox">
             <label for="api-login-creds">Activer la connexion avec identifiants</label>
-            <label class="glpi-switch">
+            <label class="glping-switch">
                 <input id="api-login-creds" type="checkbox" @bind="_model.EnableLoginWithCredentials" />
-                <span class="glpi-switch-slider"></span>
+                <span class="glping-switch-slider"></span>
             </label>
         </div>
 
-        <div class="glpi-config-field checkbox">
+        <div class="glping-config-field checkbox">
             <label for="api-login-token">Activer la connexion avec un jeton externe</label>
-            <label class="glpi-switch">
+            <label class="glping-switch">
                 <input id="api-login-token" type="checkbox" @bind="_model.EnableLoginWithExternalToken" />
-                <span class="glpi-switch-slider"></span>
+                <span class="glping-switch-slider"></span>
             </label>
         </div>
 
-        <button type="submit" class="glpi-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
     </EditForm>
 }
 

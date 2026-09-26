@@ -130,7 +130,7 @@ public partial class Index : ComponentBase
 
         _newTemplate = NewBlankTemplate();
 
-        await JS.InvokeVoidAsync("glpiNg.hideModal", "newTemplateModal");
+        await JS.InvokeVoidAsync("glping.hideModal", "newTemplateModal");
         await LoadAsync();
     }
 
