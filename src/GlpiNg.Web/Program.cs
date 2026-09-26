@@ -97,6 +97,12 @@ public class Program
         // commité (voir .gitignore).
         builder.Configuration.AddJsonFile(storagePaths.LocalSettings, optional: true, reloadOnChange: true);
 
+        // Formatage selon les préférences (« Display » dans les _Imports.razor), injecté dans tous
+        // les composants — App.razor et les pages de l'assistant d'installation compris. Enregistré
+        // ici, avant la garde d'installation, et sans exiger IUserPreferences, qui n'existe qu'une
+        // fois la base configurée : sans lui, ce sont les valeurs par défaut.
+        builder.Services.AddScoped(services => new UserDisplay(services.GetService<IUserPreferences>()));
+
         // UI Blazor Server (rendu interactif)
         builder.Services.AddRazorComponents()
             .AddInteractiveServerComponents()
@@ -320,9 +326,12 @@ public class Program
             builder.Services.AddScoped<IProfileRightsProvider, ProfileRightsProvider>();
 
             // Préférences d'affichage du compte connecté, consultées par les pages des modules
-            // (taille des tableaux, écriture des adresses MAC). Scoped : une lecture par circuit,
-            // mémorisée — voir UserPreferencesProvider.
+            // (taille des tableaux, adresses MAC, dates, fuseau, noms...). Scoped : une lecture par
+            // requête et par circuit, mémorisée — voir UserPreferencesProvider. Le préchargeur les
+            // lit à l'ouverture de chaque circuit, et UserDisplay les expose au balisage sous le
+            // nom « Display » (voir les _Imports.razor).
             builder.Services.AddScoped<IUserPreferences, UserPreferencesProvider>();
+            builder.Services.AddScoped<Microsoft.AspNetCore.Components.Server.Circuits.CircuitHandler, UserPreferencesPreloader>();
             builder.Services.AddScoped<ProfileRightsService>();
             builder.Services.AddScoped<EntityDeletionGuard>();
             builder.Services.AddScoped<IEntityOptionsProvider, EntityOptionsProvider>();
@@ -516,6 +525,10 @@ public class Program
             // retouches faites depuis et en exigeant que la base GLPI source soit joignable.
             builder.Services.AddScoped<ICronTask, KnowledgeBaseHtmlReconversionCronTask>();
 
+            // Jobs de déploiement que l'agent a reçus mais jamais terminés (JSON refusé, poste
+            // éteint en pleine installation) : sans elle, ils restent « en cours » pour toujours.
+            builder.Services.AddScoped<ICronTask, DeploymentJobTimeoutCronTask>();
+
             // Notifications (voir /config/notifications, Models/Notifications et
             // Services/Notifications) : NotificationDispatchService dépose des QueuedNotification
             // au fil des événements réels de GlpiNg (nouvel ordinateur, nouvel agent, fin de
@@ -603,6 +616,10 @@ public class Program
         // navigation interne au circuit Blazor ne passe pas par ici — elle est gardée dans
         // MainLayout, sur la même table de correspondance (voir ProfileSectionMap).
         app.UseSectionAccess();
+
+        // Préférences d'affichage chargées avant le prérendu des pages, qui les lit sans attendre
+        // (voir UserPreferencesPreloader). Après l'authentification, qui fournit l'utilisateur.
+        UserPreferencesPreloader.UseUserPreferencesPreload(app);
 
         // AllowAnonymous() explicite : sans lui, le FallbackPolicy (voir plus haut) exige une
         // session authentifiée même pour les fichiers statiques (CSS/JS), ce qui casserait entre

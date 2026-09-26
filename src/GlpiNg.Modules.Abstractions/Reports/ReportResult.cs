@@ -53,7 +53,10 @@ public sealed record ReportRow(IReadOnlyList<ReportCell> Cells, bool IsTotal = f
 /// <see cref="ReportColumnKind.Share"/>) et un lien vers la fiche ou la liste correspondante.
 /// <see cref="Href"/> est ignoré par les exports, qui n'ont pas de lien à offrir.
 /// </summary>
-public sealed record ReportCell(string Text, double? Share = null, string? Href = null)
+/// <para><paramref name="DateUtc"/> garde l'instant d'une cellule de date (voir <see cref="Date"/>) : l'hôte en
+/// réécrit le texte selon les préférences de l'utilisateur (format, fuseau) avant affichage et export,
+/// sans que chaque rapport ait à les connaître.</para>
+public sealed record ReportCell(string Text, double? Share = null, string? Href = null, DateTime? DateUtc = null)
 {
     /// <summary>Culture d'écriture des nombres affichés : l'UI est en français en dur (voir le README), et
     /// un rapport ne doit pas changer de séparateur décimal selon la culture du serveur qui l'exécute.</summary>
@@ -77,6 +80,7 @@ public sealed record ReportCell(string Text, double? Share = null, string? Href 
         return new ReportCell(ratio.ToString("P1", Fr), ratio);
     }
 
+    /// <summary>Instant enregistré en UTC. Le texte n'est qu'un repli : l'hôte le réécrit (voir <see cref="DateUtc"/>).</summary>
     public static ReportCell Date(DateTime? value)
-        => new(value is { } date ? date.ToLocalTime().ToString("dd/MM/yyyy HH:mm", Fr) : "—");
+        => new(value is { } date ? date.ToLocalTime().ToString("dd/MM/yyyy HH:mm", Fr) : "—", DateUtc: value);
 }

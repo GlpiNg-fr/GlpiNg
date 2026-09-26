@@ -61,8 +61,8 @@ else
                         </td>
                         <td class="text-truncate" style="max-width: 32rem;">@row.Note.Content</td>
                         <td class="text-secondary text-nowrap">@row.Note.AuthorName</td>
-                        <td class="text-secondary text-nowrap">@row.Note.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
-                        <td class="text-secondary text-nowrap">@(row.Note.UpdatedAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "—")</td>
+                        <td class="text-secondary text-nowrap">@Display.DateTime(row.Note.CreatedAt)</td>
+                        <td class="text-secondary text-nowrap">@(Display.DateTime(row.Note.UpdatedAt) ?? "—")</td>
                         <td class="text-nowrap">
                             @if (_confirmDeleteId == row.Note.Id)
                             {

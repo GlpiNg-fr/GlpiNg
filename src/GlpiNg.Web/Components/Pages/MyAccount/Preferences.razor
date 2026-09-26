@@ -1,5 +1,6 @@
-﻿@page "/preferences"
+@page "/preferences"
 @using GlpiNg.Modules.Abstractions.Preferences
+@using GlpiNg.Web.Services
 @rendermode InteractiveServer
 
 <PageTitle>Préférences — GlpiNg</PageTitle>
@@ -11,64 +12,294 @@
     </div>
 </div>
 
-<div class="glpi-fiche-panel glpi-fiche-panel-fill">
-    <div class="glpi-fiche-block">
-        <div class="glpi-fiche-block-title"><i class="ti ti-layout-sidebar"></i>Affichage</div>
-        <p class="text-secondary small">
-            GlpiNg n'a pas (encore) les dizaines de préférences d'affichage de GLPI (langue, thème,
-            tableaux de bord...). Celles qui suivent sont réellement exploitées par l'application.
-        </p>
-        <div class="row">
-            <div class="col-md-6">
-                <div class="glpi-fiche-field">
-                    <label>Réduire le menu latéral</label>
-                    <select class="form-select" value="@(_sidebarCollapsed ? "true" : "false")" @onchange="@(e => _sidebarCollapsed = e.Value?.ToString() == "true")">
-                        <option value="false">Non</option>
-                        <option value="true">Oui</option>
-                    </select>
-                </div>
-                <div class="glpi-fiche-field">
-                    <label>Éléments par page</label>
-                    <select class="form-select" value="@_itemsPerPage.ToString()"
-                            @onchange="@(e => _itemsPerPage = int.TryParse((string?)e.Value, out int size) ? size : DefaultItemsPerPage)">
-                        @foreach (int size in ItemsPerPageOptions)
-                        {
-                            <option value="@size">@size</option>
-                        }
-                    </select>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="glpi-fiche-field">
-                    <label>Format des adresses MAC</label>
-                    <select class="form-select" value="@((int)_macAddressFormat)"
-                            @onchange="@(e => _macAddressFormat = int.TryParse((string?)e.Value, out int format) && Enum.IsDefined((MacAddressFormat)format) ? (MacAddressFormat)format : MacAddressFormat.Default)">
-                        @foreach (MacAddressFormat format in Enum.GetValues<MacAddressFormat>())
-                        {
-                            @* L'exemple sert de libellé : « ColonUpper » ne dit rien, « AA:BB:CC:DD:EE:FF »
-                               se reconnaît immédiatement. *@
-                            <option value="@((int)format)">
-                                @(format == MacAddressFormat.Default
-                                    ? $"Réglage de l'instance ({MacAddressFormatter.Sample(_instanceMacFormat)})"
-                                    : MacAddressFormatter.Sample(format))
-                            </option>
-                        }
-                    </select>
-                </div>
-            </div>
-        </div>
-        <p class="text-secondary small mb-0">
-            Le nombre d'éléments par page s'applique à l'ouverture d'une liste ; il reste modifiable
-            au pied de chaque tableau pour la consultation en cours. Le format des adresses MAC ne
-            change que l'affichage — la valeur remontée par l'agent est conservée telle quelle. Laissé
-            sur « Réglage de l'instance », il suit « Affichage adresse MAC » de la configuration
-            générale.
-        </p>
-    </div>
+@* Même disposition que les fiches (ordinateur...) : une catégorie par onglet. Tous les onglets
+   éditent le même formulaire — le bouton Sauvegarder enregistre l'ensemble, quel que soit
+   l'onglet affiché, et changer d'onglet ne perd rien de ce qui a été modifié. *@
+<div class="glpi-fiche-layout">
+    <aside class="glpi-fiche-sidebar">
+        @foreach ((string key, string icon, string label) in Tabs)
+        {
+            <button type="button" class="glpi-fiche-tab-item @(_activeTab == key ? "active" : "")" @onclick="() => _activeTab = key">
+                <i class="ti @icon"></i>
+                <span>@label</span>
+            </button>
+        }
+    </aside>
 
-    <div class="d-flex justify-content-end gap-2 mt-3">
-        <button type="button" class="btn btn-primary" disabled="@_isSaving" @onclick="SaveAsync">
-            <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
-        </button>
+    <div class="glpi-fiche-panel glpi-fiche-panel-fill">
+        <p class="text-secondary small">
+            Chaque réglage laissé sur « Réglage de l'instance » suit Configuration &gt; Valeurs par défaut,
+            et en suivra les changements. La langue n'est pas proposée : GlpiNg n'existe qu'en français.
+        </p>
+
+        @switch (_activeTab)
+        {
+            case "affichage":
+                <div class="glpi-fiche-block">
+                    <div class="glpi-fiche-block-title"><i class="ti ti-layout-sidebar"></i>Affichage</div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="glpi-fiche-field">
+                                <label>Réduire le menu latéral</label>
+                                <select class="form-select" value="@(_sidebarCollapsed ? "true" : "false")" @onchange="@(e => _sidebarCollapsed = e.Value?.ToString() == "true")">
+                                    <option value="false">Non</option>
+                                    <option value="true">Oui</option>
+                                </select>
+                            </div>
+                            <div class="glpi-fiche-field">
+                                <label>Éléments par page</label>
+                                <select class="form-select" value="@_itemsPerPage.ToString()"
+                                        @onchange="@(e => _itemsPerPage = int.TryParse((string?)e.Value, out int size) ? size : 0)">
+                                    <option value="0">Réglage de l'instance (@InstanceItemsPerPage)</option>
+                                    @foreach (int size in UserPreferencesProvider.ItemsPerPageOptions)
+                                    {
+                                        <option value="@size">@size</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="glpi-fiche-field">
+                                <label>Format des adresses MAC</label>
+                                <select class="form-select" value="@((int)_macAddressFormat)"
+                                        @onchange="@(e => _macAddressFormat = int.TryParse((string?)e.Value, out int format) && Enum.IsDefined((MacAddressFormat)format) ? (MacAddressFormat)format : MacAddressFormat.Default)">
+                                    @foreach (MacAddressFormat format in Enum.GetValues<MacAddressFormat>())
+                                    {
+                                        @* L'exemple sert de libellé : « ColonUpper » ne dit rien, « AA:BB:CC:DD:EE:FF »
+                                           se reconnaît immédiatement. *@
+                                        <option value="@((int)format)">
+                                            @(format == MacAddressFormat.Default
+                                                ? $"Réglage de l'instance ({MacAddressFormatter.Sample(_instanceMacFormat)})"
+                                                : MacAddressFormatter.Sample(format))
+                                        </option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="glpi-fiche-field">
+                                <label>Afficher les compteurs</label>
+                                <select class="form-select" value="@_showCounters" disabled="@CountersForbidden" @onchange="@(e => _showCounters = e.Value?.ToString() ?? string.Empty)">
+                                    <option value="">Réglage de l'instance (@InstanceCountersLabel)</option>
+                                    <option value="true">Oui</option>
+                                    <option value="false">Non</option>
+                                </select>
+                            </div>
+                            @if (CountersForbidden)
+                            {
+                                <p class="hint">L'instance les interdit à tous (« Jamais ») : ce choix ne peut pas être changé ici.</p>
+                            }
+                            <div class="glpi-fiche-field">
+                                <label>Afficher les ID</label>
+                                <select class="form-select" value="@_showIds" @onchange="@(e => _showIds = e.Value?.ToString() ?? string.Empty)">
+                                    <option value="">Réglage de l'instance (@YesNo(_instance.ShowGlpiIds))</option>
+                                    <option value="true">Oui</option>
+                                    <option value="false">Non</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-secondary small mb-0">
+                        Le nombre d'éléments par page s'applique à l'ouverture d'une liste ; il reste modifiable au
+                        pied de chaque tableau. Le format des adresses MAC ne change que l'affichage. Les compteurs
+                        sont ceux des onglets des fiches ; les ID suivent le nom des utilisateurs, groupes, entités
+                        et profils dans les listes de choix.
+                    </p>
+                </div>
+                break;
+
+            case "apparence":
+                <div class="glpi-fiche-block">
+                    <div class="glpi-fiche-block-title"><i class="ti ti-palette"></i>Palette de couleur</div>
+                    <div class="glpi-palette-grid" role="radiogroup" aria-label="Palette de couleur">
+                        @{
+                            string instanceKey = PaletteCatalog.KeyOf(_instance.ColorPalette);
+                        }
+                        @* La première vignette suit l'instance : elle montre la palette qu'elle applique
+                           aujourd'hui, et suivra celle qui la remplacera. *@
+                        @PaletteCard(Inherit, $"Réglage de l'instance ({InstancePaletteLabel})", instanceKey)
+                        @foreach ((string label, string key) in PaletteCatalog.Palettes)
+                        {
+                            @PaletteCard(label, label, key)
+                        }
+                    </div>
+                    <p class="text-secondary small mt-2 mb-0">
+                        Palettes de GLPI. Darker et Midnight passent toute l'interface en sombre ; « Dark »,
+                        comme dans GLPI, garde des pages claires sous un menu très sombre. La palette
+                        s'applique après l'enregistrement.
+                    </p>
+                </div>
+
+                <div class="glpi-fiche-block">
+                    <div class="glpi-fiche-block-title"><i class="ti ti-contrast"></i>Accessibilité</div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="glpi-fiche-field">
+                                <label>Contraste élevé</label>
+                                <select class="form-select" value="@_highContrast" @onchange="@(e => _highContrast = e.Value?.ToString() ?? string.Empty)">
+                                    <option value="">Réglage de l'instance (@YesNo(_instance.HighContrast))</option>
+                                    <option value="true">Oui</option>
+                                    <option value="false">Non</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-secondary small mb-0">
+                        Texte à pleine encre, bordures franches, liens soulignés et focus clavier bien visible,
+                        quelle que soit la palette.
+                    </p>
+                </div>
+                break;
+
+            case "dates":
+                <div class="glpi-fiche-block">
+                    <div class="glpi-fiche-block-title"><i class="ti ti-calendar-time"></i>Dates et heures</div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="glpi-fiche-field">
+                                <label>Format des dates</label>
+                                <select class="form-select" value="@_dateFormat" @onchange="@(e => _dateFormat = e.Value?.ToString() ?? string.Empty)">
+                                    <option value="">Réglage de l'instance (@DateFormatLabel(_instance.DateFormat))</option>
+                                    <option value="ymd">AAAA-MM-JJ</option>
+                                    <option value="dmy">JJ-MM-AAAA</option>
+                                    <option value="mdy">MM-JJ-AAAA</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="glpi-fiche-field">
+                                <label>Fuseau horaire</label>
+                                <select class="form-select" value="@_timezone" @onchange="@(e => _timezone = e.Value?.ToString() ?? string.Empty)">
+                                    <option value="">Réglage de l'instance (@TimezoneLabel(_instance.Timezone))</option>
+                                    <option value="server">Fuseau du serveur</option>
+                                    @foreach ((string id, string label) in _timezones)
+                                    {
+                                        <option value="@id">@label</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-secondary small mb-0">
+                        Aperçu : <span class="fw-semibold">@Preview</span>. Le fuseau s'applique aux instants
+                        enregistrés par l'application (ouverture d'un ticket, dernier contact d'un agent...). Les
+                        échéances et les planifications saisies à la main restent à l'heure où elles ont été saisies.
+                    </p>
+                </div>
+                break;
+
+            case "personnes":
+                <div class="glpi-fiche-block">
+                    <div class="glpi-fiche-block-title"><i class="ti ti-users"></i>Personnes</div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="glpi-fiche-field">
+                                <label>Ordre d'affichage du nom complet</label>
+                                <select class="form-select" value="@_nameOrder" @onchange="@(e => _nameOrder = e.Value?.ToString() ?? string.Empty)">
+                                    <option value="">Réglage de l'instance (@NameOrderLabel(_instance.FullNameOrder))</option>
+                                    <option value="NomPrenom">Nom Prénom</option>
+                                    <option value="PrenomNom">Prénom Nom</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-secondary small mb-0">Pour les comptes dont le nom et le prénom sont renseignés.</p>
+                </div>
+                break;
+
+            case "historique":
+                <div class="glpi-fiche-block">
+                    <div class="glpi-fiche-block-title"><i class="ti ti-history"></i>Historique</div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="glpi-fiche-field">
+                                <label>Ordre de l'historique</label>
+                                <select class="form-select" value="@_historyOrder" @onchange="@(e => _historyOrder = e.Value?.ToString() ?? string.Empty)">
+                                    <option value="">Réglage de l'instance (@HistoryOrderLabel(_instance.HistoryOrder))</option>
+                                    <option value="natural">Anciennes entrées en premier</option>
+                                    <option value="reverse">Nouvelles entrées en premier</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-secondary small mb-0">Onglets Historique des fiches et fils de suivis de l'assistance.</p>
+                </div>
+                break;
+
+            case "exports":
+                <div class="glpi-fiche-block">
+                    <div class="glpi-fiche-block-title"><i class="ti ti-file-export"></i>Exports</div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="glpi-fiche-field">
+                                <label>Délimiteur CSV</label>
+                                <select class="form-select" value="@_csvDelimiter" @onchange="@(e => _csvDelimiter = e.Value?.ToString() ?? string.Empty)">
+                                    <option value="">Réglage de l'instance (@_instance.CsvDelimiter)</option>
+                                    <option value=";">;</option>
+                                    <option value=",">,</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-secondary small mb-0">« ; » pour Excel en français, « , » pour la plupart des autres outils.</p>
+                </div>
+                break;
+
+            case "notifications":
+                <div class="glpi-fiche-block">
+                    <div class="glpi-fiche-block-title"><i class="ti ti-bell"></i>Notifications</div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="glpi-fiche-field">
+                                <label>Notifications pour mes changements</label>
+                                <select class="form-select" value="@_notifyOnMyChanges" @onchange="@(e => _notifyOnMyChanges = e.Value?.ToString() ?? string.Empty)">
+                                    <option value="">Réglage de l'instance (@YesNo(_instance.NotifyOnMyChanges))</option>
+                                    <option value="true">Oui</option>
+                                    <option value="false">Non</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-secondary small mb-0">
+                        Sur « Non », un courriel déclenché par votre propre action ne vous est pas envoyé.
+                    </p>
+                </div>
+                break;
+        }
+
+        <div class="d-flex justify-content-end gap-2 mt-3">
+            <button type="button" class="btn btn-primary" disabled="@_isSaving" @onclick="SaveAsync">
+                <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
+            </button>
+        </div>
     </div>
 </div>
+
+@code {
+    /// <summary>
+    /// Une vignette de palette : un aperçu miniature (menu, accent, bouton, page) et son nom. La
+    /// sélection se lit à la bordure et à la coche, pas à la seule couleur.
+    /// </summary>
+    private RenderFragment PaletteCard(string value, string title, string key) => __builder =>
+    {
+        (string menuBg, string menuFg, string accent, string primary, string primaryFg, string pageBg) = PaletteCatalog.Previews[key];
+        bool selected = string.Equals(_colorPalette, value, StringComparison.OrdinalIgnoreCase);
+
+        <button type="button" class="glpi-palette-card @(selected ? "selected" : "")" role="radio" aria-checked="@(selected ? "true" : "false")"
+                @onclick="() => _colorPalette = value">
+            <span class="glpi-palette-preview" style="background: @pageBg;" aria-hidden="true">
+                <span class="glpi-palette-menu" style="background: @menuBg;">
+                    <span class="glpi-palette-dot" style="background: @accent;"></span>
+                    <span class="glpi-palette-line" style="background: @menuFg;"></span>
+                    <span class="glpi-palette-line" style="background: @menuFg;"></span>
+                </span>
+                <span class="glpi-palette-button" style="background: @primary; color: @primaryFg;">Aa</span>
+            </span>
+            <span class="glpi-palette-name">
+                @if (selected)
+                {
+                    <i class="ti ti-circle-check-filled me-1"></i>
+                }
+                @title
+            </span>
+        </button>
+    };
+}

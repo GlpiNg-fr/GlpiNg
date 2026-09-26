@@ -1,5 +1,6 @@
 using GlpiNg.Modules.Abstractions.Deployment;
 using GlpiNg.Modules.Abstractions.Directory;
+using GlpiNg.Modules.Abstractions.Preferences;
 using GlpiNg.Web.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,14 +13,21 @@ namespace GlpiNg.Web.Services;
 /// Rend aussi <see cref="IDeploymentTargetDirectory"/>, le contrat plus ancien et plus étroit du
 /// seul module Déploiement, en déléguant aux mêmes requêtes : deux services distincts auraient
 /// signifié deux fois les mêmes quatre requêtes, avec la garantie qu'elles divergent un jour.
+///
+/// Les noms rendus suivent les préférences de l'utilisateur connecté : ordre Nom/Prénom et
+/// identifiant affiché (« Afficher les ID »). C'est l'endroit par où passent toutes les listes de
+/// choix d'acteurs des modules, donc celui où le réglage s'applique partout d'un coup.
 /// </summary>
-public sealed class PrincipalDirectory(IDbContextFactory<GlpiNgDbContext> dbFactory) : IPrincipalDirectory, IDeploymentTargetDirectory
+public sealed class PrincipalDirectory(
+    IDbContextFactory<GlpiNgDbContext> dbFactory,
+    IUserPreferences preferences) : IPrincipalDirectory, IDeploymentTargetDirectory
 {
     public async Task<IReadOnlyList<PrincipalOption>> GetAsync(PrincipalKind kind, CancellationToken cancellationToken = default)
     {
         await using GlpiNgDbContext db = await dbFactory.CreateDbContextAsync(cancellationToken);
+        UserPreferenceValues display = await preferences.GetAsync(cancellationToken);
 
-        return kind switch
+        List<PrincipalOption> options = kind switch
         {
             PrincipalKind.Entity => await db.Entities
                 .AsNoTracking()
@@ -39,14 +47,22 @@ public sealed class PrincipalDirectory(IDbContextFactory<GlpiNgDbContext> dbFact
                 .Select(profile => new PrincipalOption(profile.Id, profile.Name))
                 .ToListAsync(cancellationToken),
 
-            PrincipalKind.User => await db.Users
-                .AsNoTracking()
-                .OrderBy(user => user.UserName)
-                .Select(user => new PrincipalOption(user.Id, user.DisplayName ?? user.UserName))
-                .ToListAsync(cancellationToken),
+            // Nom complet construit en mémoire : l'ordre dépend de la préférence, et le tri doit
+            // suivre ce qui s'affiche, pas l'identifiant de connexion.
+            PrincipalKind.User => [.. (await db.Users
+                    .AsNoTracking()
+                    .Select(user => new { user.Id, user.FirstName, user.LastName, user.DisplayName, user.UserName })
+                    .ToListAsync(cancellationToken))
+                .Select(user => new PrincipalOption(user.Id,
+                    display.PersonName(user.FirstName, user.LastName, user.DisplayName ?? user.UserName)))
+                .OrderBy(option => option.Name, StringComparer.CurrentCultureIgnoreCase)],
 
             _ => [],
         };
+
+        return display.ShowIds
+            ? [.. options.Select(option => option with { Name = display.WithId(option.Name, option.Id) })]
+            : options;
     }
 
     public async Task<IReadOnlyList<DeploymentTargetOption>> GetEntitiesAsync(CancellationToken cancellationToken = default)

@@ -185,10 +185,23 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<Ticket> Tickets => Set<Ticket>();
     public DbSet<Problem> Problems => Set<Problem>();
     public DbSet<ProblemTicket> ProblemTickets => Set<ProblemTicket>();
+    public DbSet<Change> Changes => Set<Change>();
+    public DbSet<ChangeValidation> ChangeValidations => Set<ChangeValidation>();
+    public DbSet<ChangeTicket> ChangeTickets => Set<ChangeTicket>();
+    public DbSet<ChangeProblem> ChangeProblems => Set<ChangeProblem>();
     public DbSet<ItilFollowup> ItilFollowups => Set<ItilFollowup>();
     public DbSet<ItilTask> ItilTasks => Set<ItilTask>();
     public DbSet<TicketCategory> TicketCategories => Set<TicketCategory>();
     public DbSet<AssistanceHistoryEntry> AssistanceHistoryEntries => Set<AssistanceHistoryEntry>();
+
+    public DbSet<Calendar> Calendars => Set<Calendar>();
+    public DbSet<CalendarSegment> CalendarSegments => Set<CalendarSegment>();
+    public DbSet<CalendarHoliday> CalendarHolidays => Set<CalendarHoliday>();
+    public DbSet<ServiceLevel> ServiceLevels => Set<ServiceLevel>();
+    public DbSet<ServiceLevelAgreement> ServiceLevelAgreements => Set<ServiceLevelAgreement>();
+    public DbSet<ServiceLevelEscalation> ServiceLevelEscalations => Set<ServiceLevelEscalation>();
+    public DbSet<ServiceLevelEscalationAction> ServiceLevelEscalationActions => Set<ServiceLevelEscalationAction>();
+    public DbSet<TicketEscalation> TicketEscalations => Set<TicketEscalation>();
 
     public DbSet<CustomAssetDefinition> CustomAssetDefinitions => Set<CustomAssetDefinition>();
     public DbSet<CustomAssetField> CustomAssetFields => Set<CustomAssetField>();
@@ -1214,6 +1227,64 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
         modelBuilder.Entity<Problem>()
             .HasIndex(problem => problem.AssignedUserId);
 
+        // Changements : mêmes règles que les problèmes pour la catégorie et les rattachements —
+        // le lien part avec l'un ou l'autre bout, jamais l'objet d'en face. Changes, Tickets et
+        // Problems ne se référencent pas entre eux : aucune des cascades ne partage de chemin.
+        modelBuilder.Entity<Change>()
+            .HasOne(change => change.Category)
+            .WithMany()
+            .HasForeignKey(change => change.CategoryId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Change>()
+            .HasIndex(change => new { change.Status, change.OpenedAt });
+
+        modelBuilder.Entity<Change>()
+            .HasIndex(change => change.AssignedUserId);
+
+        modelBuilder.Entity<ChangeTicket>()
+            .HasOne(link => link.Change)
+            .WithMany()
+            .HasForeignKey(link => link.ChangeId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ChangeTicket>()
+            .HasOne(link => link.Ticket)
+            .WithMany()
+            .HasForeignKey(link => link.TicketId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ChangeTicket>()
+            .HasIndex(link => new { link.ChangeId, link.TicketId })
+            .IsUnique();
+
+        modelBuilder.Entity<ChangeProblem>()
+            .HasOne(link => link.Change)
+            .WithMany()
+            .HasForeignKey(link => link.ChangeId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ChangeProblem>()
+            .HasOne(link => link.Problem)
+            .WithMany()
+            .HasForeignKey(link => link.ProblemId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ChangeProblem>()
+            .HasIndex(link => new { link.ChangeId, link.ProblemId })
+            .IsUnique();
+
+        // Une approbation n'existe que pour son changement ; l'index sur l'approbateur sert à
+        // retrouver ce qu'un utilisateur a encore à approuver.
+        modelBuilder.Entity<ChangeValidation>()
+            .HasOne(validation => validation.Change)
+            .WithMany()
+            .HasForeignKey(validation => validation.ChangeId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ChangeValidation>()
+            .HasIndex(validation => new { validation.ValidatorUserId, validation.Status });
+
         modelBuilder.Entity<TicketCategory>()
             .HasOne(category => category.Parent)
             .WithMany()
@@ -1230,6 +1301,100 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
         // Même table polymorphe que l'historique de la Gestion, pour les mêmes raisons.
         modelBuilder.Entity<AssistanceHistoryEntry>()
             .HasIndex(entry => new { entry.ItemType, entry.ItemId, entry.OccurredAt });
+
+        // Niveaux de service. Un calendrier porte ses plages et ses fermetures, un niveau porte ses
+        // engagements, un engagement ses niveaux d'escalade, et ceux-ci leurs actions : toute la
+        // chaîne part en cascade, chaque maillon n'existant que par celui du dessus.
+        modelBuilder.Entity<Calendar>()
+            .HasMany(calendar => calendar.Segments)
+            .WithOne(segment => segment.Calendar!)
+            .HasForeignKey(segment => segment.CalendarId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Calendar>()
+            .HasMany(calendar => calendar.Holidays)
+            .WithOne(holiday => holiday.Calendar!)
+            .HasForeignKey(holiday => holiday.CalendarId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Le calendrier, lui, survit à ce qui s'en sert : supprimer un calendrier encore utilisé
+        // ferait basculer en silence des engagements en temps réel. L'écran le refuse déjà, et
+        // cette contrainte le garantit en base.
+        modelBuilder.Entity<ServiceLevel>()
+            .HasOne(level => level.Calendar)
+            .WithMany()
+            .HasForeignKey(level => level.CalendarId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ServiceLevel>()
+            .HasMany(level => level.Agreements)
+            .WithOne(agreement => agreement.ServiceLevel!)
+            .HasForeignKey(agreement => agreement.ServiceLevelId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ServiceLevelAgreement>()
+            .HasMany(agreement => agreement.Escalations)
+            .WithOne(escalation => escalation.Agreement!)
+            .HasForeignKey(escalation => escalation.ServiceLevelAgreementId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ServiceLevelEscalation>()
+            .HasMany(escalation => escalation.Actions)
+            .WithOne(action => action.Escalation!)
+            .HasForeignKey(action => action.ServiceLevelEscalationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Les quatre engagements d'un ticket sont en Restrict, et non en SetNull : quatre chemins
+        // de suppression partant de ServiceLevelAgreements vers Tickets seraient refusés par SQL
+        // Server (1785). Les écrans refusent donc de supprimer un engagement encore porté.
+        modelBuilder.Entity<Ticket>()
+            .HasOne(ticket => ticket.SlaTimeToOwn)
+            .WithMany()
+            .HasForeignKey(ticket => ticket.SlaTimeToOwnId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Ticket>()
+            .HasOne(ticket => ticket.SlaTimeToResolve)
+            .WithMany()
+            .HasForeignKey(ticket => ticket.SlaTimeToResolveId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Ticket>()
+            .HasOne(ticket => ticket.OlaTimeToOwn)
+            .WithMany()
+            .HasForeignKey(ticket => ticket.OlaTimeToOwnId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Ticket>()
+            .HasOne(ticket => ticket.OlaTimeToResolve)
+            .WithMany()
+            .HasForeignKey(ticket => ticket.OlaTimeToResolveId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Trace d'escalade : elle part avec le ticket comme avec le niveau qui l'a produite. Deux
+        // cascades vers la même table, mais Tickets et ServiceLevelEscalations ne se référencent
+        // pas — pas de chemin partagé, donc pas de 1785.
+        modelBuilder.Entity<TicketEscalation>()
+            .HasOne(entry => entry.Ticket)
+            .WithMany()
+            .HasForeignKey(entry => entry.TicketId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<TicketEscalation>()
+            .HasOne(entry => entry.Escalation)
+            .WithMany()
+            .HasForeignKey(entry => entry.ServiceLevelEscalationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Un niveau ne s'applique qu'une fois par ticket : la contrainte le garantit même si deux
+        // passages de la tâche cron se chevauchaient.
+        modelBuilder.Entity<TicketEscalation>()
+            .HasIndex(entry => new { entry.TicketId, entry.ServiceLevelEscalationId })
+            .IsUnique();
+
+        // La requête de la tâche d'escalade : les tickets dont une échéance approche.
+        modelBuilder.Entity<Ticket>()
+            .HasIndex(ticket => ticket.TimeToResolve);
 
         modelBuilder.Entity<CustomAssetDefinition>()
             .HasMany(definition => definition.Fields)

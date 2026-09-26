@@ -135,6 +135,24 @@ the single source shared with documents). Wired to the Computer and knowledge-ba
 below, which it follows for the same reason. Entity and group notes still live in their own
 pre-existing tables (`GlpiEntityNote`, `GlpiGroupNote`); converging them is a follow-up.
 
+**Displaying dates**: never format a date by hand (`.ToLocalTime().ToString("dd/MM/yyyy")`) —
+it would ignore the user's date-format and time-zone preferences. Every component has
+`Display` injected (`UserDisplay`, see the `_Imports.razor` files): `Display.DateTime(x)` /
+`Display.Date(x)` for instants stored in UTC (converted to the user's zone),
+`Display.LocalDateTime(x)` / `Display.LocalDate(x)` for wall-clock values typed into a
+`datetime-local`/`date` input (due dates, task planning, contract dates) — those are stored as-is
+and must never be converted. History and timelines go through `Display.Chronological`. Outside
+components, take `UserPreferenceValues` from `IUserPreferences`. History *texts* written at save
+time stay in a fixed format on purpose (shared by all readers).
+
+**Colors / themes**: `glpi-theme.css` must not hard-code neutral colors. Backgrounds, borders and
+text go through the tokens at the top of the file (`--glpi-surface`, `--glpi-surface-2/3`,
+`--glpi-border(-strong)`, `--glpi-text`, `--glpi-text-2`, `--glpi-text-muted`, `--glpi-text-faint`),
+primary-as-text through `--glpi-primary-text`, and text on a primary background through
+`--tblr-primary-fg` — several GLPI palettes have a *light* primary. A hard-coded `#fff` background
+is what breaks the dark palettes (Darker, Midnight), which `App.razor` switches on via
+`data-bs-theme="dark"`.
+
 **Attachment visibility**: a document's own entity scope must not gate the *attachment list* of
 an item — `DocumentService.GetForItemAsync` (and the fallback in `GetAsync`) deliberately
 `IgnoreQueryFilters()`. The authorization boundary is the item: the knowledge-base page already

@@ -1,3 +1,4 @@
+using GlpiNg.Modules.Abstractions.Preferences;
 using System.Globalization;
 
 namespace GlpiNg.Web.Models.CustomAssets;
@@ -45,8 +46,11 @@ public static class CustomAssetValueFormat
     /// Valeur affichée sur une fiche ou dans une liste. <paramref name="dropdownName"/> résout le
     /// libellé d'un intitulé à partir de son identifiant — la valeur stockée pour une liste
     /// déroulante étant l'identifiant, pour qu'un intitulé renommé le reste partout.
+    /// <paramref name="display"/> écrit les dates selon les préférences de l'utilisateur ; sans lui
+    /// (texte d'historique, figé à l'enregistrement et lu par tous), l'écriture est fixe.
     /// </summary>
-    public static string ToDisplay(CustomAssetField field, string? stored, Func<int, string?>? dropdownName = null)
+    public static string ToDisplay(CustomAssetField field, string? stored, Func<int, string?>? dropdownName = null,
+        UserPreferenceValues? display = null)
     {
         if (string.IsNullOrWhiteSpace(stored))
         {
@@ -59,12 +63,12 @@ public static class CustomAssetValueFormat
 
             CustomAssetFieldType.Date => DateTime.TryParse(stored, CultureInfo.InvariantCulture,
                 DateTimeStyles.None, out DateTime date)
-                ? date.ToString("dd/MM/yyyy", CultureInfo.CurrentCulture)
+                ? display?.LocalDate(date) ?? date.ToString("dd/MM/yyyy", CultureInfo.CurrentCulture)
                 : stored,
 
             CustomAssetFieldType.DateTime => DateTime.TryParse(stored, CultureInfo.InvariantCulture,
                 DateTimeStyles.None, out DateTime moment)
-                ? moment.ToString("dd/MM/yyyy HH:mm", CultureInfo.CurrentCulture)
+                ? display?.LocalDateTime(moment) ?? moment.ToString("dd/MM/yyyy HH:mm", CultureInfo.CurrentCulture)
                 : stored,
 
             CustomAssetFieldType.Dropdown => int.TryParse(stored, NumberStyles.Integer, CultureInfo.InvariantCulture, out int id)

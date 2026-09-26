@@ -19,12 +19,186 @@
 :root {
   --glpi-mainmenu-bg: #1b2f62;
   --glpi-mainmenu-fg: #f4f6fa;
-  --glpi-mainmenu-fg-muted: rgba(244, 246, 250, 0.65);
+  --glpi-mainmenu-fg-muted: color-mix(in srgb, var(--glpi-mainmenu-fg) 65%, transparent);
   --glpi-accent: #fec95c;
   --glpi-accent-fg: #1b2f62;
   --tblr-primary: #3a5693;
   --tblr-primary-rgb: 58, 86, 147;
+  --tblr-primary-fg: #fff;
+
+  /* Couleur de la primaire employée comme *texte* (lien actif, survol...) : distincte de
+     --tblr-primary parce que plusieurs palettes ont une primaire claire, parfaite en fond de
+     bouton et illisible en texte sur fond blanc — GLPI les distingue de la même façon
+     (--tblr-link-color). */
+  --glpi-primary-text: var(--tblr-primary);
+
+  /* Neutres de l'interface. Toute couleur de fond, de bordure ou de texte de cette feuille passe
+     par eux, jamais par une valeur en dur : c'est ce qui permet aux palettes sombres (Darker,
+     Midnight) de tout basculer d'un coup. Valeurs claires = celles qu'utilisait la feuille. */
+  --glpi-surface: #fff;
+  --glpi-surface-2: #f8f9fa;
+  --glpi-surface-3: #e9ecef;
+  --glpi-border: #e6e7e9;
+  --glpi-border-strong: #c3c9d3;
+  --glpi-text: #232629;
+  --glpi-text-2: #495057;
+  --glpi-text-muted: #6c737b;
+  --glpi-text-faint: #c3c8cf;
 }
+
+/* ---- Mode sombre (palettes Darker et Midnight) --------------------------------------------
+   Posé par App.razor (data-bs-theme="dark") : Tabler bascule alors ses propres composants
+   (cartes, tableaux, formulaires, menus), et nos neutres s'alignent sur ses variables. */
+:root[data-bs-theme="dark"] {
+  --glpi-surface: var(--tblr-bg-surface);
+  --glpi-surface-2: var(--tblr-bg-surface-secondary);
+  --glpi-surface-3: var(--tblr-gray-700);
+  --glpi-border: var(--tblr-border-color);
+  --glpi-border-strong: var(--tblr-gray-600);
+  --glpi-text: var(--tblr-body-color);
+  --glpi-text-2: var(--tblr-gray-300);
+  --glpi-text-muted: var(--tblr-gray-400);
+  --glpi-text-faint: var(--tblr-gray-500);
+}
+
+/* ---- Palettes, reprises des sources de GLPI 11 (css/palettes/_*.scss) ----------------------
+   data-glpi-theme est posé par App.razor d'après la préférence « Palette de couleur ». Chaque
+   palette reprend le fond et le texte du menu, la primaire (--tblr-primary-rgb de GLPI) et la
+   couleur des liens. Deux écarts assumés, faute de valeur utilisable chez GLPI :
+   l'accent (icône de marque, groupe ouvert) est choisi pour ressortir sur le fond du menu, et le
+   texte sur la primaire (--tblr-primary-fg) est foncé quand la primaire est claire. */
+
+:root[data-glpi-theme="auror"] {
+  /* Valeurs de :root ci-dessus : Auror est la palette par défaut. */
+}
+
+:root[data-glpi-theme="dark"] {
+  /* « Dark » chez GLPI est un thème clair au menu très sombre — pas un mode sombre. */
+  --glpi-mainmenu-bg: #161514;
+  --glpi-mainmenu-fg: #fff;
+  --glpi-accent: #c4c0bb;
+  --glpi-accent-fg: #161514;
+  --tblr-primary: #585957;
+  --tblr-primary-rgb: 88, 89, 87;
+  --tblr-primary-fg: #fff;
+}
+
+:root[data-glpi-theme="classic"] {
+  --glpi-mainmenu-bg: #98a458;
+  --glpi-mainmenu-fg: #000;
+  --glpi-accent: #fff;
+  --glpi-accent-fg: #000;
+  --tblr-primary: #f2b265;
+  --tblr-primary-rgb: 242, 178, 101;
+  --tblr-primary-fg: #8f5a0a;
+  --glpi-primary-text: #4d7300;
+}
+
+:root[data-glpi-theme="lightblue"] {
+  --glpi-mainmenu-bg: #1a7ab2;
+  --glpi-mainmenu-fg: #f4f6fa;
+  --glpi-accent: #fff;
+  --glpi-accent-fg: #1a7ab2;
+  --tblr-primary: #c8eafd;
+  --tblr-primary-rgb: 200, 234, 253;
+  --tblr-primary-fg: #1a4f73;
+  --glpi-primary-text: #2c73a7;
+}
+
+:root[data-glpi-theme="vintage"] {
+  --glpi-mainmenu-bg: #064260;
+  --glpi-mainmenu-fg: #fff;
+  --glpi-accent: #f2ef9f;
+  --glpi-accent-fg: #064260;
+  --tblr-primary: #f9201d;
+  --tblr-primary-rgb: 249, 32, 29;
+  --tblr-primary-fg: #fff;
+  --glpi-primary-text: #bf0805;
+}
+
+:root[data-glpi-theme="icecream"] {
+  --glpi-mainmenu-bg: #113f59;
+  --glpi-mainmenu-fg: #f3edd3;
+  --glpi-accent: #19bec0;
+  --glpi-accent-fg: #113f59;
+  --tblr-primary: #d54f58;
+  --tblr-primary-rgb: 213, 79, 88;
+  --tblr-primary-fg: #f3edd3;
+  --glpi-primary-text: #127e80;
+}
+
+:root[data-glpi-theme="darker"] {
+  --tblr-body-bg: #1f1e1e;
+  --tblr-body-color: #aaa;
+  --tblr-bg-surface: #242323;
+  --tblr-bg-surface-secondary: #1f1e1e;
+  /* Les gris de Tabler en mode sombre sont bleutés : Darker est neutre, formulaires compris. */
+  --tblr-bg-surface-tertiary: #2d2c2b;
+  --tblr-bg-forms: #1f1e1e;
+  --tblr-border-color: #3a3938;
+  --glpi-surface-3: #3a3938;
+  --glpi-border-strong: #4a4948;
+  --glpi-text-2: #c4c4c4;
+  --glpi-text-muted: #8c8c8c;
+  --glpi-text-faint: #6b6b6b;
+  --glpi-mainmenu-bg: #242323;
+  --glpi-mainmenu-fg: #f4f6fa;
+  --glpi-accent: #c8c8c8;
+  --glpi-accent-fg: #242323;
+  --tblr-primary: #6b6b6b;
+  --tblr-primary-rgb: 107, 107, 107;
+  --tblr-primary-fg: #f3f3f3;
+  --glpi-primary-text: #c8c8c8;
+}
+
+:root[data-glpi-theme="midnight"] {
+  --tblr-body-bg: #000;
+  --glpi-mainmenu-bg: #000;
+  --glpi-mainmenu-fg: var(--tblr-body-color);
+  --glpi-accent: #b6c3e0;
+  --glpi-accent-fg: #232e3c;
+  --tblr-primary: #b6c3e0;
+  --tblr-primary-rgb: 182, 195, 224;
+  --tblr-primary-fg: #232e3c;
+  --glpi-primary-text: #b6c3e0;
+}
+
+/* ---- Contraste élevé (préférence « Activer le contraste élevé ») ---------------------------
+   Texte à pleine encre, bordures franches, liens soulignés et focus bien visible : ce qui compte
+   pour une vue basse ou un écran lu en plein jour. S'ajoute à n'importe quelle palette. */
+:root[data-glpi-contrast] {
+  --glpi-text: #000;
+  --glpi-text-2: #1a1a1a;
+  --glpi-text-muted: #3d434a;
+  --glpi-text-faint: #5f666e;
+  --glpi-border: #767c84;
+  --glpi-border-strong: #4a4f55;
+  --tblr-body-color: #000;
+  --tblr-secondary: #3d434a;
+  --tblr-border-color: #767c84;
+}
+
+:root[data-glpi-contrast][data-bs-theme="dark"] {
+  --glpi-text: #fff;
+  --glpi-text-2: #f1f1f1;
+  --glpi-text-muted: #d1d5db;
+  --glpi-text-faint: #b0b6be;
+  --glpi-border: #9ca3af;
+  --glpi-border-strong: #d1d5db;
+  --tblr-body-color: #fff;
+  --tblr-secondary: #d1d5db;
+  --tblr-border-color: #9ca3af;
+}
+
+:root[data-glpi-contrast] a:not(.btn):not(.glpi-nav-subitem):not(.glpi-brand) {
+  text-decoration: underline;
+}
+
+:root[data-glpi-contrast] :focus-visible {
+  outline: 3px solid var(--glpi-primary-text) !important;
+  outline-offset: 2px;
+}
+
 
 html, body {
   /* Filet de sécurité : empêche tout décalage horizontal (ex. focus natif d'un
@@ -42,7 +216,7 @@ body:has(.glpi-app) {
 }
 
 body {
-  background: #f4f6fa;
+  background: var(--glpi-surface-2);
 }
 
 /* --- Sidebar verticale (menu principal GLPI) --- */
@@ -65,7 +239,7 @@ body {
   text-decoration: none;
   font-weight: 700;
   font-size: 1.1rem;
-  border-bottom: 1px solid rgba(244, 246, 250, 0.12);
+  border-bottom: 1px solid color-mix(in srgb, var(--glpi-mainmenu-fg) 12%, transparent);
 }
 
 .glpi-sidebar .glpi-brand .ti {
@@ -92,11 +266,11 @@ body {
 
 .glpi-menu-search:hover {
   color: var(--glpi-mainmenu-fg);
-  background: rgba(244, 246, 250, 0.06);
+  background: color-mix(in srgb, var(--glpi-mainmenu-fg) 6%, transparent);
 }
 
 .glpi-menu-search.open {
-  background: rgba(244, 246, 250, 0.08);
+  background: color-mix(in srgb, var(--glpi-mainmenu-fg) 8%, transparent);
 }
 
 .glpi-menu-search input {
@@ -166,14 +340,14 @@ body {
 
 .glpi-nav-group-toggle:hover {
   color: var(--glpi-mainmenu-fg);
-  background: rgba(244, 246, 250, 0.06);
+  background: color-mix(in srgb, var(--glpi-mainmenu-fg) 6%, transparent);
 }
 
 .glpi-nav-group.open .glpi-nav-group-toggle {
   color: var(--glpi-accent);
   font-weight: 600;
   border-left-color: var(--glpi-accent);
-  background: rgba(254, 201, 92, 0.08);
+  background: color-mix(in srgb, var(--glpi-accent) 8%, transparent);
 }
 
 .glpi-nav-group.open .glpi-chevron {
@@ -249,7 +423,7 @@ body {
 
 .glpi-nav-subitem:hover {
   color: var(--glpi-mainmenu-fg);
-  background: rgba(244, 246, 250, 0.06);
+  background: color-mix(in srgb, var(--glpi-mainmenu-fg) 6%, transparent);
 }
 
 .glpi-nav-subitem.active {
@@ -259,7 +433,7 @@ body {
 }
 
 .glpi-nav-subitem.disabled {
-  color: rgba(244, 246, 250, 0.3);
+  color: color-mix(in srgb, var(--glpi-mainmenu-fg) 30%, transparent);
   cursor: not-allowed;
 }
 
@@ -271,7 +445,7 @@ body {
   padding: 0.75rem 1.25rem;
   background: transparent;
   border: none;
-  border-top: 1px solid rgba(244, 246, 250, 0.12);
+  border-top: 1px solid color-mix(in srgb, var(--glpi-mainmenu-fg) 12%, transparent);
   color: var(--glpi-mainmenu-fg-muted);
   font-size: 0.85rem;
   cursor: pointer;
@@ -334,8 +508,8 @@ body {
   min-width: 200px;
   max-width: none;
   width: max-content;
-  background: #fff;
-  color: #1b2f62;
+  background: var(--glpi-surface);
+  color: var(--glpi-text);
   border-radius: 0.75rem;
   box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.25);
   padding: 0.85rem 1rem;
@@ -346,7 +520,7 @@ body {
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #8a94a6;
+  color: var(--glpi-text-muted);
   margin-bottom: 0.5rem;
 }
 
@@ -359,19 +533,19 @@ body {
 
 .glpi-nav-flyout-items .glpi-nav-subitem {
   padding: 0.35rem 0.25rem;
-  color: #354052;
+  color: var(--glpi-text);
   min-width: 180px;
   white-space: nowrap;
   animation: none;
 }
 
 .glpi-nav-flyout-items .glpi-nav-subitem:hover {
-  color: var(--tblr-primary);
+  color: var(--glpi-primary-text);
   background: transparent;
 }
 
 .glpi-nav-flyout-items .glpi-nav-subitem.disabled {
-  color: #c3c8d1;
+  color: var(--glpi-text-faint);
 }
 
 /* --- Structure générale --- */
@@ -391,8 +565,8 @@ body {
 }
 
 .glpi-topbar {
-  background: #fff;
-  border-bottom: 1px solid #e6e7e9;
+  background: var(--glpi-surface);
+  border-bottom: 1px solid var(--glpi-border);
   padding: 0.6rem 1.5rem;
   min-height: 60px;
   display: flex;
@@ -406,14 +580,14 @@ body {
   align-items: center;
   gap: 0.4rem;
   font-size: 0.9rem;
-  color: #6c737b;
+  color: var(--glpi-text-muted);
   white-space: nowrap;
   flex: 1;
   min-width: 0;
 }
 
 .glpi-breadcrumb-sep {
-  color: #c3c8cf;
+  color: var(--glpi-text-faint);
 }
 
 .glpi-breadcrumb-item {
@@ -431,12 +605,12 @@ body {
 /* Seul un lien réagit au survol : l'élément courant est un <span>, et le teinter promettait un
    clic qui ne menait nulle part. */
 a.glpi-breadcrumb-item:hover {
-  color: var(--tblr-primary);
+  color: var(--glpi-primary-text);
   text-decoration: underline;
 }
 
 .glpi-breadcrumb-item.active {
-  color: #232629;
+  color: var(--glpi-text);
   font-weight: 600;
 }
 
@@ -459,16 +633,16 @@ a.glpi-breadcrumb-item:hover {
   align-items: center;
   gap: 0.4rem;
   padding: 0.35rem 0.6rem;
-  border: 1px solid #e6e8ea;
+  border: 1px solid var(--glpi-border);
   border-radius: 0.5rem;
   font-size: 0.8125rem;
-  color: #232629;
+  color: var(--glpi-text);
   text-decoration: none;
 }
 
 .glpi-entity-toggle:hover {
-  background: #f6f7f8;
-  color: #232629;
+  background: var(--glpi-surface-2);
+  color: var(--glpi-text);
 }
 
 .glpi-entity-label {
@@ -522,12 +696,12 @@ a.glpi-breadcrumb-item:hover {
 .glpi-user-name {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #232629;
+  color: var(--glpi-text);
 }
 
 .glpi-user-entity {
   font-size: 0.75rem;
-  color: #8a919a;
+  color: var(--glpi-text-muted);
 }
 
 .glpi-avatar {
@@ -657,8 +831,8 @@ a.glpi-breadcrumb-item:hover {
 .glpi-config {
   display: flex;
   align-items: stretch;
-  background: #fff;
-  border: 1px solid #e6e7e9;
+  background: var(--glpi-surface);
+  border: 1px solid var(--glpi-border);
   border-radius: 0.5rem;
   overflow: hidden;
 }
@@ -667,7 +841,7 @@ a.glpi-breadcrumb-item:hover {
   width: 240px;
   flex-shrink: 0;
   padding: 0.5rem 0;
-  border-right: 1px solid #e6e7e9;
+  border-right: 1px solid var(--glpi-border);
 }
 
 .glpi-config-nav-item {
@@ -681,7 +855,7 @@ a.glpi-breadcrumb-item:hover {
   border-left: 3px solid transparent;
   text-align: left;
   font-size: 0.875rem;
-  color: #495057;
+  color: var(--glpi-text-2);
   cursor: pointer;
 }
 
@@ -693,12 +867,12 @@ a.glpi-breadcrumb-item:hover {
 }
 
 .glpi-config-nav-item:hover {
-  background: #f4f6fa;
+  background: var(--glpi-surface-2);
 }
 
 .glpi-config-nav-item.active {
-  background: #eef1f8;
-  color: var(--tblr-primary);
+  background: var(--glpi-surface-2);
+  color: var(--glpi-primary-text);
   font-weight: 700;
   border-left-color: var(--tblr-primary);
 }
@@ -749,7 +923,7 @@ a.glpi-breadcrumb-item:hover {
 
 .glpi-config-field label {
   font-size: 0.875rem;
-  color: #232629;
+  color: var(--glpi-text);
   text-align: right;
 }
 
@@ -759,7 +933,7 @@ a.glpi-breadcrumb-item:hover {
   width: 100%;
   max-width: 520px;
   padding: 0.45rem 0.6rem;
-  border: 1px solid #dfe3e8;
+  border: 1px solid var(--glpi-border);
   border-radius: 6px;
   font-size: 0.875rem;
   font-family: inherit;
@@ -779,7 +953,7 @@ a.glpi-breadcrumb-item:hover {
 }
 
 .glpi-config-help {
-  color: #8a919a;
+  color: var(--glpi-text-muted);
   font-size: 0.9rem;
   margin-left: 0.3rem;
   cursor: help;
@@ -790,7 +964,7 @@ a.glpi-breadcrumb-item:hover {
   align-items: center;
   gap: 0.75rem;
   margin: 1.5rem 0 1rem;
-  color: #6c737b;
+  color: var(--glpi-text-muted);
   font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -802,7 +976,7 @@ a.glpi-breadcrumb-item:hover {
   content: "";
   flex: 1;
   height: 1px;
-  background: #e6e7e9;
+  background: var(--glpi-surface-3);
 }
 
 .glpi-config-divider span {
@@ -815,7 +989,7 @@ a.glpi-breadcrumb-item:hover {
 .glpi-config-save {
   margin-top: 1rem;
   background: var(--tblr-primary);
-  color: #fff;
+  color: var(--tblr-primary-fg, #fff);
   border: none;
   padding: 0.55rem 1.4rem;
   border-radius: 6px;
@@ -834,7 +1008,7 @@ a.glpi-breadcrumb-item:hover {
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  color: #8a919a;
+  color: var(--glpi-text-muted);
   padding: 4rem 1rem;
   text-align: center;
 }
@@ -844,7 +1018,7 @@ a.glpi-breadcrumb-item:hover {
 }
 
 .glpi-config-form .hint {
-  color: #8a919a;
+  color: var(--glpi-text-muted);
   font-size: 0.8rem;
   margin: 0.2rem 0 0 340px;
   max-width: 520px;
@@ -858,7 +1032,7 @@ a.glpi-breadcrumb-item:hover {
 
 /* --- Card expansible (ex. bloc "Modules" des onglets Parc/Assistance/Gestion) --- */
 .glpi-card-expander {
-  border: 1px solid #e6e7e9;
+  border: 1px solid var(--glpi-border);
   border-radius: 8px;
   margin: 1.5rem 0;
   overflow: hidden;
@@ -867,7 +1041,7 @@ a.glpi-breadcrumb-item:hover {
 .glpi-card-expander-header-row {
   display: flex;
   align-items: center;
-  background: #f8f9fa;
+  background: var(--glpi-surface-2);
 }
 
 /* Le bouton de repli prend toute la place laissée par l'action d'en-tête (voir CardExpander) :
@@ -891,14 +1065,14 @@ a.glpi-breadcrumb-item:hover {
   justify-content: space-between;
   gap: 0.75rem;
   padding: 0.75rem 1rem;
-  background: #f8f9fa;
+  background: var(--glpi-surface-2);
   border: none;
   cursor: pointer;
   font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: #6c737b;
+  color: var(--glpi-text-muted);
 }
 
 .glpi-card-expander-title {
@@ -917,7 +1091,7 @@ a.glpi-breadcrumb-item:hover {
 
 .glpi-card-expander-body {
   padding: 1rem;
-  background: #fff;
+  background: var(--glpi-surface);
 }
 
 .glpi-card-expander-body > *:last-child {
@@ -930,7 +1104,7 @@ a.glpi-breadcrumb-item:hover {
   flex-direction: column;
   gap: 0.1rem;
   margin-bottom: 1.5rem;
-  border: 1px solid #e6e7e9;
+  border: 1px solid var(--glpi-border);
   border-radius: 8px;
   overflow: hidden;
 }
@@ -941,8 +1115,8 @@ a.glpi-breadcrumb-item:hover {
   justify-content: space-between;
   gap: 1rem;
   padding: 0.55rem 1rem;
-  background: #fff;
-  border-bottom: 1px solid #f1f2f4;
+  background: var(--glpi-surface);
+  border-bottom: 1px solid var(--glpi-border);
 }
 
 .glpi-module-toggle-item:last-child {
@@ -954,11 +1128,11 @@ a.glpi-breadcrumb-item:hover {
   align-items: center;
   gap: 0.6rem;
   font-size: 0.875rem;
-  color: #232629;
+  color: var(--glpi-text);
 }
 
 .glpi-module-toggle-item.disabled .glpi-module-toggle-label {
-  color: #adb5bd;
+  color: var(--glpi-text-muted);
 }
 
 .glpi-switch {
@@ -978,7 +1152,7 @@ a.glpi-breadcrumb-item:hover {
 .glpi-switch-slider {
   position: absolute;
   inset: 0;
-  background: #ced4da;
+  background: var(--glpi-border-strong);
   border-radius: 999px;
   cursor: pointer;
   transition: background 0.15s ease;
@@ -991,7 +1165,7 @@ a.glpi-breadcrumb-item:hover {
   height: 15px;
   left: 3px;
   top: 3px;
-  background: #fff;
+  background: var(--glpi-surface);
   border-radius: 50%;
   transition: transform 0.15s ease;
 }
@@ -1011,7 +1185,7 @@ a.glpi-breadcrumb-item:hover {
 /* --- Tables denses (Purge de l'historique, Historique) --- */
 .glpi-config-table-wrap {
   max-width: 720px;
-  border: 1px solid #e6e7e9;
+  border: 1px solid var(--glpi-border);
   border-radius: 8px;
   overflow: hidden;
   margin-bottom: 1rem;
@@ -1026,13 +1200,13 @@ a.glpi-breadcrumb-item:hover {
 .glpi-config-table th,
 .glpi-config-table td {
   padding: 0.45rem 0.7rem;
-  border-bottom: 1px solid #f1f2f4;
+  border-bottom: 1px solid var(--glpi-border);
   text-align: left;
 }
 
 .glpi-config-table th {
-  background: #f8f9fa;
-  color: #6c737b;
+  background: var(--glpi-surface-2);
+  color: var(--glpi-text-muted);
   font-weight: 700;
   text-transform: uppercase;
   font-size: 0.7rem;
@@ -1046,7 +1220,7 @@ a.glpi-breadcrumb-item:hover {
 .glpi-config-table select {
   font-size: 0.8rem;
   padding: 0.3rem 0.4rem;
-  border: 1px solid #dfe3e8;
+  border: 1px solid var(--glpi-border);
   border-radius: 6px;
 }
 
@@ -1058,21 +1232,21 @@ a.glpi-breadcrumb-item:hover {
 
 .glpi-priority-matrix th,
 .glpi-priority-matrix td {
-  border: 1px solid #e6e7e9;
+  border: 1px solid var(--glpi-border);
   padding: 0.35rem;
   text-align: center;
   font-size: 0.75rem;
 }
 
 .glpi-priority-matrix th {
-  background: #f8f9fa;
-  color: #6c737b;
+  background: var(--glpi-surface-2);
+  color: var(--glpi-text-muted);
 }
 
 .glpi-priority-matrix select {
   font-size: 0.75rem;
   padding: 0.2rem;
-  border: 1px solid #dfe3e8;
+  border: 1px solid var(--glpi-border);
   border-radius: 4px;
 }
 
@@ -1093,19 +1267,19 @@ a.glpi-breadcrumb-item:hover {
   grid-template-columns: 180px 1fr;
   gap: 1rem;
   padding: 0.5rem 0;
-  border-bottom: 1px solid #f1f2f4;
+  border-bottom: 1px solid var(--glpi-border);
 }
 
 .glpi-itemtype-columns-row .itemtype-label {
   font-size: 0.8rem;
   font-weight: 600;
-  color: #232629;
+  color: var(--glpi-text);
 }
 
 /* --- Diagnostics runtime (onglet Performance) --- */
 .glpi-diag-card {
   max-width: 720px;
-  border: 1px solid #e6e7e9;
+  border: 1px solid var(--glpi-border);
   border-radius: 8px;
   padding: 0.9rem 1.1rem;
   margin-bottom: 1rem;
@@ -1116,7 +1290,7 @@ a.glpi-breadcrumb-item:hover {
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: #6c737b;
+  color: var(--glpi-text-muted);
 }
 
 .glpi-diag-row {
@@ -1124,7 +1298,7 @@ a.glpi-breadcrumb-item:hover {
   justify-content: space-between;
   padding: 0.3rem 0;
   font-size: 0.85rem;
-  border-bottom: 1px dashed #f1f2f4;
+  border-bottom: 1px dashed var(--glpi-border);
 }
 
 .glpi-diag-row:last-child {
@@ -1145,7 +1319,7 @@ a.glpi-breadcrumb-item:hover {
 }
 
 .glpi-sortable-th:hover {
-  color: var(--tblr-primary, #206bc4);
+  color: var(--glpi-primary-text);
 }
 
 .glpi-sort-indicator {
@@ -1163,7 +1337,7 @@ a.glpi-breadcrumb-item:hover {
   padding: 0 0.25rem;
   border-radius: 50%;
   background: var(--tblr-primary, #206bc4);
-  color: #fff;
+  color: var(--tblr-primary-fg, #fff);
   font-size: 0.65rem;
   line-height: 1rem;
 }
@@ -1208,8 +1382,8 @@ a.glpi-breadcrumb-item:hover {
   max-width: 90vw;
   display: flex;
   flex-direction: column;
-  background: #fff;
-  border-right: 1px solid var(--tblr-border-color, #e6e7e9);
+  background: var(--glpi-surface);
+  border-right: 1px solid var(--tblr-border-color, var(--glpi-border));
   box-shadow: 0.5rem 0 1.5rem rgba(0, 0, 0, 0.12);
   transition: left var(--tblr-transition, 0.2s ease);
 }
@@ -1228,7 +1402,7 @@ a.glpi-breadcrumb-item:hover {
   flex-shrink: 0;
   align-self: flex-start;
   height: calc(100vh - 60px - 3rem);
-  border-left: 1px solid var(--tblr-border-color, #e6e7e9);
+  border-left: 1px solid var(--tblr-border-color, var(--glpi-border));
   border-radius: var(--tblr-border-radius, 4px);
   box-shadow: none;
   transition: none;
@@ -1251,7 +1425,7 @@ a.glpi-breadcrumb-item:hover {
   padding: 0.75rem 1rem;
   font-weight: 600;
   flex-shrink: 0;
-  border-bottom: 1px solid var(--tblr-border-color, #e6e7e9);
+  border-bottom: 1px solid var(--tblr-border-color, var(--glpi-border));
 }
 
 .glpi-saved-searches-list {
@@ -1296,7 +1470,7 @@ a.glpi-breadcrumb-item:hover {
 .glpi-saved-searches-filter {
   padding: 0.5rem;
   flex-shrink: 0;
-  border-top: 1px solid var(--tblr-border-color, #e6e7e9);
+  border-top: 1px solid var(--tblr-border-color, var(--glpi-border));
 }
 
 /* --- Bouton "Se déconnecter" (formulaire dans le menu utilisateur, pas un <a>) --- */
@@ -1322,7 +1496,7 @@ a.glpi-breadcrumb-item:hover {
 .glpi-login-card {
   width: 100%;
   max-width: 360px;
-  background: #fff;
+  background: var(--glpi-surface);
   border-radius: 0.5rem;
   padding: 2rem;
   box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.25);
@@ -1340,7 +1514,7 @@ a.glpi-breadcrumb-item:hover {
 }
 
 .glpi-login-brand .ti {
-  color: var(--tblr-primary);
+  color: var(--glpi-primary-text);
   font-size: 1.7rem;
 }
 
@@ -1358,7 +1532,7 @@ a.glpi-breadcrumb-item:hover {
 
 .glpi-login-message {
   font-size: 0.85rem;
-  color: #495057;
+  color: var(--glpi-text-2);
   margin-bottom: 1rem;
 }
 
@@ -1370,14 +1544,14 @@ a.glpi-breadcrumb-item:hover {
   display: block;
   font-size: 0.8rem;
   font-weight: 600;
-  color: #495057;
+  color: var(--glpi-text-2);
   margin-bottom: 0.3rem;
 }
 
 .glpi-login-field input:not([type="checkbox"]) {
   width: 100%;
   padding: 0.5rem 0.65rem;
-  border: 1px solid #dfe3e8;
+  border: 1px solid var(--glpi-border);
   border-radius: 6px;
   font-size: 0.9rem;
   font-family: inherit;
@@ -1396,7 +1570,7 @@ a.glpi-breadcrumb-item:hover {
 .glpi-login-submit {
   width: 100%;
   background: var(--tblr-primary);
-  color: #fff;
+  color: var(--tblr-primary-fg, #fff);
   border: none;
   padding: 0.6rem 1rem;
   border-radius: 6px;
@@ -1417,7 +1591,7 @@ a.glpi-breadcrumb-item:hover {
 
 .glpi-update-migration-list {
   font-size: 0.85rem;
-  color: #495057;
+  color: var(--glpi-text-2);
   margin: 0 0 1rem;
   padding-left: 1.25rem;
 }
@@ -1456,21 +1630,21 @@ a.glpi-breadcrumb-item:hover {
   align-items: center;
   gap: 0.5rem;
   padding: 0.3rem 0.75rem;
-  border: 1px solid #e6e7e9;
+  border: 1px solid var(--glpi-border);
   border-radius: 6px;
-  background: #fff;
+  background: var(--glpi-surface);
   font-size: 0.875rem;
-  color: #232629;
+  color: var(--glpi-text);
 }
 
 .glpi-fiche-crumb .ti-device-desktop {
-  color: var(--tblr-primary);
+  color: var(--glpi-primary-text);
 }
 
 .glpi-fiche-favorite {
   background: transparent;
   border: none;
-  color: #c3c8cf;
+  color: var(--glpi-text-faint);
   font-size: 1rem;
   cursor: pointer;
   padding: 0;
@@ -1490,7 +1664,7 @@ a.glpi-breadcrumb-item:hover {
 
 .glpi-fiche-pager-count {
   font-size: 0.8rem;
-  color: #6c737b;
+  color: var(--glpi-text-muted);
 }
 
 .glpi-fiche-pager-btn {
@@ -1499,14 +1673,14 @@ a.glpi-breadcrumb-item:hover {
   justify-content: center;
   width: 1.75rem;
   height: 1.75rem;
-  border: 1px solid #e6e7e9;
+  border: 1px solid var(--glpi-border);
   border-radius: 6px;
-  color: #495057;
+  color: var(--glpi-text-2);
   text-decoration: none;
 }
 
 .glpi-fiche-pager-btn:hover {
-  background: #f4f6fa;
+  background: var(--glpi-surface-2);
 }
 
 .glpi-fiche-pager-btn.disabled {
@@ -1518,8 +1692,8 @@ a.glpi-breadcrumb-item:hover {
 .glpi-fiche-layout {
   display: flex;
   align-items: stretch;
-  background: #fff;
-  border: 1px solid #e6e7e9;
+  background: var(--glpi-surface);
+  border: 1px solid var(--glpi-border);
   border-radius: 8px;
   overflow: hidden;
   flex: 1;
@@ -1529,7 +1703,7 @@ a.glpi-breadcrumb-item:hover {
 .glpi-fiche-sidebar {
   width: 230px;
   flex-shrink: 0;
-  border-right: 1px solid #e6e7e9;
+  border-right: 1px solid var(--glpi-border);
   padding: 0.4rem 0;
   overflow-y: auto;
 }
@@ -1545,17 +1719,17 @@ a.glpi-breadcrumb-item:hover {
   border-left: 3px solid transparent;
   text-align: left;
   font-size: 0.8rem;
-  color: #495057;
+  color: var(--glpi-text-2);
   cursor: pointer;
 }
 
 .glpi-fiche-tab-item:hover {
-  background: #f4f6fa;
+  background: var(--glpi-surface-2);
 }
 
 .glpi-fiche-tab-item.active {
-  background: #eef1f8;
-  color: var(--tblr-primary);
+  background: var(--glpi-surface-2);
+  color: var(--glpi-primary-text);
   font-weight: 700;
   border-left-color: var(--tblr-primary);
 }
@@ -1576,8 +1750,8 @@ a.glpi-breadcrumb-item:hover {
 
 .glpi-fiche-tab-count {
   flex: 0 0 auto;
-  background: #e9ecef;
-  color: #495057;
+  background: var(--glpi-surface-3);
+  color: var(--glpi-text-2);
   font-size: 0.7rem;
   font-weight: 700;
   padding: 0.05rem 0.4rem;
@@ -1587,7 +1761,7 @@ a.glpi-breadcrumb-item:hover {
 
 .glpi-fiche-tab-item.active .glpi-fiche-tab-count {
   background: var(--tblr-primary);
-  color: #fff;
+  color: var(--tblr-primary-fg, #fff);
 }
 
 .glpi-fiche-panel {
@@ -1644,7 +1818,7 @@ a.glpi-breadcrumb-item:hover {
 .glpi-fiche-field label {
   font-size: 0.8rem;
   font-weight: 600;
-  color: #495057;
+  color: var(--glpi-text-2);
   text-align: right;
 }
 
@@ -1652,17 +1826,17 @@ a.glpi-breadcrumb-item:hover {
   display: flex;
   align-items: center;
   min-height: 2.1rem;
-  border: 1px solid #dfe3e8;
+  border: 1px solid var(--glpi-border);
   border-radius: 6px;
-  background: #f8f9fa;
+  background: var(--glpi-surface-2);
   padding: 0.4rem 0.6rem;
   font-size: 0.8rem;
-  color: #232629;
+  color: var(--glpi-text);
 }
 
 .glpi-fiche-inventory-panel {
   margin-top: 1.5rem;
-  border: 1px solid #cfe0fb;
+  border: 1px solid rgba(var(--tblr-primary-rgb), 0.3);
   border-radius: 8px;
   overflow: hidden;
 }
@@ -1672,8 +1846,8 @@ a.glpi-breadcrumb-item:hover {
   align-items: center;
   gap: 0.5rem;
   padding: 0.6rem 1rem;
-  background: #eaf1fd;
-  color: #2c5cc5;
+  background: rgba(var(--tblr-primary-rgb), 0.12);
+  color: var(--glpi-primary-text);
   font-weight: 700;
   font-size: 0.85rem;
 }
@@ -1686,7 +1860,7 @@ a.glpi-breadcrumb-item:hover {
 
 .glpi-fiche-inventory-label {
   font-size: 0.75rem;
-  color: #8a919a;
+  color: var(--glpi-text-muted);
   margin-bottom: 0.3rem;
 }
 
@@ -1697,11 +1871,11 @@ a.glpi-breadcrumb-item:hover {
 
 .glpi-fiche-inventory-agent-link {
   margin-left: 0.4rem;
-  color: #8a919a;
+  color: var(--glpi-text-muted);
 }
 
 .glpi-fiche-inventory-agent-link:hover {
-  color: #2c5cc5;
+  color: var(--glpi-primary-text);
 }
 
 .glpi-fiche-inventory-footer {
@@ -1709,19 +1883,19 @@ a.glpi-breadcrumb-item:hover {
   justify-content: space-between;
   gap: 1rem;
   padding: 0.5rem 1rem;
-  background: #f8f9fa;
-  border-top: 1px solid #e6e7e9;
+  background: var(--glpi-surface-2);
+  border-top: 1px solid var(--glpi-border);
   font-size: 0.8rem;
-  color: #6c7580;
+  color: var(--glpi-text-muted);
 }
 
 /* Blocs de champs (ex. groupes de "Composants", "Logiciels", "Connexions") */
 .glpi-fiche-block {
-  border: 1px solid #e6e7e9;
+  border: 1px solid var(--glpi-border);
   border-radius: 8px;
   overflow: hidden;
   margin-bottom: 1.25rem;
-  background: #fff;
+  background: var(--glpi-surface);
 }
 
 .glpi-fiche-block-title {
@@ -1729,8 +1903,8 @@ a.glpi-breadcrumb-item:hover {
   align-items: center;
   gap: 0.5rem;
   padding: 0.6rem 1rem;
-  background: #eef1f8;
-  color: var(--tblr-primary);
+  background: var(--glpi-surface-2);
+  color: var(--glpi-primary-text);
   font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -1746,10 +1920,10 @@ a.glpi-breadcrumb-item:hover {
   gap: 0.4rem;
   margin-left: auto;
   padding: 0.25rem 0.6rem;
-  background: #fff;
-  border: 1px solid #dfe3e8;
+  background: var(--glpi-surface);
+  border: 1px solid var(--glpi-border);
   border-radius: 6px;
-  color: #8a919a;
+  color: var(--glpi-text-muted);
 }
 
 .glpi-fiche-block-filter .ti {
@@ -1765,11 +1939,11 @@ a.glpi-breadcrumb-item:hover {
   font-weight: 400;
   text-transform: none;
   letter-spacing: normal;
-  color: #232629;
+  color: var(--glpi-text);
 }
 
 .glpi-fiche-block-filter input::placeholder {
-  color: #b9bec5;
+  color: var(--glpi-text-faint);
 }
 
 /* Contenu d'un .glpi-fiche-block, en dessous du bandeau .glpi-fiche-block-title : marge
@@ -1783,8 +1957,8 @@ a.glpi-breadcrumb-item:hover {
 .glpi-fiche-add-row {
   margin: 0 -1.25rem -1.25rem;
   padding: 0.9rem 1.25rem;
-  background: #f8f9fb;
-  border-top: 1px solid #eceef1;
+  background: var(--glpi-surface-2);
+  border-top: 1px solid var(--glpi-border);
 }
 
 /* Sélecteur multi-valeurs façon GLPI (ex. "Sélectionner les paquets à installer") : une zone
@@ -1797,8 +1971,8 @@ a.glpi-breadcrumb-item:hover {
   gap: 0.375rem;
   min-height: calc(1.4285714em + 0.7rem + 2px);
   padding: 0.35rem 0.5rem;
-  background: #fff;
-  border: 1px solid #dbdfe6;
+  background: var(--glpi-surface);
+  border: 1px solid var(--glpi-border);
   border-radius: 4px;
 }
 
@@ -1807,11 +1981,11 @@ a.glpi-breadcrumb-item:hover {
   align-items: center;
   gap: 0.3rem;
   padding: 0.15rem 0.55rem;
-  background: #eef1f8;
-  border: 1px solid #dde3f0;
+  background: var(--glpi-surface-2);
+  border: 1px solid var(--glpi-border);
   border-radius: 999px;
   font-size: 0.8125rem;
-  color: #1d2733;
+  color: var(--glpi-text);
   white-space: nowrap;
 }
 
@@ -1821,7 +1995,7 @@ a.glpi-breadcrumb-item:hover {
   padding: 0;
   border: none;
   background: none;
-  color: #6c7580;
+  color: var(--glpi-text-muted);
   cursor: pointer;
   line-height: 1;
 }
@@ -1834,10 +2008,10 @@ a.glpi-breadcrumb-item:hover {
   flex: 0 0 auto;
   max-width: 100%;
   padding: 0.15rem 0.6rem;
-  background: #fff;
-  border: 1px dashed #c3c9d3;
+  background: var(--glpi-surface);
+  border: 1px dashed var(--glpi-border-strong);
   border-radius: 999px;
-  color: #495363;
+  color: var(--glpi-text-2);
   font-size: 0.8125rem;
   cursor: pointer;
 }
@@ -1869,7 +2043,7 @@ a.glpi-breadcrumb-item:hover {
 }
 
 .glpi-log-time {
-  color: #7d8698;
+  color: var(--glpi-text-muted);
 }
 
 .glpi-log-tag {
@@ -1892,12 +2066,12 @@ a.glpi-breadcrumb-item:hover {
 
 .glpi-tag-select-input:hover:not(:disabled) {
   border-color: var(--tblr-primary);
-  color: var(--tblr-primary);
+  color: var(--glpi-primary-text);
 }
 
 .glpi-tag-select-input:disabled {
-  color: #9aa2ad;
-  border-color: #eceef1;
+  color: var(--glpi-text-muted);
+  border-color: var(--glpi-border);
   cursor: default;
 }
 
@@ -1907,7 +2081,7 @@ a.glpi-breadcrumb-item:hover {
   width: 100%;
   max-width: 140px;
   height: 1.15rem;
-  background: #e9ecef;
+  background: var(--glpi-surface-3);
   border-radius: 999px;
   overflow: hidden;
 }
@@ -1936,7 +2110,7 @@ a.glpi-breadcrumb-item:hover {
   position: relative;
   width: 100%;
   height: 0.6rem;
-  background: #e9ecef;
+  background: var(--glpi-surface-3);
   border-radius: 999px;
   overflow: hidden;
 }
@@ -1984,7 +2158,7 @@ a.glpi-breadcrumb-item:hover {
 }
 
 .glpi-dashboard-drag-handle {
-  color: #adb5bd;
+  color: var(--glpi-text-muted);
   margin-right: 0.5rem;
   cursor: grab;
 }
@@ -2040,7 +2214,7 @@ a.glpi-breadcrumb-item:hover {
 
 .glpi-switch-grid-item label:not(.glpi-switch) {
   font-size: 0.8rem;
-  color: #232629;
+  color: var(--glpi-text);
   cursor: pointer;
 }
 
@@ -2082,14 +2256,14 @@ a.glpi-breadcrumb-item:hover {
   gap: 0.75rem;
   padding: 0.6rem 0.85rem;
   margin-bottom: 1rem;
-  border: 1px solid var(--tblr-border-color, #e6e7e9);
+  border: 1px solid var(--tblr-border-color, var(--glpi-border));
   border-radius: 8px;
-  background: #f8f9fa;
+  background: var(--glpi-surface-2);
 }
 
 .glpi-import-plugin-head > .ti {
   font-size: 1.4rem;
-  color: #6c757d;
+  color: var(--glpi-text-muted);
 }
 
 .glpi-import-plugin-name {
@@ -2109,7 +2283,7 @@ a.glpi-breadcrumb-item:hover {
 
 /* --- Base de connaissances : éditeur Markdown et rendu d'un article --- */
 .glpi-md-editor {
-  border: 1px solid #e6e7e9;
+  border: 1px solid var(--glpi-border);
   border-radius: 8px;
   overflow: hidden;
 }
@@ -2120,15 +2294,15 @@ a.glpi-breadcrumb-item:hover {
   flex-wrap: wrap;
   gap: 0.5rem;
   padding: 0.35rem 0.5rem;
-  background: #f8f9fa;
-  border-bottom: 1px solid #e6e7e9;
+  background: var(--glpi-surface-2);
+  border-bottom: 1px solid var(--glpi-border);
 }
 
 .glpi-md-editor-sep {
   width: 1px;
   align-self: stretch;
   margin: 0.15rem 0.25rem;
-  background: #e6e7e9;
+  background: var(--glpi-surface-3);
 }
 
 /* Le textarea est déjà encadré par .glpi-md-editor : sa propre bordure ferait un double trait. */
@@ -2147,7 +2321,7 @@ a.glpi-breadcrumb-item:hover {
 .glpi-md-editor-preview {
   padding: 0.75rem 1rem;
   min-height: 12rem;
-  background: #fff;
+  background: var(--glpi-surface);
 }
 
 /* Rendu d'un article : le HTML vient de Markdig (voir MarkdownRenderer), donc d'un jeu de
@@ -2187,15 +2361,15 @@ a.glpi-breadcrumb-item:hover {
 
 .glpi-kb-content code {
   padding: 0.1rem 0.3rem;
-  background: #f1f2f4;
+  background: var(--glpi-surface-2);
   border-radius: 4px;
   font-size: 0.85em;
 }
 
 .glpi-kb-content pre {
   padding: 0.75rem 1rem;
-  background: #f8f9fa;
-  border: 1px solid #e6e7e9;
+  background: var(--glpi-surface-2);
+  border: 1px solid var(--glpi-border);
   border-radius: 6px;
   overflow-x: auto;
 }
@@ -2208,8 +2382,8 @@ a.glpi-breadcrumb-item:hover {
 .glpi-kb-content blockquote {
   margin: 0 0 0.9rem;
   padding: 0.25rem 0 0.25rem 0.9rem;
-  border-left: 3px solid #d7d9dc;
-  color: #6c737b;
+  border-left: 3px solid var(--glpi-border-strong);
+  color: var(--glpi-text-muted);
 }
 
 .glpi-kb-content table {
@@ -2220,11 +2394,11 @@ a.glpi-breadcrumb-item:hover {
 .glpi-kb-content th,
 .glpi-kb-content td {
   padding: 0.35rem 0.7rem;
-  border: 1px solid #e6e7e9;
+  border: 1px solid var(--glpi-border);
 }
 
 .glpi-kb-content th {
-  background: #f8f9fa;
+  background: var(--glpi-surface-2);
 }
 
 /* Une image trop large ne doit pas élargir la fiche et faire défiler toute la page. */
@@ -2235,5 +2409,582 @@ a.glpi-breadcrumb-item:hover {
 
 .glpi-kb-content hr {
   margin: 1.2rem 0;
-  border-top: 1px solid #e6e7e9;
+  border-top: 1px solid var(--glpi-border);
+}
+
+/* ---- Assistance : planning (/assistance/planning) -----------------------------------------
+   Semaine en colonnes, heures en lignes : une heure = 48px (HourHeight côté composant), les
+   lignes horaires sont un dégradé répété de cette hauteur plutôt qu'un élément par heure.
+   Les trois types d'objets portent les trois premières teintes de la palette de données
+   (bleu, orange, aqua — validées pour la vision des couleurs) : en liseré et en fond léger,
+   jamais sur le texte, qui reste à l'encre normale. */
+
+.glpi-planning {
+  --glpi-series-1: #2a78d6;
+  --glpi-series-2: #eb6834;
+  --glpi-series-3: #1baf7a;
+  --glpi-planning-line: var(--glpi-border);
+}
+
+.glpi-planning-body {
+  display: flex;
+  align-items: flex-start;
+}
+
+.glpi-planning-grid {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.glpi-planning-head,
+.glpi-planning-hours {
+  display: grid;
+  grid-template-columns: 3.5rem repeat(7, minmax(7.5rem, 1fr));
+}
+
+.glpi-planning-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--glpi-surface);
+  border-bottom: 1px solid var(--glpi-planning-line);
+}
+
+.glpi-planning-dayname {
+  padding: 0.5rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  text-align: center;
+  color: var(--glpi-text-2);
+}
+
+.glpi-planning-dayname.is-today {
+  color: var(--glpi-primary-text);
+}
+
+.glpi-planning-hourlabel {
+  padding-right: 0.4rem;
+  text-align: right;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--glpi-text-muted);
+  transform: translateY(-0.5em);
+}
+
+.glpi-planning-day {
+  position: relative;
+  border-left: 1px solid var(--glpi-planning-line);
+  background-image: linear-gradient(to bottom, var(--glpi-planning-line) 1px, transparent 1px);
+}
+
+.glpi-planning-day.is-today {
+  background-color: rgba(var(--tblr-primary-rgb), 0.035);
+}
+
+.glpi-planning-now {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  height: 2px;
+  background: #e34948;
+  pointer-events: none;
+}
+
+.glpi-planning-event,
+.glpi-planning-unplanned {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow: hidden;
+  padding: 0.2rem 0.35rem 0.2rem 0.5rem;
+  border: 0;
+  border-left: 3px solid var(--glpi-event-color, #6c737b);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--glpi-event-color, #6c737b) 10%, var(--glpi-surface));
+  color: var(--glpi-text);
+  font-size: 0.75rem;
+  line-height: 1.25;
+  text-align: left;
+  cursor: pointer;
+}
+
+.glpi-planning-event {
+  position: absolute;
+}
+
+.glpi-planning-event:hover,
+.glpi-planning-unplanned:hover,
+.glpi-planning-event:focus-visible,
+.glpi-planning-unplanned:focus-visible {
+  background: color-mix(in srgb, var(--glpi-event-color, #6c737b) 20%, var(--glpi-surface));
+  outline: none;
+}
+
+.glpi-planning-event.is-done {
+  opacity: 0.55;
+}
+
+.glpi-planning-event.is-done .glpi-planning-title {
+  text-decoration: line-through;
+}
+
+.glpi-planning-ticket { --glpi-event-color: var(--glpi-series-1); }
+.glpi-planning-problem { --glpi-event-color: var(--glpi-series-2); }
+.glpi-planning-change { --glpi-event-color: var(--glpi-series-3); }
+
+.glpi-planning-time {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.glpi-planning-title {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.glpi-planning-parent {
+  color: var(--glpi-text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.glpi-planning-side {
+  flex: 0 0 16rem;
+  padding: 0.75rem;
+  border-left: 1px solid var(--glpi-planning-line);
+}
+
+.glpi-planning-side-title {
+  margin-bottom: 0.6rem;
+  font-weight: 600;
+}
+
+.glpi-planning-unplanned {
+  width: 100%;
+  margin-bottom: 0.4rem;
+}
+
+.glpi-planning-legend {
+  display: flex;
+  gap: 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--glpi-text-2);
+}
+
+.glpi-planning-swatch {
+  display: inline-block;
+  width: 0.7rem;
+  height: 0.7rem;
+  margin-right: 0.3rem;
+  border-radius: 2px;
+  vertical-align: -1px;
+  background: var(--glpi-event-color);
+}
+
+@media (max-width: 991.98px) {
+  .glpi-planning-body {
+    flex-direction: column;
+  }
+
+  .glpi-planning-side {
+    flex-basis: auto;
+    width: 100%;
+    border-left: 0;
+    border-top: 1px solid var(--glpi-planning-line);
+  }
+}
+
+/* ---- Assistance : statistiques (/assistance/statistics) -----------------------------------
+   Trois séries (ouverts, résolus, clos) sur les trois premières teintes de la palette de
+   données, validées sur fond blanc (écart daltonien ≥ 9, vision normale ≥ 27). L'aqua passe sous
+   3:1 de contraste : légende, étiquettes de fin et vue tableau compensent, comme le veut la
+   règle. Traits fins, grille en filet, le texte jamais à la couleur des séries. */
+
+.glpi-stats {
+  --glpi-series-1: #2a78d6;
+  --glpi-series-2: #eb6834;
+  --glpi-series-3: #1baf7a;
+  --glpi-stats-grid: var(--glpi-border);
+  --glpi-stats-ink: var(--glpi-text);
+  --glpi-stats-ink-2: var(--glpi-text-2);
+  --glpi-stats-ink-3: var(--glpi-text-muted);
+}
+
+.glpi-stats-num {
+  font-variant-numeric: tabular-nums;
+}
+
+.glpi-stats-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.75rem;
+}
+
+.glpi-stats-tile {
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--tblr-border-color, var(--glpi-border));
+  border-radius: 6px;
+  background: var(--glpi-surface);
+}
+
+.glpi-stats-tile-label {
+  font-size: 0.8125rem;
+  color: var(--glpi-stats-ink-2);
+}
+
+.glpi-stats-tile-value {
+  margin-top: 0.15rem;
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--glpi-stats-ink);
+}
+
+.glpi-stats-tile-note {
+  margin-top: 0.15rem;
+  font-size: 0.8125rem;
+}
+
+.glpi-stats-legend {
+  display: flex;
+  gap: 0.9rem;
+  font-size: 0.8125rem;
+  color: var(--glpi-stats-ink-2);
+}
+
+/* Clé de légende en trait court, comme la marque qu'elle désigne. */
+.glpi-stats-key {
+  display: inline-block;
+  width: 0.9rem;
+  height: 2px;
+  margin-right: 0.35rem;
+  border-radius: 1px;
+  vertical-align: middle;
+  background: var(--glpi-stats-color);
+}
+
+.glpi-stats-s1 { --glpi-stats-color: var(--glpi-series-1); }
+.glpi-stats-s2 { --glpi-stats-color: var(--glpi-series-2); }
+.glpi-stats-s3 { --glpi-stats-color: var(--glpi-series-3); }
+
+.glpi-stats-chart {
+  position: relative;
+}
+
+.glpi-stats-chart svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.glpi-stats-grid {
+  stroke: var(--glpi-stats-grid);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+
+.glpi-stats-axis {
+  font-size: 11px;
+  fill: var(--glpi-stats-ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.glpi-stats-line {
+  fill: none;
+  stroke: var(--glpi-stats-color);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Anneau à la couleur du fond : le point reste lisible là où il croise une autre courbe. */
+.glpi-stats-dot {
+  fill: var(--glpi-stats-color);
+  stroke: var(--glpi-surface);
+  stroke-width: 2;
+}
+
+.glpi-stats-endlabel {
+  font-size: 12px;
+  fill: var(--glpi-stats-ink-2);
+}
+
+.glpi-stats-crosshair {
+  stroke: var(--glpi-border-strong);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+
+.glpi-stats-hit {
+  fill: transparent;
+  cursor: crosshair;
+}
+
+.glpi-stats-tooltip {
+  position: absolute;
+  top: 0.5rem;
+  z-index: 2;
+  min-width: 10rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--tblr-border-color, var(--glpi-border));
+  border-radius: 6px;
+  background: var(--glpi-surface);
+  box-shadow: 0 4px 14px rgba(27, 31, 36, 0.12);
+  font-size: 0.8125rem;
+  color: var(--glpi-stats-ink);
+  pointer-events: none;
+}
+
+.glpi-stats-tooltip > div:not(:first-child) {
+  display: flex;
+  align-items: center;
+}
+
+.glpi-stats-tooltip .glpi-stats-num {
+  margin-left: auto;
+  padding-left: 1rem;
+}
+
+.glpi-stats-breakdown {
+  height: 100%;
+}
+
+.glpi-stats-barcell {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.glpi-stats-bartrack {
+  flex: 1 1 auto;
+  height: 8px;
+}
+
+.glpi-stats-bar {
+  display: block;
+  height: 100%;
+  min-width: 2px;
+  border-radius: 0 4px 4px 0;
+  background: var(--glpi-series-1);
+}
+
+.glpi-stats-barcell .glpi-stats-num {
+  flex: 0 0 2.5rem;
+  text-align: right;
+}
+
+/* Tâches courtes du planning : voir Planning/Index.SizeCss. */
+.glpi-planning-event.is-short .glpi-planning-parent,
+.glpi-planning-event.is-tiny .glpi-planning-parent {
+  display: none;
+}
+
+.glpi-planning-event.is-tiny {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 0.35rem;
+  padding-top: 0.1rem;
+  padding-bottom: 0.1rem;
+}
+
+.glpi-planning-event.is-tiny .glpi-planning-time {
+  flex: 0 0 auto;
+}
+
+/* Le libellé d'une heure est remonté d'une demi-ligne pour s'aligner sur son trait ; sans cette
+   marge, celui de la première heure sortait par le haut de la grille. */
+.glpi-planning-hours {
+  padding-top: 0.6rem;
+}
+
+/* Largeur figée : un titre de tâche insécable élargissait la colonne, et la grille bougeait
+   d'une semaine à l'autre selon ce qui restait à planifier. */
+.glpi-planning-side {
+  width: 16rem;
+  min-width: 16rem;
+  max-width: 16rem;
+}
+
+.glpi-planning-unplanned {
+  min-width: 0;
+}
+
+/* Le SVG est dessiné à la largeur mesurée de sa carte (voir glpiNg.observeWidth) : on le laisse
+   à cette taille plutôt que de l'étirer, qui grossissait le texte des axes. */
+.glpi-stats-chart {
+  overflow-x: auto;
+}
+
+.glpi-stats-chart svg {
+  width: auto;
+  max-width: none;
+}
+
+/* Préférence « Afficher les compteurs » sur Non : la classe est posée par MainLayout. */
+.glpi-hide-tab-counts .glpi-fiche-tab-count {
+  display: none;
+}
+
+/* Séries des graphiques et du planning en mode sombre : les mêmes teintes, un cran ajustées pour
+   le fond sombre — validées elles aussi (écart daltonien ≥ 9, contraste ≥ 3:1 sur les surfaces
+   de Tabler et de Darker). */
+:root[data-bs-theme="dark"] .glpi-stats,
+:root[data-bs-theme="dark"] .glpi-planning {
+  --glpi-series-1: #3987e5;
+  --glpi-series-2: #d95926;
+  --glpi-series-3: #199e70;
+}
+
+/* ---- Préférences : choix de la palette ---------------------------------------------------- */
+.glpi-palette-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr));
+  gap: 0.75rem;
+}
+
+.glpi-palette-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.5rem;
+  border: 2px solid var(--glpi-border);
+  border-radius: 8px;
+  background: var(--glpi-surface);
+  color: var(--glpi-text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.glpi-palette-card:hover {
+  border-color: var(--glpi-border-strong);
+}
+
+.glpi-palette-card.selected {
+  border-color: var(--glpi-primary-text);
+}
+
+.glpi-palette-preview {
+  position: relative;
+  display: flex;
+  height: 4.5rem;
+  overflow: hidden;
+  border: 1px solid var(--glpi-border);
+  border-radius: 5px;
+}
+
+.glpi-palette-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  width: 32%;
+  padding: 0.4rem 0.35rem;
+}
+
+.glpi-palette-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+}
+
+.glpi-palette-line {
+  height: 3px;
+  border-radius: 2px;
+  opacity: 0.7;
+}
+
+.glpi-palette-button {
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.glpi-palette-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.glpi-palette-card.selected .glpi-palette-name .ti {
+  color: var(--glpi-primary-text);
+}
+
+/* ---- Liste déroulante de palettes (Configuration > Valeurs par défaut) ----------------------
+   Même gabarit que les <select> des champs de configuration, à côté desquels elle se range. */
+.glpi-palette-select {
+  width: 100%;
+  max-width: 520px;
+}
+
+.glpi-palette-select-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--glpi-border);
+  border-radius: 6px;
+  background: var(--glpi-surface);
+  color: var(--glpi-text);
+  font-size: 0.875rem;
+  text-align: left;
+}
+
+.glpi-palette-select-toggle:focus-visible {
+  outline: 2px solid var(--glpi-primary-text);
+  outline-offset: 1px;
+}
+
+.glpi-palette-select-menu {
+  width: 100%;
+  max-width: 520px;
+}
+
+.glpi-palette-select-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* Aperçu : bande de menu avec son point d'accent, fond de page et pastille de la primaire. */
+.glpi-palette-swatch {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: 2.6rem;
+  height: 1.4rem;
+  overflow: hidden;
+  border: 1px solid var(--glpi-border-strong);
+  border-radius: 4px;
+}
+
+.glpi-palette-swatch-menu {
+  display: flex;
+  justify-content: center;
+  width: 38%;
+  padding-top: 0.25rem;
+}
+
+.glpi-palette-swatch-dot {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+}
+
+.glpi-palette-swatch-primary {
+  position: absolute;
+  right: 0.25rem;
+  bottom: 0.25rem;
+  width: 0.85rem;
+  height: 0.45rem;
+  border-radius: 2px;
 }

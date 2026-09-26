@@ -89,14 +89,25 @@ src/
                                      #   ManagementHistoryEntry (historique polymorphe)
     Components/Pages/               # Une liste + une fiche par type, onglets Documents/Notes/Historique
     ManagementMenuProvider.cs       # Contribue les entrées du groupe "Gestion"
-  GlpiNg.Modules.Assistance/        # Module Assistance (tickets, problèmes)
-    Models/                         # Ticket, Problem(+ProblemTicket), TicketCategory,
+  GlpiNg.Modules.Assistance/        # Module Assistance (tickets, problèmes, changements, niveaux de service)
+    Models/                         # Ticket, Problem(+ProblemTicket), Change(+ChangeValidation/
+                                     #   ChangeTicket/ChangeProblem), TicketCategory,
                                      #   ItilFollowup/ItilTask (polymorphes), ItilLabels + matrice
-                                     #   urgence×impact, AssistanceHistoryEntry
-    Components/Pages/Tickets/       # Liste et fiche (suivis, tâches, solution, Documents/Notes/Historique)
+                                     #   urgence×impact, AssistanceHistoryEntry, Calendar(+Segment/
+                                     #   Holiday), ServiceLevel(+Agreement/Escalation/Action)
+    Services/                       # WorkingTimeCalculator (arithmétique des heures ouvrées),
+                                     #   ServiceLevelService (pose des échéances),
+                                     #   ServiceLevelEscalationCronTask (escalade),
+                                     #   ItilStatistics (calculs des statistiques)
+    Components/Pages/Tickets/       # Liste et fiche (suivis, tâches, solution, niveaux de service...)
     Components/Pages/Problems/      # Liste et fiche (analyse, incidents rattachés, suivis, tâches, solution)
-    Components/Pages/Categories/    # Catégories ITIL, hiérarchiques, communes aux deux
-    AssistanceMenuProvider.cs       # Contribue "Tickets", "Problèmes" et "Catégories ITIL"
+    Components/Pages/Changes/       # Liste et fiche (analyse, plans, approbations, tickets/problèmes rattachés...)
+    Components/Pages/Planning/      # Planning des tâches, en semaine, et leur planification
+    Components/Pages/Statistics/    # Statistiques : chiffres, évolution, répartitions
+    Components/Pages/Categories/    # Catégories ITIL, hiérarchiques, communes aux trois
+    Components/Pages/ServiceLevels/ # /config/service-levels : niveaux, engagements, escalades
+    Components/Pages/Calendars/     # /config/calendars : plages horaires et fermetures
+    AssistanceMenuProvider.cs       # Contribue à "Assistance" et à "Configuration"
   GlpiNg.Modules.Cron/              # Ordonnanceur applicatif : CronBackgroundService + AutomaticActionRunner
   GlpiNg.Modules.Scheduler/         # Tâches cron qui déclenchent déploiements / tâches réseau / WoL
   GlpiNg.Modules.Abstractions/      # Contrats de contribution : Menu (IMenuProvider / MenuGroup /
@@ -117,8 +128,7 @@ contrôleurs (`AddApplicationPart`) et ne dépend que du `DbContext` EF Core de 
 (pas du `GlpiNgDbContext` concret de l'hôte). Un module contribue aussi son propre
 menu sidebar via `IMenuProvider` plutôt que de faire modifier `MainLayout`
 directement par le code hôte. Les modules Gestion et Assistance sont les derniers
-à avoir suivi ce schéma ; un futur module Problèmes/Changements s'y rangerait de
-la même façon.
+à avoir suivi ce schéma ; un futur module s'y rangerait de la même façon.
 
 Un module ajouté doit être déclaré à **quatre** endroits : le `ProjectReference`
 du csproj hôte, l'appel `AddXxxModule()` dans `Program.cs`, la liste
@@ -147,11 +157,45 @@ pages qui s'ouvrent depuis le menu mais répondent 404 quand on colle leur adres
 
 - Connexion par cookie (`/login`), avec un profil admin créé par l'assistant
   d'installation.
-- Préférences personnelles (`/preferences`) : repli du menu latéral, nombre
-  d'éléments par page dans les listes, et format d'affichage des adresses MAC
-  (laissé sur « Réglage de l'instance », il suit « Affichage adresse MAC » de la
-  configuration générale). Contrat `IUserPreferences` côté `Abstractions`, pour
-  que les pages des modules les consultent sans connaître le modèle de compte.
+- Préférences personnelles (`/preferences`), reprises de l'onglet
+  « Personnalisation » de GLPI : repli du menu latéral, éléments par page, format
+  des adresses MAC, **format des dates** (AAAA-MM-JJ, JJ-MM-AAAA, MM-JJ-AAAA),
+  **fuseau horaire**, ordre Nom/Prénom, affichage des ID, compteurs d'onglets,
+  ordre de l'historique, délimiteur CSV et notifications pour ses propres
+  actions. Chaque réglage laissé sur « Réglage de l'instance » (valeur nulle sur
+  le compte) suit Configuration > Valeurs par défaut et en suit les changements ;
+  « Jamais » pour les compteurs côté instance les interdit à tous. La langue n'est
+  pas proposée (l'interface n'existe qu'en français).
+
+  Mécanique : `UserPreferenceValues` (Abstractions) porte les valeurs résolues
+  **et** les règles de formatage ; `UserDisplay`, injecté dans tous les composants
+  sous le nom `Display` (voir les `_Imports.razor`), sert au balisage —
+  `@Display.DateTime(ticket.OpenedAt)`. Les préférences sont chargées au début de
+  chaque requête (prérendu) et de chaque circuit (`UserPreferencesPreloader`), ce
+  qui permet de les lire sans attendre dans le balisage. Deux familles de dates :
+  - `Display.DateTime` / `Display.Date` : **instants enregistrés en UTC**
+    (création, ouverture, dernier contact…), convertis dans le fuseau choisi ;
+  - `Display.LocalDateTime` / `Display.LocalDate` : **heures murales et dates
+    seules** saisies à la main (échéances, planification des tâches, dates de
+    contrat…), stockées telles quelles et jamais converties.
+
+  Ne suivent pas les préférences, volontairement : les textes d'historique (figés
+  à l'enregistrement et lus par tous), les courriels de notification, la prose
+  (« lundi 21 septembre »), et les calculs métier des calendriers de niveau de
+  service, qui raisonnent dans le fuseau de l'organisation. Les rapports et les
+  exports (CSV, tableur, PDF) les suivent : dates, fuseau et délimiteur.
+- **Thèmes** (onglet Apparence des préférences, défaut de l'instance dans Valeurs
+  par défaut) : les huit palettes de GLPI — Auror (par défaut), Classic, Dark,
+  Darker, Midnight, Light Blue, Vintage, Ice Cream —, reprises de ses sources
+  (`css/palettes/_*.scss`), et le **contraste élevé**. Darker et Midnight sont de
+  vrais thèmes sombres (mode sombre de Tabler) ; « Dark », comme chez GLPI, garde
+  des pages claires sous un menu très sombre. `App.razor` pose `data-glpi-theme`,
+  `data-bs-theme` et `data-glpi-contrast` sur `<html>` au rendu serveur, donc sans
+  flash au chargement ; la page de connexion prend la palette de l'instance.
+  Toutes les couleurs de `glpi-theme.css` passent par des jetons (`--glpi-surface`,
+  `--glpi-text`, `--glpi-border`…) que les palettes et le mode sombre redéfinissent.
+  Les séries des graphiques et du planning ont leur variante sombre, validée comme
+  la claire (lisibles par les daltoniens).
 - Sources d'authentification externes : annuaires LDAP (CRUD sous
   `/config/auth`), avec bind LDAP au login et provisionnement automatique
   des comptes externes si activé (`AuthSettings.AutoAddUsersFromExternalAuth`).
@@ -359,8 +403,121 @@ actif du parc (il faudrait une colonne côté Inventory), pas de SLA/OLA, pas de
 gabarits, pas de règles métier, pas d'enquête de satisfaction, et pas de
 notification sur les transitions autres que l'ouverture. Côté problème, pas de
 création d'un problème depuis un incident en un geste, et pas de propagation de
-la solution aux incidents rattachés. Changements, planning et statistiques
-restent des entrées de menu sans page.
+la solution aux incidents rattachés.
+
+### Changements (`/assistance/changes`)
+
+Le changement, repris de GLPI (`glpi_changes`) : une modification planifiée de
+l'infrastructure ou du service. Là où le problème cherche une cause, le changement
+la traite — et parce qu'il touche à ce qui marche, il se prépare et se fait
+approuver avant d'être appliqué. Même socle que le problème (catégorie,
+urgence/impact/priorité, rédacteur, suivis, tâches, Documents/Notes/Historique) ;
+ce qui lui est propre :
+
+- **Cycle de vie de GLPI**, valeurs numériques comprises : Nouveau, Évaluation,
+  Approbation, Accepté, En attente, Test, Qualification, **Appliqué**, **Revue**
+  (appliqué, effet en cours de vérification — le changement reste *ouvert*),
+  Clos et **Annulé** (abandonné sans avoir été appliqué, distinct de Clos).
+- **Analyse** (impacts, liste de contrôle) et **plans** (déploiement, retour
+  arrière, checklist) — `impactcontent`, `controlistcontent`,
+  `rolloutplancontent`, `backoutplancontent`, `checklistcontent` de GLPI.
+- **Approbations** (`glpi_changevalidations`) : on sollicite un utilisateur, seul
+  lui peut répondre (vérifié côté serveur), un refus exige un commentaire.
+  L'état global suit la règle la plus prudente de GLPI : un refus suffit à
+  refuser, il faut l'accord de tous pour accepter. Demander une approbation fait
+  passer un changement Nouveau/Évaluation en « Approbation » ; l'accord de tous le
+  fait passer en « Accepté » ; un refus ne décide rien du statut. La liste filtre
+  « À approuver par moi ».
+- **Tickets et problèmes rattachés** (`glpi_changes_tickets`,
+  `glpi_changes_problems`), posés depuis la fiche du changement et affichés dans
+  l'onglet « Changements » des tickets et des problèmes.
+- Appliquer un changement non approuvé, ou sans plan de retour arrière, est
+  signalé, pas empêché — comme dans GLPI.
+- Notifications : ouverture, demande d'approbation, réponse d'un approbateur.
+
+Limites connues : pas de seuil d'approbation réglable (toujours 100 %), pas
+d'approbation par un groupe, pas de rattachement à un actif du parc, pas de
+calendrier des changements, et pas de gabarits.
+
+### Planning (`/assistance/planning`)
+
+Les tâches planifiées des tickets, problèmes et changements, en semaine (lundi →
+dimanche), pour « Mon planning », tous les techniciens ou l'un d'eux. Les tâches
+qui se chevauchent se partagent la colonne du jour, une tâche sans fin occupe une
+heure (comme dans GLPI), la plage horaire s'élargit d'elle-même pour une tâche hors
+de 8 h–19 h, et une ligne marque l'heure courante. C'est aussi là qu'on
+**planifie** : une tâche ouverte sans date attend dans « À planifier », et un clic
+sur n'importe quelle tâche ouvre sa planification (début, fin, technicien,
+terminée), tracée dans l'historique de son ticket, problème ou changement.
+
+Les dates de tâche sont des heures **locales** (saisies en `datetime-local`,
+stockées telles quelles) : elles ne passent jamais par `ToLocalTime()`, qui les
+décalait du fuseau sur les fiches — corrigé au passage.
+
+Limites : pas de glisser-déposer, pas de vue jour ou mois, pas d'événements
+personnels hors tâches, pas d'export iCal.
+
+### Statistiques (`/assistance/statistics`)
+
+La vue globale des statistiques de GLPI, pour les tickets, les problèmes ou les
+changements, sur une période prédéfinie ou libre :
+
+- **Chiffres de la période** : ouverts, résolus, clos, délai moyen et médian de
+  résolution ; **à date** : en cours et en retard ; pour les tickets, la part
+  résolue dans les délais parmi ceux qui portaient un engagement de résolution.
+- **Évolution** ouverts / résolus / clos, par jour, semaine ou mois selon la
+  longueur de la période. Trois compteurs indépendants : un ticket ouvert en août
+  et résolu en septembre compte dans les ouverts d'août et les résolus de
+  septembre. Infobulle au survol, et vue tableau des mêmes chiffres.
+- **Répartitions** par catégorie, technicien, priorité et (tickets) type, et les
+  en cours par statut. Au-delà de dix lignes, le reste est regroupé sous « Autres ».
+
+Les calculs vivent dans `Services/ItilStatistics` ; le graphique est un SVG dessiné
+à la largeur mesurée de sa carte (`glpiNg.observeWidth`), sans bibliothèque. Seuls
+les objets du périmètre d'entités de l'utilisateur sont comptés.
+
+Limites : pas de statistiques par demandeur ni par groupe, pas d'export, pas de
+comparaison entre deux périodes, et pas de temps de prise en charge.
+
+### Niveaux de services (`/config/service-levels`, `/config/calendars`)
+
+Les engagements de délai de GLPI (`glpi_slms`, `glpi_slas`, `glpi_olas`,
+`glpi_slalevels`), définis en Configuration et appliqués aux tickets.
+
+- **Calendrier** (`glpi_calendars`) : plages travaillées par jour de la semaine —
+  plusieurs par jour, pour fermer entre midi et deux — et fermetures (jours
+  fériés, ponts), ponctuelles ou revenant chaque année. Un onglet « Essai » sur
+  la fiche calcule une échéance à blanc, pour voir ce qu'on configure avant qu'un
+  incident réel en dépende.
+- **Niveau de service** : un contenant (« Support standard ») qui porte un
+  calendrier et ses engagements. Sans calendrier, les durées se comptent en temps
+  réel (24/7), ce que la liste signale par un badge plutôt que de le taire.
+- **Engagement** : un **SLA** (envers le demandeur, compté depuis l'ouverture du
+  ticket) ou un **OLA** (interne, compté depuis l'attribution), portant sur la
+  **prise en charge** (TTO) ou sur la **résolution** (TTR) — soit quatre
+  échéances possibles par ticket, que la fiche montre côte à côte. Option « fin
+  de journée ouvrée » pour un engagement à la journée.
+- **Escalade** (`glpi_slalevels`) : « à 1 h de l'échéance, passer la priorité à
+  Très haute et consigner un suivi ». Le décalage se compte en minutes *ouvrées*,
+  négatif avant l'échéance, positif après. Actions disponibles : priorité,
+  statut, attribution à un technicien ou à un groupe, suivi interne,
+  notification. Exécutées par la tâche cron `sla_escalation` (toutes les 5 min
+  par défaut, réglable depuis `/config/automatic-actions`), une seule fois par
+  ticket et par niveau — la trace est prise en base, sans quoi chaque passage
+  rejouerait le même niveau.
+
+Les échéances sont **calculées une fois, à la pose de l'engagement, et stockées** :
+les recalculer à l'affichage les ferait bouger au moindre changement de
+calendrier, et une échéance qui se déplace n'engage plus personne. Changer un
+calendrier ou une durée ne touche donc pas les tickets déjà engagés.
+
+Écarts avec GLPI : une seule table d'engagements avec un discriminant SLA/OLA là
+où GLPI en tient deux, identiques au champ près ; et les niveaux d'escalade n'ont
+pas de critères de déclenchement — ils s'appliquent dès que le ticket est encore
+ouvert au moment dit, une condition sur d'autres champs demandant le moteur de
+règles, qui n'existe pas pour l'assistance. Les réglages de `/config` >
+« Assistance » (matrice de priorité, gabarits) restent inertes : la matrice
+appliquée est celle de GLPI par défaut, en dur.
 
 **Suivis et tâches** vivent dans deux tables polymorphes (`ItilFollowups`,
 `ItilTasks` : `ItemType` + `ItemId`), comme `glpi_itilfollowups` : un objet ITIL
@@ -1002,9 +1159,10 @@ manques suivants sont connus et assumés à ce stade.
 ### Modules fonctionnels absents
 
 - **Assistance** : les tickets et les problèmes existent (voir leurs sections
-  ci-dessus), avec suivis, tâches, solution, catégories ITIL et rattachement des
-  incidents à leur cause. Absents : changements, planning, statistiques,
-  gabarits, enquêtes de satisfaction, SLA/OLA et règles métier.
+  ci-dessus), avec suivis, tâches, solution, catégories ITIL, rattachement des
+  incidents à leur cause, et niveaux de service (SLA/OLA, calendriers ouvrés,
+  escalade). Absents : changements, planning, statistiques, gabarits, enquêtes de
+  satisfaction et règles métier.
 - **Gestion** : le groupe est couvert (voir sa section ci-dessus), mais ses
   fiches ne sont pas encore reliées aux actifs du parc.
 - **Outils** : réservations (et, absents même de la sidebar : projets, rappels,
@@ -1014,7 +1172,8 @@ manques suivants sont connus et assumés à ce stade.
   connaissances, le contenu est du Markdown (pas de WYSIWYG) et sans commentaires — les
   pièces jointes, elles, existent (voir « Documents »).
 - **Administration** : formulaires.
-- **Configuration** : niveaux de services (SLA/OLA), collecteurs, plugins.
+- **Configuration** : collecteurs, plugins. Les niveaux de services existent
+  désormais (voir leur section ci-dessus).
 
 À noter : les sections `Assistance`, `Helpdesk` et `Analyse d'impact` de
 `/config` sont toujours inertes — tickets et problèmes existent, mais ils ne

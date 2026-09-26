@@ -68,4 +68,7 @@ public static class ItemTypes
 
     /// <summary>Problème : la cause commune d'un ou plusieurs incidents.</summary>
     public const string Problem = "Problem";
+
+    /// <summary>Changement : une modification planifiée, préparée et approuvée avant d'être appliquée.</summary>
+    public const string Change = "Change";
 }

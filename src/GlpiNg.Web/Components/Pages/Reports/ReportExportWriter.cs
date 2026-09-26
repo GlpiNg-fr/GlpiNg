@@ -25,18 +25,19 @@ internal static class ReportExportWriter
         QuestPDF.Settings.License = LicenseType.Community;
     }
 
-    public static byte[] BuildCsv(ReportResult report)
+    /// <param name="delimiter">Séparateur de colonnes, selon la préférence « Délimiteur CSV » de l'utilisateur.</param>
+    public static byte[] BuildCsv(ReportResult report, string delimiter)
     {
         StringBuilder sb = new();
 
         foreach (ReportTable table in report.Tables)
         {
-            sb.AppendLine(CsvEscape(table.Title));
-            sb.AppendLine(string.Join(';', table.Columns.Select(column => CsvEscape(column.Label))));
+            sb.AppendLine(CsvEscape(table.Title, delimiter));
+            sb.AppendLine(string.Join(delimiter, table.Columns.Select(column => CsvEscape(column.Label, delimiter))));
 
             foreach (ReportRow row in table.Rows)
             {
-                sb.AppendLine(string.Join(';', row.Cells.Select(cell => CsvEscape(cell.Text))));
+                sb.AppendLine(string.Join(delimiter, row.Cells.Select(cell => CsvEscape(cell.Text, delimiter))));
             }
 
             sb.AppendLine();
@@ -45,9 +46,9 @@ internal static class ReportExportWriter
         return new UTF8Encoding(encoderShouldEmitUTF8Identifier: true).GetBytes(sb.ToString());
     }
 
-    private static string CsvEscape(string value)
+    private static string CsvEscape(string value, string delimiter)
     {
-        return value.Contains(';') || value.Contains('"') || value.Contains('\n')
+        return value.Contains(delimiter) || value.Contains('"') || value.Contains('\n')
             ? $"\"{value.Replace("\"", "\"\"")}\""
             : value;
     }
@@ -202,7 +203,8 @@ internal static class ReportExportWriter
         .Replace(">", "&gt;")
         .Replace("\"", "&quot;");
 
-    public static byte[] BuildPdf(ReportDefinition definition, ReportResult report, bool landscape)
+    /// <param name="generatedAt">Date de génération déjà écrite selon les préférences de l'utilisateur.</param>
+    public static byte[] BuildPdf(ReportDefinition definition, ReportResult report, bool landscape, string generatedAt)
     {
         Document document = Document.Create(container =>
         {
@@ -216,7 +218,7 @@ internal static class ReportExportWriter
                 {
                     header.Item().Text(definition.Title).FontSize(16).Bold();
                     header.Item().Text(definition.Description).FontSize(9).FontColor(Colors.Grey.Darken1);
-                    header.Item().Text($"Généré le {DateTime.Now:dd/MM/yyyy HH:mm}").FontSize(8).FontColor(Colors.Grey.Darken1);
+                    header.Item().Text($"Généré le {generatedAt}").FontSize(8).FontColor(Colors.Grey.Darken1);
                 });
 
                 page.Content().PaddingTop(10).Column(content =>

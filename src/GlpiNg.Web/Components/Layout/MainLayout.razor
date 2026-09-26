@@ -1,6 +1,7 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="glpi-app">
+@* « Afficher les compteurs » (préférences) : une classe ici masque ceux de tous les onglets de fiche. *@
+<div class="glpi-app @(Display.ShowTabCounters ? "" : "glpi-hide-tab-counts")">
     <aside class="glpi-sidebar @(_collapsed ? "collapsed" : "")">
         <a href="/" class="glpi-brand">
             <i class="ti ti-server-2"></i>

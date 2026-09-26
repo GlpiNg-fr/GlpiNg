@@ -63,7 +63,7 @@
                     @foreach (EventLogEntry entry in _filteredEntries)
                     {
                         <tr>
-                            <td class="text-nowrap">@entry.OccurredAt.ToLocalTime().ToString("dd-MM-yyyy HH:mm:ss")</td>
+                            <td class="text-nowrap">@Display.DateTime(entry.OccurredAt, seconds: true)</td>
                             <td>@entry.Service</td>
                             <td><span class="badge @LevelBadgeCss(entry.Level)">@LevelLabel(entry.Level)</span></td>
                             <td>@entry.Message</td>

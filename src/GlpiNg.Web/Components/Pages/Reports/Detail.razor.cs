@@ -85,14 +85,27 @@ public partial class Detail : ComponentBase
         {
             // Copie du dictionnaire : le rapport ne doit pas voir les valeurs changer sous lui si
             // l'utilisateur touche un filtre pendant le calcul.
-            _result = await Catalog.RunAsync(_definition.Key, new ReportParameters(new Dictionary<string, string?>(_values)));
-            _generatedAt = DateTime.Now;
+            _result = WithUserDates(await Catalog.RunAsync(_definition.Key, new ReportParameters(new Dictionary<string, string?>(_values))));
+            _generatedAt = DateTime.UtcNow;
         }
         finally
         {
             _isRunning = false;
         }
     }
+
+    /// <summary>
+    /// Réécrit les cellules de date selon les préférences de l'utilisateur (format, fuseau) — voir
+    /// ReportCell.DateUtc. Fait une fois ici, l'affichage et les trois exports partent du même
+    /// résultat et disent donc la même heure.
+    /// </summary>
+    private ReportResult? WithUserDates(ReportResult? result) => result is null ? null : new([.. result.Tables.Select(table => table with
+    {
+        Rows = [.. table.Rows.Select(row => row with
+        {
+            Cells = [.. row.Cells.Select(cell => cell.DateUtc is { } date ? cell with { Text = Display.DateTime(date)! } : cell)],
+        })],
+    })]);
 
     private string? ValueOf(ReportFilter filter)
         => _values.TryGetValue(filter.Key, out string? value) ? value : filter.DefaultValue;
@@ -115,9 +128,9 @@ public partial class Detail : ComponentBase
 
         (byte[] Bytes, string Extension, string ContentType) export = format switch
         {
-            "pdf-landscape" => (ReportExportWriter.BuildPdf(_definition, _result, landscape: true), "pdf", "application/pdf"),
-            "pdf-portrait" => (ReportExportWriter.BuildPdf(_definition, _result, landscape: false), "pdf", "application/pdf"),
-            "csv" => (ReportExportWriter.BuildCsv(_result), "csv", "text/csv"),
+            "pdf-landscape" => (ReportExportWriter.BuildPdf(_definition, _result, landscape: true, Display.DateTime(_generatedAt ?? DateTime.UtcNow)!), "pdf", "application/pdf"),
+            "pdf-portrait" => (ReportExportWriter.BuildPdf(_definition, _result, landscape: false, Display.DateTime(_generatedAt ?? DateTime.UtcNow)!), "pdf", "application/pdf"),
+            "csv" => (ReportExportWriter.BuildCsv(_result, Display.Values.CsvDelimiter), "csv", "text/csv"),
             "ods" => (ReportExportWriter.BuildOds(_result), "ods", "application/vnd.oasis.opendocument.spreadsheet"),
             "xlsx" => (ReportExportWriter.BuildXlsx(_result), "xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
             _ => throw new ArgumentOutOfRangeException(nameof(format), format, null)

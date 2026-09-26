@@ -70,7 +70,7 @@ else
                         <td class="text-secondary">@(row.Document.Category?.Name ?? "—")</td>
                         <td class="text-secondary text-nowrap">@FormatSize(row.Document.SizeBytes)</td>
                         <td class="text-secondary">@row.AttachmentCount</td>
-                        <td class="text-secondary text-nowrap">@row.Document.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                        <td class="text-secondary text-nowrap">@Display.Date(row.Document.CreatedAt)</td>
                         <td class="text-nowrap">
                             @if (row.Document.IsContentMissing)
                             {

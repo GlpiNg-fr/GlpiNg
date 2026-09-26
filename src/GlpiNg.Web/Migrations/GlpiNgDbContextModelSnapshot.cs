@@ -57,6 +57,287 @@ namespace GlpiNg.Web.Migrations
                     b.ToTable("AssistanceHistoryEntries");
                 });
 
+            modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.Calendar", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("EntityId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsRecursive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityId");
+
+                    b.ToTable("Calendars");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.CalendarHoliday", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CalendarId")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsPerpetual")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CalendarId");
+
+                    b.ToTable("CalendarHolidays");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.CalendarSegment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CalendarId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("int");
+
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("time");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("time");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CalendarId");
+
+                    b.ToTable("CalendarSegments");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.Change", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AssignedGroupId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("AssignedUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("AuthorUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("BackoutPlanContent")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ChecklistContent")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ClosedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Content")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ControlListContent")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("EntityId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("GlobalValidation")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Impact")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ImpactContent")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsPriorityManual")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsRecursive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("OpenedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RolloutPlanContent")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Solution")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SolutionType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("SolvedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Urgency")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedUserId");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("EntityId");
+
+                    b.HasIndex("Status", "OpenedAt");
+
+                    b.ToTable("Changes");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.ChangeProblem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ChangeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProblemId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProblemId");
+
+                    b.HasIndex("ChangeId", "ProblemId")
+                        .IsUnique();
+
+                    b.ToTable("ChangeProblems");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.ChangeTicket", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ChangeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TicketId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TicketId");
+
+                    b.HasIndex("ChangeId", "TicketId")
+                        .IsUnique();
+
+                    b.ToTable("ChangeTickets");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.ChangeValidation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ChangeId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RequestComment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RequesterName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("SubmittedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ValidatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ValidationComment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ValidatorUserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChangeId");
+
+                    b.HasIndex("ValidatorUserId", "Status");
+
+                    b.ToTable("ChangeValidations");
+                });
+
             modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.ItilFollowup", b =>
                 {
                     b.Property<int>("Id")
@@ -260,6 +541,146 @@ namespace GlpiNg.Web.Migrations
                     b.ToTable("ProblemTickets");
                 });
 
+            modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.ServiceLevel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CalendarId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("EntityId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsRecursive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CalendarId");
+
+                    b.HasIndex("EntityId");
+
+                    b.ToTable("ServiceLevels");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.ServiceLevelAgreement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DurationUnit")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DurationValue")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("EndOfWorkingDay")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ServiceLevelId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Target")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ServiceLevelId");
+
+                    b.ToTable("ServiceLevelAgreements");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.ServiceLevelEscalation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("OffsetMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ServiceLevelAgreementId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ServiceLevelAgreementId");
+
+                    b.ToTable("ServiceLevelEscalations");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.ServiceLevelEscalationAction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ActionType")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ServiceLevelEscalationId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ServiceLevelEscalationId");
+
+                    b.ToTable("ServiceLevelEscalationActions");
+                });
+
             modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.Ticket", b =>
                 {
                     b.Property<int>("Id")
@@ -292,6 +713,12 @@ namespace GlpiNg.Web.Migrations
                     b.Property<int>("Impact")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("InternalTimeToOwn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("InternalTimeToResolve")
+                        .HasColumnType("datetime2");
+
                     b.Property<bool>("IsPriorityManual")
                         .HasColumnType("bit");
 
@@ -301,6 +728,15 @@ namespace GlpiNg.Web.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("OlaStartedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("OlaTimeToOwnId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("OlaTimeToResolveId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("OpenedAt")
                         .HasColumnType("datetime2");
@@ -314,6 +750,12 @@ namespace GlpiNg.Web.Migrations
                     b.Property<int?>("RequesterUserId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("SlaTimeToOwnId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SlaTimeToResolveId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Solution")
                         .HasColumnType("nvarchar(max)");
 
@@ -325,6 +767,15 @@ namespace GlpiNg.Web.Migrations
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
+
+                    b.Property<DateTime?>("TakenIntoAccountAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("TimeToOwn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("TimeToResolve")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("Type")
                         .HasColumnType("int");
@@ -342,6 +793,16 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("CategoryId");
 
                     b.HasIndex("EntityId");
+
+                    b.HasIndex("OlaTimeToOwnId");
+
+                    b.HasIndex("OlaTimeToResolveId");
+
+                    b.HasIndex("SlaTimeToOwnId");
+
+                    b.HasIndex("SlaTimeToResolveId");
+
+                    b.HasIndex("TimeToResolve");
 
                     b.HasIndex("Status", "OpenedAt");
 
@@ -388,6 +849,33 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("ParentId");
 
                     b.ToTable("TicketCategories");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.TicketEscalation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("ExecutedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ServiceLevelEscalationId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TicketId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ServiceLevelEscalationId");
+
+                    b.HasIndex("TicketId", "ServiceLevelEscalationId")
+                        .IsUnique();
+
+                    b.ToTable("TicketEscalations");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Cron.Models.AutomaticActionRunLog", b =>
@@ -6316,8 +6804,17 @@ namespace GlpiNg.Web.Migrations
                     b.Property<int>("AuthSource")
                         .HasColumnType("int");
 
+                    b.Property<string>("ColorPalette")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("CsvDelimiter")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DateFormat")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("DisplayName")
                         .HasColumnType("nvarchar(max)");
@@ -6329,6 +6826,15 @@ namespace GlpiNg.Web.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("FirstName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FullNameOrder")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool?>("HighContrast")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("HistoryOrder")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")
@@ -6352,6 +6858,9 @@ namespace GlpiNg.Web.Migrations
                     b.Property<int>("MacAddressFormat")
                         .HasColumnType("int");
 
+                    b.Property<bool?>("NotifyOnMyChanges")
+                        .HasColumnType("bit");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -6359,11 +6868,20 @@ namespace GlpiNg.Web.Migrations
                     b.Property<string>("Phone")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool?>("ShowCounters")
+                        .HasColumnType("bit");
+
+                    b.Property<bool?>("ShowGlpiIds")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("SidebarCollapsed")
                         .HasColumnType("bit");
 
                     b.Property<int?>("SourceGlpiId")
                         .HasColumnType("int");
+
+                    b.Property<string>("Timezone")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("TwoFactorAuthDisabled")
                         .HasColumnType("bit");
@@ -6904,6 +7422,100 @@ namespace GlpiNg.Web.Migrations
                     b.ToTable("WebhookHeaders");
                 });
 
+            modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.Calendar", b =>
+                {
+                    b.HasOne("GlpiNg.Web.Models.GlpiEntity", null)
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.CalendarHoliday", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Assistance.Models.Calendar", "Calendar")
+                        .WithMany("Holidays")
+                        .HasForeignKey("CalendarId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Calendar");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.CalendarSegment", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Assistance.Models.Calendar", "Calendar")
+                        .WithMany("Segments")
+                        .HasForeignKey("CalendarId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Calendar");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.Change", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Assistance.Models.TicketCategory", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("GlpiNg.Web.Models.GlpiEntity", null)
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.ChangeProblem", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Assistance.Models.Change", "Change")
+                        .WithMany()
+                        .HasForeignKey("ChangeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GlpiNg.Modules.Assistance.Models.Problem", "Problem")
+                        .WithMany()
+                        .HasForeignKey("ProblemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Change");
+
+                    b.Navigation("Problem");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.ChangeTicket", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Assistance.Models.Change", "Change")
+                        .WithMany()
+                        .HasForeignKey("ChangeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GlpiNg.Modules.Assistance.Models.Ticket", "Ticket")
+                        .WithMany()
+                        .HasForeignKey("TicketId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Change");
+
+                    b.Navigation("Ticket");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.ChangeValidation", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Assistance.Models.Change", "Change")
+                        .WithMany()
+                        .HasForeignKey("ChangeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Change");
+                });
+
             modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.Problem", b =>
                 {
                     b.HasOne("GlpiNg.Modules.Assistance.Models.TicketCategory", "Category")
@@ -6938,6 +7550,54 @@ namespace GlpiNg.Web.Migrations
                     b.Navigation("Ticket");
                 });
 
+            modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.ServiceLevel", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Assistance.Models.Calendar", "Calendar")
+                        .WithMany()
+                        .HasForeignKey("CalendarId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("GlpiNg.Web.Models.GlpiEntity", null)
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Calendar");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.ServiceLevelAgreement", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Assistance.Models.ServiceLevel", "ServiceLevel")
+                        .WithMany("Agreements")
+                        .HasForeignKey("ServiceLevelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ServiceLevel");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.ServiceLevelEscalation", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Assistance.Models.ServiceLevelAgreement", "Agreement")
+                        .WithMany("Escalations")
+                        .HasForeignKey("ServiceLevelAgreementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Agreement");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.ServiceLevelEscalationAction", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Assistance.Models.ServiceLevelEscalation", "Escalation")
+                        .WithMany("Actions")
+                        .HasForeignKey("ServiceLevelEscalationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Escalation");
+                });
+
             modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.Ticket", b =>
                 {
                     b.HasOne("GlpiNg.Modules.Assistance.Models.TicketCategory", "Category")
@@ -6950,7 +7610,35 @@ namespace GlpiNg.Web.Migrations
                         .HasForeignKey("EntityId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("GlpiNg.Modules.Assistance.Models.ServiceLevelAgreement", "OlaTimeToOwn")
+                        .WithMany()
+                        .HasForeignKey("OlaTimeToOwnId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("GlpiNg.Modules.Assistance.Models.ServiceLevelAgreement", "OlaTimeToResolve")
+                        .WithMany()
+                        .HasForeignKey("OlaTimeToResolveId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("GlpiNg.Modules.Assistance.Models.ServiceLevelAgreement", "SlaTimeToOwn")
+                        .WithMany()
+                        .HasForeignKey("SlaTimeToOwnId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("GlpiNg.Modules.Assistance.Models.ServiceLevelAgreement", "SlaTimeToResolve")
+                        .WithMany()
+                        .HasForeignKey("SlaTimeToResolveId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Category");
+
+                    b.Navigation("OlaTimeToOwn");
+
+                    b.Navigation("OlaTimeToResolve");
+
+                    b.Navigation("SlaTimeToOwn");
+
+                    b.Navigation("SlaTimeToResolve");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.TicketCategory", b =>
@@ -6966,6 +7654,25 @@ namespace GlpiNg.Web.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Parent");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.TicketEscalation", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Assistance.Models.ServiceLevelEscalation", "Escalation")
+                        .WithMany()
+                        .HasForeignKey("ServiceLevelEscalationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GlpiNg.Modules.Assistance.Models.Ticket", "Ticket")
+                        .WithMany()
+                        .HasForeignKey("TicketId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Escalation");
+
+                    b.Navigation("Ticket");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.CollectDefinition", b =>
@@ -8720,6 +9427,28 @@ namespace GlpiNg.Web.Migrations
                         .IsRequired();
 
                     b.Navigation("Webhook");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.Calendar", b =>
+                {
+                    b.Navigation("Holidays");
+
+                    b.Navigation("Segments");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.ServiceLevel", b =>
+                {
+                    b.Navigation("Agreements");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.ServiceLevelAgreement", b =>
+                {
+                    b.Navigation("Escalations");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.ServiceLevelEscalation", b =>
+                {
+                    b.Navigation("Actions");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.CollectDefinition", b =>

@@ -34,6 +34,13 @@ public sealed class ComputerDeploymentTask
 
 public sealed class ComputerDeploymentTaskExecution
 {
+    /// <summary>Identifiant unique parmi toutes les exécutions de l'onglet (« deploy-12 »,
+    /// « wol-3 ») : les jobs de déploiement et de réveil réseau ont des Id qui se chevauchent.</summary>
+    public required string Key { get; set; }
+    /// <summary>Paquet déployé, nul pour une exécution qui n'en porte pas (réveil réseau).</summary>
+    public string? PackageName { get; set; }
+    /// <summary>Journal brut rapporté par l'agent, étape par étape (voir DeploymentJob.Log).</summary>
+    public string? Log { get; set; }
     public DateTime? DateUtc { get; set; }
     public required string StatusLabel { get; set; }
     public required string StatusBadgeCssClass { get; set; }

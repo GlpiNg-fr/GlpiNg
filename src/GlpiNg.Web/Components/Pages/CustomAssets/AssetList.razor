@@ -113,7 +113,7 @@ else
                                 {
                                     <td class="text-secondary">@DisplayValue(asset, field)</td>
                                 }
-                                <td class="text-secondary">@asset.UpdatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                <td class="text-secondary">@Display.DateTime(asset.UpdatedAt)</td>
                             </tr>
                         }
                     }

@@ -149,11 +149,23 @@ public static class ProfileSectionMap
             return ProfileSection.Gestion;
         }
 
-        // Module Assistance : tickets, suivis, tâches, catégories ITIL et leur historique relèvent
-        // du groupe « Assistance » du menu (/assistance/...).
+        // Module Assistance : tickets, problèmes, suivis, tâches, catégories ITIL et leur
+        // historique relèvent du groupe « Assistance » du menu (/assistance/...).
         if (ns.StartsWith("GlpiNg.Modules.Assistance", StringComparison.Ordinal))
         {
-            return ProfileSection.Assistance;
+            // Sauf les niveaux de service et les calendriers : les définir est de la
+            // configuration (/config/service-levels, /config/calendars), même si ce sont les
+            // tickets qui les portent — comme les types d'actifs personnalisés plus bas.
+            return type.Name switch
+            {
+                nameof(Modules.Assistance.Models.Calendar) or nameof(Modules.Assistance.Models.CalendarSegment)
+                    or nameof(Modules.Assistance.Models.CalendarHoliday)
+                    or nameof(Modules.Assistance.Models.ServiceLevel) or nameof(Modules.Assistance.Models.ServiceLevelAgreement)
+                    or nameof(Modules.Assistance.Models.ServiceLevelEscalation) or nameof(Modules.Assistance.Models.ServiceLevelEscalationAction)
+                    => ProfileSection.Configuration,
+
+                _ => ProfileSection.Assistance,
+            };
         }
 
         if (ns.StartsWith("GlpiNg.Modules.Cron", StringComparison.Ordinal)
