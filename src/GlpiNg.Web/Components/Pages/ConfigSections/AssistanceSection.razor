@@ -4,18 +4,19 @@
 @inject SettingsCacheService SettingsStore
 @inject ConfigHistoryService History
 @inject ToastService ToastService
+@implements IDisposable
 
 @if (_modules is null || _model is null)
 {
-    <p>Chargement…</p>
+    <p>@T("Chargement…")</p>
 }
 else
 {
     @* L'interrupteur du module est porté par la ligne de titre elle-même : il commande tout ce que
        la carte contient, et reste donc accessible sans la déplier. *@
-    <CardExpander Title="Module Assistance" Icon="ti-headset" Expanded="false">
+    <CardExpander Title="@(T("Module Assistance"))" Icon="ti-headset" Expanded="false">
         <HeaderActions>
-            <label class="glping-switch" title="Activer ou désactiver tout le module Assistance">
+            <label class="glping-switch" title="@(T("Activer ou désactiver tout le module Assistance"))">
                 <input type="checkbox" checked="@_moduleEnabled" @onchange="OnModuleMasterToggled" />
                 <span class="glping-switch-slider"></span>
             </label>
@@ -26,12 +27,12 @@ else
     </CardExpander>
 
     <div class="glping-config-divider">
-        <span><i class="ti ti-headset"></i> Réglages de l'assistance</span>
+        <span><i class="ti ti-headset"></i> @T("Réglages de l'assistance")</span>
     </div>
 
     <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
         <div class="glping-config-field">
-            <label for="as-time-step">Pas pour les heures (en minutes)</label>
+            <label for="as-time-step">@T("Pas pour les heures (en minutes)")</label>
             <select id="as-time-step" class="glping-config-input-sm" @bind="_model.TimeStepMinutes">
                 <option value="1">1</option>
                 <option value="5">5</option>
@@ -43,17 +44,17 @@ else
         </div>
 
         <div class="glping-config-field">
-            <label for="as-planning-begin">Début du planning</label>
-            <input id="as-planning-begin" type="text" placeholder="HH:mm" pattern="[0-2][0-9]:[0-5][0-9]" class="glping-config-input-sm" @bind="_model.PlanningBegin" />
+            <label for="as-planning-begin">@T("Début du planning")</label>
+            <input id="as-planning-begin" type="text" placeholder="@(T("HH:mm"))" pattern="[0-2][0-9]:[0-5][0-9]" class="glping-config-input-sm" @bind="_model.PlanningBegin" />
         </div>
 
         <div class="glping-config-field">
-            <label for="as-planning-end">Fin du planning</label>
-            <input id="as-planning-end" type="text" placeholder="HH:mm" pattern="[0-2][0-9]:[0-5][0-9]" class="glping-config-input-sm" @bind="_model.PlanningEnd" />
+            <label for="as-planning-end">@T("Fin du planning")</label>
+            <input id="as-planning-end" type="text" placeholder="@(T("HH:mm"))" pattern="[0-2][0-9]:[0-5][0-9]" class="glping-config-input-sm" @bind="_model.PlanningEnd" />
         </div>
 
         <div class="glping-config-field">
-            <label>Planification des journées ouvrées</label>
+            <label>@T("Planification des journées ouvrées")</label>
             <div class="glping-switch-grid" style="margin:0;grid-template-columns:repeat(auto-fill, minmax(130px, 1fr));">
                 @foreach (var day in WorkDays)
                 {
@@ -63,28 +64,28 @@ else
                             <input id="@inputId" type="checkbox" checked="@_model.PlanningWorkDays.Contains(day.Value)" @onchange="e => ToggleWorkDay(day.Value, (bool)e.Value!)" />
                             <span class="glping-switch-slider"></span>
                         </label>
-                        <label for="@inputId">@day.Label</label>
+                        <label for="@inputId">@T(day.Label)</label>
                     </div>
                 }
             </div>
         </div>
 
         <div class="glping-config-field">
-            <label for="as-mailcollector-size">Taille max. des pièces jointes du collecteur de mails</label>
+            <label for="as-mailcollector-size">@T("Taille max. des pièces jointes du collecteur de mails")</label>
             <select id="as-mailcollector-size" @bind="_model.MailCollectorMaxFileSize">
-                <option value="0">Pas d'import</option>
-                <option value="1048576">1 Mio</option>
-                <option value="2097152">2 Mio</option>
-                <option value="5242880">5 Mio</option>
-                <option value="10485760">10 Mio</option>
-                <option value="20971520">20 Mio</option>
-                <option value="52428800">50 Mio</option>
-                <option value="104857600">100 Mio</option>
+                <option value="0">@T("Pas d'import")</option>
+                <option value="1048576">@T("1 Mio")</option>
+                <option value="2097152">@T("2 Mio")</option>
+                <option value="5242880">@T("5 Mio")</option>
+                <option value="10485760">@T("10 Mio")</option>
+                <option value="20971520">@T("20 Mio")</option>
+                <option value="52428800">@T("50 Mio")</option>
+                <option value="104857600">@T("100 Mio")</option>
             </select>
         </div>
 
         <div class="glping-config-field checkbox">
-            <label for="as-software-linkable">Par défaut, un logiciel peut être associé à un ticket</label>
+            <label for="as-software-linkable">@T("Par défaut, un logiciel peut être associé à un ticket")</label>
             <label class="glping-switch">
                 <input id="as-software-linkable" type="checkbox" @bind="_model.SoftwareLinkableToTicketByDefault" />
                 <span class="glping-switch-slider"></span>
@@ -92,7 +93,7 @@ else
         </div>
 
         <div class="glping-config-field checkbox">
-            <label for="as-keep-tickets">Conserver les tickets à la purge d'un élément de l'inventaire</label>
+            <label for="as-keep-tickets">@T("Conserver les tickets à la purge d'un élément de l'inventaire")</label>
             <label class="glping-switch">
                 <input id="as-keep-tickets" type="checkbox" @bind="_model.KeepTicketsOnAssetPurge" />
                 <span class="glping-switch-slider"></span>
@@ -100,7 +101,7 @@ else
         </div>
 
         <div class="glping-config-field checkbox">
-            <label for="as-show-personal">Afficher les informations personnelles dans le formulaire de nouveau ticket (interface simplifiée)</label>
+            <label for="as-show-personal">@T("Afficher les informations personnelles dans le formulaire de nouveau ticket (interface simplifiée)")</label>
             <label class="glping-switch">
                 <input id="as-show-personal" type="checkbox" @bind="_model.ShowPersonalInfoOnSimplifiedTicketForm" />
                 <span class="glping-switch-slider"></span>
@@ -108,7 +109,7 @@ else
         </div>
 
         <div class="glping-config-field checkbox">
-            <label for="as-anon-tickets">Autoriser les ouvertures de tickets anonymes (collecteur)</label>
+            <label for="as-anon-tickets">@T("Autoriser les ouvertures de tickets anonymes (collecteur)")</label>
             <label class="glping-switch">
                 <input id="as-anon-tickets" type="checkbox" @bind="_model.AllowAnonymousTicketCreation" />
                 <span class="glping-switch-slider"></span>
@@ -116,7 +117,7 @@ else
         </div>
 
         <div class="glping-config-field checkbox">
-            <label for="as-anon-followups">Autoriser les suivis anonymes (collecteur)</label>
+            <label for="as-anon-followups">@T("Autoriser les suivis anonymes (collecteur)")</label>
             <label class="glping-switch">
                 <input id="as-anon-followups" type="checkbox" @bind="_model.AllowAnonymousFollowups" />
                 <span class="glping-switch-slider"></span>
@@ -124,10 +125,10 @@ else
         </div>
 
         <div class="glping-config-divider">
-            <span><i class="ti ti-flag"></i> Matrice de priorité</span>
+            <span><i class="ti ti-flag"></i> @T("Matrice de priorité")</span>
         </div>
 
-        <p class="hint" style="margin-left:0;">Priorité = f(urgence, impact). Cliquez sur les niveaux pour les activer/désactiver (le niveau "Moyenne" reste toujours actif).</p>
+        <p class="hint" style="margin-left:0;">@T("Priorité = f(urgence, impact). Cliquez sur les niveaux pour les activer/désactiver (le niveau \"Moyenne\" reste toujours actif).")</p>
 
         <div style="overflow-x:auto;">
             <table class="glping-priority-matrix">
@@ -139,13 +140,13 @@ else
                             <th>
                                 @if (impact.Value == 3)
                                 {
-                                    <span>@impact.Label</span>
+                                    <span>@T(impact.Label)</span>
                                 }
                                 else
                                 {
                                     <label style="display:flex;flex-direction:column;align-items:center;gap:0.2rem;cursor:pointer;">
                                         <input type="checkbox" checked="@_model.EnabledImpactLevels.Contains(impact.Value)" @onchange="e => ToggleLevel(_model.EnabledImpactLevels, impact.Value, (bool)e.Value!)" />
-                                        @impact.Label
+                                        @T(impact.Label)
                                     </label>
                                 }
                             </th>
@@ -159,13 +160,13 @@ else
                             <th>
                                 @if (urgency.Value == 3)
                                 {
-                                    <span>@urgency.Label</span>
+                                    <span>@T(urgency.Label)</span>
                                 }
                                 else
                                 {
                                     <label style="display:flex;align-items:center;gap:0.3rem;cursor:pointer;">
                                         <input type="checkbox" checked="@_model.EnabledUrgencyLevels.Contains(urgency.Value)" @onchange="e => ToggleLevel(_model.EnabledUrgencyLevels, urgency.Value, (bool)e.Value!)" />
-                                        @urgency.Label
+                                        @T(urgency.Label)
                                     </label>
                                 }
                             </th>
@@ -177,7 +178,7 @@ else
                                     <select @bind="_model.PriorityMatrix[key]">
                                         @foreach (var p in Levels)
                                         {
-                                            <option value="@p.Value">@p.Label</option>
+                                            <option value="@p.Value">@T(p.Label)</option>
                                         }
                                     </select>
                                 </td>
@@ -188,7 +189,7 @@ else
             </table>
         </div>
 
-        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? T("Enregistrement…") : T("Enregistrer"))</button>
     </EditForm>
 }
 
@@ -224,7 +225,29 @@ else
         _modules = await SettingsStore.ReadSectionAsync<ModulesSettings>("ModulesSettings");
         _model = await SettingsStore.ReadSectionAsync<AssistanceSettings>(SectionName);
         _moduleEnabled = _modules.IsModuleEnabled("assistance");
+        SettingsStore.SectionSaved += OnSettingsSectionSaved;
     }
+
+    /// <summary>
+    /// Un autre écran — ou un autre administrateur — vient de basculer un module : les interrupteurs
+    /// de cette carte reprennent la valeur enregistrée, comme le menu latéral de chacun.
+    /// </summary>
+    private void OnSettingsSectionSaved(string sectionName)
+    {
+        if (sectionName != "ModulesSettings")
+        {
+            return;
+        }
+
+        _ = InvokeAsync(async () =>
+        {
+            _modules = await SettingsStore.ReadSectionAsync<ModulesSettings>("ModulesSettings");
+            _moduleEnabled = _modules.IsModuleEnabled("assistance");
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose() => SettingsStore.SectionSaved -= OnSettingsSectionSaved;
 
     private async Task OnModuleMasterToggled(ChangeEventArgs e)
     {
@@ -234,9 +257,8 @@ else
         }
 
         var enabled = (bool)e.Value!;
-        _modules.SetModuleEnabled("assistance", enabled);
+        _modules = await SettingsStore.UpdateSectionAsync<ModulesSettings>("ModulesSettings", modules => modules.SetModuleEnabled("assistance", enabled));
         _moduleEnabled = enabled;
-        await SettingsStore.SaveSectionAsync("ModulesSettings", _modules);
         await History.AppendAsync("Administrateur",
             [("Module Assistance", enabled ? "Désactivé" : "Activé", enabled ? "Activé" : "Désactivé")]);
     }
@@ -277,8 +299,7 @@ else
             return;
         }
 
-        _modules.Enabled[$"assistance:{change.Label}"] = change.Enabled;
-        await SettingsStore.SaveSectionAsync("ModulesSettings", _modules);
+        _modules = await SettingsStore.UpdateSectionAsync<ModulesSettings>("ModulesSettings", modules => modules.Enabled[$"assistance:{change.Label}"] = change.Enabled);
         await History.AppendAsync("Administrateur",
             [(change.Label, change.Enabled ? "Désactivé" : "Activé", change.Enabled ? "Activé" : "Désactivé")]);
     }
@@ -297,11 +318,11 @@ else
             var before = await SettingsStore.ReadSectionAsync<AssistanceSettings>(SectionName);
             await SettingsStore.SaveSectionAsync(SectionName, _model);
             await History.AppendAsync("Administrateur", SettingsDiff.Compare(before, _model));
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Configuration enregistrée."));
+            ToastService.Notify(new ToastMessage(ToastType.Success, T("Configuration enregistrée.")));
         }
         catch (IOException ex)
         {
-            ToastService.Notify(new ToastMessage(ToastType.Danger, $"Échec de l'enregistrement : {ex.Message}"));
+            ToastService.Notify(new ToastMessage(ToastType.Danger, T("Échec de l'enregistrement : {0}", ex.Message)));
         }
         finally
         {

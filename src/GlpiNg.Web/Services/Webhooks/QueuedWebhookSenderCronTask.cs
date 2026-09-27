@@ -1,3 +1,4 @@
+using GlpiNg.Modules.Abstractions.Localization;
 ﻿using GlpiNg.Modules.Abstractions.Cron;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models.Webhooks;
@@ -29,8 +30,7 @@ public sealed class QueuedWebhookSenderCronTask(
     public string Name => "Envoi des webhooks en file d'attente";
 
     public string Description =>
-        $"Expédie les appels HTTP sortants en attente, par lots de {BatchSize}, et purge les " +
-        "livraisons terminées passé l'âge configuré dans Configuration → Webhooks.";
+        Tr.T("Expédie les appels HTTP sortants en attente, par lots de {0}, et purge les livraisons terminées passé l'âge configuré dans Configuration → Webhooks.", BatchSize);
 
     public int DefaultFrequencyMinutes => 5;
 

@@ -575,6 +575,11 @@ public class Program
 
         WebApplication app = builder.Build();
 
+        // Catalogues de traduction de l'interface (i18n/{code}.json, texte français → traduction),
+        // chargés une fois : la langue de chaque utilisateur est posée par requête et par circuit
+        // (UserPreferencesPreloader), et Tr.T les lit selon cette culture.
+        LanguageCatalog.LoadInto(Path.Combine(app.Environment.ContentRootPath, "i18n"), app.Logger);
+
         if (!app.Environment.IsDevelopment())
         {
             app.UseExceptionHandler("/Error");

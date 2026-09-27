@@ -1,3 +1,4 @@
+using GlpiNg.Modules.Abstractions.Localization;
 using GlpiNg.Modules.Abstractions.Cron;
 using GlpiNg.Modules.Deployment.Models;
 using GlpiNg.Web.Data;
@@ -39,9 +40,8 @@ public sealed class DeploymentJobTimeoutCronTask(
     public string Name => "Expiration des jobs de déploiement";
 
     public string Description =>
-        "Passe en erreur les jobs de déploiement restés en cours : sans aucun retour de l'agent " +
-        $"après {NeverAcknowledgedDelay.TotalMinutes:0} minutes (job refusé par l'agent), ou non " +
-        $"terminés après {UnfinishedDelay.TotalHours:0} heures.";
+        Tr.T("Passe en erreur les jobs de déploiement restés en cours : sans aucun retour de l'agent après {0:0} minutes (job refusé par l'agent), ou non terminés après {1:0} heures.",
+            NeverAcknowledgedDelay.TotalMinutes, UnfinishedDelay.TotalHours);
 
     public int DefaultFrequencyMinutes => 5;
 

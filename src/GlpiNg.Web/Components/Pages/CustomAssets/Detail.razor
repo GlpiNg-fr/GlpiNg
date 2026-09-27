@@ -3,12 +3,12 @@
 @using GlpiNg.Web.Models.CustomAssets
 @rendermode InteractiveServer
 
-<PageTitle>@(_definition?.LabelSingular ?? "Actif personnalisé") — GlpiNg</PageTitle>
+<PageTitle>@(_definition?.LabelSingular ?? T("Actif personnalisé")) — GlpiNg</PageTitle>
 
 @if (_definition is null)
 {
     <div class="card">
-        <div class="card-body text-center text-secondary py-5">Type d'actif introuvable.</div>
+        <div class="card-body text-center text-secondary py-5">@T("Type d'actif introuvable.")</div>
     </div>
 }
 else
@@ -21,31 +21,31 @@ else
                 </h3>
                 <div class="btn-list">
                     <a class="btn" href="@($"/parc/custom/{_definition.SystemName}")">
-                        <i class="ti ti-list me-1"></i>Voir les actifs
+                        <i class="ti ti-list me-1"></i>@T("Voir les actifs")
                     </a>
                     <div class="dropdown">
                         <button type="button" class="btn btn-icon text-danger" data-bs-toggle="dropdown" aria-expanded="false"
-                                title="Supprimer ce type">
+                                title="@(T("Supprimer ce type"))">
                             <i class="ti ti-trash"></i>
                         </button>
                         <div class="dropdown-menu dropdown-menu-end p-3" style="min-width: 300px;">
                             <p class="mb-2">
-                                Supprimer ce type d'actif ?
+                                @T("Supprimer ce type d'actif ?")
                                 @if (_assetCount > 0)
                                 {
-                                    <strong>@_assetCount actif(s) enregistré(s) seront supprimés avec lui</strong>
-                                    <text>, ainsi que leurs valeurs, notes et historique.</text>
+                                    <strong>@T("{0} actif(s) enregistré(s) seront supprimés avec lui", _assetCount)</strong>
+                                    <text>@T(", ainsi que leurs valeurs, notes et historique.")</text>
                                 }
-                                Cette action est définitive.
+                                @T("Cette action est définitive.")
                             </p>
                             <div class="d-flex justify-content-end gap-2">
-                                <button type="button" class="btn btn-sm">Annuler</button>
-                                <button type="button" class="btn btn-sm btn-danger" @onclick="DeleteAsync">Supprimer</button>
+                                <button type="button" class="btn btn-sm">@T("Annuler")</button>
+                                <button type="button" class="btn btn-sm btn-danger" @onclick="DeleteAsync">@T("Supprimer")</button>
                             </div>
                         </div>
                     </div>
                     <button type="button" class="btn btn-warning" disabled="@_isSaving" @onclick="SaveAsync">
-                        <i class="ti ti-device-floppy me-1"></i>Enregistrer
+                        <i class="ti ti-device-floppy me-1"></i>@T("Enregistrer")
                     </button>
                 </div>
             </div>
@@ -54,44 +54,44 @@ else
                 <div class="row">
                     <div class="col-md-6">
                         <div class="glping-fiche-field">
-                            <label>Libellé au singulier</label>
+                            <label>@T("Libellé au singulier")</label>
                             <input class="form-control" @bind="_definition.LabelSingular" />
                         </div>
                         <div class="glping-fiche-field">
-                            <label>Libellé au pluriel</label>
+                            <label>@T("Libellé au pluriel")</label>
                             <input class="form-control" @bind="_definition.LabelPlural" />
                         </div>
                         <div class="glping-fiche-field">
-                            <label>Nom technique</label>
+                            <label>@T("Nom technique")</label>
                             <input class="form-control" value="@_definition.SystemName" disabled />
                             <p class="hint">
-                                Définitif : les documents, notes et historique déjà rattachés le portent.
+                                @T("Définitif : les documents, notes et historique déjà rattachés le portent.")
                             </p>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="glping-fiche-field">
-                            <label>Icône</label>
+                            <label>@T("Icône")</label>
                             <div class="d-flex align-items-center gap-2">
                                 <i class="ti @_definition.Icon fs-2"></i>
                                 <select class="form-select" @bind="_definition.Icon">
                                     @foreach ((string icon, string label) in IconChoices)
                                     {
-                                        <option value="@icon">@label</option>
+                                        <option value="@icon">@T(label)</option>
                                     }
                                 </select>
                             </div>
                         </div>
                         <div class="glping-fiche-field">
-                            <label>Actif</label>
+                            <label>@T("Actif")</label>
                             <select class="form-select" value="@(_definition.IsActive ? "true" : "false")"
                                     @onchange="@(e => _definition.IsActive = e.Value?.ToString() == "true")">
-                                <option value="true">Oui</option>
-                                <option value="false">Non</option>
+                                <option value="true">@T("Oui")</option>
+                                <option value="false">@T("Non")</option>
                             </select>
                         </div>
                         <div class="glping-fiche-field">
-                            <label>Commentaires</label>
+                            <label>@T("Commentaires")</label>
                             <textarea class="form-control" rows="2" @bind="_definition.Comment"></textarea>
                         </div>
                     </div>
@@ -99,27 +99,27 @@ else
 
                 <hr />
 
-                <h4>Onglets proposés sur la fiche</h4>
+                <h4>@T("Onglets proposés sur la fiche")</h4>
                 <div class="row">
                     <div class="col-md-4">
                         <label class="form-check">
                             <input class="form-check-input" type="checkbox" checked="@_definition.DocumentsEnabled"
                                    @onchange="@((ChangeEventArgs e) => _definition.DocumentsEnabled = (bool)(e.Value ?? false))" />
-                            <span class="form-check-label">Documents</span>
+                            <span class="form-check-label">@T("Documents")</span>
                         </label>
                     </div>
                     <div class="col-md-4">
                         <label class="form-check">
                             <input class="form-check-input" type="checkbox" checked="@_definition.NotesEnabled"
                                    @onchange="@((ChangeEventArgs e) => _definition.NotesEnabled = (bool)(e.Value ?? false))" />
-                            <span class="form-check-label">Notes</span>
+                            <span class="form-check-label">@T("Notes")</span>
                         </label>
                     </div>
                     <div class="col-md-4">
                         <label class="form-check">
                             <input class="form-check-input" type="checkbox" checked="@_definition.HistoryEnabled"
                                    @onchange="@((ChangeEventArgs e) => _definition.HistoryEnabled = (bool)(e.Value ?? false))" />
-                            <span class="form-check-label">Historique</span>
+                            <span class="form-check-label">@T("Historique")</span>
                         </label>
                     </div>
                 </div>
@@ -128,24 +128,22 @@ else
 
         <div class="card mt-3">
             <div class="card-header d-flex align-items-center justify-content-between">
-                <h3 class="card-title mb-0"><i class="ti ti-forms me-2"></i>Champs</h3>
+                <h3 class="card-title mb-0"><i class="ti ti-forms me-2"></i>@T("Champs")</h3>
                 <button type="button" class="btn btn-primary" @onclick="AddField">
-                    <i class="ti ti-plus me-1"></i>Ajouter un champ
+                    <i class="ti ti-plus me-1"></i>@T("Ajouter un champ")
                 </button>
             </div>
 
             <div class="card-body">
                 <p class="hint">
-                    Tout actif porte déjà un nom et un commentaire. Les champs ci-dessous s'y ajoutent,
-                    dans cet ordre, sur la fiche comme dans la liste. Enregistrer supprime aussi les
-                    valeurs saisies pour un champ retiré.
+                    @T("Tout actif porte déjà un nom et un commentaire. Les champs ci-dessous s'y ajoutent, dans cet ordre, sur la fiche comme dans la liste. Enregistrer supprime aussi les valeurs saisies pour un champ retiré.")
                 </p>
 
                 @if (_fields.Count == 0)
                 {
                     <div class="glping-config-placeholder">
                         <i class="ti ti-forms"></i>
-                        <p class="mb-0">Aucun champ : les actifs de ce type n'auront qu'un nom et un commentaire.</p>
+                        <p class="mb-0">@T("Aucun champ : les actifs de ce type n'auront qu'un nom et un commentaire.")</p>
                     </div>
                 }
                 else
@@ -154,11 +152,11 @@ else
                         <table class="table table-vcenter">
                             <thead>
                                 <tr>
-                                    <th>Libellé</th>
-                                    <th style="width: 12rem;">Type</th>
-                                    <th style="width: 14rem;">Liste déroulante</th>
-                                    <th style="width: 8rem;">Obligatoire</th>
-                                    <th style="width: 7rem;">Ordre</th>
+                                    <th>@T("Libellé")</th>
+                                    <th style="width: 12rem;">@T("Type")</th>
+                                    <th style="width: 14rem;">@T("Liste déroulante")</th>
+                                    <th style="width: 8rem;">@T("Obligatoire")</th>
+                                    <th style="width: 7rem;">@T("Ordre")</th>
                                     <th style="width: 3rem;"></th>
                                 </tr>
                             </thead>
@@ -204,7 +202,7 @@ else
                                                    @onchange="@(e => OnSortOrderChanged(field, e))" />
                                         </td>
                                         <td>
-                                            <button type="button" class="btn btn-icon btn-sm text-danger" title="Retirer ce champ"
+                                            <button type="button" class="btn btn-icon btn-sm text-danger" title="@(T("Retirer ce champ"))"
                                                     @onclick="() => RemoveField(field)">
                                                 <i class="ti ti-trash"></i>
                                             </button>

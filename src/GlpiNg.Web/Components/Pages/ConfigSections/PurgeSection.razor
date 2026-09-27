@@ -6,31 +6,31 @@
 
 @if (_model is null)
 {
-    <p>Chargement…</p>
+    <p>@T("Chargement…")</p>
 }
 else
 {
     <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
-        <p class="hint" style="margin-left:0;">Délai de conservation avant purge définitive, par type d'entrée d'historique.</p>
+        <p class="hint" style="margin-left:0;">@T("Délai de conservation avant purge définitive, par type d'entrée d'historique.")</p>
 
         <div class="glping-config-table-wrap" style="max-width:100%;">
             <table class="glping-config-table">
                 <thead>
                     <tr>
-                        <th>Type d'entrée</th>
-                        <th>Politique de purge</th>
+                        <th>@T("Type d'entrée")</th>
+                        <th>@T("Politique de purge")</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var (key, label) in PurgeSettings.Fields)
                     {
                         <tr>
-                            <td>@label</td>
+                            <td>@T(label)</td>
                             <td>
                                 <select @bind="_model.RetentionMonths[key]">
                                     @foreach (var option in Options)
                                     {
-                                        <option value="@option.Value">@option.Label</option>
+                                        <option value="@option.Value">@T(option.Label)</option>
                                     }
                                 </select>
                             </td>
@@ -40,7 +40,7 @@ else
             </table>
         </div>
 
-        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? T("Enregistrement…") : T("Enregistrer"))</button>
     </EditForm>
 }
 
@@ -79,11 +79,11 @@ else
             var before = await SettingsStore.ReadSectionAsync<PurgeSettings>(SectionName);
             await SettingsStore.SaveSectionAsync(SectionName, _model);
             await History.AppendAsync("Administrateur", SettingsDiff.Compare(before, _model));
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Configuration enregistrée."));
+            ToastService.Notify(new ToastMessage(ToastType.Success, T("Configuration enregistrée.")));
         }
         catch (IOException ex)
         {
-            ToastService.Notify(new ToastMessage(ToastType.Danger, $"Échec de l'enregistrement : {ex.Message}"));
+            ToastService.Notify(new ToastMessage(ToastType.Danger, T("Échec de l'enregistrement : {0}", ex.Message)));
         }
         finally
         {

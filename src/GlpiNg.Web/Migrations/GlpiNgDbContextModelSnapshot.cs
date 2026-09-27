@@ -6846,6 +6846,9 @@ namespace GlpiNg.Web.Migrations
                     b.Property<int>("ItemsPerPage")
                         .HasColumnType("int");
 
+                    b.Property<string>("Language")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("LastName")
                         .HasColumnType("nvarchar(max)");
 

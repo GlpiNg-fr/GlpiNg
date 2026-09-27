@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Web.Components.Pages.OAuthClients;
 
@@ -118,7 +119,7 @@ public partial class Index : ComponentBase
         bool alreadyExists = await db.OAuthClients.AsNoTracking().AnyAsync(c => c.Name == _newClient.Name);
         if (alreadyExists)
         {
-            ToastService.Notify(new ToastMessage(ToastType.Danger, "Ce nom est déjà utilisé."));
+            ToastService.Notify(new ToastMessage(ToastType.Danger, Tr.T("Ce nom est déjà utilisé.")));
             return;
         }
 

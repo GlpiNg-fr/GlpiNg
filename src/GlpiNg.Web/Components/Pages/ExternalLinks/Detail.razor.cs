@@ -1,3 +1,4 @@
+using GlpiNg.Modules.Abstractions.Localization;
 ﻿using System.Text.RegularExpressions;
 using BlazorBootstrap;
 using GlpiNg.Modules.Abstractions.ExternalLinks;
@@ -99,7 +100,7 @@ public partial class Detail : ComponentBase
 
             await db.SaveChangesAsync();
 
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Lien enregistré."));
+            ToastService.Notify(new ToastMessage(ToastType.Success, Tr.T("Lien enregistré.")));
             await LoadAsync();
         }
         finally
@@ -141,7 +142,7 @@ public partial class Detail : ComponentBase
 
             await db.SaveChangesAsync();
 
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Types associés enregistrés."));
+            ToastService.Notify(new ToastMessage(ToastType.Success, Tr.T("Types associés enregistrés.")));
             await LoadAsync();
         }
         finally
@@ -215,22 +216,22 @@ public partial class Detail : ComponentBase
     private static string SampleValue(string tag) => tag switch
     {
         ExternalLinkTags.Id => "42",
-        ExternalLinkTags.ItemType => "Computer",
-        ExternalLinkTags.Name => "PC-042",
-        ExternalLinkTags.Serial => "SN-ABC123",
-        ExternalLinkTags.OtherSerial => "INV-0099",
-        ExternalLinkTags.Type => "Laptop",
-        ExternalLinkTags.Model => "Latitude 5540",
-        ExternalLinkTags.Manufacturer => "Dell",
-        ExternalLinkTags.State => "En service",
-        ExternalLinkTags.Location => "Ingénierie",
+        ExternalLinkTags.ItemType => Tr.T("Computer"),
+        ExternalLinkTags.Name => Tr.T("PC-042"),
+        ExternalLinkTags.Serial => Tr.T("SN-ABC123"),
+        ExternalLinkTags.OtherSerial => Tr.T("INV-0099"),
+        ExternalLinkTags.Type => Tr.T("Laptop"),
+        ExternalLinkTags.Model => Tr.T("Latitude 5540"),
+        ExternalLinkTags.Manufacturer => Tr.T("Dell"),
+        ExternalLinkTags.State => Tr.T("En service"),
+        ExternalLinkTags.Location => Tr.T("Ingénierie"),
         ExternalLinkTags.User => "jdupont",
         ExternalLinkTags.Tech => "athibault",
         ExternalLinkTags.Uuid => "4c4c4544-0042-3010-8052-b9c04f503432",
-        ExternalLinkTags.Comment => "Poste de test",
+        ExternalLinkTags.Comment => Tr.T("Poste de test"),
         ExternalLinkTags.Ip => "192.168.1.42",
         ExternalLinkTags.Mac => "00:1a:2b:3c:4d:5e",
-        ExternalLinkTags.OperatingSystem => "Windows 11",
+        ExternalLinkTags.OperatingSystem => Tr.T("Windows 11"),
         ExternalLinkTags.Domain => "exemple.local",
         _ => tag,
     };
@@ -254,7 +255,7 @@ public partial class Detail : ComponentBase
 
             return Uri.TryCreate(rendered, UriKind.Absolute, out _)
                 ? null
-                : "Adresse non absolue : indiquez le schéma, par exemple https://exemple.org/…";
+                : Tr.T("Adresse non absolue : indiquez le schéma, par exemple https://exemple.org/…");
         }
     }
 }

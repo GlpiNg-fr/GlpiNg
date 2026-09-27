@@ -60,6 +60,9 @@ public class GlpiUser
 
     public bool? HighContrast { get; set; }
 
+    /// <summary>Langue de l'interface (« fr_FR », « en_GB »…), au format de DefaultValuesSettings.</summary>
+    public string? Language { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     /// <summary>Id de l'utilisateur GLPI d'origine (glpi_users.id) — voir Import/GlpiAdminMySqlImportService, même principe que Computer.SourceGlpiId.</summary>

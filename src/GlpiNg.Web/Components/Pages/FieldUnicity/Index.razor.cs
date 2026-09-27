@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Web.Components.Pages.FieldUnicity;
 
@@ -121,7 +122,7 @@ public partial class Index : ComponentBase
         if (await db.FieldUnicityCriteria.AsNoTracking()
                 .AnyAsync(criterion => criterion.Name == _newCriterion.Name))
         {
-            ToastService.Notify(new ToastMessage(ToastType.Danger, "Ce nom est déjà utilisé."));
+            ToastService.Notify(new ToastMessage(ToastType.Danger, Tr.T("Ce nom est déjà utilisé.")));
             return;
         }
 

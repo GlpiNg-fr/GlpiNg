@@ -10,7 +10,7 @@
         @Field.Label
         @if (Field.IsMandatory)
         {
-            <span class="text-danger ms-1" title="Champ obligatoire">*</span>
+            <span class="text-danger ms-1" title="@(T("Champ obligatoire"))">*</span>
         }
     </label>
 
@@ -28,8 +28,8 @@
         case CustomAssetFieldType.Boolean:
             <select class="form-select" value="@(CustomAssetValueFormat.IsTrue(Value) ? "true" : "false")"
                     @onchange="OnChanged">
-                <option value="false">Non</option>
-                <option value="true">Oui</option>
+                <option value="false">@T("Non")</option>
+                <option value="true">@T("Oui")</option>
             </select>
             break;
 
@@ -57,7 +57,7 @@
             {
                 @* Un champ « liste déroulante » sans catégorie ne propose rien : le dire ici plutôt
                    que de laisser une liste vide sans explication. *@
-                <p class="hint">Aucune catégorie d'intitulés choisie pour ce champ.</p>
+                <p class="hint">@T("Aucune catégorie d'intitulés choisie pour ce champ.")</p>
             }
             break;
 

@@ -6,34 +6,34 @@
 
 @if (_model is null)
 {
-    <p>Chargement…</p>
+    <p>@T("Chargement…")</p>
 }
 else
 {
     <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
         <div class="glping-config-divider">
-            <span><i class="ti ti-key"></i> Enregistrement</span>
+            <span><i class="ti ti-key"></i> @T("Enregistrement")</span>
         </div>
 
         <div class="glping-config-field">
-            <label for="net-key">Clé d'enregistrement</label>
-            <input id="net-key" @bind="_model.RegistrationKey" placeholder="XXXX-XXXX-XXXX-XXXX" />
+            <label for="net-key">@T("Clé d'enregistrement")</label>
+            <input id="net-key" @bind="_model.RegistrationKey" placeholder="@(T("XXXX-XXXX-XXXX-XXXX"))" />
         </div>
 
         <div class="glping-config-divider">
-            <span><i class="ti ti-apps"></i> Marketplace</span>
+            <span><i class="ti ti-apps"></i> @T("Marketplace")</span>
         </div>
 
         <div class="glping-config-field">
-            <label for="net-marketplace">Page des plugins</label>
+            <label for="net-marketplace">@T("Page des plugins")</label>
             <select id="net-marketplace" @bind="_model.MarketplaceBehavior">
-                <option value="ask">Demander avant de remplacer</option>
-                <option value="replace">Remplacer la page des plugins par celle du Marketplace</option>
-                <option value="never">Ne jamais remplacer la page des plugins</option>
+                <option value="ask">@T("Demander avant de remplacer")</option>
+                <option value="replace">@T("Remplacer la page des plugins par celle du Marketplace")</option>
+                <option value="never">@T("Ne jamais remplacer la page des plugins")</option>
             </select>
         </div>
 
-        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? T("Enregistrement…") : T("Enregistrer"))</button>
     </EditForm>
 }
 
@@ -62,11 +62,11 @@ else
             var before = await SettingsStore.ReadSectionAsync<GlpiNetworkSettings>(SectionName);
             await SettingsStore.SaveSectionAsync(SectionName, _model);
             await History.AppendAsync("Administrateur", SettingsDiff.Compare(before, _model));
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Configuration enregistrée."));
+            ToastService.Notify(new ToastMessage(ToastType.Success, T("Configuration enregistrée.")));
         }
         catch (IOException ex)
         {
-            ToastService.Notify(new ToastMessage(ToastType.Danger, $"Échec de l'enregistrement : {ex.Message}"));
+            ToastService.Notify(new ToastMessage(ToastType.Danger, T("Échec de l'enregistrement : {0}", ex.Message)));
         }
         finally
         {

@@ -3,6 +3,7 @@ using GlpiNg.Web.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Web.Components.Pages.Logs;
 
@@ -80,10 +81,10 @@ public partial class Index : ComponentBase
 
     private static string LevelLabel(EventLogLevel level) => level switch
     {
-        EventLogLevel.Critical => "Critique",
-        EventLogLevel.Error => "Erreur",
-        EventLogLevel.Warning => "Avertissement",
-        _ => "Information",
+        EventLogLevel.Critical => Tr.T("Critique"),
+        EventLogLevel.Error => Tr.T("Erreur"),
+        EventLogLevel.Warning => Tr.T("Avertissement"),
+        _ => Tr.T("Information"),
     };
 
     private static string LevelBadgeCss(EventLogLevel level) => level switch

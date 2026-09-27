@@ -2,7 +2,7 @@
 @using GlpiNg.Web.Models
 @rendermode InteractiveServer
 
-<PageTitle>@(_server?.Name ?? "Serveur mails") — GlpiNg</PageTitle>
+<PageTitle>@(_server?.Name ?? T("Serveur mails")) — GlpiNg</PageTitle>
 
 <AuthTabStrip Current="mail" />
 
@@ -10,7 +10,7 @@
 {
     <div class="text-center text-secondary py-5">
         <i class="ti ti-mail fs-1"></i>
-        <p class="mt-2">Ce serveur est introuvable.</p>
+        <p class="mt-2">@T("Ce serveur est introuvable.")</p>
     </div>
 }
 else
@@ -18,7 +18,7 @@ else
     <div class="card">
         <div class="card-header">
             <i class="ti ti-mail me-2"></i>
-            <span class="fw-semibold">Serveur mails - @_server.Name - ID @_server.Id</span>
+            <span class="fw-semibold">@T("Serveur mails - {0} - ID {1}", _server.Name, _server.Id)</span>
         </div>
         <div class="card-body">
             <EditForm Model="_server" OnValidSubmit="SaveAsync">
@@ -26,10 +26,10 @@ else
 
                 <div class="d-flex justify-content-end gap-2 mt-3">
                     <button type="button" class="btn btn-outline-danger" @onclick="DeleteAsync">
-                        <i class="ti ti-trash me-1"></i>Supprimer définitivement
+                        <i class="ti ti-trash me-1"></i>@T("Supprimer définitivement")
                     </button>
                     <button type="submit" class="btn btn-primary" disabled="@_isSaving">
-                        <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
+                        <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? T("Enregistrement…") : T("Sauvegarder"))
                     </button>
                 </div>
             </EditForm>

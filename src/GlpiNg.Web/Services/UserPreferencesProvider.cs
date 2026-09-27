@@ -108,6 +108,7 @@ public sealed class UserPreferencesProvider(
             NotifyOnMyChanges = stored?.NotifyOnMyChanges ?? instance.NotifyOnMyChanges,
             Palette = PaletteCatalog.KeyOf(stored?.ColorPalette ?? instance.ColorPalette),
             HighContrast = stored?.HighContrast ?? instance.HighContrast,
+            Language = LanguageCatalog.Normalize(stored?.Language ?? instance.Language),
         };
     }
 

@@ -6,13 +6,13 @@
 
 @if (_model is null)
 {
-    <p>Chargement…</p>
+    <p>@T("Chargement…")</p>
 }
 else
 {
     <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
         <div class="glping-config-field checkbox">
-            <label for="sec-enforce">Obliger les mots de passe à respecter la politique de sécurité</label>
+            <label for="sec-enforce">@T("Obliger les mots de passe à respecter la politique de sécurité")</label>
             <label class="glping-switch">
                 <input id="sec-enforce" type="checkbox" @bind="_model.EnforcePasswordPolicy" />
                 <span class="glping-switch-slider"></span>
@@ -20,12 +20,12 @@ else
         </div>
 
         <div class="glping-config-field">
-            <label for="sec-min-length">Longueur minimale des mots de passe</label>
+            <label for="sec-min-length">@T("Longueur minimale des mots de passe")</label>
             <input id="sec-min-length" type="number" min="4" max="64" class="glping-config-input-sm" @bind="_model.PasswordMinLength" />
         </div>
 
         <div class="glping-config-field checkbox">
-            <label for="sec-number">Le mot de passe requiert au moins un chiffre</label>
+            <label for="sec-number">@T("Le mot de passe requiert au moins un chiffre")</label>
             <label class="glping-switch">
                 <input id="sec-number" type="checkbox" @bind="_model.PasswordNeedNumber" />
                 <span class="glping-switch-slider"></span>
@@ -33,7 +33,7 @@ else
         </div>
 
         <div class="glping-config-field checkbox">
-            <label for="sec-lower">Le mot de passe requiert au moins une minuscule</label>
+            <label for="sec-lower">@T("Le mot de passe requiert au moins une minuscule")</label>
             <label class="glping-switch">
                 <input id="sec-lower" type="checkbox" @bind="_model.PasswordNeedLowercase" />
                 <span class="glping-switch-slider"></span>
@@ -41,7 +41,7 @@ else
         </div>
 
         <div class="glping-config-field checkbox">
-            <label for="sec-upper">Le mot de passe requiert au moins une majuscule</label>
+            <label for="sec-upper">@T("Le mot de passe requiert au moins une majuscule")</label>
             <label class="glping-switch">
                 <input id="sec-upper" type="checkbox" @bind="_model.PasswordNeedUppercase" />
                 <span class="glping-switch-slider"></span>
@@ -49,7 +49,7 @@ else
         </div>
 
         <div class="glping-config-field checkbox">
-            <label for="sec-symbol">Le mot de passe requiert au moins un symbole</label>
+            <label for="sec-symbol">@T("Le mot de passe requiert au moins un symbole")</label>
             <label class="glping-switch">
                 <input id="sec-symbol" type="checkbox" @bind="_model.PasswordNeedSymbol" />
                 <span class="glping-switch-slider"></span>
@@ -57,39 +57,39 @@ else
         </div>
 
         <div class="glping-config-field">
-            <label for="sec-expiration">Délai d'expiration des mots de passe (en jours)</label>
+            <label for="sec-expiration">@T("Délai d'expiration des mots de passe (en jours)")</label>
             <select id="sec-expiration" @bind="_model.PasswordExpirationDays">
-                <option value="-1">Jamais</option>
-                <option value="30">30 jours</option>
-                <option value="60">60 jours</option>
-                <option value="90">90 jours</option>
-                <option value="180">180 jours</option>
-                <option value="365">365 jours</option>
+                <option value="-1">@T("Jamais")</option>
+                <option value="30">@T("30 jours")</option>
+                <option value="60">@T("60 jours")</option>
+                <option value="90">@T("90 jours")</option>
+                <option value="180">@T("180 jours")</option>
+                <option value="365">@T("365 jours")</option>
             </select>
         </div>
 
         <div class="glping-config-field">
-            <label for="sec-notice">Délai de préavis d'expiration du mot de passe (en jours)</label>
+            <label for="sec-notice">@T("Délai de préavis d'expiration du mot de passe (en jours)")</label>
             <select id="sec-notice" @bind="_model.PasswordExpirationNoticeDays">
-                <option value="-1">Notification désactivée</option>
-                <option value="7">7 jours</option>
-                <option value="15">15 jours</option>
-                <option value="30">30 jours</option>
+                <option value="-1">@T("Notification désactivée")</option>
+                <option value="7">@T("7 jours")</option>
+                <option value="15">@T("15 jours")</option>
+                <option value="30">@T("30 jours")</option>
             </select>
         </div>
 
         <div class="glping-config-field">
-            <label for="sec-lock-delay">Délai avant la désactivation du compte (en jours)</label>
+            <label for="sec-lock-delay">@T("Délai avant la désactivation du compte (en jours)")</label>
             <select id="sec-lock-delay" @bind="_model.PasswordExpirationLockDelayDays">
-                <option value="-1">Ne pas désactiver</option>
-                <option value="7">7 jours</option>
-                <option value="15">15 jours</option>
-                <option value="30">30 jours</option>
+                <option value="-1">@T("Ne pas désactiver")</option>
+                <option value="7">@T("7 jours")</option>
+                <option value="15">@T("15 jours")</option>
+                <option value="30">@T("30 jours")</option>
             </select>
         </div>
 
         <div class="glping-config-field">
-            <label for="sec-token-delay">Période de validité du jeton d'initialisation du mot de passe</label>
+            <label for="sec-token-delay">@T("Période de validité du jeton d'initialisation du mot de passe")</label>
             <select id="sec-token-delay" @bind="_model.PasswordInitTokenDelay">
                 @foreach (var days in new[] { 1, 2, 3, 5, 7, 10, 14, 21, 30 })
                 {
@@ -99,30 +99,30 @@ else
         </div>
 
         <div class="glping-config-field">
-            <label for="sec-reuse">Interdire aux utilisateurs de réutiliser leurs anciens mots de passe</label>
+            <label for="sec-reuse">@T("Interdire aux utilisateurs de réutiliser leurs anciens mots de passe")</label>
             <select id="sec-reuse" @bind="_model.NonReusablePasswordsCount">
-                <option value="1">Dernier mot de passe</option>
-                <option value="2">Derniers 2 mots de passe</option>
-                <option value="3">Derniers 3 mots de passe</option>
-                <option value="4">Derniers 4 mots de passe</option>
-                <option value="5">Derniers 5 mots de passe</option>
+                <option value="1">@T("Dernier mot de passe")</option>
+                <option value="2">@T("Derniers 2 mots de passe")</option>
+                <option value="3">@T("Derniers 3 mots de passe")</option>
+                <option value="4">@T("Derniers 4 mots de passe")</option>
+                <option value="5">@T("Derniers 5 mots de passe")</option>
             </select>
         </div>
 
         <div class="glping-config-field">
-            <label for="sec-2fa-suffix">Suffixe 2FA</label>
+            <label for="sec-2fa-suffix">@T("Suffixe 2FA")</label>
             <input id="sec-2fa-suffix" @bind="_model.TwoFactorSuffix" />
         </div>
 
         <div class="glping-config-field checkbox">
-            <label for="sec-2fa-enforced">Forcer 2FA</label>
+            <label for="sec-2fa-enforced">@T("Forcer 2FA")</label>
             <label class="glping-switch">
                 <input id="sec-2fa-enforced" type="checkbox" @bind="_model.TwoFactorEnforced" />
                 <span class="glping-switch-slider"></span>
             </label>
         </div>
 
-        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? T("Enregistrement…") : T("Enregistrer"))</button>
     </EditForm>
 }
 
@@ -151,11 +151,11 @@ else
             var before = await SettingsStore.ReadSectionAsync<SecuritySettings>(SectionName);
             await SettingsStore.SaveSectionAsync(SectionName, _model);
             await History.AppendAsync("Administrateur", SettingsDiff.Compare(before, _model));
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Configuration enregistrée."));
+            ToastService.Notify(new ToastMessage(ToastType.Success, T("Configuration enregistrée.")));
         }
         catch (IOException ex)
         {
-            ToastService.Notify(new ToastMessage(ToastType.Danger, $"Échec de l'enregistrement : {ex.Message}"));
+            ToastService.Notify(new ToastMessage(ToastType.Danger, T("Échec de l'enregistrement : {0}", ex.Message)));
         }
         finally
         {

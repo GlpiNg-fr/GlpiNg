@@ -4,18 +4,19 @@
 @inject SettingsCacheService SettingsStore
 @inject ConfigHistoryService History
 @inject ToastService ToastService
+@implements IDisposable
 
 @if (_modules is null || _model is null)
 {
-    <p>Chargement…</p>
+    <p>@T("Chargement…")</p>
 }
 else
 {
     @* L'interrupteur du module est porté par la ligne de titre elle-même : il commande tout ce que
        la carte contient, et reste donc accessible sans la déplier. *@
-    <CardExpander Title="Module Inventaire" Icon="ti-box" Expanded="false">
+    <CardExpander Title="@(T("Module Inventaire"))" Icon="ti-box" Expanded="false">
         <HeaderActions>
-            <label class="glping-switch" title="Activer ou désactiver tout le module Inventaire">
+            <label class="glping-switch" title="@(T("Activer ou désactiver tout le module Inventaire"))">
                 <input type="checkbox" checked="@_moduleEnabled" @onchange="OnModuleMasterToggled" />
                 <span class="glping-switch-slider"></span>
             </label>
@@ -26,12 +27,12 @@ else
     </CardExpander>
 
     <div class="glping-config-divider">
-        <span><i class="ti ti-box"></i> Réglages du parc</span>
+        <span><i class="ti ti-box"></i> @T("Réglages du parc")</span>
     </div>
 
     <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
         <div class="glping-config-field checkbox">
-            <label for="parc-infocoms">Activer les informations financières et administratives par défaut</label>
+            <label for="parc-infocoms">@T("Activer les informations financières et administratives par défaut")</label>
             <label class="glping-switch">
                 <input id="parc-infocoms" type="checkbox" @bind="_model.AutoCreateFinancialInfo" />
                 <span class="glping-switch-slider"></span>
@@ -39,50 +40,50 @@ else
         </div>
 
         <div class="glping-config-field">
-            <label for="parc-monitors-restrict">Restreindre la gestion des moniteurs</label>
+            <label for="parc-monitors-restrict">@T("Restreindre la gestion des moniteurs")</label>
             <select id="parc-monitors-restrict" @bind="_model.MonitorsManagementRestrict">
-                <option value="0">Oui - Restreint à la gestion unitaire</option>
-                <option value="1">Oui - Restreint à la gestion globale</option>
-                <option value="2">Non</option>
+                <option value="0">@T("Oui - Restreint à la gestion unitaire")</option>
+                <option value="1">@T("Oui - Restreint à la gestion globale")</option>
+                <option value="2">@T("Non")</option>
             </select>
         </div>
 
         <div class="glping-config-field">
-            <label for="parc-peripherals-restrict">Restreindre la gestion des périphériques</label>
+            <label for="parc-peripherals-restrict">@T("Restreindre la gestion des périphériques")</label>
             <select id="parc-peripherals-restrict" @bind="_model.PeripheralsManagementRestrict">
-                <option value="0">Oui - Restreint à la gestion unitaire</option>
-                <option value="1">Oui - Restreint à la gestion globale</option>
-                <option value="2">Non</option>
+                <option value="0">@T("Oui - Restreint à la gestion unitaire")</option>
+                <option value="1">@T("Oui - Restreint à la gestion globale")</option>
+                <option value="2">@T("Non")</option>
             </select>
         </div>
 
         <div class="glping-config-field">
-            <label for="parc-phones-restrict">Restreindre la gestion des téléphones</label>
+            <label for="parc-phones-restrict">@T("Restreindre la gestion des téléphones")</label>
             <select id="parc-phones-restrict" @bind="_model.PhonesManagementRestrict">
-                <option value="0">Oui - Restreint à la gestion unitaire</option>
-                <option value="1">Oui - Restreint à la gestion globale</option>
-                <option value="2">Non</option>
+                <option value="0">@T("Oui - Restreint à la gestion unitaire")</option>
+                <option value="1">@T("Oui - Restreint à la gestion globale")</option>
+                <option value="2">@T("Non")</option>
             </select>
         </div>
 
         <div class="glping-config-field">
-            <label for="parc-printers-restrict">Restreindre la gestion des imprimantes</label>
+            <label for="parc-printers-restrict">@T("Restreindre la gestion des imprimantes")</label>
             <select id="parc-printers-restrict" @bind="_model.PrintersManagementRestrict">
-                <option value="0">Oui - Restreint à la gestion unitaire</option>
-                <option value="1">Oui - Restreint à la gestion globale</option>
-                <option value="2">Non</option>
+                <option value="0">@T("Oui - Restreint à la gestion unitaire")</option>
+                <option value="1">@T("Oui - Restreint à la gestion globale")</option>
+                <option value="2">@T("Non")</option>
             </select>
         </div>
 
         <div class="glping-config-field">
-            <label for="parc-autoname">Champs automatiques (marqués par *)</label>
+            <label for="parc-autoname">@T("Champs automatiques (marqués par *)")</label>
             <select id="parc-autoname" @bind="_model.AutonameScope">
-                <option value="0">Global</option>
-                <option value="1">Par entité</option>
+                <option value="0">@T("Global")</option>
+                <option value="1">@T("Par entité")</option>
             </select>
         </div>
 
-        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? T("Enregistrement…") : T("Enregistrer"))</button>
     </EditForm>
 }
 
@@ -119,7 +120,29 @@ else
         _modules = await SettingsStore.ReadSectionAsync<ModulesSettings>("ModulesSettings");
         _model = await SettingsStore.ReadSectionAsync<ParcSettings>(SectionName);
         _moduleEnabled = _modules.IsModuleEnabled("parc");
+        SettingsStore.SectionSaved += OnSettingsSectionSaved;
     }
+
+    /// <summary>
+    /// Un autre écran — ou un autre administrateur — vient de basculer un module : les interrupteurs
+    /// de cette carte reprennent la valeur enregistrée, comme le menu latéral de chacun.
+    /// </summary>
+    private void OnSettingsSectionSaved(string sectionName)
+    {
+        if (sectionName != "ModulesSettings")
+        {
+            return;
+        }
+
+        _ = InvokeAsync(async () =>
+        {
+            _modules = await SettingsStore.ReadSectionAsync<ModulesSettings>("ModulesSettings");
+            _moduleEnabled = _modules.IsModuleEnabled("parc");
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose() => SettingsStore.SectionSaved -= OnSettingsSectionSaved;
 
     private async Task OnModuleMasterToggled(ChangeEventArgs e)
     {
@@ -129,9 +152,8 @@ else
         }
 
         var enabled = (bool)e.Value!;
-        _modules.SetModuleEnabled("parc", enabled);
+        _modules = await SettingsStore.UpdateSectionAsync<ModulesSettings>("ModulesSettings", modules => modules.SetModuleEnabled("parc", enabled));
         _moduleEnabled = enabled;
-        await SettingsStore.SaveSectionAsync("ModulesSettings", _modules);
         await History.AppendAsync("Administrateur",
             [("Module Inventaire", enabled ? "Désactivé" : "Activé", enabled ? "Activé" : "Désactivé")]);
     }
@@ -143,8 +165,7 @@ else
             return;
         }
 
-        _modules.Enabled[$"parc:{change.Label}"] = change.Enabled;
-        await SettingsStore.SaveSectionAsync("ModulesSettings", _modules);
+        _modules = await SettingsStore.UpdateSectionAsync<ModulesSettings>("ModulesSettings", modules => modules.Enabled[$"parc:{change.Label}"] = change.Enabled);
         await History.AppendAsync("Administrateur",
             [(change.Label, change.Enabled ? "Désactivé" : "Activé", change.Enabled ? "Activé" : "Désactivé")]);
     }
@@ -163,11 +184,11 @@ else
             var before = await SettingsStore.ReadSectionAsync<ParcSettings>(SectionName);
             await SettingsStore.SaveSectionAsync(SectionName, _model);
             await History.AppendAsync("Administrateur", SettingsDiff.Compare(before, _model));
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Configuration enregistrée."));
+            ToastService.Notify(new ToastMessage(ToastType.Success, T("Configuration enregistrée.")));
         }
         catch (IOException ex)
         {
-            ToastService.Notify(new ToastMessage(ToastType.Danger, $"Échec de l'enregistrement : {ex.Message}"));
+            ToastService.Notify(new ToastMessage(ToastType.Danger, T("Échec de l'enregistrement : {0}", ex.Message)));
         }
         finally
         {

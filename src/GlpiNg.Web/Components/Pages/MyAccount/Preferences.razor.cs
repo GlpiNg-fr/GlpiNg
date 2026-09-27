@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Web.Components.Pages.MyAccount;
 
@@ -87,6 +88,7 @@ public partial class Preferences : ComponentBase, IAsyncDisposable
     private string _notifyOnMyChanges = Inherit;
     private string _colorPalette = Inherit;
     private string _highContrast = Inherit;
+    private string _language = Inherit;
 
     private string InstancePaletteLabel =>
         PaletteCatalog.LabelOf(_instance.ColorPalette);
@@ -134,6 +136,7 @@ public partial class Preferences : ComponentBase, IAsyncDisposable
             _notifyOnMyChanges = FromBool(stored.NotifyOnMyChanges);
             _colorPalette = stored.ColorPalette ?? Inherit;
             _highContrast = FromBool(stored.HighContrast);
+            _language = stored.Language ?? Inherit;
         }
 
         _timezones = BuildTimezones(_timezone, _instance.Timezone);
@@ -193,13 +196,13 @@ public partial class Preferences : ComponentBase, IAsyncDisposable
     private static string TimezoneLabel(string? value) =>
         string.IsNullOrEmpty(value) || value == "server" ? "fuseau du serveur" : value;
 
-    private static string YesNo(bool value) => value ? "Oui" : "Non";
+    private static string YesNo(bool value) => value ? Tr.T("Oui") : Tr.T("Non");
 
     private string InstanceCountersLabel => _instance.ShowCounters switch
     {
-        2 => "Jamais",
-        1 => "Oui",
-        _ => "Non",
+        2 => Tr.T("Jamais"),
+        1 => Tr.T("Oui"),
+        _ => Tr.T("Non"),
     };
 
     /// <summary>« Jamais » côté instance interdit les compteurs à tous, choix personnel compris.</summary>
@@ -256,9 +259,10 @@ public partial class Preferences : ComponentBase, IAsyncDisposable
             user.NotifyOnMyChanges = ToBool(_notifyOnMyChanges);
             user.ColorPalette = ToNullable(_colorPalette);
             user.HighContrast = ToBool(_highContrast);
+            user.Language = ToNullable(_language);
 
             await _db.SaveChangesAsync();
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Préférences enregistrées."));
+            ToastService.Notify(new ToastMessage(ToastType.Success, Tr.T("Préférences enregistrées.")));
             Nav.NavigateTo(Nav.Uri, forceLoad: true);
         }
         finally

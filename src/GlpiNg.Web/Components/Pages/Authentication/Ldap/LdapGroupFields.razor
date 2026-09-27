@@ -7,71 +7,68 @@
 <div class="row">
     <div class="col-md-6">
         <div class="glping-fiche-field">
-            <label>Synchroniser les groupes à la connexion</label>
+            <label>@T("Synchroniser les groupes à la connexion")</label>
             <select class="form-select" value="@(Server.SynchronizeGroups ? "true" : "false")"
                     @onchange="@(e => Server.SynchronizeGroups = e.Value?.ToString() == "true")">
-                <option value="false">Non</option>
-                <option value="true">Oui</option>
+                <option value="false">@T("Non")</option>
+                <option value="true">@T("Oui")</option>
             </select>
             <div class="form-hint">
-                Désactivé par défaut : l'activer modifie les appartenances des comptes concernés
-                dès leur prochaine connexion.
+                @T("Désactivé par défaut : l'activer modifie les appartenances des comptes concernés dès leur prochaine connexion.")
             </div>
         </div>
 
         <div class="glping-fiche-field">
-            <label>Rechercher dans</label>
+            <label>@T("Rechercher dans")</label>
             <select class="form-select" value="@Server.GroupSearchType"
                     @onchange="@(e => Server.GroupSearchType = Enum.Parse<LdapGroupSearchType>((string)e.Value!))"
                     disabled="@(!Server.SynchronizeGroups)">
-                <option value="@nameof(LdapGroupSearchType.InUsers)">Les utilisateurs</option>
-                <option value="@nameof(LdapGroupSearchType.InGroups)">Les groupes</option>
-                <option value="@nameof(LdapGroupSearchType.Both)">Les deux</option>
+                <option value="@nameof(LdapGroupSearchType.InUsers)">@T("Les utilisateurs")</option>
+                <option value="@nameof(LdapGroupSearchType.InGroups)">@T("Les groupes")</option>
+                <option value="@nameof(LdapGroupSearchType.Both)">@T("Les deux")</option>
             </select>
         </div>
 
         <div class="glping-fiche-field">
-            <label>Attribut des utilisateurs contenant les groupes</label>
-            <input class="form-control" @bind="Server.GroupMemberOfField" placeholder="memberof"
+            <label>@T("Attribut des utilisateurs contenant les groupes")</label>
+            <input class="form-control" @bind="Server.GroupMemberOfField" placeholder="@(T("memberof"))"
                    disabled="@(!Server.SynchronizeGroups || Server.GroupSearchType == LdapGroupSearchType.InGroups)" />
         </div>
     </div>
 
     <div class="col-md-6">
         <div class="glping-fiche-field">
-            <label>Filtre de recherche des groupes</label>
-            <textarea class="form-control" rows="2" @bind="Server.GroupFilter" placeholder="(objectClass=groupOfNames)"
+            <label>@T("Filtre de recherche des groupes")</label>
+            <textarea class="form-control" rows="2" @bind="Server.GroupFilter" placeholder="@(T("(objectClass=groupOfNames)"))"
                       disabled="@(!Server.SynchronizeGroups || Server.GroupSearchType == LdapGroupSearchType.InUsers)"></textarea>
         </div>
 
         <div class="glping-fiche-field">
-            <label>Attribut du nom du groupe</label>
-            <input class="form-control" @bind="Server.GroupNameField" placeholder="cn"
+            <label>@T("Attribut du nom du groupe")</label>
+            <input class="form-control" @bind="Server.GroupNameField" placeholder="@(T("cn"))"
                    disabled="@(!Server.SynchronizeGroups)" />
         </div>
 
         <div class="glping-fiche-field">
-            <label>Attribut des membres du groupe</label>
-            <input class="form-control" @bind="Server.GroupMemberField" placeholder="member"
+            <label>@T("Attribut des membres du groupe")</label>
+            <input class="form-control" @bind="Server.GroupMemberField" placeholder="@(T("member"))"
                    disabled="@(!Server.SynchronizeGroups || Server.GroupSearchType == LdapGroupSearchType.InUsers)" />
         </div>
 
         <div class="glping-fiche-field">
-            <label>Utiliser le DN dans la recherche</label>
+            <label>@T("Utiliser le DN dans la recherche")</label>
             <select class="form-select" value="@(Server.UseDnForGroupSearch ? "true" : "false")"
                     @onchange="@(e => Server.UseDnForGroupSearch = e.Value?.ToString() == "true")"
                     disabled="@(!Server.SynchronizeGroups || Server.GroupSearchType == LdapGroupSearchType.InUsers)">
-                <option value="false">Non — les membres sont désignés par leur identifiant</option>
-                <option value="true">Oui — les membres sont désignés par leur DN complet</option>
+                <option value="false">@T("Non — les membres sont désignés par leur identifiant")</option>
+                <option value="true">@T("Oui — les membres sont désignés par leur DN complet")</option>
             </select>
         </div>
     </div>
 </div>
 
 <p class="hint">
-    Le rapprochement se fait par nom, sur des groupes qui existent déjà dans GlpiNg : un groupe de
-    l'annuaire sans équivalent local est ignoré plutôt que créé. Un rattachement fait à la main sur
-    un groupe que l'annuaire ne connaît pas est conservé.
+    @T("Le rapprochement se fait par nom, sur des groupes qui existent déjà dans GlpiNg : un groupe de l'annuaire sans équivalent local est ignoré plutôt que créé. Un rattachement fait à la main sur un groupe que l'annuaire ne connaît pas est conservé.")
 </p>
 
 @code {

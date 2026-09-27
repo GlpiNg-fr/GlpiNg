@@ -4,18 +4,19 @@
 @inject SettingsCacheService SettingsStore
 @inject ConfigHistoryService History
 @inject ToastService ToastService
+@implements IDisposable
 
 @if (_modules is null || _model is null)
 {
-    <p>Chargement…</p>
+    <p>@T("Chargement…")</p>
 }
 else
 {
     @* L'interrupteur du module est porté par la ligne de titre elle-même : il commande tout ce que
        la carte contient, et reste donc accessible sans la déplier. *@
-    <CardExpander Title="Module Gestion" Icon="ti-wallet" Expanded="false">
+    <CardExpander Title="@(T("Module Gestion"))" Icon="ti-wallet" Expanded="false">
         <HeaderActions>
-            <label class="glping-switch" title="Activer ou désactiver tout le module Gestion">
+            <label class="glping-switch" title="@(T("Activer ou désactiver tout le module Gestion"))">
                 <input type="checkbox" checked="@_moduleEnabled" @onchange="OnModuleMasterToggled" />
                 <span class="glping-switch-slider"></span>
             </label>
@@ -26,16 +27,16 @@ else
     </CardExpander>
 
     <div class="glping-config-divider">
-        <span><i class="ti ti-wallet"></i> Réglages de gestion</span>
+        <span><i class="ti ti-wallet"></i> @T("Réglages de gestion")</span>
     </div>
 
     <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
         <div class="glping-config-field">
-            <label for="ge-doc-size">Taille maximale des documents (Mio)</label>
+            <label for="ge-doc-size">@T("Taille maximale des documents (Mio)")</label>
             <input id="ge-doc-size" type="number" min="1" class="glping-config-input-sm" @bind="_model.DocumentMaxSizeMib" />
         </div>
 
-        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? T("Enregistrement…") : T("Enregistrer"))</button>
     </EditForm>
 }
 
@@ -69,7 +70,29 @@ else
         _modules = await SettingsStore.ReadSectionAsync<ModulesSettings>("ModulesSettings");
         _model = await SettingsStore.ReadSectionAsync<GestionSettings>(SectionName);
         _moduleEnabled = _modules.IsModuleEnabled("gestion");
+        SettingsStore.SectionSaved += OnSettingsSectionSaved;
     }
+
+    /// <summary>
+    /// Un autre écran — ou un autre administrateur — vient de basculer un module : les interrupteurs
+    /// de cette carte reprennent la valeur enregistrée, comme le menu latéral de chacun.
+    /// </summary>
+    private void OnSettingsSectionSaved(string sectionName)
+    {
+        if (sectionName != "ModulesSettings")
+        {
+            return;
+        }
+
+        _ = InvokeAsync(async () =>
+        {
+            _modules = await SettingsStore.ReadSectionAsync<ModulesSettings>("ModulesSettings");
+            _moduleEnabled = _modules.IsModuleEnabled("gestion");
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose() => SettingsStore.SectionSaved -= OnSettingsSectionSaved;
 
     private async Task OnModuleMasterToggled(ChangeEventArgs e)
     {
@@ -79,9 +102,8 @@ else
         }
 
         var enabled = (bool)e.Value!;
-        _modules.SetModuleEnabled("gestion", enabled);
+        _modules = await SettingsStore.UpdateSectionAsync<ModulesSettings>("ModulesSettings", modules => modules.SetModuleEnabled("gestion", enabled));
         _moduleEnabled = enabled;
-        await SettingsStore.SaveSectionAsync("ModulesSettings", _modules);
         await History.AppendAsync("Administrateur",
             [("Module Gestion", enabled ? "Désactivé" : "Activé", enabled ? "Activé" : "Désactivé")]);
     }
@@ -93,8 +115,7 @@ else
             return;
         }
 
-        _modules.Enabled[$"gestion:{change.Label}"] = change.Enabled;
-        await SettingsStore.SaveSectionAsync("ModulesSettings", _modules);
+        _modules = await SettingsStore.UpdateSectionAsync<ModulesSettings>("ModulesSettings", modules => modules.Enabled[$"gestion:{change.Label}"] = change.Enabled);
         await History.AppendAsync("Administrateur",
             [(change.Label, change.Enabled ? "Désactivé" : "Activé", change.Enabled ? "Activé" : "Désactivé")]);
     }
@@ -113,11 +134,11 @@ else
             var before = await SettingsStore.ReadSectionAsync<GestionSettings>(SectionName);
             await SettingsStore.SaveSectionAsync(SectionName, _model);
             await History.AppendAsync("Administrateur", SettingsDiff.Compare(before, _model));
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Configuration enregistrée."));
+            ToastService.Notify(new ToastMessage(ToastType.Success, T("Configuration enregistrée.")));
         }
         catch (IOException ex)
         {
-            ToastService.Notify(new ToastMessage(ToastType.Danger, $"Échec de l'enregistrement : {ex.Message}"));
+            ToastService.Notify(new ToastMessage(ToastType.Danger, T("Échec de l'enregistrement : {0}", ex.Message)));
         }
         finally
         {

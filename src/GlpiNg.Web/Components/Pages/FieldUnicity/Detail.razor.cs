@@ -4,6 +4,7 @@ using GlpiNg.Web.Models.FieldUnicity;
 using GlpiNg.Web.Services.FieldUnicity;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Web.Components.Pages.FieldUnicity;
 
@@ -131,7 +132,7 @@ public partial class Detail : ComponentBase
 
             await db.SaveChangesAsync();
 
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Critère enregistré."));
+            ToastService.Notify(new ToastMessage(ToastType.Success, Tr.T("Critère enregistré.")));
             await LoadAsync();
         }
         finally

@@ -4,6 +4,7 @@ using GlpiNg.Web.Data;
 using GlpiNg.Web.Models.CustomAssets;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Web.Components.Pages.CustomAssets;
 
@@ -113,13 +114,13 @@ public partial class Detail : ComponentBase
 
         if (_fields.Any(field => string.IsNullOrWhiteSpace(field.Label)))
         {
-            _fieldError = "Chaque champ doit porter un libellé.";
+            _fieldError = Tr.T("Chaque champ doit porter un libellé.");
             return;
         }
 
         if (_fields.GroupBy(field => field.Label.Trim(), StringComparer.CurrentCultureIgnoreCase).Any(group => group.Count() > 1))
         {
-            _fieldError = "Deux champs ne peuvent pas porter le même libellé.";
+            _fieldError = Tr.T("Deux champs ne peuvent pas porter le même libellé.");
             return;
         }
 
@@ -190,7 +191,7 @@ public partial class Detail : ComponentBase
 
             await db.SaveChangesAsync();
 
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Type d'actif enregistré."));
+            ToastService.Notify(new ToastMessage(ToastType.Success, Tr.T("Type d'actif enregistré.")));
             await LoadAsync();
         }
         finally

@@ -2,16 +2,16 @@
 @using GlpiNg.Modules.Abstractions.Reports
 @rendermode InteractiveServer
 
-<PageTitle>@(_definition?.Title ?? "Rapport") — GlpiNg</PageTitle>
+<PageTitle>@(_definition?.Title ?? T("Rapport")) — GlpiNg</PageTitle>
 
 @if (_definition is null)
 {
     <div class="card">
         <div class="card-body text-center py-5">
             <div class="text-secondary mb-3">
-                Ce rapport n'existe pas, ou n'est plus fourni par aucun module actif.
+                @T("Ce rapport n'existe pas, ou n'est plus fourni par aucun module actif.")
             </div>
-            <a href="/tools/reports" class="btn btn-primary"><i class="ti ti-arrow-left me-1"></i>Retour aux rapports</a>
+            <a href="/tools/reports" class="btn btn-primary"><i class="ti ti-arrow-left me-1"></i>@T("Retour aux rapports")</a>
         </div>
     </div>
 }
@@ -21,35 +21,35 @@ else
         <div class="card">
             <div class="card-header d-flex align-items-center justify-content-between glping-list-toolbar">
                 <div>
-                    <h3 class="card-title mb-0"><i class="ti @_definition.Icon me-1"></i>@_definition.Title</h3>
-                    <div class="text-secondary">@_definition.Description</div>
+                    <h3 class="card-title mb-0"><i class="ti @_definition.Icon me-1"></i>@T(_definition.Title)</h3>
+                    <div class="text-secondary">@T(_definition.Description)</div>
                 </div>
 
                 <div class="btn-list align-items-center">
-                    <button type="button" class="btn btn-icon" @onclick="RunAsync" disabled="@_isRunning" title="Rafraîchir">
+                    <button type="button" class="btn btn-icon" @onclick="RunAsync" disabled="@_isRunning" title="@(T("Rafraîchir"))">
                         <i class="ti ti-refresh @(_isRunning ? "glping-spin" : "")"></i>
                     </button>
 
                     <div class="dropdown">
                         <button type="button" class="btn btn-icon" data-bs-toggle="dropdown" aria-expanded="false"
-                                disabled="@(_result is null || _isRunning)" title="Exporter">
+                                disabled="@(_result is null || _isRunning)" title="@(T("Exporter"))">
                             <i class="ti ti-download"></i>
                         </button>
                         <div class="dropdown-menu dropdown-menu-end p-0 glping-export-menu">
                             <button type="button" class="dropdown-item" @onclick='() => ExportAsync("pdf-landscape")'>
-                                <i class="ti ti-file-type-pdf"></i>PDF paysage
+                                <i class="ti ti-file-type-pdf"></i>@T("PDF paysage")
                             </button>
                             <button type="button" class="dropdown-item" @onclick='() => ExportAsync("pdf-portrait")'>
-                                <i class="ti ti-file-type-pdf"></i>PDF portrait
+                                <i class="ti ti-file-type-pdf"></i>@T("PDF portrait")
                             </button>
                             <button type="button" class="dropdown-item" @onclick='() => ExportAsync("csv")'>
-                                <i class="ti ti-file-type-csv"></i>CSV
+                                <i class="ti ti-file-type-csv"></i>@T("CSV")
                             </button>
                             <button type="button" class="dropdown-item" @onclick='() => ExportAsync("ods")'>
-                                <i class="ti ti-table"></i>Tableau (ODS)
+                                <i class="ti ti-table"></i>@T("Tableau (ODS)")
                             </button>
                             <button type="button" class="dropdown-item" @onclick='() => ExportAsync("xlsx")'>
-                                <i class="ti ti-table"></i>Tableau (XLSX)
+                                <i class="ti ti-table"></i>@T("Tableau (XLSX)")
                             </button>
                         </div>
                     </div>
@@ -63,7 +63,7 @@ else
                         @foreach (ReportFilter filter in _filters)
                         {
                             <div class="col-auto">
-                                <label class="form-label" for="filter-@filter.Key">@filter.Label</label>
+                                <label class="form-label" for="filter-@filter.Key">@T(filter.Label)</label>
                                 @switch (filter.Kind)
                                 {
                                     case ReportFilterKind.Select:
@@ -72,11 +72,11 @@ else
                                                 @onchange="@((ChangeEventArgs e) => SetValue(filter.Key, (string?)e.Value))">
                                             @if (filter.DefaultValue is null)
                                             {
-                                                <option value="">Tous</option>
+                                                <option value="">@T("Tous")</option>
                                             }
                                             @foreach (ReportFilterOption option in filter.Options)
                                             {
-                                                <option value="@option.Value" selected="@(ValueOf(filter) == option.Value)">@option.Label</option>
+                                                <option value="@option.Value" selected="@(ValueOf(filter) == option.Value)">@T(option.Label)</option>
                                             }
                                         </select>
                                         break;
@@ -96,7 +96,7 @@ else
 
                         <div class="col-auto">
                             <button type="button" class="btn btn-primary" @onclick="RunAsync" disabled="@_isRunning">
-                                <i class="ti ti-player-play me-1"></i>Générer
+                                <i class="ti ti-player-play me-1"></i>@T("Générer")
                             </button>
                         </div>
                     </div>
@@ -106,11 +106,11 @@ else
             <div class="card-footer text-secondary">
                 @if (_generatedAt is DateTime generatedAt)
                 {
-                    <span>Généré le @Display.DateTime(generatedAt)</span>
+                    <span>@T("Généré le {0}", Display.DateTime(generatedAt))</span>
                 }
                 else
                 {
-                    <span>Génération en cours...</span>
+                    <span>@T("Génération en cours...")</span>
                 }
             </div>
         </div>
@@ -120,7 +120,7 @@ else
             <div class="card mt-3">
                 <div class="card-body text-center py-5 text-secondary">
                     <div class="spinner-border" role="status"></div>
-                    <div class="mt-2">Calcul du rapport...</div>
+                    <div class="mt-2">@T("Calcul du rapport...")</div>
                 </div>
             </div>
         }
@@ -130,13 +130,13 @@ else
             {
                 <div class="card mt-3">
                     <div class="card-header">
-                        <h3 class="card-title">@table.Title</h3>
+                        <h3 class="card-title">@T(table.Title)</h3>
                     </div>
 
                     @if (table.Rows.Count == 0)
                     {
                         <div class="card-body text-center text-secondary py-4">
-                            @(table.EmptyMessage ?? "Aucune donnée.")
+                            @(table.EmptyMessage ?? T("Aucune donnée."))
                         </div>
                     }
                     else
@@ -147,7 +147,7 @@ else
                                     <tr>
                                         @foreach (ReportColumn column in table.Columns)
                                         {
-                                            <th class="@(column.Kind == ReportColumnKind.Number ? "text-end" : "")">@column.Label</th>
+                                            <th class="@(column.Kind == ReportColumnKind.Number ? "text-end" : "")">@T(column.Label)</th>
                                         }
                                     </tr>
                                 </thead>

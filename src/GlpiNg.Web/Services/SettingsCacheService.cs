@@ -23,7 +23,17 @@ public sealed class SettingsCacheService(IRootDbContextFactory dbFactory, IConfi
 {
     private readonly ConcurrentDictionary<string, JsonNode> _cache = new();
     private readonly SemaphoreSlim _loadLock = new(1, 1);
+    private readonly SemaphoreSlim _writeLock = new(1, 1);
     private volatile bool _loaded;
+
+    /// <summary>
+    /// Levé après chaque enregistrement d'une section, avec son nom. Le service est un singleton
+    /// partagé par tous les circuits Blazor : c'est ce qui permet à un écran déjà ouvert chez un
+    /// autre utilisateur — le menu latéral de <c>MainLayout</c> quand un module est activé ou
+    /// désactivé — de se mettre à jour sans rechargement. Un abonné est appelé sur le fil de
+    /// l'enregistrement : un composant doit repasser par <c>InvokeAsync</c>.
+    /// </summary>
+    public event Action<string>? SectionSaved;
 
     public async Task<T> ReadSectionAsync<T>(string sectionName, CancellationToken cancellationToken = default) where T : new()
     {
@@ -37,6 +47,29 @@ public sealed class SettingsCacheService(IRootDbContextFactory dbFactory, IConfi
         // Pas encore en base : reprend la valeur encore présente dans appsettings.json (transition
         // depuis l'ancien stockage fichier) plutôt que de perdre un réglage déjà personnalisé.
         return configuration.GetSection(sectionName).Get<T>() ?? new T();
+    }
+
+    /// <summary>
+    /// Relit la dernière valeur d'une section, la modifie et l'enregistre, le tout sous verrou.
+    /// À préférer à un <see cref="SaveSectionAsync{T}"/> d'une copie lue plus tôt dès que plusieurs
+    /// écrans modifient la même section par morceaux (« ModulesSettings » : chaque carte de /config
+    /// bascule ses propres entrées) : enregistrer une copie périmée effacerait ce qu'un autre écran
+    /// — ou un autre administrateur — a changé entre-temps.
+    /// </summary>
+    public async Task<T> UpdateSectionAsync<T>(string sectionName, Action<T> update, CancellationToken cancellationToken = default) where T : new()
+    {
+        await _writeLock.WaitAsync(cancellationToken);
+        try
+        {
+            T current = await ReadSectionAsync<T>(sectionName, cancellationToken);
+            update(current);
+            await SaveSectionAsync(sectionName, current, cancellationToken);
+            return current;
+        }
+        finally
+        {
+            _writeLock.Release();
+        }
     }
 
     public async Task SaveSectionAsync<T>(string sectionName, T settings, CancellationToken cancellationToken = default)
@@ -62,6 +95,20 @@ public sealed class SettingsCacheService(IRootDbContextFactory dbFactory, IConfi
 
         // Rend la valeur immédiatement visible aux autres services/pages, sans relire la base.
         _cache[sectionName] = node;
+
+        // Un abonné défaillant (circuit en cours de fermeture...) ne doit ni faire échouer
+        // l'enregistrement, déjà fait, ni priver les autres abonnés de la nouvelle.
+        foreach (Action<string> subscriber in SectionSaved?.GetInvocationList().Cast<Action<string>>() ?? [])
+        {
+            try
+            {
+                subscriber(sectionName);
+            }
+            catch (Exception)
+            {
+                // Rien à faire : l'abonné relira la valeur à sa prochaine ouverture.
+            }
+        }
     }
 
     private async Task EnsureLoadedAsync(CancellationToken cancellationToken)

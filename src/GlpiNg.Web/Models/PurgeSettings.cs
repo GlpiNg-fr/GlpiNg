@@ -1,3 +1,4 @@
+using GlpiNg.Modules.Abstractions.Localization;
 namespace GlpiNg.Web.Models;
 
 /// <summary>
@@ -54,7 +55,7 @@ public class PurgeSettings
         yield return (0, "Conserver tout");
         for (var months = 1; months <= 120; months++)
         {
-            yield return (months, $"Supprimer si plus ancien que {months} mois");
+            yield return (months, Tr.T("Supprimer si plus ancien que {0} mois", months));
         }
     }
 }

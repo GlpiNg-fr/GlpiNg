@@ -3,47 +3,47 @@
 <div class="row">
     <div class="col-md-6">
         <div class="glping-fiche-field">
-            <label>Nom</label>
+            <label>@T("Nom")</label>
             <input class="form-control" @bind="Template.Name" @bind:event="oninput" @bind:after="NotifyChangedAsync" />
         </div>
         <div class="glping-fiche-field">
-            <label>Type d'objet</label>
+            <label>@T("Type d'objet")</label>
             <select class="form-select" value="@Template.ItemType" @onchange="OnItemTypeChanged">
                 @foreach ((string itemType, string label) in NotificationEventCatalog.ItemTypes)
                 {
-                    <option value="@itemType">@label</option>
+                    <option value="@itemType">@T(label)</option>
                 }
             </select>
         </div>
         <div class="glping-fiche-field">
-            <label>Commentaires</label>
+            <label>@T("Commentaires")</label>
             <textarea class="form-control" rows="2" @bind="Template.Comment"></textarea>
         </div>
         <div class="glping-fiche-field">
-            <label>Balises disponibles</label>
+            <label>@T("Balises disponibles")</label>
             <div class="glping-config-placeholder text-start p-2">
                 @foreach (NotificationTag tag in AvailableTags)
                 {
-                    <div><code>##@tag.Key##</code> — @tag.Label</div>
+                    <div><code>##@tag.Key##</code> — @T(tag.Label)</div>
                 }
                 @if (AvailableTags.Count == 0)
                 {
-                    <span class="text-secondary">Aucune balise pour ce type d'objet.</span>
+                    <span class="text-secondary">@T("Aucune balise pour ce type d'objet.")</span>
                 }
             </div>
         </div>
     </div>
     <div class="col-md-6">
         <div class="glping-fiche-field">
-            <label>Sujet</label>
+            <label>@T("Sujet")</label>
             <input class="form-control" @bind="Template.Subject" />
         </div>
         <div class="glping-fiche-field">
-            <label>Corps texte du mail</label>
+            <label>@T("Corps texte du mail")</label>
             <textarea class="form-control" rows="6" @bind="Template.ContentText"></textarea>
         </div>
         <div class="glping-fiche-field">
-            <label>Corps HTML du mail (optionnel)</label>
+            <label>@T("Corps HTML du mail (optionnel)")</label>
             <textarea class="form-control" rows="6" @bind="Template.ContentHtml"></textarea>
         </div>
     </div>

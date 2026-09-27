@@ -4,13 +4,12 @@
 
 @if (_entries is null)
 {
-    <p>Chargement…</p>
+    <p>@T("Chargement…")</p>
 }
 else if (_entries.Count == 0)
 {
     <p class="hint" style="margin-left:0;">
-        Aucune entrée pour le moment : cet historique s'alimente à chaque enregistrement effectué
-        depuis les autres onglets de cette page.
+        @T("Aucune entrée pour le moment : cet historique s'alimente à chaque enregistrement effectué depuis les autres onglets de cette page.")
     </p>
 }
 else
@@ -19,11 +18,11 @@ else
         <table class="glping-config-table">
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Date</th>
-                    <th>Utilisateur</th>
-                    <th>Champ</th>
-                    <th>Mise à jour</th>
+                    <th>@T("ID")</th>
+                    <th>@T("Date")</th>
+                    <th>@T("Utilisateur")</th>
+                    <th>@T("Champ")</th>
+                    <th>@T("Mise à jour")</th>
                 </tr>
             </thead>
             <tbody>

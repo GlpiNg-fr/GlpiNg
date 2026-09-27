@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Web.Components.Pages.Users;
 
@@ -196,7 +197,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
         u.Location, u.IsActive, u.IsAdmin, u.SidebarCollapsed,
         u.TwoFactorAuthDisabled);
 
-    private static string YesNo(bool value) => value ? "Oui" : "Non";
+    private static string YesNo(bool value) => value ? Tr.T("Oui") : Tr.T("Non");
 
     private string EntityFullName(GlpiEntity entity)
     {
@@ -245,7 +246,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
             {
                 if (_newPassword != _newPasswordConfirm)
                 {
-                    ToastService.Notify(new ToastMessage(ToastType.Danger, "Les mots de passe ne correspondent pas."));
+                    ToastService.Notify(new ToastMessage(ToastType.Danger, Tr.T("Les mots de passe ne correspondent pas.")));
                     return;
                 }
 
@@ -291,7 +292,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
             _beforeEdit = after;
             await ReloadReferenceDataAsync();
             RebuildTabs();
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Utilisateur enregistré."));
+            ToastService.Notify(new ToastMessage(ToastType.Success, Tr.T("Utilisateur enregistré.")));
         }
         finally
         {

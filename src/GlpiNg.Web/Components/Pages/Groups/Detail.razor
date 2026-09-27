@@ -2,13 +2,13 @@
 @using GlpiNg.Web.Models
 @rendermode InteractiveServer
 
-<PageTitle>@(_group?.Name ?? "Groupe") — GlpiNg</PageTitle>
+<PageTitle>@(_group?.Name ?? T("Groupe")) — GlpiNg</PageTitle>
 
 @if (_group is null)
 {
     <div class="text-center text-secondary py-5">
         <i class="ti ti-users fs-1"></i>
-        <p class="mt-2">Ce groupe est introuvable.</p>
+        <p class="mt-2">@T("Ce groupe est introuvable.")</p>
     </div>
 }
 else
@@ -16,8 +16,8 @@ else
     <div class="glping-fiche-topbar">
         <div class="glping-fiche-crumb">
             <i class="ti ti-users"></i>
-            <span>Groupe - @_group.Name - ID @_group.Id</span>
-            <button type="button" class="glping-fiche-favorite" title="Ajouter aux favoris">
+            <span>@T("Groupe - {0} - ID {1}", _group.Name, _group.Id)</span>
+            <button type="button" class="glping-fiche-favorite" title="@(T("Ajouter aux favoris"))">
                 <i class="ti ti-star"></i>
             </button>
         </div>
@@ -41,7 +41,7 @@ else
             {
                 <button type="button" class="glping-fiche-tab-item @(_activeTabKey == tab.Key ? "active" : "")" @onclick="() => SetTab(tab.Key)">
                     <i class="ti @tab.Icon"></i>
-                    <span>@tab.Label</span>
+                    <span>@T(tab.Label)</span>
                     @if (tab.Count is { } count)
                     {
                         <span class="glping-fiche-tab-count">@count</span>
@@ -59,10 +59,10 @@ else
 
                         <div class="d-flex justify-content-end gap-2 mt-3">
                             <button type="button" class="btn btn-outline-danger" @onclick="DeleteAsync">
-                                <i class="ti ti-trash me-1"></i>Supprimer définitivement
+                                <i class="ti ti-trash me-1"></i>@T("Supprimer définitivement")
                             </button>
                             <button type="submit" class="btn btn-primary" disabled="@_isSaving">
-                                <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
+                                <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? T("Enregistrement…") : T("Sauvegarder"))
                             </button>
                         </div>
                     </EditForm>
@@ -70,12 +70,12 @@ else
 
                 case "subgroups":
                     <div class="glping-fiche-block">
-                        <div class="glping-fiche-block-title"><i class="ti ti-sitemap"></i>Sous-groupes (@_group.Children.Count)</div>
+                        <div class="glping-fiche-block-title"><i class="ti ti-sitemap"></i>@T("Sous-groupes ({0})", _group.Children.Count)</div>
                         @if (_group.Children.Count == 0)
                         {
                             <div class="glping-config-placeholder">
                                 <i class="ti ti-sitemap"></i>
-                                <p class="mb-0">Aucun sous-groupe.</p>
+                                <p class="mb-0">@T("Aucun sous-groupe.")</p>
                             </div>
                         }
                         else
@@ -84,8 +84,8 @@ else
                                 <table class="table table-vcenter card-table mb-0">
                                     <thead>
                                         <tr>
-                                            <th>Nom</th>
-                                            <th>Commentaires</th>
+                                            <th>@T("Nom")</th>
+                                            <th>@T("Commentaires")</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -105,9 +105,9 @@ else
                             </div>
                         }
                         <div class="d-flex gap-2 mt-3">
-                            <input class="form-control" style="max-width: 320px;" placeholder="Nom du sous-groupe" @bind="_newSubgroupName" @bind:event="oninput" />
+                            <input class="form-control" style="max-width: 320px;" placeholder="@(T("Nom du sous-groupe"))" @bind="_newSubgroupName" @bind:event="oninput" />
                             <button type="button" class="btn btn-primary" disabled="@string.IsNullOrWhiteSpace(_newSubgroupName)" @onclick="AddSubgroupAsync">
-                                <i class="ti ti-plus me-1"></i>Ajouter
+                                <i class="ti ti-plus me-1"></i>@T("Ajouter")
                             </button>
                         </div>
                     </div>
@@ -115,12 +115,12 @@ else
 
                 case "users":
                     <div class="glping-fiche-block">
-                        <div class="glping-fiche-block-title"><i class="ti ti-user"></i>Utilisateurs (@_group.Members.Count)</div>
+                        <div class="glping-fiche-block-title"><i class="ti ti-user"></i>@T("Utilisateurs ({0})", _group.Members.Count)</div>
                         @if (_group.Members.Count == 0)
                         {
                             <div class="glping-config-placeholder">
                                 <i class="ti ti-user"></i>
-                                <p class="mb-0">Aucun utilisateur dans ce groupe.</p>
+                                <p class="mb-0">@T("Aucun utilisateur dans ce groupe.")</p>
                             </div>
                         }
                         else
@@ -129,7 +129,7 @@ else
                                 <table class="table table-vcenter card-table mb-0">
                                     <thead>
                                         <tr>
-                                            <th>Utilisateur</th>
+                                            <th>@T("Utilisateur")</th>
                                             <th style="width: 6rem;"></th>
                                         </tr>
                                     </thead>
@@ -137,9 +137,9 @@ else
                                         @foreach (GlpiGroupUser member in _group.Members.OrderBy(m => m.User?.DisplayName ?? m.User?.UserName ?? string.Empty))
                                         {
                                             <tr>
-                                                <td><i class="ti ti-user me-1 text-secondary"></i>@(member.User?.DisplayName ?? member.User?.UserName ?? "Utilisateur inconnu")</td>
+                                                <td><i class="ti ti-user me-1 text-secondary"></i>@(member.User?.DisplayName ?? member.User?.UserName ?? T("Utilisateur inconnu"))</td>
                                                 <td>
-                                                    <button type="button" class="btn btn-icon btn-sm text-danger" title="Retirer" @onclick="() => RemoveUserAsync(member.UserId)">
+                                                    <button type="button" class="btn btn-icon btn-sm text-danger" title="@(T("Retirer"))" @onclick="() => RemoveUserAsync(member.UserId)">
                                                         <i class="ti ti-x"></i>
                                                     </button>
                                                 </td>
@@ -151,14 +151,14 @@ else
                         }
                         <div class="d-flex gap-2 mt-3">
                             <select class="form-select" style="max-width: 320px;" @bind="_userIdToAdd">
-                                <option value="0">-- Choisir un utilisateur --</option>
+                                <option value="0">@T("-- Choisir un utilisateur --")</option>
                                 @foreach (GlpiUser user in AvailableUsers())
                                 {
                                     <option value="@user.Id">@(user.DisplayName ?? user.UserName)</option>
                                 }
                             </select>
                             <button type="button" class="btn btn-primary" disabled="@(_userIdToAdd == 0)" @onclick="AddUserAsync">
-                                <i class="ti ti-plus me-1"></i>Ajouter
+                                <i class="ti ti-plus me-1"></i>@T("Ajouter")
                             </button>
                         </div>
                     </div>
@@ -166,15 +166,15 @@ else
 
                 case "security":
                     <EditForm Model="_group" OnValidSubmit="SaveAsync">
-                        <div class="glping-fiche-block-title"><i class="ti ti-shield"></i>Double authentification (2FA)</div>
-                        <p class="text-secondary small">Si la double authentification est imposée, les utilisateurs rattachés à ce groupe devront l'utiliser à la connexion.</p>
+                        <div class="glping-fiche-block-title"><i class="ti ti-shield"></i>@T("Double authentification (2FA)")</div>
+                        <p class="text-secondary small">@T("Si la double authentification est imposée, les utilisateurs rattachés à ce groupe devront l'utiliser à la connexion.")</p>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="glping-fiche-field">
-                                    <label>Forcer 2FA</label>
+                                    <label>@T("Forcer 2FA")</label>
                                     <select class="form-select" value="@(_group.TwoFactorAuthRequired ? "true" : "false")" @onchange="@(e => _group.TwoFactorAuthRequired = e.Value?.ToString() == "true")">
-                                        <option value="false">Non</option>
-                                        <option value="true">Oui</option>
+                                        <option value="false">@T("Non")</option>
+                                        <option value="true">@T("Oui")</option>
                                     </select>
                                 </div>
                             </div>
@@ -182,7 +182,7 @@ else
 
                         <div class="d-flex justify-content-end gap-2 mt-3">
                             <button type="submit" class="btn btn-primary" disabled="@_isSaving">
-                                <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
+                                <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? T("Enregistrement…") : T("Sauvegarder"))
                             </button>
                         </div>
                     </EditForm>
@@ -190,12 +190,12 @@ else
 
                 case "notes":
                     <div class="glping-fiche-block">
-                        <div class="glping-fiche-block-title"><i class="ti ti-notes"></i>Notes (@_notes.Count)</div>
+                        <div class="glping-fiche-block-title"><i class="ti ti-notes"></i>@T("Notes ({0})", _notes.Count)</div>
                         @if (_notes.Count == 0)
                         {
                             <div class="glping-config-placeholder">
                                 <i class="ti ti-notes"></i>
-                                <p class="mb-0">Aucune note.</p>
+                                <p class="mb-0">@T("Aucune note.")</p>
                             </div>
                         }
                         else
@@ -206,7 +206,7 @@ else
                                     <p class="mb-1" style="white-space: pre-wrap;">@note.Content</p>
                                     <div class="d-flex justify-content-between align-items-center">
                                         <span class="text-secondary small">@note.Author — @Display.DateTime(note.CreatedAt)</span>
-                                        <button type="button" class="btn btn-icon btn-sm text-danger" title="Supprimer" @onclick="() => DeleteNoteAsync(note.Id)">
+                                        <button type="button" class="btn btn-icon btn-sm text-danger" title="@(T("Supprimer"))" @onclick="() => DeleteNoteAsync(note.Id)">
                                             <i class="ti ti-trash"></i>
                                         </button>
                                     </div>
@@ -214,9 +214,9 @@ else
                             }
                         }
                         <div class="d-flex gap-2 mt-3">
-                            <textarea class="form-control" rows="3" placeholder="Nouvelle note..." @bind="_newNoteContent" @bind:event="oninput"></textarea>
+                            <textarea class="form-control" rows="3" placeholder="@(T("Nouvelle note..."))" @bind="_newNoteContent" @bind:event="oninput"></textarea>
                             <button type="button" class="btn btn-primary align-self-start" disabled="@string.IsNullOrWhiteSpace(_newNoteContent)" @onclick="AddNoteAsync">
-                                <i class="ti ti-plus me-1"></i>Ajouter
+                                <i class="ti ti-plus me-1"></i>@T("Ajouter")
                             </button>
                         </div>
                     </div>
@@ -224,12 +224,12 @@ else
 
                 case "history":
                     <div class="glping-fiche-block">
-                        <div class="glping-fiche-block-title"><i class="ti ti-history"></i>Historique (@_historyEntries.Count)</div>
+                        <div class="glping-fiche-block-title"><i class="ti ti-history"></i>@T("Historique ({0})", _historyEntries.Count)</div>
                         @if (_historyEntries.Count == 0)
                         {
                             <div class="glping-config-placeholder">
                                 <i class="ti ti-history"></i>
-                                <p class="mb-0">Aucun historique.</p>
+                                <p class="mb-0">@T("Aucun historique.")</p>
                             </div>
                         }
                         else
@@ -238,11 +238,11 @@ else
                                 <table class="table table-vcenter card-table mb-0">
                                     <thead>
                                         <tr>
-                                            <th>ID</th>
-                                            <th>Date</th>
-                                            <th>Utilisateur</th>
-                                            <th>Champ</th>
-                                            <th>Mise à jour</th>
+                                            <th>@T("ID")</th>
+                                            <th>@T("Date")</th>
+                                            <th>@T("Utilisateur")</th>
+                                            <th>@T("Champ")</th>
+                                            <th>@T("Mise à jour")</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -265,39 +265,39 @@ else
 
                 case "all":
                     <div class="glping-fiche-block">
-                        <div class="glping-fiche-block-title"><i class="ti ti-users"></i>Groupe</div>
-                        <p class="mb-1"><strong>Nom :</strong> @_group.Name</p>
-                        <p class="mb-1"><strong>Code :</strong> @(_group.Code ?? "—")</p>
-                        <p class="mb-1"><strong>Comme enfant de :</strong> @ParentLabel(_group.ParentId)</p>
-                        <p class="mb-0"><strong>Commentaires :</strong> @(_group.Comment ?? "—")</p>
+                        <div class="glping-fiche-block-title"><i class="ti ti-users"></i>@T("Groupe")</div>
+                        <p class="mb-1"><strong>@T("Nom :")</strong> @_group.Name</p>
+                        <p class="mb-1"><strong>@T("Code :")</strong> @(_group.Code ?? "—")</p>
+                        <p class="mb-1"><strong>@T("Comme enfant de :")</strong> @ParentLabel(_group.ParentId)</p>
+                        <p class="mb-0"><strong>@T("Commentaires :")</strong> @(_group.Comment ?? "—")</p>
                     </div>
                     <div class="glping-fiche-block">
-                        <div class="glping-fiche-block-title"><i class="ti ti-shield"></i>Sécurité</div>
-                        <p class="mb-0"><strong>Forcer 2FA :</strong> @YesNo(_group.TwoFactorAuthRequired)</p>
+                        <div class="glping-fiche-block-title"><i class="ti ti-shield"></i>@T("Sécurité")</div>
+                        <p class="mb-0"><strong>@T("Forcer 2FA :")</strong> @YesNo(_group.TwoFactorAuthRequired)</p>
                     </div>
                     <div class="glping-fiche-block">
-                        <div class="glping-fiche-block-title"><i class="ti ti-sitemap"></i>Sous-groupes (@_group.Children.Count)</div>
+                        <div class="glping-fiche-block-title"><i class="ti ti-sitemap"></i>@T("Sous-groupes ({0})", _group.Children.Count)</div>
                         @foreach (GlpiGroup child in _group.Children.OrderBy(c => c.Name))
                         {
                             <p class="mb-1"><a href="@($"/admin/groups/{child.Id}")">@child.Name</a></p>
                         }
                     </div>
                     <div class="glping-fiche-block">
-                        <div class="glping-fiche-block-title"><i class="ti ti-user"></i>Utilisateurs (@_group.Members.Count)</div>
+                        <div class="glping-fiche-block-title"><i class="ti ti-user"></i>@T("Utilisateurs ({0})", _group.Members.Count)</div>
                         @foreach (GlpiGroupUser member in _group.Members.OrderBy(m => m.User.DisplayName ?? m.User.UserName))
                         {
                             <p class="mb-1">@(member.User.DisplayName ?? member.User.UserName)</p>
                         }
                     </div>
                     <div class="glping-fiche-block">
-                        <div class="glping-fiche-block-title"><i class="ti ti-notes"></i>Notes (@_notes.Count)</div>
+                        <div class="glping-fiche-block-title"><i class="ti ti-notes"></i>@T("Notes ({0})", _notes.Count)</div>
                         @foreach (GlpiGroupNote note in _notes)
                         {
                             <p class="mb-1" style="white-space: pre-wrap;">@note.Content <span class="text-secondary small">(@note.Author, @Display.DateTime(note.CreatedAt))</span></p>
                         }
                     </div>
                     <div class="glping-fiche-block">
-                        <div class="glping-fiche-block-title"><i class="ti ti-history"></i>Historique (@_historyEntries.Count)</div>
+                        <div class="glping-fiche-block-title"><i class="ti ti-history"></i>@T("Historique ({0})", _historyEntries.Count)</div>
                         @foreach (GlpiGroupHistoryEntry entry in Display.Chronological(_historyEntries, entry => entry.OccurredAt))
                         {
                             <p class="mb-1">@Display.DateTime(entry.OccurredAt) — @entry.User — @entry.Field : @entry.Description</p>
@@ -316,7 +316,7 @@ else
                             }
                             else
                             {
-                                @:L'onglet « @current.Label » n'est pas encore disponible.
+                                @:L'onglet « @T(current.Label) » n'est pas encore disponible.
                             }
                         </p>
                     </div>

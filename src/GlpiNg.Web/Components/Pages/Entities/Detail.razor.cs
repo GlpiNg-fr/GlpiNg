@@ -1,3 +1,4 @@
+using GlpiNg.Modules.Abstractions.Localization;
 ﻿using BlazorBootstrap;
 using GlpiNg.Web.Services;
 using GlpiNg.Web.Data;
@@ -195,7 +196,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
     private string ParentLabel(int? parentId) =>
         parentId is { } id && _entitiesById.TryGetValue(id, out GlpiEntity? parent) ? parent.Name : "-----";
 
-    private static string YesNo(bool value) => value ? "Oui" : "Non";
+    private static string YesNo(bool value) => value ? Tr.T("Oui") : Tr.T("Non");
 
     private IEnumerable<(string Field, string? Old, string? New)> DiffFields(EntitySnapshot before, EntitySnapshot after)
     {
@@ -258,7 +259,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
             _beforeEdit = after;
             await ReloadReferenceDataAsync();
             RebuildTabs();
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Entité enregistrée."));
+            ToastService.Notify(new ToastMessage(ToastType.Success, Tr.T("Entité enregistrée.")));
         }
         finally
         {
@@ -275,7 +276,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
 
         if (_entityHabilitations.Count > 0)
         {
-            ToastService.Notify(new ToastMessage(ToastType.Danger, "Impossible de supprimer une entité à laquelle des utilisateurs sont rattachés : détachez-les d'abord."));
+            ToastService.Notify(new ToastMessage(ToastType.Danger, Tr.T("Impossible de supprimer une entité à laquelle des utilisateurs sont rattachés : détachez-les d'abord.")));
             return;
         }
 

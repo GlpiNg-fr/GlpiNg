@@ -6,23 +6,23 @@
 
 @if (_model is null)
 {
-    <p>Chargement…</p>
+    <p>@T("Chargement…")</p>
 }
 else
 {
-    <p class="hint" style="margin-left:0;">Surcharge des textes du portail libre-service (helpdesk), par langue.</p>
+    <p class="hint" style="margin-left:0;">@T("Surcharge des textes du portail libre-service (helpdesk), par langue.")</p>
 
     <div class="glping-config-field">
-        <label for="hd-new-lang">Ajouter une langue</label>
+        <label for="hd-new-lang">@T("Ajouter une langue")</label>
         <div style="display:flex;gap:0.5rem;max-width:520px;">
-            <input id="hd-new-lang" @bind="_newLanguageLabel" placeholder="Ex. Español" style="flex:1;" />
-            <button type="button" class="glping-config-save" style="margin:0;" @onclick="AddLanguage">Ajouter</button>
+            <input id="hd-new-lang" @bind="_newLanguageLabel" placeholder="@(T("Ex. Español"))" style="flex:1;" />
+            <button type="button" class="glping-config-save" style="margin:0;" @onclick="AddLanguage">@T("Ajouter")</button>
         </div>
     </div>
 
     @if (_model.Translations.Count == 0)
     {
-        <p class="hint" style="margin-left:0;">Aucune langue configurée pour le moment.</p>
+        <p class="hint" style="margin-left:0;">@T("Aucune langue configurée pour le moment.")</p>
     }
     else
     {
@@ -33,28 +33,28 @@ else
             </div>
 
             <div class="glping-config-field">
-                <label>Titre d'accueil</label>
+                <label>@T("Titre d'accueil")</label>
                 <input @bind="translation.WelcomeTitle" />
             </div>
 
             <div class="glping-config-field">
-                <label>Message de bienvenue</label>
+                <label>@T("Message de bienvenue")</label>
                 <textarea rows="3" @bind="translation.WelcomeMessage"></textarea>
             </div>
 
             <div class="glping-config-field">
-                <label>Libellé du bouton d'envoi</label>
+                <label>@T("Libellé du bouton d'envoi")</label>
                 <input @bind="translation.SubmitButtonLabel" />
             </div>
 
             <div class="glping-config-field">
                 <label></label>
-                <button type="button" class="glping-config-save" style="background:#d63939;" @onclick="() => RemoveLanguage(translation)">Supprimer cette langue</button>
+                <button type="button" class="glping-config-save" style="background:#d63939;" @onclick="() => RemoveLanguage(translation)">@T("Supprimer cette langue")</button>
             </div>
         }
     }
 
-    <button type="button" class="glping-config-save" disabled="@_isSaving" @onclick="SaveAsync">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+    <button type="button" class="glping-config-save" disabled="@_isSaving" @onclick="SaveAsync">@(_isSaving ? T("Enregistrement…") : T("Enregistrer"))</button>
 }
 
 @code {
@@ -103,11 +103,11 @@ else
             await SettingsStore.SaveSectionAsync(SectionName, _model);
             await History.AppendAsync("Administrateur",
                 [("Helpdesk", "-----", $"{_model.Translations.Count} langue(s) configurée(s)")]);
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Configuration enregistrée."));
+            ToastService.Notify(new ToastMessage(ToastType.Success, T("Configuration enregistrée.")));
         }
         catch (IOException ex)
         {
-            ToastService.Notify(new ToastMessage(ToastType.Danger, $"Échec de l'enregistrement : {ex.Message}"));
+            ToastService.Notify(new ToastMessage(ToastType.Danger, T("Échec de l'enregistrement : {0}", ex.Message)));
         }
         finally
         {

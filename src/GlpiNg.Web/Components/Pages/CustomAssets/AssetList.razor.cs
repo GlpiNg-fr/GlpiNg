@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Web.Components.Pages.CustomAssets;
 
@@ -178,7 +179,7 @@ public partial class AssetList : ComponentBase
 
         if (_fields.FirstOrDefault(field => field.IsMandatory && string.IsNullOrWhiteSpace(GetNewValue(field))) is { } missing)
         {
-            _createError = $"Le champ « {missing.Label} » est obligatoire.";
+            _createError = Tr.T("Le champ « {0} » est obligatoire.", missing.Label);
             return;
         }
 

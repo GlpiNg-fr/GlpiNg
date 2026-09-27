@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Web.Components.Pages.MyAccount;
 
@@ -81,13 +82,13 @@ public partial class Profile : ComponentBase, IAsyncDisposable
             {
                 if (Hasher.VerifyHashedPassword(_user, _user.PasswordHash, _currentPassword) == PasswordVerificationResult.Failed)
                 {
-                    ToastService.Notify(new ToastMessage(ToastType.Danger, "Le mot de passe actuel est incorrect."));
+                    ToastService.Notify(new ToastMessage(ToastType.Danger, Tr.T("Le mot de passe actuel est incorrect.")));
                     return;
                 }
 
                 if (string.IsNullOrEmpty(_newPassword) || _newPassword != _newPasswordConfirm)
                 {
-                    ToastService.Notify(new ToastMessage(ToastType.Danger, "Les nouveaux mots de passe ne correspondent pas."));
+                    ToastService.Notify(new ToastMessage(ToastType.Danger, Tr.T("Les nouveaux mots de passe ne correspondent pas.")));
                     return;
                 }
 
@@ -106,7 +107,7 @@ public partial class Profile : ComponentBase, IAsyncDisposable
             _user.DisplayName = ComputeDisplayName(_user);
 
             await _db.SaveChangesAsync();
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Profil enregistré."));
+            ToastService.Notify(new ToastMessage(ToastType.Success, Tr.T("Profil enregistré.")));
         }
         finally
         {

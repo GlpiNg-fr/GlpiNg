@@ -5,107 +5,105 @@
 @inject ToastService ToastService
 @rendermode InteractiveServer
 
-<PageTitle>Authentification — GlpiNg</PageTitle>
+<PageTitle>@T("Authentification — GlpiNg")</PageTitle>
 
 <AuthTabStrip Current="others" />
 
 @if (_model is null)
 {
-    <p>Chargement…</p>
+    <p>@T("Chargement…")</p>
 }
 else
 {
     <div class="glping-config">
         <div class="glping-config-body">
             <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
-                <div class="glping-fiche-block-title"><i class="ti ti-shield-lock"></i>Authentification par CAS</div>
+                <div class="glping-fiche-block-title"><i class="ti ti-shield-lock"></i>@T("Authentification par CAS")</div>
                 <div class="glping-config-field">
-                    <label for="cas-host">Hôte CAS</label>
+                    <label for="cas-host">@T("Hôte CAS")</label>
                     <input id="cas-host" @bind="_model.CasHost" />
                 </div>
                 <div class="glping-config-field">
-                    <label for="cas-version">Version CAS</label>
+                    <label for="cas-version">@T("Version CAS")</label>
                     <select id="cas-version" @bind="_model.CasVersion">
-                        <option value="1">Version 1</option>
-                        <option value="2">Version 2</option>
-                        <option value="3">Version 3</option>
+                        <option value="1">@T("Version 1")</option>
+                        <option value="2">@T("Version 2")</option>
+                        <option value="3">@T("Version 3")</option>
                     </select>
                 </div>
                 <div class="glping-config-field">
-                    <label for="cas-port">Port</label>
+                    <label for="cas-port">@T("Port")</label>
                     <input id="cas-port" type="number" @bind="_model.CasPort" />
                 </div>
                 <div class="glping-config-field">
-                    <label for="cas-base-dir">Répertoire de base (optionnel)</label>
+                    <label for="cas-base-dir">@T("Répertoire de base (optionnel)")</label>
                     <input id="cas-base-dir" @bind="_model.CasBaseDirectory" />
                 </div>
                 <div class="glping-config-field">
-                    <label for="cas-logout">Adresse web de retour à la déconnexion (logout)</label>
+                    <label for="cas-logout">@T("Adresse web de retour à la déconnexion (logout)")</label>
                     <input id="cas-logout" @bind="_model.CasLogoutUrl" />
                 </div>
 
-                <div class="glping-fiche-block-title mt-3"><i class="ti ti-certificate"></i>Authentification par certificat x509</div>
+                <div class="glping-fiche-block-title mt-3"><i class="ti ti-certificate"></i>@T("Authentification par certificat x509")</div>
                 <div class="glping-config-field">
-                    <label for="x509-email">Attribut de l'email pour authentification par certificat x509</label>
+                    <label for="x509-email">@T("Attribut de l'email pour authentification par certificat x509")</label>
                     <input id="x509-email" @bind="_model.X509EmailAttribute" />
                 </div>
                 <div class="glping-config-field">
-                    <label for="x509-ou">Restreindre le champ OU (séparateur $)</label>
+                    <label for="x509-ou">@T("Restreindre le champ OU (séparateur $)")</label>
                     <input id="x509-ou" @bind="_model.X509RestrictOu" />
                 </div>
                 <div class="glping-config-field">
-                    <label for="x509-cn">Restreindre le champ CN (séparateur $)</label>
+                    <label for="x509-cn">@T("Restreindre le champ CN (séparateur $)")</label>
                     <input id="x509-cn" @bind="_model.X509RestrictCn" />
                 </div>
                 <div class="glping-config-field">
-                    <label for="x509-o">Restreindre le champ O (séparateur $)</label>
+                    <label for="x509-o">@T("Restreindre le champ O (séparateur $)")</label>
                     <input id="x509-o" @bind="_model.X509RestrictO" />
                 </div>
 
-                <div class="glping-fiche-block-title mt-3"><i class="ti ti-world-www"></i>Autre authentification transmise dans la requête HTTP (SSO)</div>
+                <div class="glping-fiche-block-title mt-3"><i class="ti ti-world-www"></i>@T("Autre authentification transmise dans la requête HTTP (SSO)")</div>
                 <div class="glping-config-field">
-                    <label for="sso-field">Champ de stockage de l'identifiant dans la requête HTTP</label>
+                    <label for="sso-field">@T("Champ de stockage de l'identifiant dans la requête HTTP")</label>
                     <input id="sso-field" @bind="_model.HttpAuthField" />
                 </div>
                 <div class="glping-config-field">
-                    <label for="sso-logout">URL de déconnexion SSO</label>
+                    <label for="sso-logout">@T("URL de déconnexion SSO")</label>
                     <input id="sso-logout" @bind="_model.SsoLogoutUrl" />
                 </div>
                 <div class="glping-config-field checkbox">
-                    <label for="sso-strip-domain">Supprimer le domaine des identifiants de la forme identifiant@@domaine</label>
+                    <label for="sso-strip-domain">@T("Supprimer le domaine des identifiants de la forme identifiant@domaine")</label>
                     <label class="glping-switch">
                         <input id="sso-strip-domain" type="checkbox" @bind="_model.StripDomainFromLogin" />
                         <span class="glping-switch-slider"></span>
                     </label>
                 </div>
                 <div class="glping-config-field">
-                    <label for="sso-lastname">Champ HTTP — Nom de famille</label>
+                    <label for="sso-lastname">@T("Champ HTTP — Nom de famille")</label>
                     <input id="sso-lastname" @bind="_model.HttpAuthLastNameField" />
                 </div>
                 <div class="glping-config-field">
-                    <label for="sso-firstname">Champ HTTP — Prénom</label>
+                    <label for="sso-firstname">@T("Champ HTTP — Prénom")</label>
                     <input id="sso-firstname" @bind="_model.HttpAuthFirstNameField" />
                 </div>
                 <div class="glping-config-field">
-                    <label for="sso-comment">Champ HTTP — Commentaires</label>
+                    <label for="sso-comment">@T("Champ HTTP — Commentaires")</label>
                     <input id="sso-comment" @bind="_model.HttpAuthCommentField" />
                 </div>
                 <div class="glping-config-field">
-                    <label for="sso-email">Champ HTTP — E-mail</label>
+                    <label for="sso-email">@T("Champ HTTP — E-mail")</label>
                     <input id="sso-email" @bind="_model.HttpAuthEmailField" />
                 </div>
                 <div class="glping-config-field">
-                    <label for="sso-phone">Champ HTTP — Téléphone</label>
+                    <label for="sso-phone">@T("Champ HTTP — Téléphone")</label>
                     <input id="sso-phone" @bind="_model.HttpAuthPhoneField" />
                 </div>
 
                 <p class="hint mt-3">
-                    Configuration uniquement : contrairement à l'annuaire LDAP, aucune de ces méthodes n'est
-                    branchée sur le flux de connexion réel (AccountController) — GlpiNg n'a pas de client CAS,
-                    de validation de certificat x509 client, ni de lecture d'en-tête SSO.
+                    @T("Configuration uniquement : contrairement à l'annuaire LDAP, aucune de ces méthodes n'est branchée sur le flux de connexion réel (AccountController) — GlpiNg n'a pas de client CAS, de validation de certificat x509 client, ni de lecture d'en-tête SSO.")
                 </p>
 
-                <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+                <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? T("Enregistrement…") : T("Enregistrer"))</button>
             </EditForm>
         </div>
     </div>
@@ -134,7 +132,7 @@ else
         try
         {
             await SettingsStore.SaveSectionAsync(SectionName, _model);
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Configuration enregistrée."));
+            ToastService.Notify(new ToastMessage(ToastType.Success, T("Configuration enregistrée.")));
         }
         finally
         {

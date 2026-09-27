@@ -1,3 +1,4 @@
+using GlpiNg.Modules.Abstractions.Localization;
 ﻿using BlazorBootstrap;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
@@ -133,7 +134,7 @@ public partial class Index : ComponentBase
         bool alreadyExists = await db.AuthLdapServers.AsNoTracking().AnyAsync(s => s.Name == _newServer.Name);
         if (alreadyExists)
         {
-            ToastService.Notify(new ToastMessage(ToastType.Danger, "Ce nom est déjà utilisé."));
+            ToastService.Notify(new ToastMessage(ToastType.Danger, Tr.T("Ce nom est déjà utilisé.")));
             return;
         }
 

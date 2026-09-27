@@ -2,7 +2,7 @@
 @using GlpiNg.Web.Components.Pages.ConfigSections
 @rendermode InteractiveServer
 
-<PageTitle>Configuration — GlpiNg</PageTitle>
+<PageTitle>@T("Configuration — GlpiNg")</PageTitle>
 
 <div class="glping-config">
     <aside class="glping-config-sidebar">
@@ -12,7 +12,7 @@
                     class="glping-config-nav-item @(section.Key == _activeSection ? "active" : "")"
                     @onclick="() => SelectSection(section.Key)">
                 <i class="ti @section.Icon"></i>
-                <span>@section.Label</span>
+                <span>@T(section.Label)</span>
             </button>
         }
     </aside>

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Web.Components.Pages.OAuthClients;
 
@@ -53,7 +54,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
         {
             _client.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Client enregistré."));
+            ToastService.Notify(new ToastMessage(ToastType.Success, Tr.T("Client enregistré.")));
         }
         finally
         {
@@ -78,7 +79,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
             await _db.SaveChangesAsync();
 
             _revealSecret = plainSecret;
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Secret régénéré."));
+            ToastService.Notify(new ToastMessage(ToastType.Success, Tr.T("Secret régénéré.")));
         }
         finally
         {

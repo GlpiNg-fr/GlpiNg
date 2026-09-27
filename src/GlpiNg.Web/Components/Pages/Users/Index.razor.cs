@@ -1,3 +1,4 @@
+using GlpiNg.Modules.Abstractions.Localization;
 ﻿using BlazorBootstrap;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
@@ -157,7 +158,7 @@ public partial class Index : ComponentBase
 
             ToastService.Notify(new ToastMessage(
                 result.Created > 0 ? ToastType.Success : ToastType.Warning,
-                $"{result.Created} compte(s) importé(s)" + (result.Skipped > 0 ? $", {result.Skipped} ignoré(s)." : ".")));
+                $"{result.Created} compte(s) importé(s)" + (result.Skipped > 0 ? Tr.T(", {0} ignoré(s).", result.Skipped) : ".")));
 
             foreach (string warning in result.Warnings)
             {
@@ -258,7 +259,7 @@ public partial class Index : ComponentBase
         bool alreadyExists = await db.Users.AsNoTracking().AnyAsync(u => u.UserName == _newUser.UserName);
         if (alreadyExists)
         {
-            ToastService.Notify(new ToastMessage(ToastType.Danger, "Cet identifiant est déjà utilisé."));
+            ToastService.Notify(new ToastMessage(ToastType.Danger, Tr.T("Cet identifiant est déjà utilisé.")));
             return;
         }
 

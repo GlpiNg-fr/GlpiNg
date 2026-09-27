@@ -7,50 +7,50 @@
 
 @if (_general is null || _server is null)
 {
-    <p>Chargement…</p>
+    <p>@T("Chargement…")</p>
 }
 else
 {
     <EditForm Model="_general" OnValidSubmit="SaveAsync" class="glping-config-form">
         <div class="glping-config-field">
-            <label for="urls">Adresses d'écoute du serveur</label>
+            <label for="urls">@T("Adresses d'écoute du serveur")</label>
             <input id="urls" @bind="_server.Urls" placeholder="http://0.0.0.0:5000" />
         </div>
         <p class="hint">
-            Clé de configuration "Urls" (adresses d'écoute Kestrel). Un
-            redémarrage de l'application est nécessaire pour appliquer ce
+            @T("Clé de configuration \"Urls\" (adresses d'écoute Kestrel). Un")
+            @T("redémarrage de l'application est nécessaire pour appliquer ce")
             changement. Si un argument <code>--urls</code> ou une autre source de
-            configuration définit aussi les adresses d'écoute, vérifiez laquelle
-            l'emporte sur votre déploiement avant de vous fier uniquement à cette page.
+            @T("configuration définit aussi les adresses d'écoute, vérifiez laquelle")
+            @T("l'emporte sur votre déploiement avant de vous fier uniquement à cette page.")
         </p>
 
         <div class="glping-config-field">
-            <label for="app-url">URL de l'application</label>
+            <label for="app-url">@T("URL de l'application")</label>
             <input id="app-url" @bind="_general.ApplicationUrl" placeholder="http://localhost" />
         </div>
 
         <div class="glping-config-field">
-            <label for="login-message">Texte sur la page de connexion</label>
+            <label for="login-message">@T("Texte sur la page de connexion")</label>
             <textarea id="login-message" rows="4" @bind="_general.LoginPageMessage"></textarea>
         </div>
 
         <div class="glping-config-field">
-            <label for="help-simplified">Lien d'aide dans l'interface simplifiée</label>
+            <label for="help-simplified">@T("Lien d'aide dans l'interface simplifiée")</label>
             <input id="help-simplified" @bind="_general.SimplifiedInterfaceHelpLink" />
         </div>
 
         <div class="glping-config-field">
-            <label for="help-standard">Lien d'aide dans l'interface standard</label>
+            <label for="help-standard">@T("Lien d'aide dans l'interface standard")</label>
             <input id="help-standard" @bind="_general.StandardInterfaceHelpLink" />
         </div>
 
         <div class="glping-config-field">
-            <label for="decimals">Nombre de décimales par défaut <span class="required">*</span></label>
+            <label for="decimals">@T("Nombre de décimales par défaut") <span class="required">*</span></label>
             <input id="decimals" type="number" min="0" max="8" class="glping-config-input-sm" @bind="_general.DefaultDecimalsCount" />
         </div>
 
         <div class="glping-config-field checkbox">
-            <label for="anon-faq">Autoriser l'accès anonyme à la FAQ</label>
+            <label for="anon-faq">@T("Autoriser l'accès anonyme à la FAQ")</label>
             <label class="glping-switch">
                 <input id="anon-faq" type="checkbox" @bind="_general.AllowAnonymousFaqAccess" />
                 <span class="glping-switch-slider"></span>
@@ -59,8 +59,8 @@ else
 
         <div class="glping-config-field checkbox">
             <label for="anon-imports">
-                Autoriser les imports (de fichiers) anonymes
-                <i class="ti ti-help-circle glping-config-help" title="Permet l'import de fichiers sans authentification préalable."></i>
+                @T("Autoriser les imports (de fichiers) anonymes")
+                <i class="ti ti-help-circle glping-config-help" title="@(T("Permet l'import de fichiers sans authentification préalable."))"></i>
             </label>
             <label class="glping-switch">
                 <input id="anon-imports" type="checkbox" @bind="_general.AllowAnonymousFileImports" />
@@ -69,26 +69,26 @@ else
         </div>
 
         <div class="glping-config-field">
-            <label for="mac-format">Affichage adresse MAC</label>
+            <label for="mac-format">@T("Affichage adresse MAC")</label>
             <select id="mac-format" class="glping-config-input" @bind="_general.MacAddressFormat">
-                <option value="Windows">Windows (AA-BB-CC-DD-EE-FF)</option>
-                <option value="HP">HP (AABBCC-DDEEFF)</option>
-                <option value="Cisco">Cisco (aabb.ccdd.eeff)</option>
+                <option value="Windows">@T("Windows (AA-BB-CC-DD-EE-FF)")</option>
+                <option value="HP">@T("HP (AABBCC-DDEEFF)")</option>
+                <option value="Cisco">@T("Cisco (aabb.ccdd.eeff)")</option>
             </select>
         </div>
 
         <div class="glping-config-divider">
-            <span><i class="ti ti-list"></i> Affichage dynamique</span>
+            <span><i class="ti ti-list"></i> @T("Affichage dynamique")</span>
         </div>
 
         <div class="glping-config-field">
-            <label for="dropdown-limit">Taille par défaut pour les listes déroulantes <span class="required">*</span></label>
+            <label for="dropdown-limit">@T("Taille par défaut pour les listes déroulantes") <span class="required">*</span></label>
             <input id="dropdown-limit" type="number" min="1" class="glping-config-input-sm" @bind="_general.DefaultDropdownListLimit" />
         </div>
 
         <div class="glping-config-field">
             <label for="search-threshold">
-                Ne pas utiliser le moteur de recherche dans les intitulés si le nombre d'éléments est inférieur à
+                @T("Ne pas utiliser le moteur de recherche dans les intitulés si le nombre d'éléments est inférieur à")
                 <span class="required">*</span>
             </label>
             <select id="search-threshold" class="glping-config-input-sm" @bind="_general.SearchEngineDisableThreshold">
@@ -100,20 +100,20 @@ else
         </div>
 
         <div class="glping-config-divider">
-            <span><i class="ti ti-search"></i> Moteur de recherche</span>
+            <span><i class="ti ti-search"></i> @T("Moteur de recherche")</span>
         </div>
 
         <div class="glping-config-field">
-            <label for="search-view">Éléments visualisés</label>
+            <label for="search-view">@T("Éléments visualisés")</label>
             <select id="search-view" class="glping-config-input-sm" @bind="_general.SearchViewMode">
-                <option value="0">Non</option>
-                <option value="1">Oui (dernier critère)</option>
-                <option value="2">Oui (critère par défaut)</option>
+                <option value="0">@T("Non")</option>
+                <option value="1">@T("Oui (dernier critère)")</option>
+                <option value="2">@T("Oui (critère par défaut)")</option>
             </select>
         </div>
 
         <div class="glping-config-field checkbox">
-            <label for="search-global">Recherche globale</label>
+            <label for="search-global">@T("Recherche globale")</label>
             <label class="glping-switch">
                 <input id="search-global" type="checkbox" @bind="_general.AllowGlobalSearch" />
                 <span class="glping-switch-slider"></span>
@@ -121,44 +121,44 @@ else
         </div>
 
         <div class="glping-config-field">
-            <label for="search-all">Tous</label>
+            <label for="search-all">@T("Tous")</label>
             <select id="search-all" class="glping-config-input-sm" @bind="_general.SearchAllListMode">
-                <option value="0">Non</option>
-                <option value="1">Oui (dernier critère)</option>
+                <option value="0">@T("Non")</option>
+                <option value="1">@T("Oui (dernier critère)")</option>
             </select>
         </div>
 
         <div class="glping-config-field">
-            <label for="search-max-results">Nombre maximum de résultats de recherche (par page) <span class="required">*</span></label>
+            <label for="search-max-results">@T("Nombre maximum de résultats de recherche (par page)") <span class="required">*</span></label>
             <input id="search-max-results" type="number" min="1" class="glping-config-input-sm" @bind="_general.MaxSearchResultsPerPage" />
         </div>
 
         <div class="glping-config-field">
-            <label for="search-summary-length">Taille limite par défaut (zones de texte de résumés) <span class="required">*</span></label>
+            <label for="search-summary-length">@T("Taille limite par défaut (zones de texte de résumés)") <span class="required">*</span></label>
             <input id="search-summary-length" type="number" min="1" class="glping-config-input-sm" @bind="_general.SearchResultsSummaryLength" />
         </div>
 
         <div class="glping-config-field">
-            <label for="search-url-length">Longueur maximale par défaut pour les URL <span class="required">*</span></label>
+            <label for="search-url-length">@T("Longueur maximale par défaut pour les URL") <span class="required">*</span></label>
             <input id="search-url-length" type="number" min="1" class="glping-config-input-sm" @bind="_general.SearchResultsMaxUrlLength" />
         </div>
 
         <div class="glping-config-divider">
-            <span><i class="ti ti-fingerprint"></i> Identification automatique</span>
+            <span><i class="ti ti-fingerprint"></i> @T("Identification automatique")</span>
         </div>
 
         <div class="glping-config-field">
-            <label for="remember-me">Temps de rétention "se souvenir de moi"</label>
+            <label for="remember-me">@T("Temps de rétention \"se souvenir de moi\"")</label>
             <select id="remember-me" class="glping-config-input-sm" @bind="_general.RememberMeDuration">
                 @foreach (var duration in RememberMeDurations)
                 {
-                    <option value="@duration.Seconds">@duration.Label</option>
+                    <option value="@duration.Seconds">@T(duration.Label)</option>
                 }
             </select>
         </div>
 
         <div class="glping-config-field checkbox">
-            <label for="remember-me-default">État par défaut de la case à cocher</label>
+            <label for="remember-me-default">@T("État par défaut de la case à cocher")</label>
             <label class="glping-switch">
                 <input id="remember-me-default" type="checkbox" @bind="_general.RememberMeDefaultChecked" />
                 <span class="glping-switch-slider"></span>
@@ -166,14 +166,14 @@ else
         </div>
 
         <div class="glping-config-field checkbox">
-            <label for="show-auth-sources">Afficher la liste des sources d'authentification sur la page de login</label>
+            <label for="show-auth-sources">@T("Afficher la liste des sources d'authentification sur la page de login")</label>
             <label class="glping-switch">
                 <input id="show-auth-sources" type="checkbox" @bind="_general.ShowAuthSourcesOnLoginPage" />
                 <span class="glping-switch-slider"></span>
             </label>
         </div>
 
-        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? T("Enregistrement…") : T("Enregistrer"))</button>
     </EditForm>
 }
 
@@ -189,7 +189,7 @@ else
         }
         for (var days = 1; days <= 60; days++)
         {
-            durations.Add((days * 86400, days == 1 ? "1 jour" : $"{days} jours"));
+            durations.Add((days * 86400, days == 1 ? T("1 jour") : T("{0} jours", days)));
         }
 
         return durations;
@@ -222,11 +222,11 @@ else
             await SettingsStore.SaveSectionAsync(SectionName, _general);
             await FileStore.SaveAsync(_server);
             await History.AppendAsync("Administrateur", SettingsDiff.Compare(before, _general));
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Configuration enregistrée."));
+            ToastService.Notify(new ToastMessage(ToastType.Success, T("Configuration enregistrée.")));
         }
         catch (IOException ex)
         {
-            ToastService.Notify(new ToastMessage(ToastType.Danger, $"Échec de l'enregistrement : {ex.Message}"));
+            ToastService.Notify(new ToastMessage(ToastType.Danger, T("Échec de l'enregistrement : {0}", ex.Message)));
         }
         finally
         {

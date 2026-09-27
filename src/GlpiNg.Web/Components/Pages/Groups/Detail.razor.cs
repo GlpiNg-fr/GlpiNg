@@ -4,6 +4,7 @@ using GlpiNg.Web.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.EntityFrameworkCore;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Web.Components.Pages.Groups;
 
@@ -168,7 +169,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
         g.CanBeNotified, g.CanBeProjectSupervisor, g.CanContainItems, g.CanContainUsers,
         g.TwoFactorAuthRequired);
 
-    private static string YesNo(bool value) => value ? "Oui" : "Non";
+    private static string YesNo(bool value) => value ? Tr.T("Oui") : Tr.T("Non");
 
     private IEnumerable<(string Field, string? Old, string? New)> DiffFields(GroupSnapshot before, GroupSnapshot after)
     {
@@ -223,7 +224,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
             _beforeEdit = after;
             await ReloadReferenceDataAsync();
             RebuildTabs();
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Groupe enregistré."));
+            ToastService.Notify(new ToastMessage(ToastType.Success, Tr.T("Groupe enregistré.")));
         }
         finally
         {
@@ -240,7 +241,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
 
         if (_group.Children.Count > 0)
         {
-            ToastService.Notify(new ToastMessage(ToastType.Danger, "Impossible de supprimer un groupe qui a des sous-groupes : détachez-les d'abord."));
+            ToastService.Notify(new ToastMessage(ToastType.Danger, Tr.T("Impossible de supprimer un groupe qui a des sous-groupes : détachez-les d'abord.")));
             return;
         }
 

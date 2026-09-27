@@ -1,3 +1,4 @@
+using GlpiNg.Modules.Abstractions.Localization;
 ﻿using BlazorBootstrap;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
@@ -69,7 +70,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
 
             _server.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Annuaire enregistré."));
+            ToastService.Notify(new ToastMessage(ToastType.Success, Tr.T("Annuaire enregistré.")));
         }
         finally
         {

@@ -8,53 +8,53 @@
 <div class="row">
     <div class="col-md-6">
         <div class="glping-fiche-field">
-            <label>Nom</label>
+            <label>@T("Nom")</label>
             <input class="form-control" @bind="Server.Name" @bind:event="oninput" @bind:after="NotifyChangedAsync" />
         </div>
         <div class="glping-fiche-field">
-            <label>Serveur par défaut</label>
+            <label>@T("Serveur par défaut")</label>
             @YesNoSelect(Server.IsDefault, v => Server.IsDefault = v)
         </div>
         <div class="glping-fiche-field">
-            <label>Activé</label>
+            <label>@T("Activé")</label>
             @YesNoSelect(Server.IsActive, v => Server.IsActive = v)
         </div>
         <div class="glping-fiche-field">
-            <label>Serveur</label>
+            <label>@T("Serveur")</label>
             <input class="form-control" @bind="Server.Host" @bind:event="oninput" @bind:after="NotifyChangedAsync" placeholder="ldap.example.com" />
         </div>
         <div class="glping-fiche-field">
-            <label>Port (par défaut 389)</label>
+            <label>@T("Port (par défaut 389)")</label>
             <input type="number" class="form-control" @bind="Server.Port" />
         </div>
         <div class="glping-fiche-field">
-            <label>SSL/TLS</label>
+            <label>@T("SSL/TLS")</label>
             @YesNoSelect(Server.UseSsl, v => Server.UseSsl = v)
         </div>
         <div class="glping-fiche-field">
-            <label>Commentaires</label>
+            <label>@T("Commentaires")</label>
             <textarea class="form-control" rows="2" @bind="Server.Comment"></textarea>
         </div>
     </div>
     <div class="col-md-6">
         <div class="glping-fiche-field">
-            <label>BaseDN</label>
-            <input class="form-control" @bind="Server.BaseDn" @bind:event="oninput" @bind:after="NotifyChangedAsync" placeholder="dc=example,dc=com" />
+            <label>@T("BaseDN")</label>
+            <input class="form-control" @bind="Server.BaseDn" @bind:event="oninput" @bind:after="NotifyChangedAsync" placeholder="@(T("dc=example,dc=com"))" />
         </div>
         <div class="glping-fiche-field">
-            <label>Utiliser un compte de connexion (bind)</label>
+            <label>@T("Utiliser un compte de connexion (bind)")</label>
             @YesNoSelect(Server.UseBind, v => Server.UseBind = v)
         </div>
         @if (Server.UseBind)
         {
             <div class="glping-fiche-field">
-                <label>DN du compte (pour les connexions non anonymes)</label>
-                <input class="form-control" @bind="Server.BindDn" placeholder="cn=admin,dc=example,dc=com" />
+                <label>@T("DN du compte (pour les connexions non anonymes)")</label>
+                <input class="form-control" @bind="Server.BindDn" placeholder="@(T("cn=admin,dc=example,dc=com"))" />
             </div>
             <div class="glping-fiche-field">
-                <label>Mot de passe du compte</label>
+                <label>@T("Mot de passe du compte")</label>
                 <input type="password" class="form-control" value="@BindPasswordPlain" @oninput="OnPasswordInput"
-                       placeholder="@(HasStoredPassword ? "•••••••• (laisser vide pour conserver)" : "")" />
+                       placeholder="@(HasStoredPassword ? T("•••••••• (laisser vide pour conserver)") : "")" />
                 @* Un secret present mais indechiffrable affichait le meme « •••••••• » qu'un secret
                    valide. Le bind degenerait alors en bind non authentifie, sans que rien ne le
                    laisse voir sur cette fiche. *@
@@ -62,23 +62,20 @@
                 {
                     <div class="form-hint text-danger">
                         <i class="ti ti-alert-triangle me-1"></i>
-                        Un mot de passe est enregistré mais ne peut plus être déchiffré : les clés de
-                        chiffrement ont changé, ou l'application a été déplacée ou lancée sous un autre
-                        compte. Ressaisissez-le — sans lui, la connexion à l'annuaire reste anonyme.
+                        @T("Un mot de passe est enregistré mais ne peut plus être déchiffré : les clés de chiffrement ont changé, ou l'application a été déplacée ou lancée sous un autre compte. Ressaisissez-le — sans lui, la connexion à l'annuaire reste anonyme.")
                     </div>
                 }
                 else if (HasStoredPassword)
                 {
                     <div class="form-hint text-success">
-                        <i class="ti ti-lock me-1"></i>Mot de passe enregistré et lisible.
+                        <i class="ti ti-lock me-1"></i>@T("Mot de passe enregistré et lisible.")
                     </div>
                 }
                 else
                 {
                     <div class="form-hint text-warning">
                         <i class="ti ti-alert-triangle me-1"></i>
-                        Aucun mot de passe enregistré : la connexion à l'annuaire restera anonyme, ce
-                        qu'Active Directory refuse.
+                        @T("Aucun mot de passe enregistré : la connexion à l'annuaire restera anonyme, ce qu'Active Directory refuse.")
                     </div>
                 }
             </div>

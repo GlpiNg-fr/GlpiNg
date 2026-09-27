@@ -4,7 +4,7 @@
 @rendermode InteractiveServer
 @using GlpiNg.Web.Models
 
-<PageTitle>Connexion — GlpiNg</PageTitle>
+<PageTitle>@T("Connexion — GlpiNg")</PageTitle>
 
 <div class="glping-login">
     <div class="glping-login-card">
@@ -23,27 +23,27 @@
             <input type="hidden" name="returnUrl" value="@ReturnUrl" />
 
             <div class="glping-login-field">
-                <label for="userName">Nom d'utilisateur</label>
+                <label for="userName">@T("Nom d'utilisateur")</label>
                 <input id="userName" name="userName" autocomplete="username" required autofocus />
             </div>
 
             <div class="glping-login-field">
-                <label for="password">Mot de passe</label>
+                <label for="password">@T("Mot de passe")</label>
                 <input id="password" name="password" type="password" autocomplete="current-password" required />
             </div>
 
             @if (_general?.ShowAuthSourcesOnLoginPage == true && _ldapServers.Count > 0)
             {
                 <div class="glping-login-field">
-                    <label for="authSource">Source d'authentification</label>
+                    <label for="authSource">@T("Source d'authentification")</label>
                     @* « Automatique » en premier, donc sélectionné par défaut : la valeur vide ne
                        poste rien, et le serveur enchaîne mot de passe local puis annuaires. Avec
                        « Base GlpiNg (local) » en tête, un utilisateur qui ne touchait pas au
                        sélecteur imposait sans le savoir la source locale, et aucun annuaire
                        n'était essayé — échec indistinguable d'un mauvais mot de passe. *@
                     <select id="authSource" name="authSource">
-                        <option value="">Automatique</option>
-                        <option value="0">Base GlpiNg (local)</option>
+                        <option value="">@T("Automatique")</option>
+                        <option value="0">@T("Base GlpiNg (local)")</option>
                         @foreach (AuthLdapServer server in _ldapServers)
                         {
                             <option value="@server.Id">@server.Name</option>
@@ -56,11 +56,11 @@
             {
                 <div class="glping-login-field checkbox">
                     <input id="rememberMe" name="rememberMe" type="checkbox" value="true" checked="@(_general?.RememberMeDefaultChecked ?? true)" />
-                    <label for="rememberMe">Se souvenir de moi</label>
+                    <label for="rememberMe">@T("Se souvenir de moi")</label>
                 </div>
             }
 
-            <button type="submit" class="glping-login-submit">Se connecter</button>
+            <button type="submit" class="glping-login-submit">@T("Se connecter")</button>
         </form>
     </div>
 </div>

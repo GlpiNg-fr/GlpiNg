@@ -5,13 +5,13 @@
 @inject ToastService ToastService
 @rendermode InteractiveServer
 
-<PageTitle>Authentification — GlpiNg</PageTitle>
+<PageTitle>@T("Authentification — GlpiNg")</PageTitle>
 
 <AuthTabStrip Current="config" />
 
 @if (_model is null)
 {
-    <p>Chargement…</p>
+    <p>@T("Chargement…")</p>
 }
 else
 {
@@ -19,7 +19,7 @@ else
         <div class="glping-config-body">
             <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
                 <div class="glping-config-field checkbox">
-                    <label for="auth-auto-add">Ajout automatique des utilisateurs à partir des sources externes d'authentification</label>
+                    <label for="auth-auto-add">@T("Ajout automatique des utilisateurs à partir des sources externes d'authentification")</label>
                     <label class="glping-switch">
                         <input id="auth-auto-add" type="checkbox" @bind="_model.AutoAddUsersFromExternalAuth" />
                         <span class="glping-switch-slider"></span>
@@ -27,7 +27,7 @@ else
                 </div>
 
                 <div class="glping-config-field checkbox">
-                    <label for="auth-add-without-right">Ajouter un utilisateur sans habilitation depuis un annuaire LDAP</label>
+                    <label for="auth-add-without-right">@T("Ajouter un utilisateur sans habilitation depuis un annuaire LDAP")</label>
                     <label class="glping-switch">
                         <input id="auth-add-without-right" type="checkbox" @bind="_model.AddUserWithoutRightFromLdap" />
                         <span class="glping-switch-slider"></span>
@@ -35,7 +35,7 @@ else
                 </div>
 
                 <div class="glping-config-field">
-                    <label for="auth-restored">Action quand un utilisateur est restauré dans l'annuaire LDAP</label>
+                    <label for="auth-restored">@T("Action quand un utilisateur est restauré dans l'annuaire LDAP")</label>
                     <select id="auth-restored" @bind="_model.RestoredUserAction">
                         @foreach (LdapUserPresenceAction action in Enum.GetValues<LdapUserPresenceAction>())
                         {
@@ -44,10 +44,10 @@ else
                     </select>
                 </div>
 
-                <div class="glping-fiche-block-title mt-3"><i class="ti ti-user-x"></i>Action lorsqu'un utilisateur est supprimé de l'annuaire LDAP</div>
+                <div class="glping-fiche-block-title mt-3"><i class="ti ti-user-x"></i>@T("Action lorsqu'un utilisateur est supprimé de l'annuaire LDAP")</div>
 
                 <div class="glping-config-field">
-                    <label for="auth-deleted-user">Utilisateur</label>
+                    <label for="auth-deleted-user">@T("Utilisateur")</label>
                     <select id="auth-deleted-user" @bind="_model.DeletedUserAction">
                         @foreach (LdapUserPresenceAction action in Enum.GetValues<LdapUserPresenceAction>())
                         {
@@ -57,7 +57,7 @@ else
                 </div>
 
                 <div class="glping-config-field">
-                    <label for="auth-deleted-groups">Groupes</label>
+                    <label for="auth-deleted-groups">@T("Groupes")</label>
                     <select id="auth-deleted-groups" @bind="_model.DeletedUserGroupsAction">
                         @foreach (LdapUserPresenceAction action in Enum.GetValues<LdapUserPresenceAction>())
                         {
@@ -67,7 +67,7 @@ else
                 </div>
 
                 <div class="glping-config-field">
-                    <label for="auth-deleted-hab">Habilitations</label>
+                    <label for="auth-deleted-hab">@T("Habilitations")</label>
                     <select id="auth-deleted-hab" @bind="_model.DeletedUserHabilitationsAction">
                         @foreach (LdapUserPresenceAction action in Enum.GetValues<LdapUserPresenceAction>())
                         {
@@ -77,12 +77,10 @@ else
                 </div>
 
                 <p class="hint mt-3">
-                    Seul « Ajout automatique des utilisateurs » est aujourd'hui appliqué (voir AccountController.Login) :
-                    les autres réglages ci-dessus sont conservés pour la fidélité avec GLPI mais ne pilotent aucune
-                    synchronisation — GlpiNg n'a pas de tâche planifiée de synchronisation LDAP.
+                    @T("Seul « Ajout automatique des utilisateurs » est aujourd'hui appliqué (voir AccountController.Login) : les autres réglages ci-dessus sont conservés pour la fidélité avec GLPI mais ne pilotent aucune synchronisation — GlpiNg n'a pas de tâche planifiée de synchronisation LDAP.")
                 </p>
 
-                <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+                <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? T("Enregistrement…") : T("Enregistrer"))</button>
             </EditForm>
         </div>
     </div>
@@ -111,7 +109,7 @@ else
         try
         {
             await SettingsStore.SaveSectionAsync(SectionName, _model);
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Configuration enregistrée."));
+            ToastService.Notify(new ToastMessage(ToastType.Success, T("Configuration enregistrée.")));
         }
         finally
         {
@@ -121,11 +119,11 @@ else
 
     private static string ActionLabel(LdapUserPresenceAction action) => action switch
     {
-        LdapUserPresenceAction.DoNothing => "Ne rien faire",
-        LdapUserPresenceAction.Restore => "Restaurer",
-        LdapUserPresenceAction.MoveToTrash => "Mettre en corbeille",
-        LdapUserPresenceAction.Delete => "Supprimer",
-        LdapUserPresenceAction.Deactivate => "Désactiver",
+        LdapUserPresenceAction.DoNothing => T("Ne rien faire"),
+        LdapUserPresenceAction.Restore => T("Restaurer"),
+        LdapUserPresenceAction.MoveToTrash => T("Mettre en corbeille"),
+        LdapUserPresenceAction.Delete => T("Supprimer"),
+        LdapUserPresenceAction.Deactivate => T("Désactiver"),
         _ => action.ToString(),
     };
 }
