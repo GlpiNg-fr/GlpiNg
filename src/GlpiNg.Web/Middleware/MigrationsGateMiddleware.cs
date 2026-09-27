@@ -19,6 +19,11 @@ public sealed class MigrationsGateMiddleware(RequestDelegate next)
     [
         "/update",
         "/inventory",
+        // Autres entrées du protocole agent (voir les [Route] d'AgentController).
+        // /front/inventory.php passe déjà par la règle « chemin avec extension ».
+        "/marketplace/glpiinventory",
+        "/plugins/glpiinventory",
+        "/plugins/fusioninventory",
         "/_blazor",
         "/_framework",
         "/_content",
