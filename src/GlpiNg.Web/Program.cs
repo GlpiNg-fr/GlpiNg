@@ -586,6 +586,24 @@ public class Program
             app.UseHsts();
         }
 
+        // Agent configuré avec l'URL nue du serveur (https://serveur/), comme GLPI 10 l'accepte :
+        // la racine est la page d'accueil Blazor, donc on renvoie vers /inventory les requêtes qui
+        // portent le User-Agent d'un agent. UseRouting explicite juste après : sans lui,
+        // WebApplication le place en tête du pipeline et la route "/" serait déjà choisie avant la
+        // réécriture. Après UseExceptionHandler, qui doit précéder le routage pour réexécuter /Error.
+        app.Use((context, next) =>
+        {
+            string userAgent = context.Request.Headers.UserAgent.ToString();
+            if (context.Request.Path == "/"
+                && (userAgent.Contains("GLPI-Agent", StringComparison.OrdinalIgnoreCase)
+                    || userAgent.Contains("FusionInventory-Agent", StringComparison.OrdinalIgnoreCase)))
+            {
+                context.Request.Path = "/inventory";
+            }
+            return next(context);
+        });
+        app.UseRouting();
+
         // Activation de Swagger pilotée par appsettings.json ("Swagger:Enabled", éditable
         // depuis /config) plutôt que par l'environnement : IOptionsMonitor est réévalué à
         // chaque requête, donc le changement s'applique sans redémarrage. Désactivé par défaut

@@ -39,6 +39,14 @@ namespace GlpiNg.Web.Controllers;
 /// </summary>
 [ApiController]
 [Route("inventory")]
+// URL qu'un agent peut porter en configuration selon le serveur GLPI qu'il visait : GLPI 10+
+// natif, plugin GLPI Inventory (marketplace ou plugins), ancien FusionInventory. Seule l'entrée
+// compte : getConfig annonce ensuite /inventory comme « remote » de chaque tâche. La racine
+// du site est aiguillée ici par le middleware de Program.cs (User-Agent de l'agent).
+[Route("front/inventory.php")]
+[Route("marketplace/glpiinventory")]
+[Route("plugins/glpiinventory")]
+[Route("plugins/fusioninventory")]
 [Produces("application/json")]
 [AllowAnonymous]
 public class AgentController(
