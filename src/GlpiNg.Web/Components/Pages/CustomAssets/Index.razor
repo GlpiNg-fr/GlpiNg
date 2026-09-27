@@ -2,7 +2,7 @@
 @using GlpiNg.Web.Models.CustomAssets
 @rendermode InteractiveServer
 
-<PageTitle>Actifs personnalisés — GlpiNg</PageTitle>
+<PageTitle>@T("Actifs personnalisés — GlpiNg")</PageTitle>
 
 <div class="glping-list-page">
 <div class="card">
@@ -10,14 +10,14 @@
         <div class="btn-list">
             <div class="dropdown">
                 <button type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="ti ti-search me-1"></i>Rechercher
+                    <i class="ti ti-search me-1"></i>@T("Rechercher")
                 </button>
                 <div class="dropdown-menu p-3" style="min-width: 280px;">
                     <div class="input-icon">
                         <span class="input-icon-addon">
                             <i class="ti ti-search"></i>
                         </span>
-                        <input type="text" class="form-control" placeholder="Rechercher un type..."
+                        <input type="text" class="form-control" placeholder="@(T("Rechercher un type..."))"
                                @bind="_searchTerm" @bind:event="oninput" @onkeyup="OnSearchChanged" />
                     </div>
                 </div>
@@ -25,12 +25,12 @@
         </div>
 
         <div class="btn-list align-items-center">
-            <button type="button" class="btn btn-icon" @onclick="OnRefreshAsync" title="Rafraîchir">
+            <button type="button" class="btn btn-icon" @onclick="OnRefreshAsync" title="@(T("Rafraîchir"))">
                 <i class="ti ti-refresh"></i>
             </button>
 
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newDefinitionModal">
-                <i class="ti ti-plus me-1"></i>Ajouter
+                <i class="ti ti-plus me-1"></i>@T("Ajouter")
             </button>
         </div>
     </div>
@@ -39,19 +39,19 @@
         <table class="table table-vcenter card-table">
             <thead>
                 <tr>
-                    <th>Libellé</th>
-                    <th>Nom technique</th>
-                    <th>Champs</th>
-                    <th>Actifs</th>
-                    <th>Onglets</th>
-                    <th>Actif</th>
+                    <th>@T("Libellé")</th>
+                    <th>@T("Nom technique")</th>
+                    <th>@T("Champs")</th>
+                    <th>@T("Actifs")</th>
+                    <th>@T("Onglets")</th>
+                    <th>@T("Actif")</th>
                 </tr>
             </thead>
             <tbody>
                 @if (_filtered.Count == 0)
                 {
                     <tr>
-                        <td colspan="6" class="text-center text-secondary py-4">Aucun type d'actif personnalisé.</td>
+                        <td colspan="6" class="text-center text-secondary py-4">@T("Aucun type d'actif personnalisé.")</td>
                     </tr>
                 }
                 else
@@ -68,11 +68,11 @@
                             <td>
                                 @if (definition.Fields.Count == 0)
                                 {
-                                    <span class="badge bg-secondary-lt">Aucun — nom et commentaire seulement</span>
+                                    <span class="badge bg-secondary-lt">@T("Aucun — nom et commentaire seulement")</span>
                                 }
                                 else
                                 {
-                                    <span class="text-secondary">@definition.Fields.Count champ(s)</span>
+                                    <span class="text-secondary">@T("{0} champ(s)", definition.Fields.Count)</span>
                                 }
                             </td>
                             <td class="text-secondary">
@@ -89,27 +89,27 @@
                                 <div class="d-flex flex-wrap gap-1">
                                     @if (definition.DocumentsEnabled)
                                     {
-                                        <span class="badge bg-secondary-lt">Documents</span>
+                                        <span class="badge bg-secondary-lt">@T("Documents")</span>
                                     }
                                     @if (definition.NotesEnabled)
                                     {
-                                        <span class="badge bg-secondary-lt">Notes</span>
+                                        <span class="badge bg-secondary-lt">@T("Notes")</span>
                                     }
                                     @if (definition.HistoryEnabled)
                                     {
-                                        <span class="badge bg-secondary-lt">Historique</span>
+                                        <span class="badge bg-secondary-lt">@T("Historique")</span>
                                     }
                                 </div>
                             </td>
                             <td>
                                 @if (definition.IsActive)
                                 {
-                                    <span class="badge bg-success-lt">Oui</span>
+                                    <span class="badge bg-success-lt">@T("Oui")</span>
                                 }
                                 else
                                 {
                                     @* Un type inactif garde ses actifs : le dire évite de croire qu'ils ont disparu. *@
-                                    <span class="badge bg-warning-lt">Non — masqué du menu Parc</span>
+                                    <span class="badge bg-warning-lt">@T("Non — masqué du menu Parc")</span>
                                 }
                             </td>
                         </tr>
@@ -125,8 +125,8 @@
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="ti ti-tool me-2"></i>Nouvel élément - Actif personnalisé</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                <h5 class="modal-title"><i class="ti ti-tool me-2"></i>@T("Nouvel élément - Actif personnalisé")</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@(T("Fermer"))"></button>
             </div>
             <div class="modal-body">
                 @if (_createError is not null)
@@ -135,28 +135,28 @@
                 }
 
                 <div class="glping-fiche-field">
-                    <label>Libellé au singulier</label>
-                    <input class="form-control" placeholder="Vidéoprojecteur"
+                    <label>@T("Libellé au singulier")</label>
+                    <input class="form-control" placeholder="@(T("Vidéoprojecteur"))"
                            value="@_newDefinition.LabelSingular" @oninput="OnSingularChanged" />
                 </div>
                 <div class="glping-fiche-field">
-                    <label>Libellé au pluriel</label>
-                    <input class="form-control" placeholder="Vidéoprojecteurs"
+                    <label>@T("Libellé au pluriel")</label>
+                    <input class="form-control" placeholder="@(T("Vidéoprojecteurs"))"
                            @bind="_newDefinition.LabelPlural" @bind:event="oninput" />
                 </div>
                 <div class="glping-fiche-field">
-                    <label>Nom technique</label>
+                    <label>@T("Nom technique")</label>
                     <input class="form-control" @bind="_newDefinition.SystemName" @bind:event="oninput" />
                     <p class="hint">
                         Sert d'adresse (<code>/parc/custom/@(_newDefinition.SystemName)</code>) et de
-                        référence pour les documents et les notes. Lettres et chiffres sans espace ni
-                        accent, et définitif : le changer détacherait les pièces jointes déjà posées.
+                        @T("référence pour les documents et les notes. Lettres et chiffres sans espace ni")
+                        @T("accent, et définitif : le changer détacherait les pièces jointes déjà posées.")
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-warning" disabled="@(!CanCreate)" @onclick="CreateAsync">
-                    <i class="ti ti-plus me-1"></i>Ajouter
+                    <i class="ti ti-plus me-1"></i>@T("Ajouter")
                 </button>
             </div>
         </div>

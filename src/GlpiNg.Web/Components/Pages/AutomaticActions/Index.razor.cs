@@ -5,6 +5,7 @@ using GlpiNg.Modules.Cron.Models;
 using GlpiNg.Web.Data;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Web.Components.Pages.AutomaticActions;
 
@@ -85,7 +86,7 @@ public partial class Index : ComponentBase
             bool success = await Runner.RunAsync(row.Task.Key, CancellationToken.None);
             ToastService.Notify(new ToastMessage(
                 success ? ToastType.Success : ToastType.Danger,
-                success ? $"« {row.Task.Name} » exécutée avec succès." : $"« {row.Task.Name} » a échoué."));
+                success ? Tr.T("« {0} » exécutée avec succès.", row.Task.Name) : Tr.T("« {0} » a échoué.", row.Task.Name)));
         }
         finally
         {
@@ -98,5 +99,5 @@ public partial class Index : ComponentBase
     private static string FrequencyLabel(Row row) => FrequencyFormat.Label(row.State.FrequencyMinutes ?? row.Task.DefaultFrequencyMinutes);
 
     private string LastRunLabel(AutomaticActionState state) =>
-        state.LastRunAt is DateTime lastRunAt ? Display.DateTime(lastRunAt)! : "Jamais exécutée";
+        state.LastRunAt is DateTime lastRunAt ? Display.DateTime(lastRunAt)! : Tr.T("Jamais exécutée");
 }

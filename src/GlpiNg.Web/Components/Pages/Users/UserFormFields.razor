@@ -3,55 +3,55 @@
 <div class="row">
     <div class="col-md-6">
         <div class="glping-fiche-field">
-            <label>Identifiant</label>
+            <label>@T("Identifiant")</label>
             <input class="form-control" @bind="User.UserName" @bind:event="oninput" @bind:after="NotifyChangedAsync" />
         </div>
         <div class="glping-fiche-field">
-            <label>Nom de famille</label>
+            <label>@T("Nom de famille")</label>
             <input class="form-control" @bind="User.LastName" />
         </div>
         <div class="glping-fiche-field">
-            <label>Actif</label>
+            <label>@T("Actif")</label>
             <select class="form-select" value="@(User.IsActive ? "true" : "false")" @onchange="@(e => User.IsActive = e.Value?.ToString() == "true")">
-                <option value="false">Non</option>
-                <option value="true">Oui</option>
+                <option value="false">@T("Non")</option>
+                <option value="true">@T("Oui")</option>
             </select>
         </div>
         <div class="glping-fiche-field">
-            <label>Lieu</label>
+            <label>@T("Lieu")</label>
             <input class="form-control" @bind="User.Location" />
         </div>
     </div>
     <div class="col-md-6">
         <div class="glping-fiche-field">
-            <label>Image</label>
+            <label>@T("Image")</label>
             <span style="display:inline-flex;align-items:center;justify-content:center;width:2.5rem;height:2.5rem;border-radius:6px;color:#fff;font-size:1rem;font-weight:600;background:@UserAvatar.Color(User)">@UserAvatar.Initials(User)</span>
         </div>
         <div class="glping-fiche-field">
-            <label>Prénom</label>
+            <label>@T("Prénom")</label>
             <input class="form-control" @bind="User.FirstName" />
         </div>
         <div class="glping-fiche-field">
-            <label>Administrateur</label>
+            <label>@T("Administrateur")</label>
             <select class="form-select" value="@(User.IsAdmin ? "true" : "false")" @onchange="@(e => User.IsAdmin = e.Value?.ToString() == "true")">
-                <option value="false">Non</option>
-                <option value="true">Oui</option>
+                <option value="false">@T("Non")</option>
+                <option value="true">@T("Oui")</option>
             </select>
         </div>
     </div>
 </div>
 
-<div class="glping-fiche-block-title mt-2"><i class="ti ti-address-book"></i>Information de contact</div>
+<div class="glping-fiche-block-title mt-2"><i class="ti ti-address-book"></i>@T("Information de contact")</div>
 <div class="row">
     <div class="col-md-6">
         <div class="glping-fiche-field">
-            <label>E-mail</label>
+            <label>@T("E-mail")</label>
             <input class="form-control" type="email" @bind="User.Email" />
         </div>
     </div>
     <div class="col-md-6">
         <div class="glping-fiche-field">
-            <label>Téléphone</label>
+            <label>@T("Téléphone")</label>
             <input class="form-control" @bind="User.Phone" />
         </div>
     </div>

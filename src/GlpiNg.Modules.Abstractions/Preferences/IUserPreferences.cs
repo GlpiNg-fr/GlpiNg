@@ -88,6 +88,15 @@ public sealed record UserPreferenceValues
     /// <summary>Contraste élevé : texte à pleine encre, bordures franches, liens soulignés.</summary>
     public bool HighContrast { get; init; }
 
+    /// <summary>
+    /// Langue de l'interface, au format de GLPI (« fr_FR », « en_GB », « pt_BR »…). Seule la langue
+    /// des textes en dépend : dates et nombres suivent leurs propres préférences.
+    /// </summary>
+    public string Language { get; init; } = "fr_FR";
+
+    /// <summary>Nom de culture .NET de <see cref="Language"/> (« fr-FR »).</summary>
+    public string CultureName => Language.Replace('_', '-');
+
     public string? FormatMac(string? mac) => MacAddressFormatter.Format(mac, MacAddressFormat);
 
     // ---- Dates ------------------------------------------------------------------------------

@@ -3,63 +3,63 @@
 <div class="row">
     <div class="col-md-6">
         <div class="glping-fiche-field">
-            <label>Téléphone</label>
+            <label>@T("Téléphone")</label>
             <input class="form-control" @bind="Entity.Phone" />
         </div>
         <div class="glping-fiche-field">
-            <label>Matricule</label>
+            <label>@T("Matricule")</label>
             <input class="form-control" @bind="Entity.Registration" />
         </div>
         <div class="glping-fiche-field">
-            <label>Fax</label>
+            <label>@T("Fax")</label>
             <input class="form-control" @bind="Entity.Fax" />
         </div>
         <div class="glping-fiche-field">
-            <label>Site Web</label>
+            <label>@T("Site Web")</label>
             <input class="form-control" @bind="Entity.Website" />
         </div>
         <div class="glping-fiche-field">
-            <label>E-mail</label>
+            <label>@T("E-mail")</label>
             <input class="form-control" type="email" @bind="Entity.Email" />
         </div>
     </div>
     <div class="col-md-6">
         <div class="glping-fiche-field">
-            <label>Code postal</label>
+            <label>@T("Code postal")</label>
             <input class="form-control" @bind="Entity.Postcode" />
         </div>
         <div class="glping-fiche-field">
-            <label>Adresse</label>
+            <label>@T("Adresse")</label>
             <textarea class="form-control" rows="2" @bind="Entity.Address"></textarea>
         </div>
         <div class="glping-fiche-field">
-            <label>Ville</label>
+            <label>@T("Ville")</label>
             <input class="form-control" @bind="Entity.Town" />
         </div>
         <div class="glping-fiche-field">
-            <label>État</label>
+            <label>@T("État")</label>
             <input class="form-control" @bind="Entity.State" />
         </div>
         <div class="glping-fiche-field">
-            <label>Pays</label>
+            <label>@T("Pays")</label>
             <input class="form-control" @bind="Entity.Country" />
         </div>
     </div>
 </div>
 
-<div class="glping-fiche-block-title mt-2"><i class="ti ti-map-pin"></i>Emplacement sur la carte</div>
+<div class="glping-fiche-block-title mt-2"><i class="ti ti-map-pin"></i>@T("Emplacement sur la carte")</div>
 <div class="row">
     <div class="col-md-6">
         <div class="glping-fiche-field">
-            <label>Longitude</label>
+            <label>@T("Longitude")</label>
             <input class="form-control" @bind="Entity.Longitude" />
         </div>
         <div class="glping-fiche-field">
-            <label>Latitude</label>
+            <label>@T("Latitude")</label>
             <input class="form-control" @bind="Entity.Latitude" />
         </div>
         <div class="glping-fiche-field">
-            <label>Altitude</label>
+            <label>@T("Altitude")</label>
             <input class="form-control" @bind="Entity.Altitude" />
         </div>
     </div>

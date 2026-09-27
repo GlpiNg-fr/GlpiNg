@@ -3,22 +3,22 @@
         <ul class="nav nav-tabs card-header-tabs" style="border-bottom: none;">
             <li class="nav-item">
                 <a href="/config/auth/config" class="nav-link @(Current == "config" ? "active" : "")">
-                    <i class="ti ti-settings me-1"></i>Configuration
+                    <i class="ti ti-settings me-1"></i>@T("Configuration")
                 </a>
             </li>
             <li class="nav-item">
                 <a href="/config/auth/ldap" class="nav-link @(Current == "ldap" ? "active" : "")">
-                    <i class="ti ti-address-book me-1"></i>Annuaire LDAP
+                    <i class="ti ti-address-book me-1"></i>@T("Annuaire LDAP")
                 </a>
             </li>
             <li class="nav-item">
                 <a href="/config/auth/mail" class="nav-link @(Current == "mail" ? "active" : "")">
-                    <i class="ti ti-mail me-1"></i>Serveur mails
+                    <i class="ti ti-mail me-1"></i>@T("Serveur mails")
                 </a>
             </li>
             <li class="nav-item">
                 <a href="/config/auth/others" class="nav-link @(Current == "others" ? "active" : "")">
-                    <i class="ti ti-key me-1"></i>Autres méthodes d'authentification
+                    <i class="ti ti-key me-1"></i>@T("Autres méthodes d'authentification")
                 </a>
             </li>
         </ul>

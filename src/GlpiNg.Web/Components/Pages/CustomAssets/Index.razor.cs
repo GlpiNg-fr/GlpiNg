@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Web.Components.Pages.CustomAssets;
 
@@ -117,7 +118,7 @@ public partial class Index : ComponentBase
 
         // Un nom ne peut pas commencer par un chiffre : il sert d'identifiant, pas de libellé.
         string slug = builder.ToString();
-        return slug.Length > 0 && char.IsDigit(slug[0]) ? "Type" + slug : slug;
+        return slug.Length > 0 && char.IsDigit(slug[0]) ? Tr.T("Type") + slug : slug;
     }
 
     private async Task CreateAsync()
@@ -132,7 +133,7 @@ public partial class Index : ComponentBase
         if (await db.CustomAssetDefinitions.AsNoTracking()
                 .AnyAsync(definition => definition.SystemName == _newDefinition.SystemName))
         {
-            _createError = "Ce nom technique est déjà utilisé par un autre type.";
+            _createError = Tr.T("Ce nom technique est déjà utilisé par un autre type.");
             return;
         }
 

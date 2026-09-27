@@ -164,8 +164,8 @@ pages qui s'ouvrent depuis le menu mais répondent 404 quand on colle leur adres
   ordre de l'historique, délimiteur CSV et notifications pour ses propres
   actions. Chaque réglage laissé sur « Réglage de l'instance » (valeur nulle sur
   le compte) suit Configuration > Valeurs par défaut et en suit les changements ;
-  « Jamais » pour les compteurs côté instance les interdit à tous. La langue n'est
-  pas proposée (l'interface n'existe qu'en français).
+  « Jamais » pour les compteurs côté instance les interdit à tous. La **langue**
+  s'y choisit aussi (voir « Langues » ci-dessous).
 
   Mécanique : `UserPreferenceValues` (Abstractions) porte les valeurs résolues
   **et** les règles de formatage ; `UserDisplay`, injecté dans tous les composants
@@ -184,6 +184,22 @@ pages qui s'ouvrent depuis le menu mais répondent 404 quand on colle leur adres
   (« lundi 21 septembre »), et les calculs métier des calendriers de niveau de
   service, qui raisonnent dans le fuseau de l'organisation. Les rapports et les
   exports (CSV, tableur, PDF) les suivent : dates, fuseau et délimiteur.
+- **Langues** (onglet Affichage des préférences, défaut de l'instance dans Valeurs
+  par défaut) : les quinze langues de GLPI — français (France, Canada, Belgique),
+  anglais (GB, US), espagnol, allemand, italien, portugais (Portugal, Brésil),
+  néerlandais, russe, chinois simplifié, japonais, coréen. À la manière de gettext,
+  **la clé est le texte français lui-même** : `@T("Enregistrer")` dans le balisage,
+  `Tr.T("...")` dans le code, `T("Supprimer {0} élément(s) ?", count)` avec des
+  valeurs. Les catalogues sont des fichiers JSON par langue (`src/GlpiNg.Web/i18n/`,
+  texte français → traduction), chargés au démarrage ; les variantes partagent le
+  catalogue de leur langue (`en.json` pour GB et US, `pt.json` pour le Portugal et le
+  Brésil), le français n'en a pas. Un texte absent d'un catalogue s'affiche en
+  français. `UserPreferencesPreloader` pose `CultureInfo.CurrentUICulture` à chaque
+  requête et à l'ouverture de chaque circuit Blazor : changer de langue recharge
+  donc la page. Seuls les textes et les noms de jours/mois changent ; dates et
+  nombres suivent leurs propres préférences. Restent en français, volontairement :
+  les données saisies (noms, catégories, statuts créés par l'utilisateur), les
+  textes d'historique et les journaux, figés à l'enregistrement.
 - **Thèmes** (onglet Apparence des préférences, défaut de l'instance dans Valeurs
   par défaut) : les huit palettes de GLPI — Auror (par défaut), Classic, Dark,
   Darker, Midnight, Light Blue, Vintage, Ice Cream —, reprises de ses sources
@@ -1185,8 +1201,10 @@ matrice appliquée est celle de GLPI par défaut, en dur.
 - **Pas d'API REST générique** — rien d'équivalent à `apirest.php` (CRUD et
   recherche par itemtype). Les seuls endpoints exposés sont `/inventory`,
   `/oauth2/token`, `/admin/import/glpi` et l'upload de fichiers de paquet.
-- **Pas d'internationalisation** — aucun `.resx` ni `IStringLocalizer`, l'UI est
-  en français en dur.
+- **Traductions à relire** — les dix catalogues (toutes les langues sauf le français) ont été
+  produits d'un bloc et n'ont pas été relus par des locuteurs natifs ; certaines
+  phrases longues, coupées par du balisage (`<code>`, `<strong>`), sont traduites
+  par morceaux.
 - **Actions massives limitées aux Ordinateurs** : statut, lieu et utilisateur
   assigné y sont modifiables sur une sélection ; les autres listes n'ont que la
   suppression. L'export reste lui aussi limité à cette page

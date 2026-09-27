@@ -133,6 +133,7 @@ public partial class MainLayout : IDisposable
         var modules = await SettingsStore.ReadSectionAsync<ModulesSettings>("ModulesSettings");
         Groups = BuildGroups(modules, await LoadCustomAssetItemsAsync());
         Nav.LocationChanged += OnLocationChanged;
+        SettingsStore.SectionSaved += OnSettingsSectionSaved;
         Breadcrumb = BuildBreadcrumb();
         _expandedGroup = FindGroupForPath();
 
@@ -263,6 +264,35 @@ public partial class MainLayout : IDisposable
         InvokeAsync(StateHasChanged);
     }
 
+    /// <summary>
+    /// Un module ou une entrée de menu vient d'être activé ou désactivé dans /config — peut-être par
+    /// un autre utilisateur : le menu de ce circuit se reconstruit sur place, sans rechargement. Levé
+    /// sur le fil de l'enregistrement, d'où le passage par InvokeAsync vers le circuit de ce menu.
+    /// </summary>
+    private void OnSettingsSectionSaved(string sectionName)
+    {
+        if (sectionName != "ModulesSettings")
+        {
+            return;
+        }
+
+        _ = InvokeAsync(async () =>
+        {
+            try
+            {
+                var modules = await SettingsStore.ReadSectionAsync<ModulesSettings>("ModulesSettings");
+                Groups = BuildGroups(modules, await LoadCustomAssetItemsAsync());
+                Breadcrumb = BuildBreadcrumb();
+                _expandedGroup = FindGroupForPath() ?? (Groups.Any(g => g.Key == _expandedGroup) ? _expandedGroup : null);
+                StateHasChanged();
+            }
+            catch (Exception ex) when (ex is ObjectDisposedException or InvalidOperationException)
+            {
+                // Circuit fermé entre l'enregistrement et la mise à jour : plus de menu à redessiner.
+            }
+        });
+    }
+
     private string? FindGroupForPath()
     {
         var path = "/" + new Uri(Nav.Uri).AbsolutePath.Trim('/');
@@ -382,5 +412,6 @@ public partial class MainLayout : IDisposable
     public void Dispose()
     {
         Nav.LocationChanged -= OnLocationChanged;
+        SettingsStore.SectionSaved -= OnSettingsSectionSaved;
     }
 }

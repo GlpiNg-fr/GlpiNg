@@ -3,12 +3,12 @@
 @using GlpiNg.Web.Services
 @rendermode InteractiveServer
 
-<PageTitle>Préférences — GlpiNg</PageTitle>
+<PageTitle>@T("Préférences — GlpiNg")</PageTitle>
 
 <div class="glping-fiche-topbar">
     <div class="glping-fiche-crumb">
         <i class="ti ti-adjustments"></i>
-        <span>Préférences</span>
+        <span>@T("Préférences")</span>
     </div>
 </div>
 
@@ -21,36 +21,46 @@
         {
             <button type="button" class="glping-fiche-tab-item @(_activeTab == key ? "active" : "")" @onclick="() => _activeTab = key">
                 <i class="ti @icon"></i>
-                <span>@label</span>
+                <span>@T(label)</span>
             </button>
         }
     </aside>
 
     <div class="glping-fiche-panel glping-fiche-panel-fill">
         <p class="text-secondary small">
-            Chaque réglage laissé sur « Réglage de l'instance » suit Configuration &gt; Valeurs par défaut,
-            et en suivra les changements. La langue n'est pas proposée : GlpiNg n'existe qu'en français.
+            @T("Chaque réglage laissé sur « Réglage de l'instance » suit Configuration > Valeurs par défaut, et en suivra les changements.")
         </p>
 
         @switch (_activeTab)
         {
             case "affichage":
                 <div class="glping-fiche-block">
-                    <div class="glping-fiche-block-title"><i class="ti ti-layout-sidebar"></i>Affichage</div>
+                    <div class="glping-fiche-block-title"><i class="ti ti-layout-sidebar"></i>@T("Affichage")</div>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="glping-fiche-field">
-                                <label>Réduire le menu latéral</label>
-                                <select class="form-select" value="@(_sidebarCollapsed ? "true" : "false")" @onchange="@(e => _sidebarCollapsed = e.Value?.ToString() == "true")">
-                                    <option value="false">Non</option>
-                                    <option value="true">Oui</option>
+                                <label>@T("Langue")</label>
+                                <select class="form-select" value="@_language" @onchange="@(e => _language = e.Value?.ToString() ?? string.Empty)">
+                                    <option value="">@T("Réglage de l'instance ({0})", LanguageCatalog.NativeNameOf(_instance.Language))</option>
+                                    @* Chaque langue sous son propre nom, jamais traduit : c'est ainsi qu'on reconnaît la sienne. *@
+                                    @foreach ((string languageCode, string nativeName) in LanguageCatalog.Languages)
+                                    {
+                                        <option value="@languageCode">@nativeName</option>
+                                    }
                                 </select>
                             </div>
                             <div class="glping-fiche-field">
-                                <label>Éléments par page</label>
+                                <label>@T("Réduire le menu latéral")</label>
+                                <select class="form-select" value="@(_sidebarCollapsed ? "true" : "false")" @onchange="@(e => _sidebarCollapsed = e.Value?.ToString() == "true")">
+                                    <option value="false">@T("Non")</option>
+                                    <option value="true">@T("Oui")</option>
+                                </select>
+                            </div>
+                            <div class="glping-fiche-field">
+                                <label>@T("Éléments par page")</label>
                                 <select class="form-select" value="@_itemsPerPage.ToString()"
                                         @onchange="@(e => _itemsPerPage = int.TryParse((string?)e.Value, out int size) ? size : 0)">
-                                    <option value="0">Réglage de l'instance (@InstanceItemsPerPage)</option>
+                                    <option value="0">@T("Réglage de l'instance ({0})", InstanceItemsPerPage)</option>
                                     @foreach (int size in UserPreferencesProvider.ItemsPerPageOptions)
                                     {
                                         <option value="@size">@size</option>
@@ -58,7 +68,7 @@
                                 </select>
                             </div>
                             <div class="glping-fiche-field">
-                                <label>Format des adresses MAC</label>
+                                <label>@T("Format des adresses MAC")</label>
                                 <select class="form-select" value="@((int)_macAddressFormat)"
                                         @onchange="@(e => _macAddressFormat = int.TryParse((string?)e.Value, out int format) && Enum.IsDefined((MacAddressFormat)format) ? (MacAddressFormat)format : MacAddressFormat.Default)">
                                     @foreach (MacAddressFormat format in Enum.GetValues<MacAddressFormat>())
@@ -67,7 +77,7 @@
                                            se reconnaît immédiatement. *@
                                         <option value="@((int)format)">
                                             @(format == MacAddressFormat.Default
-                                                ? $"Réglage de l'instance ({MacAddressFormatter.Sample(_instanceMacFormat)})"
+                                                ? T("Réglage de l'instance ({0})", MacAddressFormatter.Sample(_instanceMacFormat))
                                                 : MacAddressFormatter.Sample(format))
                                         </option>
                                     }
@@ -76,100 +86,94 @@
                         </div>
                         <div class="col-md-6">
                             <div class="glping-fiche-field">
-                                <label>Afficher les compteurs</label>
+                                <label>@T("Afficher les compteurs")</label>
                                 <select class="form-select" value="@_showCounters" disabled="@CountersForbidden" @onchange="@(e => _showCounters = e.Value?.ToString() ?? string.Empty)">
-                                    <option value="">Réglage de l'instance (@InstanceCountersLabel)</option>
-                                    <option value="true">Oui</option>
-                                    <option value="false">Non</option>
+                                    <option value="">@T("Réglage de l'instance ({0})", InstanceCountersLabel)</option>
+                                    <option value="true">@T("Oui")</option>
+                                    <option value="false">@T("Non")</option>
                                 </select>
                             </div>
                             @if (CountersForbidden)
                             {
-                                <p class="hint">L'instance les interdit à tous (« Jamais ») : ce choix ne peut pas être changé ici.</p>
+                                <p class="hint">@T("L'instance les interdit à tous (« Jamais ») : ce choix ne peut pas être changé ici.")</p>
                             }
                             <div class="glping-fiche-field">
-                                <label>Afficher les ID</label>
+                                <label>@T("Afficher les ID")</label>
                                 <select class="form-select" value="@_showIds" @onchange="@(e => _showIds = e.Value?.ToString() ?? string.Empty)">
-                                    <option value="">Réglage de l'instance (@YesNo(_instance.ShowGlpiIds))</option>
-                                    <option value="true">Oui</option>
-                                    <option value="false">Non</option>
+                                    <option value="">@T("Réglage de l'instance ({0})", YesNo(_instance.ShowGlpiIds))</option>
+                                    <option value="true">@T("Oui")</option>
+                                    <option value="false">@T("Non")</option>
                                 </select>
                             </div>
                         </div>
                     </div>
                     <p class="text-secondary small mb-0">
-                        Le nombre d'éléments par page s'applique à l'ouverture d'une liste ; il reste modifiable au
-                        pied de chaque tableau. Le format des adresses MAC ne change que l'affichage. Les compteurs
-                        sont ceux des onglets des fiches ; les ID suivent le nom des utilisateurs, groupes, entités
-                        et profils dans les listes de choix.
+                        @T("Le nombre d'éléments par page s'applique à l'ouverture d'une liste ; il reste modifiable au pied de chaque tableau. Le format des adresses MAC ne change que l'affichage. Les compteurs sont ceux des onglets des fiches ; les ID suivent le nom des utilisateurs, groupes, entités et profils dans les listes de choix.")
                     </p>
                 </div>
                 break;
 
             case "apparence":
                 <div class="glping-fiche-block">
-                    <div class="glping-fiche-block-title"><i class="ti ti-palette"></i>Palette de couleur</div>
-                    <div class="glping-palette-grid" role="radiogroup" aria-label="Palette de couleur" @ref="_paletteGrid">
+                    <div class="glping-fiche-block-title"><i class="ti ti-palette"></i>@T("Palette de couleur")</div>
+                    <div class="glping-palette-grid" role="radiogroup" aria-label="@(T("Palette de couleur"))" @ref="_paletteGrid">
                         @{
                             string instanceKey = PaletteCatalog.KeyOf(_instance.ColorPalette);
                         }
                         @* La première vignette suit l'instance : elle montre la palette qu'elle applique
                            aujourd'hui, et suivra celle qui la remplacera. *@
-                        @PaletteCard(Inherit, $"Réglage de l'instance ({InstancePaletteLabel})", instanceKey)
+                        @PaletteCard(Inherit, T("Réglage de l'instance ({0})", InstancePaletteLabel), instanceKey)
                         @foreach ((string label, string key) in PaletteCatalog.Palettes)
                         {
                             @PaletteCard(label, label, key)
                         }
                     </div>
                     <p class="text-secondary small mt-2 mb-0">
-                        Palettes de GLPI. Darker et Midnight passent toute l'interface en sombre ; « Dark »,
-                        comme dans GLPI, garde des pages claires sous un menu très sombre. Laissez la souris deux
-                        secondes sur une palette pour l'essayer sur toute la page ; elle n'est gardée qu'avec Sauvegarder.
+                        @T("Palettes de GLPI. Darker et Midnight passent toute l'interface en sombre ; « Dark », comme dans GLPI, garde des pages claires sous un menu très sombre. Laissez la souris deux secondes sur une palette pour l'essayer sur toute la page ; elle n'est gardée qu'avec Sauvegarder.")
                     </p>
                 </div>
 
                 <div class="glping-fiche-block">
-                    <div class="glping-fiche-block-title"><i class="ti ti-contrast"></i>Accessibilité</div>
+                    <div class="glping-fiche-block-title"><i class="ti ti-contrast"></i>@T("Accessibilité")</div>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="glping-fiche-field">
-                                <label>Contraste élevé</label>
+                                <label>@T("Contraste élevé")</label>
                                 <select class="form-select" value="@_highContrast" @onchange="@(e => _highContrast = e.Value?.ToString() ?? string.Empty)">
-                                    <option value="">Réglage de l'instance (@YesNo(_instance.HighContrast))</option>
-                                    <option value="true">Oui</option>
-                                    <option value="false">Non</option>
+                                    <option value="">@T("Réglage de l'instance ({0})", YesNo(_instance.HighContrast))</option>
+                                    <option value="true">@T("Oui")</option>
+                                    <option value="false">@T("Non")</option>
                                 </select>
                             </div>
                         </div>
                     </div>
                     <p class="text-secondary small mb-0">
-                        Texte à pleine encre, bordures franches, liens soulignés et focus clavier bien visible,
-                        quelle que soit la palette.
+                        @T("Texte à pleine encre, bordures franches, liens soulignés et focus clavier bien visible, quelle que soit la palette.")
                     </p>
                 </div>
                 break;
 
             case "dates":
                 <div class="glping-fiche-block">
-                    <div class="glping-fiche-block-title"><i class="ti ti-calendar-time"></i>Dates et heures</div>
+                    <div class="glping-fiche-block-title"><i class="ti ti-calendar-time"></i>@T("Dates et heures")</div>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="glping-fiche-field">
-                                <label>Format des dates</label>
+                                <label>@T("Format des dates")</label>
                                 <select class="form-select" value="@_dateFormat" @onchange="@(e => _dateFormat = e.Value?.ToString() ?? string.Empty)">
-                                    <option value="">Réglage de l'instance (@DateFormatLabel(_instance.DateFormat))</option>
-                                    <option value="ymd">AAAA-MM-JJ</option>
-                                    <option value="dmy">JJ-MM-AAAA</option>
-                                    <option value="mdy">MM-JJ-AAAA</option>
+                                    <option value="">@T("Réglage de l'instance ({0})", DateFormatLabel(_instance.DateFormat))</option>
+                                    <option value="ymd">@T("AAAA-MM-JJ")</option>
+                                    <option value="dmy">@T("JJ-MM-AAAA")</option>
+                                    <option value="mdy">@T("MM-JJ-AAAA")</option>
                                 </select>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="glping-fiche-field">
-                                <label>Fuseau horaire</label>
+                                <label>@T("Fuseau horaire")</label>
                                 <select class="form-select" value="@_timezone" @onchange="@(e => _timezone = e.Value?.ToString() ?? string.Empty)">
-                                    <option value="">Réglage de l'instance (@TimezoneLabel(_instance.Timezone))</option>
-                                    <option value="server">Fuseau du serveur</option>
+                                    <option value="">@T("Réglage de l'instance ({0})", TimezoneLabel(_instance.Timezone))</option>
+                                    <option value="server">@T("Fuseau du serveur")</option>
                                     @foreach ((string id, string label) in _timezones)
                                     {
                                         <option value="@id">@label</option>
@@ -179,87 +183,85 @@
                         </div>
                     </div>
                     <p class="text-secondary small mb-0">
-                        Aperçu : <span class="fw-semibold">@Preview</span>. Le fuseau s'applique aux instants
-                        enregistrés par l'application (ouverture d'un ticket, dernier contact d'un agent...). Les
-                        échéances et les planifications saisies à la main restent à l'heure où elles ont été saisies.
+                        @T("Aperçu :") <span class="fw-semibold">@Preview</span>@T(". Le fuseau s'applique aux instants enregistrés par l'application (ouverture d'un ticket, dernier contact d'un agent...). Les échéances et les planifications saisies à la main restent à l'heure où elles ont été saisies.")
                     </p>
                 </div>
                 break;
 
             case "personnes":
                 <div class="glping-fiche-block">
-                    <div class="glping-fiche-block-title"><i class="ti ti-users"></i>Personnes</div>
+                    <div class="glping-fiche-block-title"><i class="ti ti-users"></i>@T("Personnes")</div>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="glping-fiche-field">
-                                <label>Ordre d'affichage du nom complet</label>
+                                <label>@T("Ordre d'affichage du nom complet")</label>
                                 <select class="form-select" value="@_nameOrder" @onchange="@(e => _nameOrder = e.Value?.ToString() ?? string.Empty)">
-                                    <option value="">Réglage de l'instance (@NameOrderLabel(_instance.FullNameOrder))</option>
-                                    <option value="NomPrenom">Nom Prénom</option>
-                                    <option value="PrenomNom">Prénom Nom</option>
+                                    <option value="">@T("Réglage de l'instance ({0})", NameOrderLabel(_instance.FullNameOrder))</option>
+                                    <option value="NomPrenom">@T("Nom Prénom")</option>
+                                    <option value="PrenomNom">@T("Prénom Nom")</option>
                                 </select>
                             </div>
                         </div>
                     </div>
-                    <p class="text-secondary small mb-0">Pour les comptes dont le nom et le prénom sont renseignés.</p>
+                    <p class="text-secondary small mb-0">@T("Pour les comptes dont le nom et le prénom sont renseignés.")</p>
                 </div>
                 break;
 
             case "historique":
                 <div class="glping-fiche-block">
-                    <div class="glping-fiche-block-title"><i class="ti ti-history"></i>Historique</div>
+                    <div class="glping-fiche-block-title"><i class="ti ti-history"></i>@T("Historique")</div>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="glping-fiche-field">
-                                <label>Ordre de l'historique</label>
+                                <label>@T("Ordre de l'historique")</label>
                                 <select class="form-select" value="@_historyOrder" @onchange="@(e => _historyOrder = e.Value?.ToString() ?? string.Empty)">
-                                    <option value="">Réglage de l'instance (@HistoryOrderLabel(_instance.HistoryOrder))</option>
-                                    <option value="natural">Anciennes entrées en premier</option>
-                                    <option value="reverse">Nouvelles entrées en premier</option>
+                                    <option value="">@T("Réglage de l'instance ({0})", HistoryOrderLabel(_instance.HistoryOrder))</option>
+                                    <option value="natural">@T("Anciennes entrées en premier")</option>
+                                    <option value="reverse">@T("Nouvelles entrées en premier")</option>
                                 </select>
                             </div>
                         </div>
                     </div>
-                    <p class="text-secondary small mb-0">Onglets Historique des fiches et fils de suivis de l'assistance.</p>
+                    <p class="text-secondary small mb-0">@T("Onglets Historique des fiches et fils de suivis de l'assistance.")</p>
                 </div>
                 break;
 
             case "exports":
                 <div class="glping-fiche-block">
-                    <div class="glping-fiche-block-title"><i class="ti ti-file-export"></i>Exports</div>
+                    <div class="glping-fiche-block-title"><i class="ti ti-file-export"></i>@T("Exports")</div>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="glping-fiche-field">
-                                <label>Délimiteur CSV</label>
+                                <label>@T("Délimiteur CSV")</label>
                                 <select class="form-select" value="@_csvDelimiter" @onchange="@(e => _csvDelimiter = e.Value?.ToString() ?? string.Empty)">
-                                    <option value="">Réglage de l'instance (@_instance.CsvDelimiter)</option>
+                                    <option value="">@T("Réglage de l'instance ({0})", _instance.CsvDelimiter)</option>
                                     <option value=";">;</option>
                                     <option value=",">,</option>
                                 </select>
                             </div>
                         </div>
                     </div>
-                    <p class="text-secondary small mb-0">« ; » pour Excel en français, « , » pour la plupart des autres outils.</p>
+                    <p class="text-secondary small mb-0">@T("« ; » pour Excel en français, « , » pour la plupart des autres outils.")</p>
                 </div>
                 break;
 
             case "notifications":
                 <div class="glping-fiche-block">
-                    <div class="glping-fiche-block-title"><i class="ti ti-bell"></i>Notifications</div>
+                    <div class="glping-fiche-block-title"><i class="ti ti-bell"></i>@T("Notifications")</div>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="glping-fiche-field">
-                                <label>Notifications pour mes changements</label>
+                                <label>@T("Notifications pour mes changements")</label>
                                 <select class="form-select" value="@_notifyOnMyChanges" @onchange="@(e => _notifyOnMyChanges = e.Value?.ToString() ?? string.Empty)">
-                                    <option value="">Réglage de l'instance (@YesNo(_instance.NotifyOnMyChanges))</option>
-                                    <option value="true">Oui</option>
-                                    <option value="false">Non</option>
+                                    <option value="">@T("Réglage de l'instance ({0})", YesNo(_instance.NotifyOnMyChanges))</option>
+                                    <option value="true">@T("Oui")</option>
+                                    <option value="false">@T("Non")</option>
                                 </select>
                             </div>
                         </div>
                     </div>
                     <p class="text-secondary small mb-0">
-                        Sur « Non », un courriel déclenché par votre propre action ne vous est pas envoyé.
+                        @T("Sur « Non », un courriel déclenché par votre propre action ne vous est pas envoyé.")
                     </p>
                 </div>
                 break;
@@ -267,7 +269,7 @@
 
         <div class="d-flex justify-content-end gap-2 mt-3">
             <button type="button" class="btn btn-primary" disabled="@_isSaving" @onclick="SaveAsync">
-                <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
+                <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? T("Enregistrement…") : T("Sauvegarder"))
             </button>
         </div>
     </div>

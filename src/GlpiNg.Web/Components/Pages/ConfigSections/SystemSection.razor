@@ -12,53 +12,50 @@
 @inject ToastService ToastService
 
 <p class="hint" style="margin-left:0;">
-    Les adresses d'écoute du serveur ont été déplacées dans l'onglet
-    "Configuration générale", et l'activation de Swagger dans l'onglet "API".
+    @T("Les adresses d'écoute du serveur ont été déplacées dans l'onglet \"Configuration générale\", et l'activation de Swagger dans l'onglet \"API\".")
 </p>
 
 @if (_intervalMinutes is null)
 {
-    <p>Chargement…</p>
+    <p>@T("Chargement…")</p>
 }
 else
 {
     <EditForm Model="this" OnValidSubmit="SaveAsync" class="glping-config-form">
         <div class="glping-config-field">
-            <label for="cron-interval">Intervalle d'exécution du service cron (minutes)</label>
+            <label for="cron-interval">@T("Intervalle d'exécution du service cron (minutes)")</label>
             <input id="cron-interval" type="number" min="@CronIntervalState.MinMinutes" max="@CronIntervalState.MaxMinutes"
                    class="glping-config-input-sm" @bind="_intervalMinutes" />
         </div>
         <p class="hint">
-            Fréquence à laquelle le service principal exécute ses tâches planifiées (purge de
-            l'historique, nettoyage des agents inactifs, ...). Pris en compte immédiatement, sans
-            redémarrage.
+            @T("Fréquence à laquelle le service principal exécute ses tâches planifiées (purge de l'historique, nettoyage des agents inactifs, ...). Pris en compte immédiatement, sans redémarrage.")
         </p>
 
         <div class="glping-config-field">
-            <label for="storage-root">Emplacement de stockage des fichiers</label>
+            <label for="storage-root">@T("Emplacement de stockage des fichiers")</label>
             <input id="storage-root" class="glping-config-input" @bind="_storageRootPath"
                    placeholder="@_defaultRootHint" />
         </div>
         <p class="hint">
-            Racine des fichiers écrits par GlpiNg : paquets de déploiement, clés de chiffrement
+            @T("Racine des fichiers écrits par GlpiNg : paquets de déploiement, clés de chiffrement")
             (mots de passe des annuaires LDAP) et <code>appsettings.local.json</code>. Un chemin
-            relatif est résolu depuis la racine du programme. Laisser vide pour utiliser le dossier
+            @T("relatif est résolu depuis la racine du programme. Laisser vide pour utiliser le dossier")
             <code>data</code> à cet emplacement.
-            <strong>Un redémarrage est nécessaire</strong>, comme pour les adresses d'écoute.
+            <strong>@T("Un redémarrage est nécessaire")</strong>@T(", comme pour les adresses d'écoute.")
         </p>
         <p class="hint">
-            <strong>Avant de redémarrer après un changement de racine</strong>, déplacez le contenu
+            <strong>@T("Avant de redémarrer après un changement de racine")</strong>@T(", déplacez le contenu")
             de l'ancienne racine vers la nouvelle — <code>appsettings.local.json</code> en premier :
-            il porte la chaîne de connexion et l'état de l'installation. Sans lui, GlpiNg ne
-            retrouve pas son installation au démarrage. Les clés de chiffrement laissées derrière
-            rendraient par ailleurs illisibles les mots de passe des annuaires LDAP.
+            @T("il porte la chaîne de connexion et l'état de l'installation. Sans lui, GlpiNg ne")
+            @T("retrouve pas son installation au démarrage. Les clés de chiffrement laissées derrière")
+            @T("rendraient par ailleurs illisibles les mots de passe des annuaires LDAP.")
         </p>
 
         @* Les chemins effectifs sont affichés parce que plusieurs sources peuvent les décider —
            valeur configurée, défaut, et pour les paquets un éventuel PackageStorage:RootPath
            hérité. Sans ça, « où sont mes fichiers » se répond en lisant le code. *@
         <div class="glping-config-field">
-            <label>Emplacements effectifs (au dernier démarrage)</label>
+            <label>@T("Emplacements effectifs (au dernier démarrage)")</label>
             <ul class="mb-0">
                 <li><code>@StoragePaths.Root</code> — racine</li>
                 <li><code>@StoragePaths.LocalSettings</code> — configuration de l'installation</li>
@@ -67,7 +64,7 @@ else
             </ul>
         </div>
 
-        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? T("Enregistrement…") : T("Enregistrer"))</button>
     </EditForm>
 }
 

@@ -6,13 +6,13 @@
 @inject ToastService ToastService
 @rendermode InteractiveServer
 
-<PageTitle>Webhooks — GlpiNg</PageTitle>
+<PageTitle>@T("Webhooks — GlpiNg")</PageTitle>
 
 <WebhooksTabStrip Current="settings" />
 
 @if (_model is null)
 {
-    <p>Chargement…</p>
+    <p>@T("Chargement…")</p>
 }
 else
 {
@@ -20,47 +20,44 @@ else
         <div class="glping-config-body">
             <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
                 <div class="glping-config-field checkbox">
-                    <label for="wh-use">Activer les webhooks</label>
+                    <label for="wh-use">@T("Activer les webhooks")</label>
                     <label class="glping-switch">
                         <input id="wh-use" type="checkbox" @bind="_model.UseWebhooks" />
                         <span class="glping-switch-slider"></span>
                     </label>
                 </div>
                 <p class="hint">
-                    Coupe tout d'un seul geste : plus aucune livraison n'est mise en file ni expédiée,
-                    sans avoir à désactiver chaque webhook. Les livraisons déjà en attente reprennent
-                    à la réactivation.
+                    @T("Coupe tout d'un seul geste : plus aucune livraison n'est mise en file ni expédiée, sans avoir à désactiver chaque webhook. Les livraisons déjà en attente reprennent à la réactivation.")
                 </p>
 
                 <div class="glping-config-field">
-                    <label for="wh-timeout">Délai d'attente (secondes)</label>
+                    <label for="wh-timeout">@T("Délai d'attente (secondes)")</label>
                     <input id="wh-timeout" type="number" min="1" max="300" class="glping-config-input-sm" @bind="_model.TimeoutSeconds" />
                 </div>
 
                 <div class="glping-config-field">
-                    <label for="wh-attempts">Tentatives avant échec définitif</label>
+                    <label for="wh-attempts">@T("Tentatives avant échec définitif")</label>
                     <input id="wh-attempts" type="number" min="1" max="20" class="glping-config-input-sm" @bind="_model.MaxAttempts" />
                 </div>
 
                 <div class="glping-config-field">
-                    <label for="wh-purge">Purge des livraisons terminées (jours)</label>
+                    <label for="wh-purge">@T("Purge des livraisons terminées (jours)")</label>
                     <input id="wh-purge" type="number" min="0" max="3650" class="glping-config-input-sm" @bind="_model.PurgeAfterDays" />
                 </div>
                 <p class="hint">
-                    Les livraisons envoyées ou définitivement en échec sont supprimées passé cet âge.
-                    Zéro conserve tout — la file grossit alors sans fin.
+                    @T("Les livraisons envoyées ou définitivement en échec sont supprimées passé cet âge. Zéro conserve tout — la file grossit alors sans fin.")
                 </p>
 
-                <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+                <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? T("Enregistrement…") : T("Enregistrer"))</button>
             </EditForm>
 
-            <div class="glping-fiche-block-title mt-4"><i class="ti ti-lock"></i>Signature des appels</div>
+            <div class="glping-fiche-block-title mt-4"><i class="ti ti-lock"></i>@T("Signature des appels")</div>
             <p class="text-secondary" style="max-width: 52rem;">
-                Quand un webhook porte un secret, chaque livraison est signée comme le fait GLPI :
+                @T("Quand un webhook porte un secret, chaque livraison est signée comme le fait GLPI :")
                 l'en-tête <code>X-GLPI-signature</code> contient le HMAC-SHA256, en hexadécimal, du
                 corps concaténé à l'horodatage, et <code>X-GLPI-timestamp</code> porte cet horodatage
-                (secondes Unix). Le destinataire recalcule la même valeur avec le secret partagé pour
-                vérifier que l'appel vient bien de ce serveur et n'est pas un rejeu.
+                @T("(secondes Unix). Le destinataire recalcule la même valeur avec le secret partagé pour")
+                @T("vérifier que l'appel vient bien de ce serveur et n'est pas un rejeu.")
             </p>
         </div>
     </div>

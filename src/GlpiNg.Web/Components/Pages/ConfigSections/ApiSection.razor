@@ -7,13 +7,13 @@
 
 @if (_model is null || _server is null)
 {
-    <p>Chargement…</p>
+    <p>@T("Chargement…")</p>
 }
 else
 {
     <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
         <div class="glping-config-field checkbox">
-            <label for="api-hlapi">Activer l'API</label>
+            <label for="api-hlapi">@T("Activer l'API")</label>
             <label class="glping-switch">
                 <input id="api-hlapi" type="checkbox" @bind="_model.EnableHighLevelApi" />
                 <span class="glping-switch-slider"></span>
@@ -21,7 +21,7 @@ else
         </div>
 
         <div class="glping-config-field checkbox">
-            <label for="api-legacy">Activer l'API REST legacy</label>
+            <label for="api-legacy">@T("Activer l'API REST legacy")</label>
             <label class="glping-switch">
                 <input id="api-legacy" type="checkbox" @bind="_model.EnableLegacyRestApi" />
                 <span class="glping-switch-slider"></span>
@@ -29,26 +29,26 @@ else
         </div>
 
         <div class="glping-config-field checkbox">
-            <label for="swagger">Activer Swagger (/swagger)</label>
+            <label for="swagger">@T("Activer Swagger (/swagger)")</label>
             <label class="glping-switch">
                 <input id="swagger" type="checkbox" @bind="_server.SwaggerEnabled" />
                 <span class="glping-switch-slider"></span>
             </label>
         </div>
-        <p class="hint">Pris en compte immédiatement, sans redémarrage.</p>
+        <p class="hint">@T("Pris en compte immédiatement, sans redémarrage.")</p>
 
         <div class="glping-config-field">
-            <label for="api-url">URL de l'API</label>
+            <label for="api-url">@T("URL de l'API")</label>
             <input id="api-url" @bind="_model.LegacyApiUrl" />
         </div>
         <p class="hint">
             GlpiNg expose déjà sa propre API REST (voir <code>/swagger</code> ci-dessus) : ces
-            réglages ne font que documenter des équivalents GLPI, ils ne pilotent pas encore ce
-            endpoint.
+            @T("réglages ne font que documenter des équivalents GLPI, ils ne pilotent pas encore ce")
+            @T("endpoint.")
         </p>
 
         <div class="glping-config-field checkbox">
-            <label for="api-login-creds">Activer la connexion avec identifiants</label>
+            <label for="api-login-creds">@T("Activer la connexion avec identifiants")</label>
             <label class="glping-switch">
                 <input id="api-login-creds" type="checkbox" @bind="_model.EnableLoginWithCredentials" />
                 <span class="glping-switch-slider"></span>
@@ -56,14 +56,14 @@ else
         </div>
 
         <div class="glping-config-field checkbox">
-            <label for="api-login-token">Activer la connexion avec un jeton externe</label>
+            <label for="api-login-token">@T("Activer la connexion avec un jeton externe")</label>
             <label class="glping-switch">
                 <input id="api-login-token" type="checkbox" @bind="_model.EnableLoginWithExternalToken" />
                 <span class="glping-switch-slider"></span>
             </label>
         </div>
 
-        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? T("Enregistrement…") : T("Enregistrer"))</button>
     </EditForm>
 }
 
@@ -95,11 +95,11 @@ else
             await SettingsStore.SaveSectionAsync(SectionName, _model);
             await FileStore.SaveAsync(_server);
             await History.AppendAsync("Administrateur", SettingsDiff.Compare(before, _model));
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Configuration enregistrée."));
+            ToastService.Notify(new ToastMessage(ToastType.Success, T("Configuration enregistrée.")));
         }
         catch (IOException ex)
         {
-            ToastService.Notify(new ToastMessage(ToastType.Danger, $"Échec de l'enregistrement : {ex.Message}"));
+            ToastService.Notify(new ToastMessage(ToastType.Danger, T("Échec de l'enregistrement : {0}", ex.Message)));
         }
         finally
         {

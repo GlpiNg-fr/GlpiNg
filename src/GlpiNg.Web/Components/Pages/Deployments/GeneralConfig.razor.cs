@@ -2,6 +2,7 @@ using BlazorBootstrap;
 using GlpiNg.Modules.Deployment.Models;
 using GlpiNg.Web.Services;
 using Microsoft.AspNetCore.Components;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Web.Components.Pages.Deployments;
 
@@ -40,11 +41,11 @@ public partial class GeneralConfig : ComponentBase
             DeploymentGeneralSettings before = await SettingsStore.ReadSectionAsync<DeploymentGeneralSettings>(SectionName);
             await SettingsStore.SaveSectionAsync(SectionName, _model);
             await History.AppendAsync("Administrateur", SettingsDiff.Compare(before, _model));
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Configuration enregistrée."));
+            ToastService.Notify(new ToastMessage(ToastType.Success, Tr.T("Configuration enregistrée.")));
         }
         catch (IOException ex)
         {
-            ToastService.Notify(new ToastMessage(ToastType.Danger, $"Échec de l'enregistrement : {ex.Message}"));
+            ToastService.Notify(new ToastMessage(ToastType.Danger, Tr.T("Échec de l'enregistrement : {0}", ex.Message)));
         }
         finally
         {

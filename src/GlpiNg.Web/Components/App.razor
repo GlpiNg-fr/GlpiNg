@@ -3,7 +3,7 @@
 @* Thème de l'utilisateur (préférences « Palette de couleur » et « Contraste élevé ») : les
    palettes sont définies dans glping-theme.css sous ces attributs, et data-bs-theme bascule Tabler en
    mode sombre pour Darker et Midnight. Rendu côté serveur, donc sans flash au chargement. *@
-<html lang="fr" data-glping-theme="@Display.Values.Palette" data-bs-theme="@(Display.Values.IsDarkPalette ? "dark" : "light")"
+<html lang="@Display.Values.Language[..2]" data-glping-theme="@Display.Values.Palette" data-bs-theme="@(Display.Values.IsDarkPalette ? "dark" : "light")"
       data-glping-contrast="@(Display.Values.HighContrast ? "" : null)">
 <head>
     <meta charset="utf-8" />

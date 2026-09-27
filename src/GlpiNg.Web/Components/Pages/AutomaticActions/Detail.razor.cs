@@ -5,6 +5,7 @@ using GlpiNg.Modules.Cron.Models;
 using GlpiNg.Web.Data;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Web.Components.Pages.AutomaticActions;
 
@@ -107,7 +108,7 @@ public partial class Detail : ComponentBase
             await db.SaveChangesAsync();
             _frequencyMinutes = clamped;
 
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Fréquence enregistrée."));
+            ToastService.Notify(new ToastMessage(ToastType.Success, Tr.T("Fréquence enregistrée.")));
         }
         finally
         {
@@ -126,7 +127,7 @@ public partial class Detail : ComponentBase
             bool success = await Runner.RunAsync(TaskKey, CancellationToken.None);
             ToastService.Notify(new ToastMessage(
                 success ? ToastType.Success : ToastType.Danger,
-                success ? "Tâche exécutée avec succès." : "L'exécution a échoué — voir le journal ci-dessous."));
+                success ? Tr.T("Tâche exécutée avec succès.") : Tr.T("L'exécution a échoué — voir le journal ci-dessous.")));
         }
         finally
         {

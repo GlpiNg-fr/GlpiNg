@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.EntityFrameworkCore;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Web.Components.Pages.Documents;
 
@@ -92,11 +93,11 @@ public partial class Index : ComponentBase
         }
         catch (IOException ex)
         {
-            _error = $"Fichier refusé (taille maximale {MaxUploadBytes / (1024 * 1024)} Mo) : {ex.Message}";
+            _error = Tr.T("Fichier refusé (taille maximale {0} Mo) : {1}", MaxUploadBytes / (1024 * 1024), ex.Message);
         }
         catch (Exception ex) when (ex is InvalidOperationException or UnauthorizedAccessException or DbUpdateException)
         {
-            _error = $"Échec du téléversement : {ex.Message}";
+            _error = Tr.T("Échec du téléversement : {0}", ex.Message);
         }
         finally
         {
@@ -110,21 +111,21 @@ public partial class Index : ComponentBase
         {
             await Documents.DeleteAsync(documentId);
             await LoadAsync();
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Document supprimé."));
+            ToastService.Notify(new ToastMessage(ToastType.Success, Tr.T("Document supprimé.")));
         }
         catch (Exception ex) when (ex is InvalidOperationException or DbUpdateException)
         {
             _confirmDeleteId = null;
-            ToastService.Notify(new ToastMessage(ToastType.Danger, $"Échec de la suppression : {ex.Message}"));
+            ToastService.Notify(new ToastMessage(ToastType.Danger, Tr.T("Échec de la suppression : {0}", ex.Message)));
         }
     }
 
     private static string FormatSize(long bytes) => bytes switch
     {
         < 1024 => $"{bytes} o",
-        < 1024 * 1024 => $"{bytes / 1024.0:0.#} Ko",
-        < 1024 * 1024 * 1024 => $"{bytes / (1024.0 * 1024):0.#} Mo",
-        _ => $"{bytes / (1024.0 * 1024 * 1024):0.##} Go",
+        < 1024 * 1024 => Tr.T("{0:0.#} Ko", bytes / 1024.0),
+        < 1024 * 1024 * 1024 => Tr.T("{0:0.#} Mo", bytes / (1024.0 * 1024)),
+        _ => Tr.T("{0:0.##} Go", bytes / (1024.0 * 1024 * 1024)),
     };
 
     private async Task<int?> CurrentUserIdAsync()

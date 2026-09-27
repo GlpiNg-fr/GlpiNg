@@ -3,7 +3,7 @@
 @attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
 @rendermode InteractiveServer
 
-<PageTitle>Mise à niveau requise — GlpiNg</PageTitle>
+<PageTitle>@T("Mise à niveau requise — GlpiNg")</PageTitle>
 
 <div class="glping-login">
     <div class="glping-login-card glping-update-card">
@@ -14,15 +14,15 @@
 
         @if (_pendingMigrations.Count == 0)
         {
-            <p class="glping-login-message">La base de données est à jour.</p>
-            <button type="button" class="glping-login-submit" @onclick="GoHome">Continuer</button>
+            <p class="glping-login-message">@T("La base de données est à jour.")</p>
+            <button type="button" class="glping-login-submit" @onclick="GoHome">@T("Continuer")</button>
         }
         else
         {
             <p class="glping-login-message">
                 @(_pendingMigrations.Count == 1
-                    ? "1 migration est en attente avant de pouvoir utiliser GlpiNg :"
-                    : $"{_pendingMigrations.Count} migrations sont en attente avant de pouvoir utiliser GlpiNg :")
+                    ? T("1 migration est en attente avant de pouvoir utiliser GlpiNg :")
+                    : T("{0} migrations sont en attente avant de pouvoir utiliser GlpiNg :", _pendingMigrations.Count))
             </p>
             <ul class="glping-update-migration-list">
                 @foreach (string migration in _pendingMigrations)
@@ -32,7 +32,7 @@
             </ul>
 
             <button type="button" class="glping-login-submit" disabled="@_applying" @onclick="ApplyAsync">
-                @(_applying ? "Application en cours..." : "Confirmer la mise à niveau")
+                @(_applying ? T("Application en cours...") : T("Confirmer la mise à niveau"))
             </button>
         }
     </div>

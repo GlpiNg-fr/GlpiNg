@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.EntityFrameworkCore;
+using GlpiNg.Modules.Abstractions.Localization;
 
 // BlazorBootstrap (importé ci-dessus pour ToastService) expose lui aussi un « DropdownItem ».
 using DropdownItem = GlpiNg.Modules.Inventory.Models.DropdownItem;
@@ -186,8 +187,8 @@ public partial class AssetDetail : ComponentBase
     private static string FormatSize(long bytes) => bytes switch
     {
         < 1024 => $"{bytes} o",
-        < 1024 * 1024 => $"{bytes / 1024d:0.#} Ko",
-        _ => $"{bytes / (1024d * 1024d):0.#} Mo",
+        < 1024 * 1024 => Tr.T("{0:0.#} Ko", bytes / 1024d),
+        _ => Tr.T("{0:0.#} Mo", bytes / (1024d * 1024d)),
     };
 
     private async Task SaveAsync()
@@ -199,13 +200,13 @@ public partial class AssetDetail : ComponentBase
 
         if (string.IsNullOrWhiteSpace(_asset.Name))
         {
-            _saveError = "Le nom est obligatoire.";
+            _saveError = Tr.T("Le nom est obligatoire.");
             return;
         }
 
         if (_fields.FirstOrDefault(field => field.IsMandatory && string.IsNullOrWhiteSpace(GetValue(field))) is { } missing)
         {
-            _saveError = $"Le champ « {missing.Label} » est obligatoire.";
+            _saveError = Tr.T("Le champ « {0} » est obligatoire.", missing.Label);
             return;
         }
 
@@ -289,7 +290,7 @@ public partial class AssetDetail : ComponentBase
 
             await db.SaveChangesAsync();
 
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Élément enregistré."));
+            ToastService.Notify(new ToastMessage(ToastType.Success, Tr.T("Élément enregistré.")));
             await LoadAsync();
         }
         finally
@@ -306,7 +307,7 @@ public partial class AssetDetail : ComponentBase
         Description = $"« {Displayable(before)} » → « {Displayable(after)} »",
     };
 
-    private static string Displayable(string? value) => string.IsNullOrWhiteSpace(value) ? "(vide)" : value;
+    private static string Displayable(string? value) => string.IsNullOrWhiteSpace(value) ? Tr.T("(vide)") : value;
 
     private async Task DeleteAsync()
     {
@@ -330,7 +331,7 @@ public partial class AssetDetail : ComponentBase
 
         if (file.Size > MaxDocumentBytes)
         {
-            _documentError = $"Fichier trop volumineux ({FormatSize(file.Size)}) : {FormatSize(MaxDocumentBytes)} au maximum.";
+            _documentError = Tr.T("Fichier trop volumineux ({0}) : {1} au maximum.", FormatSize(file.Size), FormatSize(MaxDocumentBytes));
             return;
         }
 

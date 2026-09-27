@@ -5,32 +5,32 @@
 <div class="row">
     <div class="col-md-6">
         <div class="glping-fiche-field">
-            <label>Nom</label>
+            <label>@T("Nom")</label>
             <input class="form-control" @bind="Hook.Name" @bind:event="oninput" @bind:after="NotifyChangedAsync" />
         </div>
         <div class="glping-fiche-field">
-            <label>Activé</label>
+            <label>@T("Activé")</label>
             @YesNoSelect(Hook.IsActive, v => Hook.IsActive = v)
         </div>
         <div class="glping-fiche-field">
-            <label>Commentaires</label>
+            <label>@T("Commentaires")</label>
             <textarea class="form-control" rows="2" @bind="Hook.Comment"></textarea>
         </div>
         <div class="glping-fiche-field">
-            <label>Type d'objet</label>
+            <label>@T("Type d'objet")</label>
             <select class="form-select" value="@Hook.ItemType" @onchange="OnItemTypeChanged">
                 @foreach ((string itemType, string label) in NotificationEventCatalog.ItemTypes)
                 {
-                    <option value="@itemType">@label</option>
+                    <option value="@itemType">@T(label)</option>
                 }
             </select>
         </div>
         <div class="glping-fiche-field">
-            <label>Événement</label>
+            <label>@T("Événement")</label>
             <select class="form-select" @bind="Hook.Event" @bind:after="NotifyChangedAsync">
                 @foreach (NotificationEventDefinition evt in NotificationEventCatalog.EventsFor(Hook.ItemType))
                 {
-                    <option value="@evt.EventKey">@evt.EventLabel</option>
+                    <option value="@evt.EventKey">@T(evt.EventLabel)</option>
                 }
             </select>
         </div>
@@ -38,7 +38,7 @@
 
     <div class="col-md-6">
         <div class="glping-fiche-field">
-            <label>URL cible</label>
+            <label>@T("URL cible")</label>
             <input class="form-control" placeholder="https://exemple.org/hook" @bind="Hook.Url"
                    @bind:event="oninput" @bind:after="NotifyChangedAsync" />
         </div>
@@ -48,52 +48,51 @@
         }
 
         <div class="glping-fiche-field">
-            <label>Méthode HTTP</label>
+            <label>@T("Méthode HTTP")</label>
             <select class="form-select" @bind="Hook.Method" @bind:after="NotifyChangedAsync">
-                <option value="@WebhookHttpMethod.Post">POST</option>
-                <option value="@WebhookHttpMethod.Put">PUT</option>
-                <option value="@WebhookHttpMethod.Patch">PATCH</option>
-                <option value="@WebhookHttpMethod.Delete">DELETE</option>
-                <option value="@WebhookHttpMethod.Get">GET</option>
+                <option value="@WebhookHttpMethod.Post">@T("POST")</option>
+                <option value="@WebhookHttpMethod.Put">@T("PUT")</option>
+                <option value="@WebhookHttpMethod.Patch">@T("PATCH")</option>
+                <option value="@WebhookHttpMethod.Delete">@T("DELETE")</option>
+                <option value="@WebhookHttpMethod.Get">@T("GET")</option>
             </select>
         </div>
         @if (Hook.Method == WebhookHttpMethod.Get)
         {
-            <p class="hint">Un GET ne porte pas de corps : seules l'URL et les en-têtes partent.</p>
+            <p class="hint">@T("Un GET ne porte pas de corps : seules l'URL et les en-têtes partent.")</p>
         }
 
         <div class="glping-fiche-field">
-            <label>Secret partagé</label>
+            <label>@T("Secret partagé")</label>
             <input type="password" class="form-control" value="@_secretPlain" @oninput="OnSecretInputAsync"
-                   placeholder="@(HasStoredSecret ? "Laisser vide pour conserver le secret actuel" : "Optionnel")" />
+                   placeholder="@(HasStoredSecret ? T("Laisser vide pour conserver le secret actuel") : T("Optionnel"))" />
         </div>
         <p class="hint">
-            Renseigné, chaque appel porte <code>X-GLPI-signature</code> et <code>X-GLPI-timestamp</code>,
-            ce qui permet au destinataire de vérifier l'origine de l'appel.
+            @T("Renseigné, chaque appel porte") <code>X-GLPI-signature</code> @T("et") <code>X-GLPI-timestamp</code>,
+            @T("ce qui permet au destinataire de vérifier l'origine de l'appel.")
         </p>
 
         <div class="glping-fiche-field">
-            <label>Conserver la réponse</label>
+            <label>@T("Conserver la réponse")</label>
             @YesNoSelect(Hook.SaveResponseBody, v => Hook.SaveResponseBody = v)
         </div>
         <p class="hint">
-            Garde le corps renvoyé par le destinataire dans la file de livraison. Utile le temps de
-            mettre au point une intégration ; inutile ensuite, le code HTTP suffit.
+            @T("Garde le corps renvoyé par le destinataire dans la file de livraison. Utile le temps de mettre au point une intégration ; inutile ensuite, le code HTTP suffit.")
         </p>
     </div>
 </div>
 
 @if (Hook.Method != WebhookHttpMethod.Get)
 {
-    <div class="glping-fiche-block-title mt-3"><i class="ti ti-code"></i>Corps de la requête</div>
+    <div class="glping-fiche-block-title mt-3"><i class="ti ti-code"></i>@T("Corps de la requête")</div>
 
     <div class="row">
         <div class="col-md-6">
             <div class="glping-fiche-field">
-                <label>Contenu</label>
+                <label>@T("Contenu")</label>
                 <select class="form-select" @bind="Hook.PayloadMode" @bind:after="NotifyChangedAsync">
-                    <option value="@WebhookPayloadMode.Default">Par défaut (JSON construit par GlpiNg)</option>
-                    <option value="@WebhookPayloadMode.Custom">Personnalisé</option>
+                    <option value="@WebhookPayloadMode.Default">@T("Par défaut (JSON construit par GlpiNg)")</option>
+                    <option value="@WebhookPayloadMode.Custom">@T("Personnalisé")</option>
                 </select>
             </div>
         </div>
@@ -102,14 +101,14 @@
     @if (Hook.PayloadMode == WebhookPayloadMode.Custom)
     {
         <div class="glping-fiche-field">
-            <label>Corps personnalisé</label>
+            <label>@T("Corps personnalisé")</label>
             <textarea class="form-control font-monospace" rows="8" @bind="Hook.CustomPayload"
                       placeholder='{ "poste": "##computer.name##" }'></textarea>
         </div>
         <p class="hint">
             Les balises <code>##cle##</code> ci-dessous sont remplacées au moment de l'événement.
             Le corps part tel quel, avec <code>Content-Type: application/json</code> — à vous
-            d'écrire du JSON valide si le destinataire en attend.
+            @T("d'écrire du JSON valide si le destinataire en attend.")
         </p>
     }
     else
@@ -120,11 +119,11 @@
         </p>
     }
 
-    <div class="glping-fiche-block-title mt-3"><i class="ti ti-tags"></i>Balises disponibles</div>
+    <div class="glping-fiche-block-title mt-3"><i class="ti ti-tags"></i>@T("Balises disponibles")</div>
     <div class="d-flex flex-wrap gap-2">
         @foreach (NotificationTag tag in WebhookPayloadBuilder.TagsFor(Hook.ItemType, Hook.Event))
         {
-            <span class="badge bg-secondary-lt" title="@tag.Label">##@tag.Key##</span>
+            <span class="badge bg-secondary-lt" title="@T(tag.Label)">##@tag.Key##</span>
         }
     </div>
 }

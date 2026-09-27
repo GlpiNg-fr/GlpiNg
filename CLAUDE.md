@@ -119,7 +119,14 @@ cache, so reads never hit the database and a save updates the DB row and the cac
 together, making the new value visible to every other service/page immediately without a
 restart. On first read of a section not yet in the DB, it falls back to the matching
 `appsettings.json` section (if still present) rather than losing an already-customized
-value — see the fallback in `SettingsCacheService.ReadSectionAsync`. Only server listen
+value — see the fallback in `SettingsCacheService.ReadSectionAsync`. Every save raises
+`SettingsCacheService.SectionSaved` (the service is a singleton shared by all Blazor circuits):
+`MainLayout` rebuilds its side menu on `ModulesSettings`, and the module cards of `/config` refresh
+their switches, so enabling/disabling a module or menu entry shows up live for every connected user.
+Subscribers must go through `InvokeAsync` and unsubscribe in `Dispose`. A section edited piecemeal
+by several screens (`ModulesSettings`) must be changed with `UpdateSectionAsync(name, mutate)` — it
+re-reads the latest value under a lock — never by saving a copy read earlier, which would silently
+undo a toggle made meanwhile by another card or another admin. Only server listen
 addresses (`Urls`) and Swagger enabled/disabled stay in `appsettings.json` via
 `AppSettingsFileStore`: `Urls` is read by Kestrel at startup, before the app has DB
 access, and needs a restart anyway; Swagger's toggle relies on
@@ -144,6 +151,26 @@ it would ignore the user's date-format and time-zone preferences. Every componen
 and must never be converted. History and timelines go through `Display.Chronological`. Outside
 components, take `UserPreferenceValues` from `IUserPreferences`. History *texts* written at save
 time stay in a fixed format on purpose (shared by all readers).
+
+**Translations (i18n)**: gettext-style — the **French text is the key**. Write user-facing text as
+`@T("Enregistrer")` in markup (`using static ...Localization.Tr` is in every `_Imports.razor`),
+`Tr.T("...")` in C#, and `T("Supprimer {0} élément(s) ?", count)` with values (never a `$"..."`
+interpolation: it can't be a key). Catalogs are `src/GlpiNg.Web/i18n/{lang}.json` (French → translation,
+one per language, `en`/`pt` shared by their variants); a missing key just shows the French, so a new
+text works immediately and only needs adding to the catalogs. `CurrentUICulture` is set per request and
+per circuit by `UserPreferencesPreloader`, so a language change needs a page reload (`forceLoad`).
+Rules that matter:
+- Never call `T` in a **static** initializer (`static readonly` list/dictionary): it would freeze the
+  language of the first reader. Keep such catalogs French and translate at display time instead —
+  `@T(tab.Label)`, `@T(column.Label)`, `@T(report.Title)`. Don't do both (translate in code *and* at
+  display): a translation that happens to equal another French key would be translated twice.
+- Never translate what is **stored**: history texts (`Track`, `AddHistory`, `Field =`), log/audit
+  messages, default setting values, names given to created records. They are read by every user in
+  whatever language; they stay French.
+- Keys, CSS classes, enum/ItemType names and anything compared in code stay untranslated.
+- In a generic component (`@typeparam T`), `T(...)` is the type parameter — use `Tr.T(...)`.
+- Day/month names follow `CultureInfo.CurrentUICulture`; numbers and date *formats* follow the user's
+  own preferences (see "Displaying dates"), not the language.
 
 **Naming (front end)**: our own CSS classes, custom properties, `data-*` attributes, DOM ids and the
 JS global are prefixed `glping` (`glping-fiche`, `--glping-surface`, `data-glping-theme`,

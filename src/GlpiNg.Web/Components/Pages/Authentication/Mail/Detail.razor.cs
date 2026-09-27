@@ -3,6 +3,7 @@ using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Web.Components.Pages.Authentication.Mail;
 
@@ -43,7 +44,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
         {
             _server.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Serveur enregistré."));
+            ToastService.Notify(new ToastMessage(ToastType.Success, Tr.T("Serveur enregistré.")));
         }
         finally
         {

@@ -2,14 +2,14 @@
 @using GlpiNg.Modules.Cron.Models
 @rendermode InteractiveServer
 
-<PageTitle>Actions automatiques — GlpiNg</PageTitle>
+<PageTitle>@T("Actions automatiques — GlpiNg")</PageTitle>
 
 <div class="glping-list-page">
 <div class="card">
     <div class="card-header d-flex align-items-center justify-content-between glping-list-toolbar">
-        <span class="fw-semibold">@_rows.Count action(s)</span>
+        <span class="fw-semibold">@T("{0} action(s)", _rows.Count)</span>
         <div class="btn-list align-items-center">
-            <button type="button" class="btn btn-icon" @onclick="LoadAsync" title="Rafraîchir">
+            <button type="button" class="btn btn-icon" @onclick="LoadAsync" title="@(T("Rafraîchir"))">
                 <i class="ti ti-refresh"></i>
             </button>
         </div>
@@ -19,11 +19,11 @@
         <table class="table table-vcenter card-table">
             <thead>
                 <tr>
-                    <th>Nom</th>
-                    <th>Fréquence</th>
-                    <th>Dernière exécution</th>
-                    <th>Statut</th>
-                    <th>Activée</th>
+                    <th>@T("Nom")</th>
+                    <th>@T("Fréquence")</th>
+                    <th>@T("Dernière exécution")</th>
+                    <th>@T("Statut")</th>
+                    <th>@T("Activée")</th>
                     <th style="width: 8rem;"></th>
                 </tr>
             </thead>
@@ -31,7 +31,7 @@
                 @if (_rows.Count == 0)
                 {
                     <tr>
-                        <td colspan="6" class="text-center text-secondary py-4">Aucune action automatique disponible.</td>
+                        <td colspan="6" class="text-center text-secondary py-4">@T("Aucune action automatique disponible.")</td>
                     </tr>
                 }
                 else
@@ -41,7 +41,7 @@
                         <tr>
                             <td>
                                 <a href="@($"/config/automatic-actions/{row.Task.Key}")" class="text-reset fw-semibold">
-                                    <i class="ti ti-robot me-1 text-secondary"></i>@row.Task.Name
+                                    <i class="ti ti-robot me-1 text-secondary"></i>@T(row.Task.Name)
                                 </a>
                             </td>
                             <td>@FrequencyLabel(row)</td>
@@ -53,11 +53,11 @@
                                 }
                                 else if (row.State.LastRunSuccess == true)
                                 {
-                                    <span class="badge bg-success">Succès</span>
+                                    <span class="badge bg-success">@T("Succès")</span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-danger">Échec</span>
+                                    <span class="badge bg-danger">@T("Échec")</span>
                                 }
                             </td>
                             <td>
@@ -67,7 +67,7 @@
                                 </label>
                             </td>
                             <td>
-                                <button type="button" class="btn btn-icon btn-sm" title="Lancer maintenant"
+                                <button type="button" class="btn btn-icon btn-sm" title="@(T("Lancer maintenant"))"
                                         disabled="@_runningKeys.Contains(row.Task.Key)" @onclick="() => RunNowAsync(row)">
                                     @if (_runningKeys.Contains(row.Task.Key))
                                     {

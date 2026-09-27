@@ -12,7 +12,7 @@
         {
             <div class="glping-menu-search open">
                 <i class="ti ti-search"></i>
-                <input type="text" placeholder="Chercher dans le menu"
+                <input type="text" placeholder="@(T("Chercher dans le menu"))"
                        value="@_searchTerm" @oninput="OnSearchInput" />
                 <button type="button" class="glping-menu-search-close" @onclick="ToggleSearch">
                     <i class="ti ti-x"></i>
@@ -23,7 +23,7 @@
         {
             <button type="button" class="glping-menu-search" @onclick="ToggleSearch">
                 <i class="ti ti-arrow-right"></i>
-                <span>Chercher dans le menu</span>
+                <span>@T("Chercher dans le menu")</span>
             </button>
         }
 
@@ -39,7 +39,7 @@
                 <div class="glping-nav-group @(isOpen ? "open" : "")">
                     <button type="button" class="glping-nav-group-toggle" @onclick="() => ToggleGroup(group.Key)">
                         <i class="ti @group.Icon"></i>
-                        <span>@group.Label</span>
+                        <span>@T(group.Label)</span>
                         <i class="ti ti-chevron-down glping-chevron"></i>
                     </button>
                     @if (isOpen)
@@ -51,14 +51,14 @@
                                 {
                                     <NavLink href="@item.Href" Match="@(item.Href == "/" ? NavLinkMatch.All : NavLinkMatch.Prefix)" class="glping-nav-subitem">
                                         <i class="ti @(item.Icon ?? "ti-point")"></i>
-                                        <span>@item.Label</span>
+                                        <span>@T(item.Label)</span>
                                     </NavLink>
                                 }
                                 else
                                 {
-                                    <span class="glping-nav-subitem disabled" title="Pas encore disponible">
+                                    <span class="glping-nav-subitem disabled" title="@(T("Pas encore disponible"))">
                                         <i class="ti @(item.Icon ?? "ti-point")"></i>
-                                        <span>@item.Label</span>
+                                        <span>@T(item.Label)</span>
                                     </span>
                                 }
                             }
@@ -66,7 +66,7 @@
                     }
                     <div class="glping-nav-flyout">
                         <div class="glping-nav-flyout-panel">
-                            <div class="glping-nav-flyout-header">@group.Label</div>
+                            <div class="glping-nav-flyout-header">@T(group.Label)</div>
                             <div class="glping-nav-flyout-items">
                                 @foreach (var item in FilteredItems(group))
                                 {
@@ -74,14 +74,14 @@
                                     {
                                         <NavLink href="@item.Href" Match="@(item.Href == "/" ? NavLinkMatch.All : NavLinkMatch.Prefix)" class="glping-nav-subitem">
                                             <i class="ti @(item.Icon ?? "ti-point")"></i>
-                                            <span>@item.Label</span>
+                                            <span>@T(item.Label)</span>
                                         </NavLink>
                                     }
                                     else
                                     {
-                                        <span class="glping-nav-subitem disabled" title="Pas encore disponible">
+                                        <span class="glping-nav-subitem disabled" title="@(T("Pas encore disponible"))">
                                             <i class="ti @(item.Icon ?? "ti-point")"></i>
-                                            <span>@item.Label</span>
+                                            <span>@T(item.Label)</span>
                                         </span>
                                     }
                                 }
@@ -96,7 +96,7 @@
             <i class="ti @(_collapsed ? "ti-chevrons-right" : "ti-chevrons-left")"></i>
             @if (!_collapsed)
             {
-                <span>Réduire le menu</span>
+                <span>@T("Réduire le menu")</span>
             }
         </button>
     </aside>
@@ -117,14 +117,14 @@
                     {
                         <span class="glping-breadcrumb-item active">
                             <i class="ti @crumb.Icon"></i>
-                            <span>@crumb.Label</span>
+                            <span>@T(crumb.Label)</span>
                         </span>
                     }
                     else
                     {
                         <a href="@crumb.Href" class="glping-breadcrumb-item">
                             <i class="ti @crumb.Icon"></i>
-                            <span>@crumb.Label</span>
+                            <span>@T(crumb.Label)</span>
                         </a>
                     }
                 }
@@ -134,7 +134,7 @@
                 <span class="input-icon-addon">
                     <i class="ti ti-search"></i>
                 </span>
-                <input type="text" class="form-control" placeholder="Rechercher..." />
+                <input type="text" class="form-control" placeholder="@(T("Rechercher..."))" />
             </div>
 
             <EntitySelector />
@@ -147,13 +147,13 @@
                     <span class="glping-avatar">@_userInitial</span>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="/mon-profil"><i class="ti ti-user"></i> Mon profil</a></li>
-                    <li><a class="dropdown-item" href="/preferences"><i class="ti ti-settings"></i> Préférences</a></li>
+                    <li><a class="dropdown-item" href="/mon-profil"><i class="ti ti-user"></i> @T("Mon profil")</a></li>
+                    <li><a class="dropdown-item" href="/preferences"><i class="ti ti-settings"></i> @T("Préférences")</a></li>
                     <li><hr class="dropdown-divider" /></li>
                     <li>
                         <form method="post" action="/Account/Logout">
                             <AntiforgeryToken />
-                            <button type="submit" class="dropdown-item glping-logout-button"><i class="ti ti-logout"></i> Se déconnecter</button>
+                            <button type="submit" class="dropdown-item glping-logout-button"><i class="ti ti-logout"></i> @T("Se déconnecter")</button>
                         </form>
                     </li>
                 </ul>
@@ -170,18 +170,17 @@
             {
                 <div class="alert alert-warning alert-dismissible" role="alert">
                     <i class="ti ti-lock"></i>
-                    Accès refusé à la section « @denied » : votre profil ne l'autorise pas pour l'entité active.
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+                    @T("Accès refusé à la section « {0} » : votre profil ne l'autorise pas pour l'entité active.", denied)
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@(T("Fermer"))"></button>
                 </div>
             }
 
             @if (!CanViewCurrentPage)
             {
                 <div class="alert alert-warning" role="alert">
-                    <h4 class="alert-title"><i class="ti ti-lock"></i> Droits insuffisants</h4>
+                    <h4 class="alert-title"><i class="ti ti-lock"></i> @T("Droits insuffisants")</h4>
                     <p class="mb-0">
-                        Votre profil ne donne pas accès à la section « @CurrentSection » pour l'entité active.
-                        Changez d'entité active depuis le bandeau, ou demandez une habilitation à un administrateur.
+                        @T("Votre profil ne donne pas accès à la section « {0} » pour l'entité active. Changez d'entité active depuis le bandeau, ou demandez une habilitation à un administrateur.", CurrentSection)
                     </p>
                 </div>
             }

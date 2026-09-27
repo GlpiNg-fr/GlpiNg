@@ -4,6 +4,7 @@ using GlpiNg.Web.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.EntityFrameworkCore;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Web.Components.Pages.Profiles;
 
@@ -145,13 +146,13 @@ public partial class Detail : ComponentBase, IAsyncDisposable
         p.ParcRight, p.AssistanceRight, p.GestionRight,
         p.OutilsRight, p.AdministrationRight, p.ConfigurationRight);
 
-    private static string YesNo(bool value) => value ? "Oui" : "Non";
+    private static string YesNo(bool value) => value ? Tr.T("Oui") : Tr.T("Non");
 
     private static string RightLabel(ProfileRightLevel level) => level switch
     {
-        ProfileRightLevel.None => "Aucun accès",
-        ProfileRightLevel.Read => "Lecture",
-        ProfileRightLevel.Write => "Lecture / Écriture",
+        ProfileRightLevel.None => Tr.T("Aucun accès"),
+        ProfileRightLevel.Read => Tr.T("Lecture"),
+        ProfileRightLevel.Write => Tr.T("Lecture / Écriture"),
         _ => level.ToString()
     };
 
@@ -203,7 +204,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
             _beforeEdit = after;
             await ReloadReferenceDataAsync();
             RebuildTabs();
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Profil enregistré."));
+            ToastService.Notify(new ToastMessage(ToastType.Success, Tr.T("Profil enregistré.")));
         }
         finally
         {
@@ -220,7 +221,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
 
         if (_profileHabilitations.Count > 0)
         {
-            ToastService.Notify(new ToastMessage(ToastType.Danger, "Impossible de supprimer un profil auquel des utilisateurs sont rattachés : détachez-les d'abord."));
+            ToastService.Notify(new ToastMessage(ToastType.Danger, Tr.T("Impossible de supprimer un profil auquel des utilisateurs sont rattachés : détachez-les d'abord.")));
             return;
         }
 

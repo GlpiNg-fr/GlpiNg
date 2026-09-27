@@ -4,6 +4,7 @@ using GlpiNg.Web.Models;
 using GlpiNg.Web.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Web.Components.Pages;
 
@@ -51,7 +52,7 @@ public partial class Login : ComponentBase
         // exists yet) so the toast is actually visible to the user.
         if (firstRender && Error == "1")
         {
-            ToastService.Notify(new ToastMessage(ToastType.Danger, "Nom d'utilisateur ou mot de passe incorrect."));
+            ToastService.Notify(new ToastMessage(ToastType.Danger, Tr.T("Nom d'utilisateur ou mot de passe incorrect.")));
         }
 
         return Task.CompletedTask;

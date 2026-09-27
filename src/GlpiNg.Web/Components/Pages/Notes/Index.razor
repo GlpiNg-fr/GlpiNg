@@ -1,25 +1,25 @@
 @page "/tools/notes"
 @rendermode InteractiveServer
 
-<PageTitle>Notes — GlpiNg</PageTitle>
+<PageTitle>@T("Notes — GlpiNg")</PageTitle>
 
 <div class="glping-page-header">
-    <h1><i class="ti ti-notes me-2"></i>Notes</h1>
+    <h1><i class="ti ti-notes me-2"></i>@T("Notes")</h1>
 </div>
 
 <p class="text-secondary">
-    Toutes les notes libres de l'installation, tous objets confondus. Une note se crée depuis
-    l'onglet « Notes » de la fiche qui la porte (ordinateur, article de la base de connaissances…) ;
-    cet écran sert à les retrouver et, au besoin, à les supprimer.
+    @T("Toutes les notes libres de l'installation, tous objets confondus. Une note se crée depuis")
+    @T("l'onglet « Notes » de la fiche qui la porte (ordinateur, article de la base de connaissances…) ;")
+    @T("cet écran sert à les retrouver et, au besoin, à les supprimer.")
 </p>
 
 <div class="row g-2 align-items-end mb-3">
     <div class="col-md-5">
-        <label class="form-label" for="note-search">Rechercher</label>
+        <label class="form-label" for="note-search">@T("Rechercher")</label>
         <div class="input-group">
             <input id="note-search" class="form-control" @bind="_search" @bind:event="oninput"
-                   placeholder="Contenu ou auteur" />
-            <button type="button" class="btn" @onclick="LoadAsync"><i class="ti ti-search me-1"></i>Chercher</button>
+                   placeholder="@(T("Contenu ou auteur"))" />
+            <button type="button" class="btn" @onclick="LoadAsync"><i class="ti ti-search me-1"></i>@T("Chercher")</button>
         </div>
     </div>
 </div>
@@ -28,7 +28,7 @@
 {
     <div class="glping-config-placeholder">
         <i class="ti ti-notes-off"></i>
-        <p class="mb-0">Aucune note.</p>
+        <p class="mb-0">@T("Aucune note.")</p>
     </div>
 }
 else
@@ -37,11 +37,11 @@ else
         <table class="table table-vcenter card-table">
             <thead>
                 <tr>
-                    <th>Objet</th>
-                    <th>Contenu</th>
-                    <th>Auteur</th>
-                    <th>Créée le</th>
-                    <th>Modifiée le</th>
+                    <th>@T("Objet")</th>
+                    <th>@T("Contenu")</th>
+                    <th>@T("Auteur")</th>
+                    <th>@T("Créée le")</th>
+                    <th>@T("Modifiée le")</th>
                     <th class="w-1"></th>
                 </tr>
             </thead>
@@ -67,13 +67,13 @@ else
                             @if (_confirmDeleteId == row.Note.Id)
                             {
                                 <button type="button" class="btn btn-sm btn-danger" @onclick="() => DeleteAsync(row.Note.Id)">
-                                    Confirmer
+                                    @T("Confirmer")
                                 </button>
-                                <button type="button" class="btn btn-sm" @onclick="() => _confirmDeleteId = null">Annuler</button>
+                                <button type="button" class="btn btn-sm" @onclick="() => _confirmDeleteId = null">@T("Annuler")</button>
                             }
                             else
                             {
-                                <button type="button" class="btn btn-icon btn-ghost-danger" title="Supprimer"
+                                <button type="button" class="btn btn-icon btn-ghost-danger" title="@(T("Supprimer"))"
                                         @onclick="() => _confirmDeleteId = row.Note.Id">
                                     <i class="ti ti-trash"></i>
                                 </button>

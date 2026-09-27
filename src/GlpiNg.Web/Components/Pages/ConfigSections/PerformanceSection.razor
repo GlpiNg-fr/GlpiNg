@@ -1,28 +1,27 @@
 @using System.Diagnostics
 
 <p class="hint" style="margin-left:0;">
-    GlpiNg tourne sur .NET plutôt que PHP : cet onglet montre donc l'équivalent runtime .NET
-    (mémoire gérée, GC, process) là où GLPI affiche l'état d'OPcache et du cache PHP.
+    @T("GlpiNg tourne sur .NET plutôt que PHP : cet onglet montre donc l'équivalent runtime .NET (mémoire gérée, GC, process) là où GLPI affiche l'état d'OPcache et du cache PHP.")
 </p>
 
 <div class="glping-diag-card">
-    <h4><i class="ti ti-cpu"></i> Runtime .NET</h4>
-    <div class="glping-diag-row"><span>Version</span><strong>@Environment.Version</strong></div>
-    <div class="glping-diag-row"><span>Server GC</span><strong>@(System.Runtime.GCSettings.IsServerGC ? "Oui" : "Non")</strong></div>
-    <div class="glping-diag-row"><span>Processeurs logiques</span><strong>@Environment.ProcessorCount</strong></div>
-    <div class="glping-diag-row"><span>Temps depuis démarrage du process</span><strong>@FormatUptime()</strong></div>
+    <h4><i class="ti ti-cpu"></i> @T("Runtime .NET")</h4>
+    <div class="glping-diag-row"><span>@T("Version")</span><strong>@Environment.Version</strong></div>
+    <div class="glping-diag-row"><span>@T("Server GC")</span><strong>@(System.Runtime.GCSettings.IsServerGC ? T("Oui") : T("Non"))</strong></div>
+    <div class="glping-diag-row"><span>@T("Processeurs logiques")</span><strong>@Environment.ProcessorCount</strong></div>
+    <div class="glping-diag-row"><span>@T("Temps depuis démarrage du process")</span><strong>@FormatUptime()</strong></div>
 </div>
 
 <div class="glping-diag-card">
-    <h4><i class="ti ti-chart-donut"></i> Mémoire</h4>
-    <div class="glping-diag-row"><span>Working set (process)</span><strong>@FormatMib(_process.WorkingSet64)</strong></div>
-    <div class="glping-diag-row"><span>Tas géré (GC.GetTotalMemory)</span><strong>@FormatMib(GC.GetTotalMemory(false))</strong></div>
-    <div class="glping-diag-row"><span>Collectes Gen0 / Gen1 / Gen2</span><strong>@GC.CollectionCount(0) / @GC.CollectionCount(1) / @GC.CollectionCount(2)</strong></div>
+    <h4><i class="ti ti-chart-donut"></i> @T("Mémoire")</h4>
+    <div class="glping-diag-row"><span>@T("Working set (process)")</span><strong>@FormatMib(_process.WorkingSet64)</strong></div>
+    <div class="glping-diag-row"><span>@T("Tas géré (GC.GetTotalMemory)")</span><strong>@FormatMib(GC.GetTotalMemory(false))</strong></div>
+    <div class="glping-diag-row"><span>@T("Collectes Gen0 / Gen1 / Gen2")</span><strong>@GC.CollectionCount(0) / @GC.CollectionCount(1) / @GC.CollectionCount(2)</strong></div>
 </div>
 
 <div class="glping-diag-card">
-    <h4><i class="ti ti-database"></i> Cache</h4>
-    <div class="glping-diag-row"><span>Réglages (appsettings.json)</span><strong>En mémoire (IMemoryCache), pas de cache distribué configuré</strong></div>
+    <h4><i class="ti ti-database"></i> @T("Cache")</h4>
+    <div class="glping-diag-row"><span>@T("Réglages (appsettings.json)")</span><strong>@T("En mémoire (IMemoryCache), pas de cache distribué configuré")</strong></div>
 </div>
 
 @code {
@@ -31,8 +30,8 @@
     private string FormatUptime()
     {
         var uptime = DateTime.Now - _process.StartTime;
-        return $"{(int)uptime.TotalHours}h {uptime.Minutes:D2}min";
+        return T("{0}h {1:D2}min", (int)uptime.TotalHours, uptime.Minutes);
     }
 
-    private static string FormatMib(long bytes) => $"{bytes / 1024.0 / 1024.0:0.##} Mio";
+    private static string FormatMib(long bytes) => T("{0:0.##} Mio", bytes / 1024.0 / 1024.0);
 }

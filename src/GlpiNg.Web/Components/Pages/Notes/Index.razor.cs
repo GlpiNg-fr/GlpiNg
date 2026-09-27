@@ -5,6 +5,7 @@ using GlpiNg.Web.Data;
 using GlpiNg.Web.Models.Notes;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Web.Components.Pages.Notes;
 
@@ -72,11 +73,11 @@ public partial class Index : ComponentBase
         {
             ItemTypes.Computer => new NoteRow(
                 note,
-                computerNames.TryGetValue(note.ItemId, out string? name) ? name : $"Ordinateur #{note.ItemId}",
+                computerNames.TryGetValue(note.ItemId, out string? name) ? name : Tr.T("Ordinateur #{0}", note.ItemId),
                 $"/parc/computer/{note.ItemId}"),
             ItemTypes.KnowledgeBaseArticle => new NoteRow(
                 note,
-                articleSubjects.TryGetValue(note.ItemId, out string? subject) ? subject : $"Article #{note.ItemId}",
+                articleSubjects.TryGetValue(note.ItemId, out string? subject) ? subject : Tr.T("Article #{0}", note.ItemId),
                 $"/tools/knowledgebase/article/{note.ItemId}"),
             _ => new NoteRow(note, $"{note.ItemType} #{note.ItemId}", null),
         }).ToList();
@@ -91,6 +92,6 @@ public partial class Index : ComponentBase
     {
         await Notes.DeleteAsync(noteId);
         await LoadAsync();
-        ToastService.Notify(new ToastMessage(ToastType.Success, "Note supprimée."));
+        ToastService.Notify(new ToastMessage(ToastType.Success, Tr.T("Note supprimée.")));
     }
 }

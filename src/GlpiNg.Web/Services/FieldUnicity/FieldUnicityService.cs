@@ -6,6 +6,7 @@ using GlpiNg.Web.Models.FieldUnicity;
 using GlpiNg.Web.Models.Notifications;
 using GlpiNg.Web.Services.Notifications;
 using Microsoft.EntityFrameworkCore;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Web.Services.FieldUnicity;
 
@@ -159,7 +160,7 @@ public sealed class FieldUnicityService(
         string fields = string.Join(", ", pairs.Select(pair =>
             $"{FieldUnicityCatalog.LabelForField(pair.Field)} « {pair.Value} »"));
 
-        return $"Création refusée : un autre élément de type {FieldUnicityCatalog.LabelFor(itemType)} porte déjà "
+        return Tr.T("Création refusée : un autre élément de type {0} porte déjà ", FieldUnicityCatalog.LabelFor(itemType))
                + $"{fields} (critère d'unicité « {criterion.Name} »).";
     }
 }

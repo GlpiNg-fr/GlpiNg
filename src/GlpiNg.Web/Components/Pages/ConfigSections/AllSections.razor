@@ -5,7 +5,7 @@
 @foreach (var (icon, label) in SectionOrder)
 {
     <div class="glping-config-divider" style="margin-top:2.5rem;">
-        <span><i class="ti @icon"></i> @label</span>
+        <span><i class="ti @icon"></i> @T(label)</span>
     </div>
 
     @if (label == "Configuration générale") { <GeneralSection /> }

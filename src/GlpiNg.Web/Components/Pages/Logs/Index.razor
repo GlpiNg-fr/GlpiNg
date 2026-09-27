@@ -2,7 +2,7 @@
 @using GlpiNg.Web.Models
 @rendermode InteractiveServer
 
-<PageTitle>Journaux — GlpiNg</PageTitle>
+<PageTitle>@T("Journaux — GlpiNg")</PageTitle>
 
 <div class="glping-list-page">
 <div class="card">
@@ -12,12 +12,12 @@
                 <span class="input-icon-addon">
                     <i class="ti ti-search"></i>
                 </span>
-                <input type="text" class="form-control" placeholder="Rechercher un message, un élément..."
+                <input type="text" class="form-control" placeholder="@(T("Rechercher un message, un élément..."))"
                        @bind="_searchTerm" @bind:event="oninput" @onkeyup="OnFilterChanged" />
             </div>
 
             <select class="form-select" style="width: auto;" @bind="_serviceFilter" @bind:after="ApplyFilter">
-                <option value="">Tous les services</option>
+                <option value="">@T("Tous les services")</option>
                 @foreach (string service in _services)
                 {
                     <option value="@service">@service</option>
@@ -25,7 +25,7 @@
             </select>
 
             <select class="form-select" style="width: auto;" @bind="_levelFilter" @bind:after="ApplyFilter">
-                <option value="">Tous les niveaux</option>
+                <option value="">@T("Tous les niveaux")</option>
                 @foreach (EventLogLevel level in Enum.GetValues<EventLogLevel>())
                 {
                     <option value="@level">@LevelLabel(level)</option>
@@ -34,7 +34,7 @@
         </div>
 
         <div class="btn-list align-items-center">
-            <button type="button" class="btn btn-icon" @onclick="OnRefreshAsync" title="Rafraîchir">
+            <button type="button" class="btn btn-icon" @onclick="OnRefreshAsync" title="@(T("Rafraîchir"))">
                 <i class="ti ti-refresh"></i>
             </button>
         </div>
@@ -44,18 +44,18 @@
         <table class="table table-vcenter card-table">
             <thead>
                 <tr>
-                    <th>Date</th>
-                    <th>Service</th>
-                    <th>Niveau</th>
-                    <th>Message</th>
-                    <th>Élément</th>
+                    <th>@T("Date")</th>
+                    <th>@T("Service")</th>
+                    <th>@T("Niveau")</th>
+                    <th>@T("Message")</th>
+                    <th>@T("Élément")</th>
                 </tr>
             </thead>
             <tbody>
                 @if (_filteredEntries.Count == 0)
                 {
                     <tr>
-                        <td colspan="5" class="text-center text-secondary py-4">Aucun évènement trouvé.</td>
+                        <td colspan="5" class="text-center text-secondary py-4">@T("Aucun évènement trouvé.")</td>
                     </tr>
                 }
                 else
@@ -95,7 +95,7 @@
     @if (_entries.Count >= MaxEntries)
     {
         <div class="card-footer text-secondary">
-            Affichage des @MaxEntries évènements les plus récents.
+            @T("Affichage des {0} évènements les plus récents.", MaxEntries)
         </div>
     }
 </div>

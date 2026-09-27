@@ -1,3 +1,4 @@
+using GlpiNg.Modules.Abstractions.Localization;
 using GlpiNg.Modules.Abstractions.Cron;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models.Notifications;
@@ -32,8 +33,7 @@ public sealed class QueuedNotificationSenderCronTask(
     public string Name => "Envoi des notifications en file d'attente";
 
     public string Description =>
-        "Expédie par SMTP les notifications en attente (déploiement, inventaire, ...), par lots " +
-        $"de {BatchSize}, jusqu'à {MaxAttempts} tentatives avant échec définitif.";
+        Tr.T("Expédie par SMTP les notifications en attente (déploiement, inventaire, ...), par lots de {0}, jusqu'à {1} tentatives avant échec définitif.", BatchSize, MaxAttempts);
 
     public int DefaultFrequencyMinutes => 5;
 

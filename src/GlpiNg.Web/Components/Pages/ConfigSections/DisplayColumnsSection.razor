@@ -6,15 +6,13 @@
 
 @if (_model is null)
 {
-    <p>Chargement…</p>
+    <p>@T("Chargement…")</p>
 }
 else
 {
     <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
         <p class="hint" style="margin-left:0;">
-            Colonnes affichées par défaut dans les listes, par type d'objet. GLPI propose ce
-            réglage pour une centaine de types ; GlpiNg le limite aux types déjà présents dans
-            l'application ou son menu.
+            @T("Colonnes affichées par défaut dans les listes, par type d'objet. GLPI propose ce réglage pour une centaine de types ; GlpiNg le limite aux types déjà présents dans l'application ou son menu.")
         </p>
 
         <div class="glping-itemtype-columns">
@@ -22,7 +20,7 @@ else
             {
                 var selected = _model.ColumnsByItemType.TryGetValue(itemType, out var cols) ? cols : [];
                 <div class="glping-itemtype-columns-row">
-                    <div class="itemtype-label">@label</div>
+                    <div class="itemtype-label">@T(label)</div>
                     <div class="glping-switch-grid" style="margin:0;">
                         @foreach (var (columnKey, columnLabel) in DisplayColumnsSettings.AvailableColumns)
                         {
@@ -44,7 +42,7 @@ else
             }
         </div>
 
-        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? T("Enregistrement…") : T("Enregistrer"))</button>
     </EditForm>
 }
 
@@ -96,11 +94,11 @@ else
             var before = await SettingsStore.ReadSectionAsync<DisplayColumnsSettings>(SectionName);
             await SettingsStore.SaveSectionAsync(SectionName, _model);
             await History.AppendAsync("Administrateur", SettingsDiff.Compare(before, _model));
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Configuration enregistrée."));
+            ToastService.Notify(new ToastMessage(ToastType.Success, T("Configuration enregistrée.")));
         }
         catch (IOException ex)
         {
-            ToastService.Notify(new ToastMessage(ToastType.Danger, $"Échec de l'enregistrement : {ex.Message}"));
+            ToastService.Notify(new ToastMessage(ToastType.Danger, T("Échec de l'enregistrement : {0}", ex.Message)));
         }
         finally
         {

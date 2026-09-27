@@ -3,11 +3,11 @@
 <div class="row">
     <div class="col-md-6">
         <div class="glping-fiche-field">
-            <label>Nom</label>
+            <label>@T("Nom")</label>
             <input class="form-control" @bind="Entity.Name" @bind:event="oninput" @bind:after="NotifyChangedAsync" />
         </div>
         <div class="glping-fiche-field">
-            <label>Comme enfant de</label>
+            <label>@T("Comme enfant de")</label>
             <select class="form-select" value="@(Entity.ParentId?.ToString() ?? "")" @onchange="OnParentChanged">
                 <option value="">-----</option>
                 @foreach (GlpiEntity candidate in ParentCandidates)
@@ -19,7 +19,7 @@
     </div>
     <div class="col-md-6">
         <div class="glping-fiche-field">
-            <label>Commentaires</label>
+            <label>@T("Commentaires")</label>
             <textarea class="form-control" rows="4" @bind="Entity.Comment"></textarea>
         </div>
     </div>

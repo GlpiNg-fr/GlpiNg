@@ -6,12 +6,12 @@
 
 @if (_model is null)
 {
-    <p>Chargement…</p>
+    <p>@T("Chargement…")</p>
 }
 else
 {
     <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
-        <p class="hint" style="margin-left:0;">Types d'éléments proposés dans les graphes d'analyse d'impact.</p>
+        <p class="hint" style="margin-left:0;">@T("Types d'éléments proposés dans les graphes d'analyse d'impact.")</p>
 
         <div class="glping-switch-grid">
             @foreach (var (key, label) in ImpactAnalysisSettings.AvailableItemTypes)
@@ -22,12 +22,12 @@ else
                         <input id="@inputId" type="checkbox" checked="@_model.EnabledItemTypes.Contains(key)" @onchange="e => Toggle(key, (bool)e.Value!)" />
                         <span class="glping-switch-slider"></span>
                     </label>
-                    <label for="@inputId">@label</label>
+                    <label for="@inputId">@T(label)</label>
                 </div>
             }
         </div>
 
-        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
+        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? T("Enregistrement…") : T("Enregistrer"))</button>
     </EditForm>
 }
 
@@ -73,11 +73,11 @@ else
             var before = await SettingsStore.ReadSectionAsync<ImpactAnalysisSettings>(SectionName);
             await SettingsStore.SaveSectionAsync(SectionName, _model);
             await History.AppendAsync("Administrateur", SettingsDiff.Compare(before, _model));
-            ToastService.Notify(new ToastMessage(ToastType.Success, "Configuration enregistrée."));
+            ToastService.Notify(new ToastMessage(ToastType.Success, T("Configuration enregistrée.")));
         }
         catch (IOException ex)
         {
-            ToastService.Notify(new ToastMessage(ToastType.Danger, $"Échec de l'enregistrement : {ex.Message}"));
+            ToastService.Notify(new ToastMessage(ToastType.Danger, T("Échec de l'enregistrement : {0}", ex.Message)));
         }
         finally
         {

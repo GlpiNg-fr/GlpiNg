@@ -2,13 +2,13 @@
 @using GlpiNg.Web.Models
 @rendermode InteractiveServer
 
-<PageTitle>@(_profile?.Name ?? "Profil") — GlpiNg</PageTitle>
+<PageTitle>@(_profile?.Name ?? T("Profil")) — GlpiNg</PageTitle>
 
 @if (_profile is null)
 {
     <div class="text-center text-secondary py-5">
         <i class="ti ti-id-badge fs-1"></i>
-        <p class="mt-2">Ce profil est introuvable.</p>
+        <p class="mt-2">@T("Ce profil est introuvable.")</p>
     </div>
 }
 else
@@ -16,8 +16,8 @@ else
     <div class="glping-fiche-topbar">
         <div class="glping-fiche-crumb">
             <i class="ti ti-id-badge"></i>
-            <span>Profil - @_profile.Name - ID @_profile.Id</span>
-            <button type="button" class="glping-fiche-favorite" title="Ajouter aux favoris">
+            <span>@T("Profil - {0} - ID {1}", _profile.Name, _profile.Id)</span>
+            <button type="button" class="glping-fiche-favorite" title="@(T("Ajouter aux favoris"))">
                 <i class="ti ti-star"></i>
             </button>
         </div>
@@ -41,7 +41,7 @@ else
             {
                 <button type="button" class="glping-fiche-tab-item @(_activeTabKey == tab.Key ? "active" : "")" @onclick="() => SetTab(tab.Key)">
                     <i class="ti @tab.Icon"></i>
-                    <span>@tab.Label</span>
+                    <span>@T(tab.Label)</span>
                     @if (tab.Count is { } count)
                     {
                         <span class="glping-fiche-tab-count">@count</span>
@@ -59,10 +59,10 @@ else
 
                         <div class="d-flex justify-content-end gap-2 mt-3">
                             <button type="button" class="btn btn-outline-danger" @onclick="DeleteAsync">
-                                <i class="ti ti-trash me-1"></i>Supprimer définitivement
+                                <i class="ti ti-trash me-1"></i>@T("Supprimer définitivement")
                             </button>
                             <button type="submit" class="btn btn-primary" disabled="@_isSaving">
-                                <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
+                                <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? T("Enregistrement…") : T("Sauvegarder"))
                             </button>
                         </div>
                     </EditForm>
@@ -70,63 +70,62 @@ else
 
                 case "droits":
                     <EditForm Model="_profile" OnValidSubmit="SaveAsync">
-                        <div class="glping-fiche-block-title"><i class="ti ti-lock"></i>Droits par section du menu</div>
+                        <div class="glping-fiche-block-title"><i class="ti ti-lock"></i>@T("Droits par section du menu")</div>
                         <p class="text-secondary small">
-                            Simplifié par rapport à GLPI : un seul droit par grande section du menu plutôt qu'une
-                            matrice fine par module. <strong>Ces droits ne sont pas encore appliqués</strong> : GlpiNg
+                            @T("Simplifié par rapport à GLPI : un seul droit par grande section du menu plutôt qu'une matrice fine par module.") <strong>@T("Ces droits ne sont pas encore appliqués")</strong> : GlpiNg
                             ne vérifie aujourd'hui aucune permission par page (seul <code>IsAdmin</code> existe sur
-                            l'utilisateur, et il n'est lui-même vérifié nulle part).
+                            @T("l'utilisateur, et il n'est lui-même vérifié nulle part).")
                         </p>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="glping-fiche-field">
-                                    <label>Parc</label>
+                                    <label>@T("Parc")</label>
                                     <select class="form-select" @bind="_profile.ParcRight">
-                                        <option value="@ProfileRightLevel.None">Aucun accès</option>
-                                        <option value="@ProfileRightLevel.Read">Lecture</option>
-                                        <option value="@ProfileRightLevel.Write">Lecture / Écriture</option>
+                                        <option value="@ProfileRightLevel.None">@T("Aucun accès")</option>
+                                        <option value="@ProfileRightLevel.Read">@T("Lecture")</option>
+                                        <option value="@ProfileRightLevel.Write">@T("Lecture / Écriture")</option>
                                     </select>
                                 </div>
                                 <div class="glping-fiche-field">
-                                    <label>Assistance</label>
+                                    <label>@T("Assistance")</label>
                                     <select class="form-select" @bind="_profile.AssistanceRight">
-                                        <option value="@ProfileRightLevel.None">Aucun accès</option>
-                                        <option value="@ProfileRightLevel.Read">Lecture</option>
-                                        <option value="@ProfileRightLevel.Write">Lecture / Écriture</option>
+                                        <option value="@ProfileRightLevel.None">@T("Aucun accès")</option>
+                                        <option value="@ProfileRightLevel.Read">@T("Lecture")</option>
+                                        <option value="@ProfileRightLevel.Write">@T("Lecture / Écriture")</option>
                                     </select>
                                 </div>
                                 <div class="glping-fiche-field">
-                                    <label>Gestion</label>
+                                    <label>@T("Gestion")</label>
                                     <select class="form-select" @bind="_profile.GestionRight">
-                                        <option value="@ProfileRightLevel.None">Aucun accès</option>
-                                        <option value="@ProfileRightLevel.Read">Lecture</option>
-                                        <option value="@ProfileRightLevel.Write">Lecture / Écriture</option>
+                                        <option value="@ProfileRightLevel.None">@T("Aucun accès")</option>
+                                        <option value="@ProfileRightLevel.Read">@T("Lecture")</option>
+                                        <option value="@ProfileRightLevel.Write">@T("Lecture / Écriture")</option>
                                     </select>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="glping-fiche-field">
-                                    <label>Outils</label>
+                                    <label>@T("Outils")</label>
                                     <select class="form-select" @bind="_profile.OutilsRight">
-                                        <option value="@ProfileRightLevel.None">Aucun accès</option>
-                                        <option value="@ProfileRightLevel.Read">Lecture</option>
-                                        <option value="@ProfileRightLevel.Write">Lecture / Écriture</option>
+                                        <option value="@ProfileRightLevel.None">@T("Aucun accès")</option>
+                                        <option value="@ProfileRightLevel.Read">@T("Lecture")</option>
+                                        <option value="@ProfileRightLevel.Write">@T("Lecture / Écriture")</option>
                                     </select>
                                 </div>
                                 <div class="glping-fiche-field">
-                                    <label>Administration</label>
+                                    <label>@T("Administration")</label>
                                     <select class="form-select" @bind="_profile.AdministrationRight">
-                                        <option value="@ProfileRightLevel.None">Aucun accès</option>
-                                        <option value="@ProfileRightLevel.Read">Lecture</option>
-                                        <option value="@ProfileRightLevel.Write">Lecture / Écriture</option>
+                                        <option value="@ProfileRightLevel.None">@T("Aucun accès")</option>
+                                        <option value="@ProfileRightLevel.Read">@T("Lecture")</option>
+                                        <option value="@ProfileRightLevel.Write">@T("Lecture / Écriture")</option>
                                     </select>
                                 </div>
                                 <div class="glping-fiche-field">
-                                    <label>Configuration</label>
+                                    <label>@T("Configuration")</label>
                                     <select class="form-select" @bind="_profile.ConfigurationRight">
-                                        <option value="@ProfileRightLevel.None">Aucun accès</option>
-                                        <option value="@ProfileRightLevel.Read">Lecture</option>
-                                        <option value="@ProfileRightLevel.Write">Lecture / Écriture</option>
+                                        <option value="@ProfileRightLevel.None">@T("Aucun accès")</option>
+                                        <option value="@ProfileRightLevel.Read">@T("Lecture")</option>
+                                        <option value="@ProfileRightLevel.Write">@T("Lecture / Écriture")</option>
                                     </select>
                                 </div>
                             </div>
@@ -134,7 +133,7 @@ else
 
                         <div class="d-flex justify-content-end gap-2 mt-3">
                             <button type="submit" class="btn btn-primary" disabled="@_isSaving">
-                                <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? "Enregistrement…" : "Sauvegarder")
+                                <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? T("Enregistrement…") : T("Sauvegarder"))
                             </button>
                         </div>
                     </EditForm>
@@ -142,14 +141,14 @@ else
 
                 case "utilisateurs":
                     <div class="glping-fiche-block">
-                        <div class="glping-fiche-block-title"><i class="ti ti-plus"></i>Ajouter une habilitation</div>
+                        <div class="glping-fiche-block-title"><i class="ti ti-plus"></i>@T("Ajouter une habilitation")</div>
                         <div class="table-responsive">
                             <table class="table table-vcenter card-table mb-0">
                                 <thead>
                                     <tr>
-                                        <th>Utilisateur</th>
-                                        <th>Entité</th>
-                                        <th>Récursif</th>
+                                        <th>@T("Utilisateur")</th>
+                                        <th>@T("Entité")</th>
+                                        <th>@T("Récursif")</th>
                                         <th></th>
                                     </tr>
                                 </thead>
@@ -157,7 +156,7 @@ else
                                     <tr>
                                         <td>
                                             <select class="form-select" @bind="_userIdToAssign">
-                                                <option value="0">-- Choisir --</option>
+                                                <option value="0">@T("-- Choisir --")</option>
                                                 @foreach (GlpiUser user in _allUsers)
                                                 {
                                                     <option value="@user.Id">@(user.DisplayName ?? user.UserName)</option>
@@ -166,7 +165,7 @@ else
                                         </td>
                                         <td>
                                             <select class="form-select" @bind="_entityIdToAssign">
-                                                <option value="0">-- Choisir --</option>
+                                                <option value="0">@T("-- Choisir --")</option>
                                                 @foreach (GlpiEntity entity in _allEntities)
                                                 {
                                                     <option value="@entity.Id">@entity.Name</option>
@@ -175,13 +174,13 @@ else
                                         </td>
                                         <td>
                                             <select class="form-select" value="@(_isRecursiveToAssign ? "true" : "false")" @onchange="@(e => _isRecursiveToAssign = e.Value?.ToString() == "true")">
-                                                <option value="false">Non</option>
-                                                <option value="true">Oui</option>
+                                                <option value="false">@T("Non")</option>
+                                                <option value="true">@T("Oui")</option>
                                             </select>
                                         </td>
                                         <td style="width: 8rem;">
                                             <button type="button" class="btn btn-primary w-100" disabled="@(_userIdToAssign == 0 || _entityIdToAssign == 0)" @onclick="AddHabilitationAsync">
-                                                <i class="ti ti-plus me-1"></i>Ajouter
+                                                <i class="ti ti-plus me-1"></i>@T("Ajouter")
                                             </button>
                                         </td>
                                     </tr>
@@ -189,12 +188,12 @@ else
                             </table>
                         </div>
 
-                        <div class="glping-fiche-block-title mt-3"><i class="ti ti-user"></i>Utilisateurs (@_profileHabilitations.Count)</div>
+                        <div class="glping-fiche-block-title mt-3"><i class="ti ti-user"></i>@T("Utilisateurs ({0})", _profileHabilitations.Count)</div>
                         @if (_profileHabilitations.Count == 0)
                         {
                             <div class="glping-config-placeholder">
                                 <i class="ti ti-user"></i>
-                                <p class="mb-0">Aucune habilitation avec ce profil.</p>
+                                <p class="mb-0">@T("Aucune habilitation avec ce profil.")</p>
                             </div>
                         }
                         else
@@ -203,9 +202,9 @@ else
                                 <table class="table table-vcenter card-table mb-0">
                                     <thead>
                                         <tr>
-                                            <th>Utilisateur</th>
-                                            <th>Entité</th>
-                                            <th>Récursif</th>
+                                            <th>@T("Utilisateur")</th>
+                                            <th>@T("Entité")</th>
+                                            <th>@T("Récursif")</th>
                                             <th style="width: 6rem;"></th>
                                         </tr>
                                     </thead>
@@ -215,13 +214,13 @@ else
                                             <tr>
                                                 <td>
                                                     <a href="@($"/admin/users/{h.UserId}")" class="text-reset">
-                                                        <i class="ti ti-user me-1 text-secondary"></i>@(h.User?.DisplayName ?? h.User?.UserName ?? "Utilisateur inconnu")
+                                                        <i class="ti ti-user me-1 text-secondary"></i>@(h.User?.DisplayName ?? h.User?.UserName ?? T("Utilisateur inconnu"))
                                                     </a>
                                                 </td>
-                                                <td>@(h.Entity?.Name ?? "Entité inconnue")</td>
-                                                <td>@(h.IsRecursive ? "Oui" : "Non")</td>
+                                                <td>@(h.Entity?.Name ?? T("Entité inconnue"))</td>
+                                                <td>@(h.IsRecursive ? T("Oui") : T("Non"))</td>
                                                 <td>
-                                                    <button type="button" class="btn btn-icon btn-sm text-danger" title="Détacher" @onclick="() => RemoveHabilitationAsync(h.Id)">
+                                                    <button type="button" class="btn btn-icon btn-sm text-danger" title="@(T("Détacher"))" @onclick="() => RemoveHabilitationAsync(h.Id)">
                                                         <i class="ti ti-x"></i>
                                                     </button>
                                                 </td>
@@ -236,12 +235,12 @@ else
 
                 case "history":
                     <div class="glping-fiche-block">
-                        <div class="glping-fiche-block-title"><i class="ti ti-history"></i>Historique (@_historyEntries.Count)</div>
+                        <div class="glping-fiche-block-title"><i class="ti ti-history"></i>@T("Historique ({0})", _historyEntries.Count)</div>
                         @if (_historyEntries.Count == 0)
                         {
                             <div class="glping-config-placeholder">
                                 <i class="ti ti-history"></i>
-                                <p class="mb-0">Aucun historique.</p>
+                                <p class="mb-0">@T("Aucun historique.")</p>
                             </div>
                         }
                         else
@@ -250,11 +249,11 @@ else
                                 <table class="table table-vcenter card-table mb-0">
                                     <thead>
                                         <tr>
-                                            <th>ID</th>
-                                            <th>Date</th>
-                                            <th>Utilisateur</th>
-                                            <th>Champ</th>
-                                            <th>Mise à jour</th>
+                                            <th>@T("ID")</th>
+                                            <th>@T("Date")</th>
+                                            <th>@T("Utilisateur")</th>
+                                            <th>@T("Champ")</th>
+                                            <th>@T("Mise à jour")</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -277,29 +276,29 @@ else
 
                 case "all":
                     <div class="glping-fiche-block">
-                        <div class="glping-fiche-block-title"><i class="ti ti-id-badge"></i>Profil</div>
-                        <p class="mb-1"><strong>Nom :</strong> @_profile.Name</p>
-                        <p class="mb-1"><strong>Par défaut :</strong> @YesNo(_profile.IsDefault)</p>
-                        <p class="mb-0"><strong>Commentaires :</strong> @(_profile.Comment ?? "—")</p>
+                        <div class="glping-fiche-block-title"><i class="ti ti-id-badge"></i>@T("Profil")</div>
+                        <p class="mb-1"><strong>@T("Nom :")</strong> @_profile.Name</p>
+                        <p class="mb-1"><strong>@T("Par défaut :")</strong> @YesNo(_profile.IsDefault)</p>
+                        <p class="mb-0"><strong>@T("Commentaires :")</strong> @(_profile.Comment ?? "—")</p>
                     </div>
                     <div class="glping-fiche-block">
-                        <div class="glping-fiche-block-title"><i class="ti ti-lock"></i>Droits</div>
-                        <p class="mb-1"><strong>Parc :</strong> @RightLabel(_profile.ParcRight)</p>
-                        <p class="mb-1"><strong>Assistance :</strong> @RightLabel(_profile.AssistanceRight)</p>
-                        <p class="mb-1"><strong>Gestion :</strong> @RightLabel(_profile.GestionRight)</p>
-                        <p class="mb-1"><strong>Outils :</strong> @RightLabel(_profile.OutilsRight)</p>
-                        <p class="mb-1"><strong>Administration :</strong> @RightLabel(_profile.AdministrationRight)</p>
-                        <p class="mb-0"><strong>Configuration :</strong> @RightLabel(_profile.ConfigurationRight)</p>
+                        <div class="glping-fiche-block-title"><i class="ti ti-lock"></i>@T("Droits")</div>
+                        <p class="mb-1"><strong>@T("Parc :")</strong> @RightLabel(_profile.ParcRight)</p>
+                        <p class="mb-1"><strong>@T("Assistance :")</strong> @RightLabel(_profile.AssistanceRight)</p>
+                        <p class="mb-1"><strong>@T("Gestion :")</strong> @RightLabel(_profile.GestionRight)</p>
+                        <p class="mb-1"><strong>@T("Outils :")</strong> @RightLabel(_profile.OutilsRight)</p>
+                        <p class="mb-1"><strong>@T("Administration :")</strong> @RightLabel(_profile.AdministrationRight)</p>
+                        <p class="mb-0"><strong>@T("Configuration :")</strong> @RightLabel(_profile.ConfigurationRight)</p>
                     </div>
                     <div class="glping-fiche-block">
-                        <div class="glping-fiche-block-title"><i class="ti ti-user"></i>Utilisateurs (@_profileHabilitations.Count)</div>
+                        <div class="glping-fiche-block-title"><i class="ti ti-user"></i>@T("Utilisateurs ({0})", _profileHabilitations.Count)</div>
                         @foreach (GlpiUserProfile h in _profileHabilitations)
                         {
-                            <p class="mb-1">@(h.User?.DisplayName ?? h.User?.UserName ?? "Utilisateur inconnu") — @(h.Entity?.Name ?? "Entité inconnue")</p>
+                            <p class="mb-1">@(h.User?.DisplayName ?? h.User?.UserName ?? T("Utilisateur inconnu")) — @(h.Entity?.Name ?? T("Entité inconnue"))</p>
                         }
                     </div>
                     <div class="glping-fiche-block">
-                        <div class="glping-fiche-block-title"><i class="ti ti-history"></i>Historique (@_historyEntries.Count)</div>
+                        <div class="glping-fiche-block-title"><i class="ti ti-history"></i>@T("Historique ({0})", _historyEntries.Count)</div>
                         @foreach (GlpiProfileHistoryEntry entry in Display.Chronological(_historyEntries, entry => entry.OccurredAt))
                         {
                             <p class="mb-1">@Display.DateTime(entry.OccurredAt) — @entry.User — @entry.Field : @entry.Description</p>

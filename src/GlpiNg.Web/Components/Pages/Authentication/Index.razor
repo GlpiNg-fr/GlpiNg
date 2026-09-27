@@ -1,10 +1,10 @@
 ﻿@page "/config/auth"
 @rendermode InteractiveServer
 
-<PageTitle>Authentification — GlpiNg</PageTitle>
+<PageTitle>@T("Authentification — GlpiNg")</PageTitle>
 
 <div class="page-header mb-3">
-    <h2 class="page-title mb-0">Authentifications externes</h2>
+    <h2 class="page-title mb-0">@T("Authentifications externes")</h2>
 </div>
 
 <div class="row row-cards">
@@ -12,8 +12,8 @@
         <a href="/config/auth/config" class="card text-reset text-decoration-none h-100">
             <div class="card-body text-center py-4">
                 <i class="ti ti-settings fs-1 text-secondary"></i>
-                <h3 class="mt-2 mb-1">Configuration</h3>
-                <p class="text-secondary mb-0">Ajout automatique des comptes, comportement lors d'une synchronisation LDAP.</p>
+                <h3 class="mt-2 mb-1">@T("Configuration")</h3>
+                <p class="text-secondary mb-0">@T("Ajout automatique des comptes, comportement lors d'une synchronisation LDAP.")</p>
             </div>
         </a>
     </div>
@@ -21,8 +21,8 @@
         <a href="/config/auth/ldap" class="card text-reset text-decoration-none h-100">
             <div class="card-body text-center py-4">
                 <i class="ti ti-address-book fs-1 text-secondary"></i>
-                <h3 class="mt-2 mb-1">Annuaire LDAP</h3>
-                <p class="text-secondary mb-0">Connexion par bind LDAP — fonctionnelle sur la page de connexion.</p>
+                <h3 class="mt-2 mb-1">@T("Annuaire LDAP")</h3>
+                <p class="text-secondary mb-0">@T("Connexion par bind LDAP — fonctionnelle sur la page de connexion.")</p>
             </div>
         </a>
     </div>
@@ -30,8 +30,8 @@
         <a href="/config/auth/mail" class="card text-reset text-decoration-none h-100">
             <div class="card-body text-center py-4">
                 <i class="ti ti-mail fs-1 text-secondary"></i>
-                <h3 class="mt-2 mb-1">Serveur mails</h3>
-                <p class="text-secondary mb-0">Gestion des serveurs IMAP/POP (non branchée sur la connexion).</p>
+                <h3 class="mt-2 mb-1">@T("Serveur mails")</h3>
+                <p class="text-secondary mb-0">@T("Gestion des serveurs IMAP/POP (non branchée sur la connexion).")</p>
             </div>
         </a>
     </div>
@@ -39,8 +39,8 @@
         <a href="/config/auth/others" class="card text-reset text-decoration-none h-100">
             <div class="card-body text-center py-4">
                 <i class="ti ti-key fs-1 text-secondary"></i>
-                <h3 class="mt-2 mb-1">Autres méthodes</h3>
-                <p class="text-secondary mb-0">CAS, certificat x509, en-tête HTTP/SSO (configuration uniquement).</p>
+                <h3 class="mt-2 mb-1">@T("Autres méthodes")</h3>
+                <p class="text-secondary mb-0">@T("CAS, certificat x509, en-tête HTTP/SSO (configuration uniquement).")</p>
             </div>
         </a>
     </div>

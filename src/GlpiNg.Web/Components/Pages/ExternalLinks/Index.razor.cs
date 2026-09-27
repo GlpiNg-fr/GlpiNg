@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Web.Components.Pages.ExternalLinks;
 
@@ -113,7 +114,7 @@ public partial class Index : ComponentBase
 
         if (await db.ExternalLinks.AsNoTracking().AnyAsync(link => link.Name == _newLink.Name))
         {
-            ToastService.Notify(new ToastMessage(ToastType.Danger, "Ce nom est déjà utilisé."));
+            ToastService.Notify(new ToastMessage(ToastType.Danger, Tr.T("Ce nom est déjà utilisé.")));
             return;
         }
 

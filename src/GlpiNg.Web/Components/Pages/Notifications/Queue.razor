@@ -2,20 +2,20 @@
 @using GlpiNg.Web.Models.Notifications
 @rendermode InteractiveServer
 
-<PageTitle>File d'attente des notifications — GlpiNg</PageTitle>
+<PageTitle>@T("File d'attente des notifications — GlpiNg")</PageTitle>
 
 <NotificationsTabStrip Current="queue" />
 
 <div class="glping-list-page">
 <div class="card">
     <div class="card-header d-flex align-items-center justify-content-between glping-list-toolbar">
-        <span class="fw-semibold">@_items.Count élément(s)</span>
+        <span class="fw-semibold">@T("{0} élément(s)", _items.Count)</span>
         <div class="btn-list align-items-center">
-            <button type="button" class="btn btn-icon" @onclick="LoadAsync" title="Rafraîchir">
+            <button type="button" class="btn btn-icon" @onclick="LoadAsync" title="@(T("Rafraîchir"))">
                 <i class="ti ti-refresh"></i>
             </button>
             <button type="button" class="btn btn-outline-danger" disabled="@(SentOrFailedCount == 0)" @onclick="PurgeSentAndFailedAsync">
-                <i class="ti ti-trash me-1"></i>Purger envoyés/échoués
+                <i class="ti ti-trash me-1"></i>@T("Purger envoyés/échoués")
             </button>
         </div>
     </div>
@@ -24,12 +24,12 @@
         <table class="table table-vcenter card-table">
             <thead>
                 <tr>
-                    <th>Sujet</th>
-                    <th>Créé le</th>
-                    <th>Destinataire</th>
-                    <th>Notification</th>
-                    <th>Statut</th>
-                    <th>Tentatives</th>
+                    <th>@T("Sujet")</th>
+                    <th>@T("Créé le")</th>
+                    <th>@T("Destinataire")</th>
+                    <th>@T("Notification")</th>
+                    <th>@T("Statut")</th>
+                    <th>@T("Tentatives")</th>
                     <th style="width: 8rem;"></th>
                 </tr>
             </thead>
@@ -37,7 +37,7 @@
                 @if (_items.Count == 0)
                 {
                     <tr>
-                        <td colspan="7" class="text-center text-secondary py-4">La file d'attente est vide.</td>
+                        <td colspan="7" class="text-center text-secondary py-4">@T("La file d'attente est vide.")</td>
                     </tr>
                 }
                 else
@@ -61,11 +61,11 @@
                                 <div class="btn-list">
                                     @if (item.Status == QueuedNotificationStatus.Failed)
                                     {
-                                        <button type="button" class="btn btn-icon btn-sm" title="Remettre en file" @onclick="() => RetryAsync(item.Id)">
+                                        <button type="button" class="btn btn-icon btn-sm" title="@(T("Remettre en file"))" @onclick="() => RetryAsync(item.Id)">
                                             <i class="ti ti-reload"></i>
                                         </button>
                                     }
-                                    <button type="button" class="btn btn-icon btn-sm text-danger" title="Supprimer" @onclick="() => DeleteAsync(item.Id)">
+                                    <button type="button" class="btn btn-icon btn-sm text-danger" title="@(T("Supprimer"))" @onclick="() => DeleteAsync(item.Id)">
                                         <i class="ti ti-x"></i>
                                     </button>
                                 </div>

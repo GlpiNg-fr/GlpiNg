@@ -7,7 +7,7 @@
         <div class="glping-module-toggle-item @(enabled && !Disabled ? "" : "disabled")">
             <span class="glping-module-toggle-label">
                 <i class="ti @item.Icon"></i>
-                <span>@item.Label</span>
+                <span>@T(item.Label)</span>
             </span>
             <label class="glping-switch">
                 <input type="checkbox" checked="@enabled" disabled="@Disabled" @onchange="e => OnToggle.InvokeAsync((item.Label, (bool)e.Value!))" />

@@ -2,7 +2,7 @@
 @using GlpiNg.Web.Models
 @rendermode InteractiveServer
 
-<PageTitle>Annuaires LDAP — GlpiNg</PageTitle>
+<PageTitle>@T("Annuaires LDAP — GlpiNg")</PageTitle>
 
 <AuthTabStrip Current="ldap" />
 
@@ -13,15 +13,12 @@
 @if (_servers.Count > 0 && !_autoAddExternalUsers)
 {
     <div class="alert alert-warning" role="alert">
-        <h4 class="alert-title"><i class="ti ti-alert-triangle"></i> Les comptes de l'annuaire ne pourront pas se connecter</h4>
+        <h4 class="alert-title"><i class="ti ti-alert-triangle"></i> @T("Les comptes de l'annuaire ne pourront pas se connecter")</h4>
         <p class="mb-2">
-            « Ajouter automatiquement les utilisateurs depuis une source externe » est désactivé.
-            Un utilisateur de l'annuaire qui n'a pas déjà un compte dans GlpiNg sera refusé, même si
-            son mot de passe est correct — et la page de connexion affichera « Nom d'utilisateur ou
-            mot de passe incorrect ».
+            @T("« Ajouter automatiquement les utilisateurs depuis une source externe » est désactivé. Un utilisateur de l'annuaire qui n'a pas déjà un compte dans GlpiNg sera refusé, même si son mot de passe est correct — et la page de connexion affichera « Nom d'utilisateur ou mot de passe incorrect ».")
         </p>
         <a class="btn btn-sm btn-warning" href="/config/auth/config">
-            <i class="ti ti-settings me-1"></i>Activer dans Configuration
+            <i class="ti ti-settings me-1"></i>@T("Activer dans Configuration")
         </a>
     </div>
 }
@@ -30,10 +27,7 @@
 {
     <div class="alert alert-info" role="alert">
         <i class="ti ti-info-circle me-1"></i>
-        Le sélecteur de source n'est pas affiché sur la page de connexion : la source est choisie
-        automatiquement (mot de passe local si le compte en a un, annuaire sinon). Pour laisser
-        l'utilisateur choisir, activez « Afficher les sources d'authentification sur la page de
-        connexion » dans <a href="/config">Configuration générale</a>.
+        @T("Le sélecteur de source n'est pas affiché sur la page de connexion : la source est choisie automatiquement (mot de passe local si le compte en a un, annuaire sinon). Pour laisser l'utilisateur choisir, activez « Afficher les sources d'authentification sur la page de connexion » dans") <a href="/config">@T("Configuration générale")</a>.
     </div>
 }
 
@@ -43,14 +37,14 @@
         <div class="btn-list">
             <div class="dropdown">
                 <button type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="ti ti-search me-1"></i>Rechercher
+                    <i class="ti ti-search me-1"></i>@T("Rechercher")
                 </button>
                 <div class="dropdown-menu p-3" style="min-width: 280px;">
                     <div class="input-icon">
                         <span class="input-icon-addon">
                             <i class="ti ti-search"></i>
                         </span>
-                        <input type="text" class="form-control" placeholder="Rechercher un annuaire..."
+                        <input type="text" class="form-control" placeholder="@(T("Rechercher un annuaire..."))"
                                @bind="_searchTerm" @bind:event="oninput" @onkeyup="OnSearchChanged" />
                     </div>
                 </div>
@@ -58,31 +52,31 @@
         </div>
 
         <div class="btn-list align-items-center">
-            <label class="form-check m-0 px-2" title="Tout sélectionner">
+            <label class="form-check m-0 px-2" title="@(T("Tout sélectionner"))">
                 <input class="form-check-input m-0" type="checkbox" checked="@AllSelected"
                        @onchange="@((ChangeEventArgs e) => ToggleSelectAll((bool)(e.Value ?? false)))" />
             </label>
 
             <div class="dropdown">
                 <button type="button" class="btn btn-icon text-danger" data-bs-toggle="dropdown" aria-expanded="false"
-                        disabled="@(_selectedIds.Count == 0)" title="Supprimer la sélection">
+                        disabled="@(_selectedIds.Count == 0)" title="@(T("Supprimer la sélection"))">
                     <i class="ti ti-trash"></i>
                 </button>
                 <div class="dropdown-menu dropdown-menu-end p-3" style="min-width: 260px;">
-                    <p class="mb-2">Supprimer @_selectedIds.Count annuaire(s) sélectionné(s) ? Cette action est définitive.</p>
+                    <p class="mb-2">@T("Supprimer {0} annuaire(s) sélectionné(s) ? Cette action est définitive.", _selectedIds.Count)</p>
                     <div class="d-flex justify-content-end gap-2">
-                        <button type="button" class="btn btn-sm">Annuler</button>
-                        <button type="button" class="btn btn-sm btn-danger" @onclick="DeleteSelectedAsync">Supprimer</button>
+                        <button type="button" class="btn btn-sm">@T("Annuler")</button>
+                        <button type="button" class="btn btn-sm btn-danger" @onclick="DeleteSelectedAsync">@T("Supprimer")</button>
                     </div>
                 </div>
             </div>
 
-            <button type="button" class="btn btn-icon" @onclick="OnRefreshAsync" title="Rafraîchir">
+            <button type="button" class="btn btn-icon" @onclick="OnRefreshAsync" title="@(T("Rafraîchir"))">
                 <i class="ti ti-refresh"></i>
             </button>
 
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newLdapServerModal">
-                <i class="ti ti-plus me-1"></i>Ajouter
+                <i class="ti ti-plus me-1"></i>@T("Ajouter")
             </button>
         </div>
     </div>
@@ -94,21 +88,21 @@
                     <th style="width: 2.5rem;">
                         @* Ne coche que les lignes affichées — la page courante là où le tableau est
                            paginé : cocher ici ne doit jamais engager plus que ce qu'on voit. *@
-                        <input class="form-check-input m-0" type="checkbox" title="Sélectionner les éléments visibles"
+                        <input class="form-check-input m-0" type="checkbox" title="@(T("Sélectionner les éléments visibles"))"
                                checked="@AllSelected"
                                @onchange="@((ChangeEventArgs e) => ToggleSelectAll((bool)(e.Value ?? false)))" />
                     </th>
-                    <th>Nom</th>
-                    <th>Serveur</th>
-                    <th>Par défaut</th>
-                    <th>Activé</th>
+                    <th>@T("Nom")</th>
+                    <th>@T("Serveur")</th>
+                    <th>@T("Par défaut")</th>
+                    <th>@T("Activé")</th>
                 </tr>
             </thead>
             <tbody>
                 @if (_filteredServers.Count == 0)
                 {
                     <tr>
-                        <td colspan="5" class="text-center text-secondary py-4">Aucun annuaire LDAP configuré.</td>
+                        <td colspan="5" class="text-center text-secondary py-4">@T("Aucun annuaire LDAP configuré.")</td>
                     </tr>
                 }
                 else
@@ -126,8 +120,8 @@
                                 </a>
                             </td>
                             <td>@server.Host:@server.Port</td>
-                            <td>@(server.IsDefault ? "Oui" : "Non")</td>
-                            <td>@(server.IsActive ? "Oui" : "Non")</td>
+                            <td>@(server.IsDefault ? T("Oui") : T("Non"))</td>
+                            <td>@(server.IsActive ? T("Oui") : T("Non"))</td>
                         </tr>
                     }
                 }
@@ -141,15 +135,15 @@
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="ti ti-address-book me-2"></i>Nouvel élément - Annuaire LDAP</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                <h5 class="modal-title"><i class="ti ti-address-book me-2"></i>@T("Nouvel élément - Annuaire LDAP")</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@(T("Fermer"))"></button>
             </div>
             <div class="modal-body">
                 <LdapServerFormFields Server="_newServer" @bind-BindPasswordPlain="_newBindPassword" OnChanged="StateHasChanged" />
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-warning" disabled="@(!CanCreate)" @onclick="CreateAsync">
-                    <i class="ti ti-plus me-1"></i>Ajouter
+                    <i class="ti ti-plus me-1"></i>@T("Ajouter")
                 </button>
             </div>
         </div>

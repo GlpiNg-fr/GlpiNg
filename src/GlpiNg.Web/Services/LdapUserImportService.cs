@@ -2,6 +2,7 @@ using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using GlpiNg.Modules.Abstractions.Localization;
 
 namespace GlpiNg.Web.Services;
 
@@ -45,7 +46,7 @@ public sealed class LdapUserImportService(
         AuthLdapServer? server = await db.AuthLdapServers.AsNoTracking().FirstOrDefaultAsync(s => s.Id == serverId, ct);
         if (server is null)
         {
-            return ([], "Annuaire introuvable.");
+            return ([], Tr.T("Annuaire introuvable."));
         }
 
         LdapSearchOutcome outcome = await ldapAuth.SearchUsersAsync(serverId, term, ct);
@@ -93,7 +94,7 @@ public sealed class LdapUserImportService(
         LdapSearchOutcome outcome = await ldapAuth.SearchUsersAsync(serverId, null, ct);
         if (!outcome.Success)
         {
-            return result with { Warnings = [outcome.Error ?? "Recherche impossible."] };
+            return result with { Warnings = [outcome.Error ?? Tr.T("Recherche impossible.")] };
         }
 
         int created = 0;
@@ -107,7 +108,7 @@ public sealed class LdapUserImportService(
 
             if (directoryUser is null)
             {
-                warnings.Add($"« {login} » est introuvable dans l'annuaire : ignoré.");
+                warnings.Add(Tr.T("« {0} » est introuvable dans l'annuaire : ignoré.", login));
                 skipped++;
                 continue;
             }
