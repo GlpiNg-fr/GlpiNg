@@ -1,0 +1,57 @@
+<div class="glping-card-expander @(_expanded ? "" : "collapsed")">
+    @* L'action d'en-tête est rendue à côté du bouton de repli, et non dedans : un interrupteur
+       imbriqué dans un <button> est invalide en HTML, et son clic replierait la carte au passage. *@
+    <div class="glping-card-expander-header-row">
+        <button type="button" class="glping-card-expander-header" @onclick="Toggle">
+            <span class="glping-card-expander-title">
+                <i class="ti @Icon"></i>
+                <span>@Title</span>
+            </span>
+            <i class="ti ti-chevron-down glping-card-expander-chevron"></i>
+        </button>
+
+        @if (HeaderActions is not null)
+        {
+            <div class="glping-card-expander-header-actions">
+                @HeaderActions
+            </div>
+        }
+    </div>
+    @if (_expanded)
+    {
+        <div class="glping-card-expander-body">
+            @ChildContent
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = "";
+
+    [Parameter]
+    public string Icon { get; set; } = "ti-box";
+
+    [Parameter]
+    public bool Expanded { get; set; } = true;
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// Contenu affiché à droite du titre, sur la ligne d'en-tête : un interrupteur qui commande
+    /// tout le contenu de la carte, par exemple (voir ParcSection). Reste visible carte repliée —
+    /// c'est tout l'intérêt d'être là plutôt que dans le corps.
+    /// </summary>
+    [Parameter]
+    public RenderFragment? HeaderActions { get; set; }
+
+    private bool _expanded;
+
+    protected override void OnInitialized()
+    {
+        _expanded = Expanded;
+    }
+
+    private void Toggle() => _expanded = !_expanded;
+}

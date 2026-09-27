@@ -1,0 +1,108 @@
+﻿@using GlpiNg.Web.Models
+@using GlpiNg.Web.Services
+@inject SettingsCacheService SettingsStore
+@inject ConfigHistoryService History
+@inject ToastService ToastService
+
+@if (_model is null)
+{
+    <p>@T("Chargement…")</p>
+}
+else
+{
+    <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
+        <p class="hint" style="margin-left:0;">
+            @T("Colonnes affichées par défaut dans les listes, par type d'objet. GLPI propose ce réglage pour une centaine de types ; GlpiNg le limite aux types déjà présents dans l'application ou son menu.")
+        </p>
+
+        <div class="glping-itemtype-columns">
+            @foreach (var (itemType, label) in DisplayColumnsSettings.ItemTypes)
+            {
+                var selected = _model.ColumnsByItemType.TryGetValue(itemType, out var cols) ? cols : [];
+                <div class="glping-itemtype-columns-row">
+                    <div class="itemtype-label">@T(label)</div>
+                    <div class="glping-switch-grid" style="margin:0;">
+                        @foreach (var (columnKey, columnLabel) in DisplayColumnsSettings.AvailableColumns)
+                        {
+                            @* L'identifiant porte le type d'objet : la même colonne est proposée
+                               sur chaque ligne, et un id répété rendrait le libellé de la première
+                               ligne cliquable pour toutes les autres. *@
+                            var inputId = $"cols-{itemType}-{columnKey}";
+                            <div class="glping-switch-grid-item">
+                                <label class="glping-switch">
+                                    <input id="@inputId" type="checkbox" checked="@selected.Contains(columnKey)"
+                                           @onchange="e => Toggle(itemType, columnKey, (bool)e.Value!)" />
+                                    <span class="glping-switch-slider"></span>
+                                </label>
+                                <label for="@inputId">@columnLabel</label>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? T("Enregistrement…") : T("Enregistrer"))</button>
+    </EditForm>
+}
+
+@code {
+    private const string SectionName = "DisplayColumnsSettings";
+
+    private DisplayColumnsSettings? _model;
+    private bool _isSaving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _model = await SettingsStore.ReadSectionAsync<DisplayColumnsSettings>(SectionName);
+    }
+
+    private void Toggle(string itemType, string columnKey, bool enabled)
+    {
+        if (_model is null)
+        {
+            return;
+        }
+
+        if (!_model.ColumnsByItemType.TryGetValue(itemType, out var columns))
+        {
+            columns = [];
+            _model.ColumnsByItemType[itemType] = columns;
+        }
+
+        if (enabled && !columns.Contains(columnKey))
+        {
+            columns.Add(columnKey);
+        }
+        else if (!enabled)
+        {
+            columns.Remove(columnKey);
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_model is null)
+        {
+            return;
+        }
+
+        _isSaving = true;
+
+        try
+        {
+            var before = await SettingsStore.ReadSectionAsync<DisplayColumnsSettings>(SectionName);
+            await SettingsStore.SaveSectionAsync(SectionName, _model);
+            await History.AppendAsync("Administrateur", SettingsDiff.Compare(before, _model));
+            ToastService.Notify(new ToastMessage(ToastType.Success, T("Configuration enregistrée.")));
+        }
+        catch (IOException ex)
+        {
+            ToastService.Notify(new ToastMessage(ToastType.Danger, T("Échec de l'enregistrement : {0}", ex.Message)));
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+}

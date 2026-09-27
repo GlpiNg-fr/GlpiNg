@@ -1,0 +1,253 @@
+@using GlpiNg.Web.Components.Shared
+@using GlpiNg.Web.Models
+@using GlpiNg.Web.Services
+@inject SettingsCacheService SettingsStore
+@inject ConfigHistoryService History
+@inject ToastService ToastService
+@inject NavigationManager Navigation
+
+@if (_model is null)
+{
+    <p>@T("Chargement…")</p>
+}
+else
+{
+    <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
+        <div class="glping-config-field">
+            <label for="dv-language">@T("Langue par défaut")</label>
+            <select id="dv-language" @bind="_model.Language">
+                @* Chaque langue sous son propre nom, jamais traduit : c'est ainsi qu'on reconnaît la sienne. *@
+                @foreach ((string languageCode, string nativeName) in LanguageCatalog.Languages)
+                {
+                    <option value="@languageCode">@nativeName</option>
+                }
+            </select>
+        </div>
+
+        <div class="glping-config-field">
+            <label for="dv-date-format">@T("Format des dates")</label>
+            <select id="dv-date-format" class="glping-config-input-sm" @bind="_model.DateFormat">
+                <option value="ymd">@T("AAAA-MM-JJ")</option>
+                <option value="dmy">@T("JJ-MM-AAAA")</option>
+                <option value="mdy">@T("MM-JJ-AAAA")</option>
+            </select>
+        </div>
+
+        <div class="glping-config-field">
+            <label for="dv-name-order">@T("Ordre d'affichage du nom complet")</label>
+            <select id="dv-name-order" @bind="_model.FullNameOrder">
+                <option value="NomPrenom">@T("Nom, Prénom")</option>
+                <option value="PrenomNom">@T("Prénom, Nom")</option>
+            </select>
+        </div>
+
+        <div class="glping-config-field">
+            <label for="dv-number-format">@T("Format des nombres")</label>
+            <select id="dv-number-format" @bind="_model.NumberFormat">
+                <option value="1 234.56">1 234.56</option>
+                <option value="1,234.56">1,234.56</option>
+                <option value="1 234,56">1 234,56</option>
+                <option value="1234.56">1234.56</option>
+                <option value="1234,56">1234,56</option>
+            </select>
+        </div>
+
+        <div class="glping-config-field">
+            <label for="dv-results-per-page">@T("Nombre de résultats par page")</label>
+            <input id="dv-results-per-page" type="number" min="1" class="glping-config-input-sm" @bind="_model.ResultsPerPage" />
+        </div>
+
+        <div class="glping-config-field checkbox">
+            <label for="dv-goto-created">@T("Après la création, aller à l'élément créé")</label>
+            <label class="glping-switch">
+                <input id="dv-goto-created" type="checkbox" @bind="_model.GoToCreatedItem" />
+                <span class="glping-switch-slider"></span>
+            </label>
+        </div>
+
+        <div class="glping-config-field checkbox">
+            <label for="dv-full-dropdown">@T("Afficher le nom complet des intitulés dans les listes déroulantes")</label>
+            <label class="glping-switch">
+                <input id="dv-full-dropdown" type="checkbox" @bind="_model.ShowFullNameInDropdowns" />
+                <span class="glping-switch-slider"></span>
+            </label>
+        </div>
+
+        <div class="glping-config-field checkbox">
+            <label for="dv-full-search">@T("Afficher le nom complet des intitulés dans les résultats de recherche")</label>
+            <label class="glping-switch">
+                <input id="dv-full-search" type="checkbox" @bind="_model.ShowFullNameInSearchResults" />
+                <span class="glping-switch-slider"></span>
+            </label>
+        </div>
+
+        <div class="glping-config-field">
+            <label for="dv-counters">@T("Afficher les compteurs")</label>
+            <select id="dv-counters" class="glping-config-input-sm" @bind="_model.ShowCounters">
+                <option value="0">@T("Non")</option>
+                <option value="1">@T("Oui")</option>
+                <option value="2">@T("Jamais")</option>
+            </select>
+        </div>
+
+        <div class="glping-config-field checkbox">
+            <label for="dv-glping-ids">@T("Afficher les ID GLPI")</label>
+            <label class="glping-switch">
+                <input id="dv-glping-ids" type="checkbox" @bind="_model.ShowGlpiIds" />
+                <span class="glping-switch-slider"></span>
+            </label>
+        </div>
+
+        <div class="glping-config-field checkbox">
+            <label for="dv-keep-devices">@T("Garder les composants lors de la suppression définitive d'un élément")</label>
+            <label class="glping-switch">
+                <input id="dv-keep-devices" type="checkbox" @bind="_model.KeepDevicesOnPurge" />
+                <span class="glping-switch-slider"></span>
+            </label>
+        </div>
+
+        <div class="glping-config-field checkbox">
+            <label for="dv-notify-changes">@T("Notifications pour mes changements")</label>
+            <label class="glping-switch">
+                <input id="dv-notify-changes" type="checkbox" @bind="_model.NotifyOnMyChanges" />
+                <span class="glping-switch-slider"></span>
+            </label>
+        </div>
+
+        <div class="glping-config-field">
+            <label for="dv-homepage-count">@T("Résultats à afficher sur la page d'accueil")</label>
+            <input id="dv-homepage-count" type="number" min="1" class="glping-config-input-sm" @bind="_model.HomepageResultsCount" />
+        </div>
+
+        <div class="glping-config-field">
+            <label for="dv-pdf-font">@T("Police pour l'export PDF")</label>
+            <select id="dv-pdf-font" @bind="_model.PdfExportFont">
+                <option value="DejaVuSans">@T("DejaVuSans")</option>
+                <option value="DejaVuSerif">@T("DejaVuSerif")</option>
+                <option value="FreeSans">@T("FreeSans")</option>
+                <option value="FreeSerif">@T("FreeSerif")</option>
+                <option value="Helvetica">@T("Helvetica")</option>
+                <option value="Courier">@T("Courier")</option>
+                <option value="Times-Roman">@T("Times-Roman")</option>
+            </select>
+        </div>
+
+        <div class="glping-config-field">
+            <label for="dv-csv-delimiter">@T("Délimiteur CSV")</label>
+            <select id="dv-csv-delimiter" class="glping-config-input-sm" @bind="_model.CsvDelimiter">
+                <option value=";">;</option>
+                <option value=",">,</option>
+            </select>
+        </div>
+
+        <div class="glping-config-field">
+            <label for="dv-palette">@T("Palette de couleur")</label>
+            @* Avec aperçu de chaque palette : un <select> n'accepte que du texte. *@
+            <PaletteSelect Id="dv-palette" @bind-Value="_model.ColorPalette" />
+        </div>
+
+        <div class="glping-config-field">
+            <label for="dv-layout">@T("Mise en page")</label>
+            <select id="dv-layout" @bind="_model.Layout">
+                <option value="horizontal">@T("Horizontal (menu dans l'en-tête)")</option>
+                <option value="vertical">@T("Vertical (menu dans la barre latérale)")</option>
+            </select>
+        </div>
+
+        <div class="glping-config-field">
+            <label for="dv-richtext">@T("Disposition des champs de texte riche")</label>
+            <select id="dv-richtext" @bind="_model.RichTextLayout">
+                <option value="embedded">@T("Intégrée (sans barre d'outils)")</option>
+                <option value="classic">@T("Classique (barre d'outils en haut)")</option>
+            </select>
+        </div>
+
+        <div class="glping-config-field checkbox">
+            <label for="dv-contrast">@T("Activer le contraste élevé")</label>
+            <label class="glping-switch">
+                <input id="dv-contrast" type="checkbox" @bind="_model.HighContrast" />
+                <span class="glping-switch-slider"></span>
+            </label>
+        </div>
+
+        <div class="glping-config-field">
+            <label for="dv-timezone">@T("Fuseau horaire")</label>
+            <select id="dv-timezone" @bind="_model.Timezone">
+                <option value="server">@T("Utiliser la configuration serveur")</option>
+                <option value="UTC">@T("UTC")</option>
+                <option value="Europe/Paris">@T("Europe/Paris")</option>
+                <option value="Europe/London">@T("Europe/London")</option>
+                <option value="America/New_York">@T("America/New_York")</option>
+                <option value="Asia/Tokyo">@T("Asia/Tokyo")</option>
+            </select>
+        </div>
+
+        <div class="glping-config-field">
+            <label for="dv-central-tab">@T("Onglet central par défaut")</label>
+            <select id="dv-central-tab" @bind="_model.DefaultCentralTab">
+                <option value="dashboard">@T("Tableau de bord")</option>
+                <option value="personal">@T("Vue personnelle")</option>
+                <option value="group">@T("Vue groupe")</option>
+                <option value="global">@T("Vue globale")</option>
+                <option value="rss">@T("Flux RSS")</option>
+            </select>
+        </div>
+
+        <div class="glping-config-field">
+            <label for="dv-history-order">@T("Ordre de l'historique")</label>
+            <select id="dv-history-order" @bind="_model.HistoryOrder">
+                <option value="natural">@T("Ordre naturel (anciennes entrées en premier)")</option>
+                <option value="reverse">@T("Ordre antéchronologique (nouvelles entrées en premier)")</option>
+            </select>
+        </div>
+
+        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? T("Enregistrement…") : T("Enregistrer"))</button>
+    </EditForm>
+}
+
+@code {
+    private const string SectionName = "DefaultValuesSettings";
+
+    private DefaultValuesSettings? _model;
+    private bool _isSaving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _model = await SettingsStore.ReadSectionAsync<DefaultValuesSettings>(SectionName);
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_model is null)
+        {
+            return;
+        }
+
+        _isSaving = true;
+
+        try
+        {
+            var before = await SettingsStore.ReadSectionAsync<DefaultValuesSettings>(SectionName);
+            await SettingsStore.SaveSectionAsync(SectionName, _model);
+            await History.AppendAsync("Administrateur", SettingsDiff.Compare(before, _model));
+
+            // La langue de l'interface est posée à l'ouverture du circuit Blazor : pour qu'une autre
+            // s'applique, il faut en ouvrir un nouveau. Seuls les comptes sans langue personnelle changent.
+            if (!string.Equals(before.Language, _model.Language, StringComparison.OrdinalIgnoreCase))
+            {
+                Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+                return;
+            }
+
+            ToastService.Notify(new ToastMessage(ToastType.Success, T("Configuration enregistrée.")));
+        }
+        catch (IOException ex)
+        {
+            ToastService.Notify(new ToastMessage(ToastType.Danger, T("Échec de l'enregistrement : {0}", ex.Message)));
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+}

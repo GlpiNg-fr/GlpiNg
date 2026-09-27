@@ -1,8 +1,28 @@
-using AnthoDingo.Setup;
+﻿using AnthoDingo.Setup;
+using GlpiNg.Modules.Abstractions.Entities;
+using GlpiNg.Modules.Cron.Models;
+using GlpiNg.Modules.Deployment.Models;
 using GlpiNg.Modules.Inventory.Models;
+using GlpiNg.Modules.KnowledgeBase.Models;
+using GlpiNg.Web.Models.Documents;
+using GlpiNg.Web.Models.Notes;
 using GlpiNg.Web.Models;
-using GlpiNg.Web.Models.Agent;
+using GlpiNg.Web.Models.Notifications;
+using GlpiNg.Modules.Management.Models;
+using GlpiNg.Modules.Assistance.Models;
+using GlpiNg.Web.Models.CustomAssets;
+using GlpiNg.Web.Models.ExternalLinks;
+using GlpiNg.Web.Models.FieldUnicity;
+using GlpiNg.Web.Models.Webhooks;
+using GlpiNg.Web.Services;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Metadata;
+using MySqlConnector;
+using Npgsql;
+using System.Data.Common;
+using System.Reflection;
 
 namespace GlpiNg.Web.Data;
 
@@ -12,13 +32,204 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<ComputerComponent> ComputerComponents => Set<ComputerComponent>();
     public DbSet<ComputerSoftware> ComputerSoftwares => Set<ComputerSoftware>();
     public DbSet<ComputerPeripheral> ComputerPeripherals => Set<ComputerPeripheral>();
+    public DbSet<ComputerVolume> ComputerVolumes => Set<ComputerVolume>();
+    public DbSet<ComputerBattery> ComputerBatteries => Set<ComputerBattery>();
+    public DbSet<ComputerConnector> ComputerConnectors => Set<ComputerConnector>();
+    public DbSet<ComputerNetworkPort> ComputerNetworkPorts => Set<ComputerNetworkPort>();
+    public DbSet<ComputerAntivirus> ComputerAntiviruses => Set<ComputerAntivirus>();
+    public DbSet<ComputerImportHistory> ComputerImportHistories => Set<ComputerImportHistory>();
+    public DbSet<ComputerHistoryEntry> ComputerHistoryEntries => Set<ComputerHistoryEntry>();
+    public DbSet<DictionaryRule> DictionaryRules => Set<DictionaryRule>();
+    public DbSet<DictionaryRuleCriterion> DictionaryRuleCriteria => Set<DictionaryRuleCriterion>();
+    public DbSet<DropdownItem> DropdownItems => Set<DropdownItem>();
+    public DbSet<SavedSearch> SavedSearches => Set<SavedSearch>();
+    public DbSet<SavedSearchOrder> SavedSearchOrders => Set<SavedSearchOrder>();
+    public DbSet<TableColumnPreference> TableColumnPreferences => Set<TableColumnPreference>();
+    public DbSet<LockedField> LockedFields => Set<LockedField>();
+
+    public DbSet<Peripheral> Peripherals => Set<Peripheral>();
+    public DbSet<PeripheralHistoryEntry> PeripheralHistoryEntries => Set<PeripheralHistoryEntry>();
+
+    public DbSet<NetworkEquipment> NetworkEquipments => Set<NetworkEquipment>();
+    public DbSet<NetworkEquipmentHistoryEntry> NetworkEquipmentHistoryEntries => Set<NetworkEquipmentHistoryEntry>();
+    public DbSet<Printer> Printers => Set<Printer>();
+    public DbSet<PrinterHistoryEntry> PrinterHistoryEntries => Set<PrinterHistoryEntry>();
+    public DbSet<Phone> Phones => Set<Phone>();
+    public DbSet<PhoneHistoryEntry> PhoneHistoryEntries => Set<PhoneHistoryEntry>();
+    public DbSet<Rack> Racks => Set<Rack>();
+    public DbSet<RackHistoryEntry> RackHistoryEntries => Set<RackHistoryEntry>();
+    public DbSet<Enclosure> Enclosures => Set<Enclosure>();
+    public DbSet<EnclosureHistoryEntry> EnclosureHistoryEntries => Set<EnclosureHistoryEntry>();
+    public DbSet<Pdu> Pdus => Set<Pdu>();
+    public DbSet<PduHistoryEntry> PduHistoryEntries => Set<PduHistoryEntry>();
+    public DbSet<PassiveEquipment> PassiveEquipments => Set<PassiveEquipment>();
+    public DbSet<PassiveEquipmentHistoryEntry> PassiveEquipmentHistoryEntries => Set<PassiveEquipmentHistoryEntry>();
+
+    public DbSet<CartridgeItem> CartridgeItems => Set<CartridgeItem>();
+    public DbSet<Cartridge> Cartridges => Set<Cartridge>();
+    public DbSet<CartridgeItemHistoryEntry> CartridgeItemHistoryEntries => Set<CartridgeItemHistoryEntry>();
+
+    public DbSet<ConsumableItem> ConsumableItems => Set<ConsumableItem>();
+    public DbSet<Consumable> Consumables => Set<Consumable>();
+    public DbSet<ConsumableItemHistoryEntry> ConsumableItemHistoryEntries => Set<ConsumableItemHistoryEntry>();
+
+    public DbSet<SimCard> SimCards => Set<SimCard>();
+    public DbSet<SimCardHistoryEntry> SimCardHistoryEntries => Set<SimCardHistoryEntry>();
+
+    public DbSet<Cable> Cables => Set<Cable>();
+    public DbSet<CableHistoryEntry> CableHistoryEntries => Set<CableHistoryEntry>();
 
     public DbSet<GlpiAgent> Agents => Set<GlpiAgent>();
     public DbSet<DeploymentJob> DeploymentJobs => Set<DeploymentJob>();
+    public DbSet<CollectResult> CollectResults => Set<CollectResult>();
     public DbSet<DeploymentPackage> DeploymentPackages => Set<DeploymentPackage>();
     public DbSet<DeploymentPackageFile> DeploymentPackageFiles => Set<DeploymentPackageFile>();
+    public DbSet<DeploymentPackageFilePart> DeploymentPackageFileParts => Set<DeploymentPackageFilePart>();
+    public DbSet<DeploymentPackageTarget> DeploymentPackageTargets => Set<DeploymentPackageTarget>();
+
+    public DbSet<DeployComputerGroup> DeployComputerGroups => Set<DeployComputerGroup>();
+    public DbSet<DeployComputerGroupMember> DeployComputerGroupMembers => Set<DeployComputerGroupMember>();
+    public DbSet<DeployComputerGroupCriterion> DeployComputerGroupCriteria => Set<DeployComputerGroupCriterion>();
+    public DbSet<DeploymentTask> DeploymentTasks => Set<DeploymentTask>();
+    public DbSet<DeploymentTaskPackage> DeploymentTaskPackages => Set<DeploymentTaskPackage>();
+    public DbSet<DeploymentTaskTarget> DeploymentTaskTargets => Set<DeploymentTaskTarget>();
+
+    public DbSet<IpRange> IpRanges => Set<IpRange>();
+    public DbSet<SnmpCredential> SnmpCredentials => Set<SnmpCredential>();
+    public DbSet<NetworkTask> NetworkTasks => Set<NetworkTask>();
+    public DbSet<NetworkTaskIpRange> NetworkTaskIpRanges => Set<NetworkTaskIpRange>();
+    public DbSet<NetworkTaskCredential> NetworkTaskCredentials => Set<NetworkTaskCredential>();
+    public DbSet<NetworkTaskActor> NetworkTaskActors => Set<NetworkTaskActor>();
+    public DbSet<NetworkTaskJob> NetworkTaskJobs => Set<NetworkTaskJob>();
+    public DbSet<DiscoveredNetworkDevice> DiscoveredNetworkDevices => Set<DiscoveredNetworkDevice>();
+
+    public DbSet<DeploymentRule> DeploymentRules => Set<DeploymentRule>();
+
+    public DbSet<WakeOnLanTask> WakeOnLanTasks => Set<WakeOnLanTask>();
+    public DbSet<WakeOnLanTaskTarget> WakeOnLanTaskTargets => Set<WakeOnLanTaskTarget>();
+    public DbSet<WakeOnLanTaskActor> WakeOnLanTaskActors => Set<WakeOnLanTaskActor>();
+    public DbSet<WakeOnLanTaskJob> WakeOnLanTaskJobs => Set<WakeOnLanTaskJob>();
 
     public DbSet<GlpiUser> Users => Set<GlpiUser>();
+    public DbSet<GlpiUserHistoryEntry> UserHistoryEntries => Set<GlpiUserHistoryEntry>();
+    public DbSet<GlpiUserProfile> UserProfiles => Set<GlpiUserProfile>();
+    public DbSet<DashboardCardPreference> DashboardCardPreferences => Set<DashboardCardPreference>();
+
+    public DbSet<GlpiGroup> Groups => Set<GlpiGroup>();
+    public DbSet<GlpiGroupUser> GroupUsers => Set<GlpiGroupUser>();
+    public DbSet<GlpiGroupNote> GroupNotes => Set<GlpiGroupNote>();
+    public DbSet<GlpiGroupHistoryEntry> GroupHistoryEntries => Set<GlpiGroupHistoryEntry>();
+
+    public DbSet<GlpiEntity> Entities => Set<GlpiEntity>();
+    public DbSet<GlpiEntityNote> EntityNotes => Set<GlpiEntityNote>();
+    public DbSet<GlpiEntityHistoryEntry> EntityHistoryEntries => Set<GlpiEntityHistoryEntry>();
+
+    public DbSet<GlpiProfile> Profiles => Set<GlpiProfile>();
+    public DbSet<GlpiProfileHistoryEntry> ProfileHistoryEntries => Set<GlpiProfileHistoryEntry>();
+
+    public DbSet<AuthLdapServer> AuthLdapServers => Set<AuthLdapServer>();
+    public DbSet<AuthMailServer> AuthMailServers => Set<AuthMailServer>();
+
+    public DbSet<OAuthClient> OAuthClients => Set<OAuthClient>();
+
+    public DbSet<ApiClient> ApiClients => Set<ApiClient>();
+
+    public DbSet<CronSettings> CronSettings => Set<CronSettings>();
+
+    public DbSet<AutomaticActionState> AutomaticActionStates => Set<AutomaticActionState>();
+    public DbSet<AutomaticActionRunLog> AutomaticActionRunLogs => Set<AutomaticActionRunLog>();
+
+    public DbSet<AppSetting> AppSettings => Set<AppSetting>();
+
+    public DbSet<TimeSlot> TimeSlots => Set<TimeSlot>();
+    public DbSet<TimeSlotEntry> TimeSlotEntries => Set<TimeSlotEntry>();
+
+    public DbSet<CollectDefinition> CollectDefinitions => Set<CollectDefinition>();
+    public DbSet<CollectRegistryEntry> CollectRegistryEntries => Set<CollectRegistryEntry>();
+    public DbSet<CollectWmiEntry> CollectWmiEntries => Set<CollectWmiEntry>();
+    public DbSet<CollectFileSearchEntry> CollectFileSearchEntries => Set<CollectFileSearchEntry>();
+
+    public DbSet<DeploymentMirrorServer> DeploymentMirrorServers => Set<DeploymentMirrorServer>();
+    public DbSet<DeploymentUserInteractionTemplate> DeploymentUserInteractionTemplates => Set<DeploymentUserInteractionTemplate>();
+
+    public DbSet<NotificationTemplate> NotificationTemplates => Set<NotificationTemplate>();
+    public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<NotificationRecipient> NotificationRecipients => Set<NotificationRecipient>();
+    public DbSet<QueuedNotification> QueuedNotifications => Set<QueuedNotification>();
+
+    public DbSet<Webhook> Webhooks => Set<Webhook>();
+    public DbSet<WebhookHeader> WebhookHeaders => Set<WebhookHeader>();
+    public DbSet<QueuedWebhook> QueuedWebhooks => Set<QueuedWebhook>();
+
+    public DbSet<ExternalLink> ExternalLinks => Set<ExternalLink>();
+    public DbSet<ExternalLinkItemType> ExternalLinkItemTypes => Set<ExternalLinkItemType>();
+
+    public DbSet<FieldUnicityCriterion> FieldUnicityCriteria => Set<FieldUnicityCriterion>();
+    public DbSet<FieldUnicityField> FieldUnicityFields => Set<FieldUnicityField>();
+
+    public DbSet<Supplier> Suppliers => Set<Supplier>();
+    public DbSet<SupplierContact> SupplierContacts => Set<SupplierContact>();
+    public DbSet<Contact> Contacts => Set<Contact>();
+    public DbSet<Contract> Contracts => Set<Contract>();
+    public DbSet<ContractSupplier> ContractSuppliers => Set<ContractSupplier>();
+    public DbSet<ContractCost> ContractCosts => Set<ContractCost>();
+    public DbSet<Budget> Budgets => Set<Budget>();
+    public DbSet<SoftwareLicense> SoftwareLicenses => Set<SoftwareLicense>();
+    public DbSet<PhoneLine> PhoneLines => Set<PhoneLine>();
+    public DbSet<Certificate> Certificates => Set<Certificate>();
+    public DbSet<Domain> Domains => Set<Domain>();
+    public DbSet<Datacenter> Datacenters => Set<Datacenter>();
+    public DbSet<Cluster> Clusters => Set<Cluster>();
+    public DbSet<Appliance> Appliances => Set<Appliance>();
+    public DbSet<DatabaseInstance> DatabaseInstances => Set<DatabaseInstance>();
+    public DbSet<ManagementHistoryEntry> ManagementHistoryEntries => Set<ManagementHistoryEntry>();
+
+    public DbSet<Ticket> Tickets => Set<Ticket>();
+    public DbSet<Problem> Problems => Set<Problem>();
+    public DbSet<ProblemTicket> ProblemTickets => Set<ProblemTicket>();
+    public DbSet<Change> Changes => Set<Change>();
+    public DbSet<ChangeValidation> ChangeValidations => Set<ChangeValidation>();
+    public DbSet<ChangeTicket> ChangeTickets => Set<ChangeTicket>();
+    public DbSet<ChangeProblem> ChangeProblems => Set<ChangeProblem>();
+    public DbSet<ItilFollowup> ItilFollowups => Set<ItilFollowup>();
+    public DbSet<ItilTask> ItilTasks => Set<ItilTask>();
+    public DbSet<TicketCategory> TicketCategories => Set<TicketCategory>();
+    public DbSet<AssistanceHistoryEntry> AssistanceHistoryEntries => Set<AssistanceHistoryEntry>();
+
+    public DbSet<Calendar> Calendars => Set<Calendar>();
+    public DbSet<CalendarSegment> CalendarSegments => Set<CalendarSegment>();
+    public DbSet<CalendarHoliday> CalendarHolidays => Set<CalendarHoliday>();
+    public DbSet<ServiceLevel> ServiceLevels => Set<ServiceLevel>();
+    public DbSet<ServiceLevelAgreement> ServiceLevelAgreements => Set<ServiceLevelAgreement>();
+    public DbSet<ServiceLevelEscalation> ServiceLevelEscalations => Set<ServiceLevelEscalation>();
+    public DbSet<ServiceLevelEscalationAction> ServiceLevelEscalationActions => Set<ServiceLevelEscalationAction>();
+    public DbSet<TicketEscalation> TicketEscalations => Set<TicketEscalation>();
+
+    public DbSet<CustomAssetDefinition> CustomAssetDefinitions => Set<CustomAssetDefinition>();
+    public DbSet<CustomAssetField> CustomAssetFields => Set<CustomAssetField>();
+    public DbSet<CustomAsset> CustomAssets => Set<CustomAsset>();
+    public DbSet<CustomAssetValue> CustomAssetValues => Set<CustomAssetValue>();
+    public DbSet<CustomAssetHistoryEntry> CustomAssetHistoryEntries => Set<CustomAssetHistoryEntry>();
+
+    public DbSet<KnowledgeBaseCategory> KnowledgeBaseCategories => Set<KnowledgeBaseCategory>();
+    public DbSet<KnowledgeBaseArticle> KnowledgeBaseArticles => Set<KnowledgeBaseArticle>();
+    public DbSet<KnowledgeBaseArticleRevision> KnowledgeBaseArticleRevisions => Set<KnowledgeBaseArticleRevision>();
+    public DbSet<KnowledgeBaseArticleTarget> KnowledgeBaseArticleTargets => Set<KnowledgeBaseArticleTarget>();
+    public DbSet<KnowledgeBaseArticleHistoryEntry> KnowledgeBaseArticleHistoryEntries => Set<KnowledgeBaseArticleHistoryEntry>();
+
+    public DbSet<Document> Documents => Set<Document>();
+    public DbSet<DocumentCategory> DocumentCategories => Set<DocumentCategory>();
+    public DbSet<DocumentItem> DocumentItems => Set<DocumentItem>();
+
+    public DbSet<Notepad> Notepads => Set<Notepad>();
+
+    public DbSet<EventLogEntry> EventLogEntries => Set<EventLogEntry>();
+
+    public DbSet<ComputerRule> ComputerRules => Set<ComputerRule>();
+
+    public DbSet<ImportAssignmentRule> ImportAssignmentRules => Set<ImportAssignmentRule>();
+    public DbSet<ImportBlacklistEntry> ImportBlacklistEntries => Set<ImportBlacklistEntry>();
+    public DbSet<RefusedImportLog> RefusedImportLogs => Set<RefusedImportLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -26,8 +237,12 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
             .HasIndex(u => u.UserName)
             .IsUnique();
 
+        modelBuilder.Entity<DashboardCardPreference>()
+            .HasIndex(p => p.UserId)
+            .IsUnique();
+
         modelBuilder.Entity<GlpiAgent>()
-            .HasIndex(a => a.DeviceId)
+            .HasIndex(a => a.AgentUuid)
             .IsUnique();
 
         modelBuilder.Entity<Computer>()
@@ -39,6 +254,15 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
             .HasIndex(c => c.SourceGlpiId)
             .IsUnique()
             .HasFilter("\"SourceGlpiId\" IS NOT NULL");
+
+        // SetNull plutôt que le Cascade par défaut d'EF pour une FK optionnelle : détacher ou
+        // supprimer l'ordinateur connecté ne doit pas supprimer le périphérique lui-même, qui
+        // reste un actif géré indépendamment (voir Peripheral.ComputerId).
+        modelBuilder.Entity<Peripheral>()
+            .HasOne(p => p.Computer)
+            .WithMany()
+            .HasForeignKey(p => p.ComputerId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         // Pas de navigation GlpiAgent.DeploymentJobs : DeploymentJob (module Deploy,
         // dans GlpiNg.Web) référence l'agent (module Inventory) par sa seule clé
@@ -53,10 +277,1479 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
             .WithMany()
             .HasForeignKey(j => j.PackageId);
 
+        // Restrict (et non SetNull comme les autres références optionnelles de DeploymentTask
+        // juste en dessous) : SQL Server refuse deux chemins de cascade SET NULL depuis la même
+        // table vers la même table cible (ici DeploymentTasks -> TimeSlots via ces deux colonnes),
+        // "may cause cycles or multiple cascade paths" — il faut donc bloquer la suppression d'un
+        // créneau encore référencé plutôt que de la laisser mettre PreparationTimeSlotId/
+        // ExecutionTimeSlotId à null. L'admin doit d'abord retirer le créneau des tâches qui le
+        // référencent (champs purement déclaratifs pour l'instant, voir la doc de DeploymentTask).
+        modelBuilder.Entity<DeploymentTask>()
+            .HasOne(t => t.PreparationTimeSlot)
+            .WithMany()
+            .HasForeignKey(t => t.PreparationTimeSlotId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<DeploymentTask>()
+            .HasOne(t => t.ExecutionTimeSlot)
+            .WithMany()
+            .HasForeignKey(t => t.ExecutionTimeSlotId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Cascade sur les deux extrémités : une ligne DeploymentTaskPackage n'a de sens que
+        // rattachée à sa tâche ET à son paquet — supprimer l'un ou l'autre retire juste ce paquet
+        // de la liste de la tâche (qui peut retomber à zéro paquet, état normal juste après
+        // création, voir la doc de DeploymentTask) plutôt que de bloquer la suppression.
+        modelBuilder.Entity<DeploymentTask>()
+            .HasMany(t => t.Packages)
+            .WithOne()
+            .HasForeignKey(p => p.DeploymentTaskId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DeploymentTaskPackage>()
+            .HasOne(p => p.Package)
+            .WithMany()
+            .HasForeignKey(p => p.PackageId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DeploymentTaskPackage>()
+            .HasIndex(p => new { p.DeploymentTaskId, p.PackageId })
+            .IsUnique();
+
+        // Même principe que DeploymentTaskPackage ci-dessus, pour les acteurs (groupe ou
+        // ordinateur individuel, voir DeploymentTaskTarget) : supprimer le groupe/ordinateur ciblé
+        // retire juste cet acteur de la tâche plutôt que de bloquer sa suppression.
+        modelBuilder.Entity<DeploymentTask>()
+            .HasMany(t => t.Targets)
+            .WithOne()
+            .HasForeignKey(tg => tg.DeploymentTaskId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DeploymentTaskTarget>()
+            .HasOne(tg => tg.Group)
+            .WithMany()
+            .HasForeignKey(tg => tg.GroupId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DeploymentTaskTarget>()
+            .HasOne(tg => tg.Computer)
+            .WithMany()
+            .HasForeignKey(tg => tg.ComputerId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // SetNull : supprimer une tâche ne doit pas emporter l'historique des jobs qu'elle a créés
+        // (même principe que QueuedNotification.NotificationId plus bas) — le job reste, simplement
+        // sans tâche d'origine.
+        modelBuilder.Entity<DeploymentJob>()
+            .HasOne(j => j.Task)
+            .WithMany(t => t.Jobs)
+            .HasForeignKey(j => j.TaskId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Pas de navigation GlpiAgent.NetworkTaskJobs / .NetworkTaskActors : même raison que
+        // DeploymentJob.Agent plus haut (ne pas faire dépendre le module Inventory du module Deploy).
+        modelBuilder.Entity<NetworkTaskJob>()
+            .HasOne(j => j.Agent)
+            .WithMany()
+            .HasForeignKey(j => j.AgentId);
+
+        // Cascade (et non SetNull comme DeploymentJob.Task) : contrairement à un DeploymentJob, qui
+        // ne fait que référencer son paquet, la spec d'un NetworkTaskJob (plages IP + identifiants)
+        // est lue en direct depuis sa NetworkTask au moment de "getNetDiscoveryJobs"/
+        // "getNetInventoryJobs" (voir la doc de NetworkTaskJob) — un job sans tâche n'a plus de sens
+        // et perdre la tâche perd donc aussi l'historique des jobs qu'elle a créés.
+        modelBuilder.Entity<NetworkTaskJob>()
+            .HasOne(j => j.Task)
+            .WithMany(t => t.Jobs)
+            .HasForeignKey(j => j.NetworkTaskId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Restrict : même raison multi-chemin-cascade SQL Server que DeploymentTask.ExecutionTimeSlot
+        // plus haut ("may cause cycles or multiple cascade paths").
+        modelBuilder.Entity<NetworkTask>()
+            .HasOne(t => t.ExecutionTimeSlot)
+            .WithMany()
+            .HasForeignKey(t => t.ExecutionTimeSlotId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Cascade sur les deux extrémités, même principe que DeploymentTaskPackage/DeploymentTaskTarget
+        // plus haut : une ligne de jointure n'a de sens que rattachée à sa tâche ET à sa plage/son
+        // identifiant/son agent — supprimer l'un ou l'autre retire juste cette entrée de la liste de
+        // la tâche plutôt que de bloquer la suppression.
+        modelBuilder.Entity<NetworkTask>()
+            .HasMany(t => t.IpRanges)
+            .WithOne()
+            .HasForeignKey(r => r.NetworkTaskId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<NetworkTaskIpRange>()
+            .HasOne(r => r.IpRange)
+            .WithMany()
+            .HasForeignKey(r => r.IpRangeId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<NetworkTaskIpRange>()
+            .HasIndex(r => new { r.NetworkTaskId, r.IpRangeId })
+            .IsUnique();
+
+        modelBuilder.Entity<NetworkTask>()
+            .HasMany(t => t.Credentials)
+            .WithOne()
+            .HasForeignKey(c => c.NetworkTaskId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<NetworkTaskCredential>()
+            .HasOne(c => c.SnmpCredential)
+            .WithMany()
+            .HasForeignKey(c => c.SnmpCredentialId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<NetworkTaskCredential>()
+            .HasIndex(c => new { c.NetworkTaskId, c.SnmpCredentialId })
+            .IsUnique();
+
+        modelBuilder.Entity<NetworkTask>()
+            .HasMany(t => t.Actors)
+            .WithOne()
+            .HasForeignKey(a => a.NetworkTaskId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<NetworkTaskActor>()
+            .HasOne(a => a.Agent)
+            .WithMany()
+            .HasForeignKey(a => a.AgentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<NetworkTaskActor>()
+            .HasIndex(a => new { a.NetworkTaskId, a.AgentId })
+            .IsUnique();
+
+        // SetNull : l'historique de découverte (adresse/MAC/sysDescr...) reste utile même une fois
+        // la tâche qui l'a produit supprimée ou l'équipement promu vers un NetworkEquipment.
+        modelBuilder.Entity<DiscoveredNetworkDevice>()
+            .HasOne(d => d.DiscoveredViaNetworkTask)
+            .WithMany()
+            .HasForeignKey(d => d.DiscoveredViaNetworkTaskId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<DiscoveredNetworkDevice>()
+            .HasOne(d => d.PromotedNetworkEquipment)
+            .WithMany()
+            .HasForeignKey(d => d.PromotedNetworkEquipmentId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // WakeOnLanTask : même famille de configuration que DeploymentTask (cibles Group/Computer)
+        // et NetworkTask (agents relais, ExecutionTimeSlot Restrict) combinées — voir les
+        // commentaires détaillés sur ces deux blocs plus haut, non répétés ici.
+        modelBuilder.Entity<WakeOnLanTask>()
+            .HasOne(t => t.ExecutionTimeSlot)
+            .WithMany()
+            .HasForeignKey(t => t.ExecutionTimeSlotId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<WakeOnLanTask>()
+            .HasMany(t => t.Targets)
+            .WithOne()
+            .HasForeignKey(tg => tg.WakeOnLanTaskId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<WakeOnLanTaskTarget>()
+            .HasOne(tg => tg.Group)
+            .WithMany()
+            .HasForeignKey(tg => tg.GroupId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<WakeOnLanTaskTarget>()
+            .HasOne(tg => tg.Computer)
+            .WithMany()
+            .HasForeignKey(tg => tg.ComputerId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<WakeOnLanTask>()
+            .HasMany(t => t.RelayAgents)
+            .WithOne()
+            .HasForeignKey(a => a.WakeOnLanTaskId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<WakeOnLanTaskActor>()
+            .HasOne(a => a.Agent)
+            .WithMany()
+            .HasForeignKey(a => a.AgentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<WakeOnLanTaskActor>()
+            .HasIndex(a => new { a.WakeOnLanTaskId, a.AgentId })
+            .IsUnique();
+
+        // Pas de navigation GlpiAgent.WakeOnLanTaskJobs : même raison que DeploymentJob.Agent/
+        // NetworkTaskJob.Agent plus haut.
+        modelBuilder.Entity<WakeOnLanTaskJob>()
+            .HasOne(j => j.Agent)
+            .WithMany()
+            .HasForeignKey(j => j.AgentId);
+
+        // Cascade : les cibles sont figées dans TargetMacsJson au lancement (voir la doc de
+        // WakeOnLanTaskJob), mais un job n'a de sens que rattaché à la tâche qui l'a créé — même
+        // raisonnement que NetworkTaskJob.Task.
+        modelBuilder.Entity<WakeOnLanTaskJob>()
+            .HasOne(j => j.Task)
+            .WithMany(t => t.Jobs)
+            .HasForeignKey(j => j.WakeOnLanTaskId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Cascade des deux côtés : un résultat de collecte n'a de sens ni sans le poste qu'il
+        // décrit, ni sans la collecte qui l'a demandé. L'index le rend consultable par poste —
+        // c'est la seule lecture que fait la fiche — et garantit une valeur par entrée : un
+        // nouveau passage remplace le précédent au lieu de s'empiler.
+        modelBuilder.Entity<CollectResult>()
+            .HasOne(result => result.CollectDefinition)
+            .WithMany()
+            .HasForeignKey(result => result.CollectDefinitionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<CollectResult>()
+            .HasIndex(result => new { result.ComputerId, result.CollectDefinitionId, result.EntryName })
+            .IsUnique();
+
         modelBuilder.Entity<DeploymentPackage>()
             .HasMany(p => p.Files)
             .WithOne()
             .HasForeignKey(f => f.DeploymentPackageId);
+
+        modelBuilder.Entity<DeploymentPackageFile>()
+            .HasMany(f => f.Parts)
+            .WithOne()
+            .HasForeignKey(part => part.DeploymentPackageFileId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Index de recherche, et non contrainte d'unicité : un fragment est adressé par le hash de
+        // son contenu (voir AgentController.GetDeployFilePart), mais il appartient à un fichier,
+        // lui-même à un paquet. Deux paquets qui embarquent le même fichier — cas courant d'un
+        // import depuis GLPI — produisent donc deux fois les mêmes fragments, et un fichier dont
+        // deux morceaux sont identiques en produit deux aussi. L'unicité était intenable, et sa
+        // violation faisait échouer l'enregistrement de tout l'import.
+        //
+        // Les doublons sont sans conséquence à la lecture : le hash désigne un contenu, donc
+        // n'importe laquelle des lignes qui le portent mène aux mêmes octets.
+        modelBuilder.Entity<DeploymentPackageFilePart>()
+            .HasIndex(part => part.Sha512);
+
+        // SetNull : supprimer le groupe désactive juste le déploiement à la demande du paquet
+        // (retombe sur "-----", comme plugin_glpiinventory_deploygroups_id côté GLPI-Inventory
+        // d'origine) plutôt que de supprimer le paquet lui-même.
+        modelBuilder.Entity<DeploymentPackage>()
+            .HasOne(p => p.DeployComputerGroup)
+            .WithMany()
+            .HasForeignKey(p => p.DeployComputerGroupId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Cascade : une cible n'a de sens que rattachée à son paquet. Pas de contrainte FK vers
+        // Entities/Groups/Profiles/Users : DeploymentPackageTarget.ItemId est une référence
+        // polymorphe (Type + ItemId, comme itemtype/items_id côté GLPI) que EF Core ne peut pas
+        // contraindre vers plusieurs tables cibles — voir la doc de DeploymentPackageTarget.
+        modelBuilder.Entity<DeploymentPackage>()
+            .HasMany(p => p.Targets)
+            .WithOne()
+            .HasForeignKey(t => t.DeploymentPackageId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Restrict comme GlpiGroup.Parent plus bas : FK auto-référencée, donc pas de Cascade
+        // (non supporté par SQL Server sur une relation qui boucle sur la même table). Empêche
+        // aussi de supprimer un paquet remplaçant tant que d'autres paquets le référencent encore.
+        modelBuilder.Entity<DeploymentPackage>()
+            .HasOne(p => p.SupersededByPackage)
+            .WithMany()
+            .HasForeignKey(p => p.SupersededByPackageId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<GlpiGroup>()
+            .HasOne(g => g.Parent)
+            .WithMany(g => g.Children)
+            .HasForeignKey(g => g.ParentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<GlpiGroupUser>()
+            .HasKey(gu => new { gu.GroupId, gu.UserId });
+
+        modelBuilder.Entity<GlpiGroupUser>()
+            .HasOne(gu => gu.Group)
+            .WithMany(g => g.Members)
+            .HasForeignKey(gu => gu.GroupId);
+
+        modelBuilder.Entity<GlpiGroupUser>()
+            .HasOne(gu => gu.User)
+            .WithMany(u => u.GroupMemberships)
+            .HasForeignKey(gu => gu.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<GlpiEntity>()
+            .HasOne(e => e.Parent)
+            .WithMany(e => e.Children)
+            .HasForeignKey(e => e.ParentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Idempotence de l'import GLPI "Administration" (voir Import/GlpiAdminMySqlImportService),
+        // même principe que Computer.SourceGlpiId plus haut.
+        modelBuilder.Entity<GlpiEntity>()
+            .HasIndex(e => e.SourceGlpiId)
+            .IsUnique()
+            .HasFilter("\"SourceGlpiId\" IS NOT NULL");
+
+        modelBuilder.Entity<GlpiGroup>()
+            .HasIndex(g => g.SourceGlpiId)
+            .IsUnique()
+            .HasFilter("\"SourceGlpiId\" IS NOT NULL");
+
+        modelBuilder.Entity<GlpiProfile>()
+            .HasIndex(p => p.SourceGlpiId)
+            .IsUnique()
+            .HasFilter("\"SourceGlpiId\" IS NOT NULL");
+
+        modelBuilder.Entity<GlpiUser>()
+            .HasIndex(u => u.SourceGlpiId)
+            .IsUnique()
+            .HasFilter("\"SourceGlpiId\" IS NOT NULL");
+
+        modelBuilder.Entity<GlpiUserProfile>()
+            .HasOne(up => up.User)
+            .WithMany(u => u.Habilitations)
+            .HasForeignKey(up => up.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<GlpiUserProfile>()
+            .HasOne(up => up.Entity)
+            .WithMany()
+            .HasForeignKey(up => up.EntityId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<GlpiUserProfile>()
+            .HasOne(up => up.Profile)
+            .WithMany()
+            .HasForeignKey(up => up.ProfileId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<GlpiEntityNote>()
+            .HasOne(n => n.Entity)
+            .WithMany()
+            .HasForeignKey(n => n.EntityId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<GlpiEntityHistoryEntry>()
+            .HasOne<GlpiEntity>()
+            .WithMany()
+            .HasForeignKey(h => h.EntityId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<GlpiGroupNote>()
+            .HasOne(n => n.Group)
+            .WithMany()
+            .HasForeignKey(n => n.GroupId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<GlpiGroupHistoryEntry>()
+            .HasOne<GlpiGroup>()
+            .WithMany()
+            .HasForeignKey(h => h.GroupId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<GlpiUserHistoryEntry>()
+            .HasOne<GlpiUser>()
+            .WithMany()
+            .HasForeignKey(h => h.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<GlpiProfileHistoryEntry>()
+            .HasOne<GlpiProfile>()
+            .WithMany()
+            .HasForeignKey(h => h.ProfileId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<AuthLdapServer>()
+            .HasIndex(s => s.Name)
+            .IsUnique();
+
+        modelBuilder.Entity<AuthMailServer>()
+            .HasIndex(s => s.Name)
+            .IsUnique();
+
+        // SetNull plutôt que Restrict/Cascade : supprimer un annuaire LDAP ne doit pas empêcher
+        // sa suppression ni supprimer les comptes qui s'y authentifiaient — ils retombent
+        // simplement sans LdapServerId (AuthSource reste Ldap, la connexion échouera jusqu'à
+        // rattachement à un autre annuaire ou retour en local via un nouveau mot de passe).
+        modelBuilder.Entity<GlpiUser>()
+            .HasOne(u => u.LdapServer)
+            .WithMany()
+            .HasForeignKey(u => u.LdapServerId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<OAuthClient>()
+            .HasIndex(c => c.ClientId)
+            .IsUnique();
+
+        modelBuilder.Entity<OAuthClient>()
+            .HasIndex(c => c.Name)
+            .IsUnique();
+
+        // Recherche d'un compte par son jeton d'API personnel (initSession avec user_token). Longueur
+        // bornée : SQL Server n'indexe pas un nvarchar(max). Empreinte SHA-256 en hexadécimal.
+        modelBuilder.Entity<GlpiUser>()
+            .Property(u => u.ApiTokenHash)
+            .HasMaxLength(64);
+        modelBuilder.Entity<GlpiUser>()
+            .HasIndex(u => u.ApiTokenHash);
+
+        modelBuilder.Entity<ApiClient>()
+            .Property(c => c.AppTokenHash)
+            .HasMaxLength(64);
+
+        modelBuilder.Entity<SavedSearchOrder>()
+            .HasIndex(o => new { o.UserId, o.SavedSearchId })
+            .IsUnique();
+
+        modelBuilder.Entity<TableColumnPreference>()
+            .HasIndex(p => new { p.UserId, p.ItemType })
+            .IsUnique();
+
+        modelBuilder.Entity<AutomaticActionState>()
+            .HasIndex(s => s.TaskKey)
+            .IsUnique();
+
+        modelBuilder.Entity<AutomaticActionRunLog>()
+            .HasIndex(l => new { l.TaskKey, l.RanAt });
+
+        modelBuilder.Entity<TimeSlot>()
+            .HasMany(t => t.Entries)
+            .WithOne()
+            .HasForeignKey(e => e.TimeSlotId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<CollectDefinition>()
+            .HasMany(c => c.RegistryEntries)
+            .WithOne()
+            .HasForeignKey(e => e.CollectDefinitionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<CollectDefinition>()
+            .HasMany(c => c.WmiEntries)
+            .WithOne()
+            .HasForeignKey(e => e.CollectDefinitionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<CollectDefinition>()
+            .HasMany(c => c.FileSearchEntries)
+            .WithOne()
+            .HasForeignKey(e => e.CollectDefinitionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DeployComputerGroup>()
+            .HasMany(g => g.Members)
+            .WithOne()
+            .HasForeignKey(m => m.DeployComputerGroupId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DeployComputerGroupMember>()
+            .HasOne(m => m.Computer)
+            .WithMany()
+            .HasForeignKey(m => m.ComputerId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DeployComputerGroupMember>()
+            .HasIndex(m => new { m.DeployComputerGroupId, m.ComputerId })
+            .IsUnique();
+
+        modelBuilder.Entity<DeployComputerGroup>()
+            .HasMany(g => g.Criteria)
+            .WithOne()
+            .HasForeignKey(c => c.DeployComputerGroupId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DeploymentRule>()
+            .HasMany(r => r.Criteria)
+            .WithOne()
+            .HasForeignKey(c => c.DeploymentRuleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DeploymentRule>()
+            .HasMany(r => r.Actions)
+            .WithOne()
+            .HasForeignKey(a => a.DeploymentRuleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Même principe que DeploymentTaskPackage->DeploymentPackage (voir plus haut) : supprimer
+        // le paquet retire juste cette action de la règle plutôt que de bloquer sa suppression.
+        modelBuilder.Entity<DeploymentRuleAction>()
+            .HasOne(a => a.Package)
+            .WithMany()
+            .HasForeignKey(a => a.PackageId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DictionaryRule>()
+            .HasMany(r => r.Criteria)
+            .WithOne()
+            .HasForeignKey(c => c.DictionaryRuleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ComputerRule>()
+            .HasMany(r => r.Criteria)
+            .WithOne()
+            .HasForeignKey(c => c.ComputerRuleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ComputerRule>()
+            .HasMany(r => r.Actions)
+            .WithOne()
+            .HasForeignKey(a => a.ComputerRuleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ImportAssignmentRule>()
+            .HasMany(r => r.Criteria)
+            .WithOne()
+            .HasForeignKey(c => c.ImportAssignmentRuleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ImportAssignmentRule>()
+            .HasMany(r => r.Actions)
+            .WithOne()
+            .HasForeignKey(a => a.ImportAssignmentRuleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Unicité d'une valeur d'Intitulé, dans son type, son entité et sous son parent.
+        //
+        // Le parent en fait partie parce que les Lieux sont hiérarchisés (Site > Bâtiment > Salle) :
+        // « Bureau » doit pouvoir exister sous deux bâtiments différents, comme dans GLPI, dont la
+        // clé d'unicité est (entities_id, locations_id, name). Un index sur (Type, Name) seul
+        // l'interdisait.
+        //
+        // L'entité en fait partie pour la même raison depuis le cloisonnement : deux entités
+        // tiennent chacune leur propre référentiel d'intitulés.
+        //
+        // Les types plats (Fabricant, Statut...) n'ont jamais de parent : pour eux, la contrainte
+        // reste équivalente à (Type, Name) au sein d'une entité, ce dont dépend l'upsert « création
+        // à la volée » de Computers/Detail.razor.cs (SaveComputerFieldsAsync).
+        modelBuilder.Entity<DropdownItem>()
+            .HasIndex(i => new { i.Type, i.EntityId, i.ParentId, i.Name })
+            .IsUnique();
+
+        // Restrict comme GlpiGroup.Parent plus bas : FK auto-référencée, donc pas de Cascade (non
+        // supporté par SQL Server sur une relation qui boucle sur la même table). Empêche aussi de
+        // supprimer un Lieu tant que des sous-lieux le référencent encore.
+        modelBuilder.Entity<DropdownItem>()
+            .HasOne(i => i.Parent)
+            .WithMany()
+            .HasForeignKey(i => i.ParentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // SetNull sur les trois entités qui référencent un Intitulé de type Status (Computer,
+        // Peripheral, ComputerPeripheral/"Moniteurs") : supprimer une valeur de statut depuis
+        // /config/dropdowns ne doit pas empêcher sa suppression ni supprimer les actifs qui la
+        // référencent, ils retombent simplement sans statut.
+        modelBuilder.Entity<Computer>()
+            .HasOne(c => c.StatusItem)
+            .WithMany()
+            .HasForeignKey(c => c.StatusId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Peripheral>()
+            .HasOne(p => p.StatusItem)
+            .WithMany()
+            .HasForeignKey(p => p.StatusId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<ComputerPeripheral>()
+            .HasOne(p => p.StatusItem)
+            .WithMany()
+            .HasForeignKey(p => p.StatusId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Restrict (et non SetNull comme StatusId ci-dessus) : SQL Server refuse un deuxième chemin
+        // de cascade SET NULL depuis Computers vers DropdownItems (même limitation que
+        // DeploymentTask.PreparationTimeSlot/ExecutionTimeSlot plus haut, "may cause cycles or
+        // multiple cascade paths"). L'admin doit d'abord retirer ce Lieu des postes qui le
+        // référencent avant de le supprimer depuis /config/dropdowns.
+        modelBuilder.Entity<Computer>()
+            .HasOne(c => c.LocationItem)
+            .WithMany()
+            .HasForeignKey(c => c.LocationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Nouveaux types de parc (Matériel réseau, Imprimante, Téléphone, Baie, Châssis, PDU,
+        // Équipement passif) : même paire StatusId(SetNull)/LocationId(Restrict) que Computer
+        // ci-dessus, plutôt que les champs texte libres Site/Building/Room de Peripheral (qui
+        // datent d'avant l'introduction des Intitulés).
+        modelBuilder.Entity<NetworkEquipment>().HasOne(e => e.StatusItem).WithMany().HasForeignKey(e => e.StatusId).OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<NetworkEquipment>().HasOne(e => e.LocationItem).WithMany().HasForeignKey(e => e.LocationId).OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Printer>().HasOne(e => e.StatusItem).WithMany().HasForeignKey(e => e.StatusId).OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<Printer>().HasOne(e => e.LocationItem).WithMany().HasForeignKey(e => e.LocationId).OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Phone>().HasOne(e => e.StatusItem).WithMany().HasForeignKey(e => e.StatusId).OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<Phone>().HasOne(e => e.LocationItem).WithMany().HasForeignKey(e => e.LocationId).OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Rack>().HasOne(e => e.StatusItem).WithMany().HasForeignKey(e => e.StatusId).OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<Rack>().HasOne(e => e.LocationItem).WithMany().HasForeignKey(e => e.LocationId).OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Enclosure>().HasOne(e => e.StatusItem).WithMany().HasForeignKey(e => e.StatusId).OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<Enclosure>().HasOne(e => e.LocationItem).WithMany().HasForeignKey(e => e.LocationId).OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Pdu>().HasOne(e => e.StatusItem).WithMany().HasForeignKey(e => e.StatusId).OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<Pdu>().HasOne(e => e.LocationItem).WithMany().HasForeignKey(e => e.LocationId).OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<PassiveEquipment>().HasOne(e => e.StatusItem).WithMany().HasForeignKey(e => e.StatusId).OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<PassiveEquipment>().HasOne(e => e.LocationItem).WithMany().HasForeignKey(e => e.LocationId).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<SimCard>().HasOne(e => e.StatusItem).WithMany().HasForeignKey(e => e.StatusId).OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<SimCard>().HasOne(e => e.LocationItem).WithMany().HasForeignKey(e => e.LocationId).OnDelete(DeleteBehavior.Restrict);
+
+        // Cartouches (CartridgeItem = modèle, Cartridge = exemplaire individuel suivi en stock,
+        // voir leur doc dans Models/CartridgeItem.cs) : Cascade pour Cartridges/HistoryEntries
+        // (n'ont de sens que rattachés à leur modèle), SetNull pour le lien optionnel vers
+        // l'imprimante dans laquelle une cartouche est en service (retirer/supprimer
+        // l'imprimante ne doit pas supprimer la cartouche, qui retombe simplement en stock).
+        modelBuilder.Entity<CartridgeItem>().HasOne(e => e.LocationItem).WithMany().HasForeignKey(e => e.LocationId).OnDelete(DeleteBehavior.Restrict);
+        // WithOne(c => c.CartridgeItem) : la navigation inverse sert à nommer une unité vue depuis
+        // l'imprimante, où seul le numéro d'exemplaire serait autrement disponible. Même relation,
+        // même clé étrangère — rien ne change au schéma.
+        modelBuilder.Entity<CartridgeItem>()
+            .HasMany(ci => ci.Cartridges)
+            .WithOne(c => c.CartridgeItem!)
+            .HasForeignKey(c => c.CartridgeItemId)
+            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<CartridgeItem>()
+            .HasMany(ci => ci.HistoryEntries)
+            .WithOne()
+            .HasForeignKey(h => h.CartridgeItemId)
+            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<Cartridge>()
+            .HasOne(c => c.Printer)
+            .WithMany()
+            .HasForeignKey(c => c.PrinterId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Consommables (ConsumableItem/Consumable) : même principe que Cartouches ci-dessus, sans
+        // lien vers une imprimante.
+        modelBuilder.Entity<ConsumableItem>().HasOne(e => e.LocationItem).WithMany().HasForeignKey(e => e.LocationId).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<ConsumableItem>()
+            .HasMany(ci => ci.Consumables)
+            .WithOne()
+            .HasForeignKey(c => c.ConsumableItemId)
+            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<ConsumableItem>()
+            .HasMany(ci => ci.HistoryEntries)
+            .WithOne()
+            .HasForeignKey(h => h.ConsumableItemId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Câbles (Cable) : EndpointAType/EndpointAId et EndpointBType/EndpointBId sont une
+        // référence polymorphe non contrainte (voir doc dans Models/Cable.cs), donc aucune config
+        // de clé étrangère ici pour les extrémités — seulement StatusItem et HistoryEntries.
+        modelBuilder.Entity<Cable>().HasOne(e => e.StatusItem).WithMany().HasForeignKey(e => e.StatusId).OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<Cable>()
+            .HasMany(c => c.HistoryEntries)
+            .WithOne()
+            .HasForeignKey(h => h.CableId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DeploymentMirrorServer>()
+            .HasIndex(s => s.Name)
+            .IsUnique();
+
+        modelBuilder.Entity<DeploymentUserInteractionTemplate>()
+            .HasIndex(t => t.Name)
+            .IsUnique();
+
+        // Restrict : un gabarit encore référencé par une notification ne doit pas pouvoir être
+        // supprimé silencieusement (la notification se retrouverait sans contenu à envoyer) —
+        // l'admin doit d'abord réassigner ou supprimer la notification elle-même.
+        modelBuilder.Entity<Notification>()
+            .HasOne(n => n.Template)
+            .WithMany()
+            .HasForeignKey(n => n.NotificationTemplateId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Notification>()
+            .HasMany(n => n.Recipients)
+            .WithOne(r => r.Notification)
+            .HasForeignKey(r => r.NotificationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // SetNull : supprimer l'utilisateur/le groupe ciblé par un destinataire ne doit pas
+        // supprimer la notification elle-même (comme GlpiUser.LdapServerId plus haut) — la ligne
+        // de destinataire reste, simplement sans cible résolue tant qu'elle n'est pas corrigée.
+        modelBuilder.Entity<NotificationRecipient>()
+            .HasOne(r => r.User)
+            .WithMany()
+            .HasForeignKey(r => r.UserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<NotificationRecipient>()
+            .HasOne(r => r.Group)
+            .WithMany()
+            .HasForeignKey(r => r.GroupId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // SetNull : une notification supprimée ne doit pas emporter l'historique déjà envoyé/en
+        // attente dans la file — voir QueuedNotification.NotificationName, qui garde le nom même
+        // une fois la référence perdue.
+        modelBuilder.Entity<QueuedNotification>()
+            .HasOne(q => q.Notification)
+            .WithMany()
+            .HasForeignKey(q => q.NotificationId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Webhook>()
+            .HasMany(w => w.Headers)
+            .WithOne(h => h.Webhook)
+            .HasForeignKey(h => h.WebhookId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Même choix que QueuedNotification juste au-dessus : supprimer un webhook ne doit pas
+        // effacer la trace de ce qu'il a déjà envoyé — voir QueuedWebhook.WebhookName, qui garde
+        // le nom une fois la référence perdue.
+        modelBuilder.Entity<QueuedWebhook>()
+            .HasOne(q => q.Webhook)
+            .WithMany()
+            .HasForeignKey(q => q.WebhookId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // La file est lue par statut puis par ancienneté (tâche cron) et par ancienneté seule
+        // (page de consultation) : c'est le seul index qui compte ici.
+        modelBuilder.Entity<QueuedWebhook>()
+            .HasIndex(q => new { q.Status, q.CreatedAt });
+
+        modelBuilder.Entity<ExternalLink>()
+            .HasMany(link => link.ItemTypes)
+            .WithOne(association => association.ExternalLink)
+            .HasForeignKey(association => association.ExternalLinkId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Un même type ne s'associe qu'une fois à un lien : deux lignes identiques feraient
+        // apparaître le lien en double sur chaque fiche concernée.
+        modelBuilder.Entity<ExternalLinkItemType>()
+            .HasIndex(association => new { association.ExternalLinkId, association.ItemType })
+            .IsUnique();
+
+        // C'est la requête de chaque ouverture de fiche : « quels liens pour ce type ? »
+        modelBuilder.Entity<ExternalLinkItemType>()
+            .HasIndex(association => association.ItemType);
+
+        modelBuilder.Entity<FieldUnicityCriterion>()
+            .HasMany(criterion => criterion.Fields)
+            .WithOne(field => field.Criterion)
+            .HasForeignKey(field => field.FieldUnicityCriterionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Un même champ ne se coche qu'une fois dans un critère : deux lignes identiques
+        // ajouteraient la même condition deux fois à la recherche de doublon.
+        modelBuilder.Entity<FieldUnicityField>()
+            .HasIndex(field => new { field.FieldUnicityCriterionId, field.FieldName })
+            .IsUnique();
+
+        // C'est la requête faite avant chaque création d'objet : « quels critères actifs pour ce
+        // type ? ». Elle doit rester insignifiante, sans quoi elle se paierait sur chaque import.
+        modelBuilder.Entity<FieldUnicityCriterion>()
+            .HasIndex(criterion => new { criterion.ItemType, criterion.IsActive });
+
+        // ---- Module Gestion : tiers, contrats, budgets ------------------------------------------
+
+        // Un tiers ne s'associe qu'une fois au même interlocuteur, et un contrat qu'une fois au
+        // même tiers : une ligne en double afficherait deux fois la même personne sur la fiche.
+        modelBuilder.Entity<SupplierContact>()
+            .HasIndex(link => new { link.SupplierId, link.ContactId })
+            .IsUnique();
+
+        modelBuilder.Entity<ContractSupplier>()
+            .HasIndex(link => new { link.ContractId, link.SupplierId })
+            .IsUnique();
+
+        modelBuilder.Entity<SupplierContact>()
+            .HasOne(link => link.Supplier)
+            .WithMany(supplier => supplier.Contacts)
+            .HasForeignKey(link => link.SupplierId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Pas de cascade depuis le contact : supprimer une personne ne doit pas emporter la ligne
+        // côté tiers sans qu'on le voie — et deux cascades vers la même table de liaison sont de
+        // toute façon refusées par SQL Server (voir CustomAssets plus bas).
+        modelBuilder.Entity<SupplierContact>()
+            .HasOne(link => link.Contact)
+            .WithMany(contact => contact.Suppliers)
+            .HasForeignKey(link => link.ContactId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ContractSupplier>()
+            .HasOne(link => link.Contract)
+            .WithMany(contract => contract.Suppliers)
+            .HasForeignKey(link => link.ContractId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ContractSupplier>()
+            .HasOne(link => link.Supplier)
+            .WithMany(supplier => supplier.Contracts)
+            .HasForeignKey(link => link.SupplierId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ContractCost>()
+            .HasOne(cost => cost.Contract)
+            .WithMany(contract => contract.Costs)
+            .HasForeignKey(cost => cost.ContractId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Un budget supprimé ne doit pas emporter les coûts qui lui étaient imputés : la dépense a
+        // bien eu lieu, c'est l'enveloppe qui disparaît. Le coût redevient simplement non imputé.
+        modelBuilder.Entity<ContractCost>()
+            .HasOne(cost => cost.Budget)
+            .WithMany(budget => budget.Costs)
+            .HasForeignKey(cost => cost.BudgetId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // Montants : 2 décimales suffisent pour de la monnaie, et la précision doit être fixée ici
+        // sous peine d'un type flottant côté base, où 0,1 + 0,2 ne fait pas 0,3.
+        modelBuilder.Entity<ContractCost>()
+            .Property(cost => cost.Amount)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<Budget>()
+            .Property(budget => budget.Amount)
+            .HasPrecision(18, 2);
+
+        // Tiers et contrat sont facultatifs partout : leur suppression détache la fiche
+        // (SetNull) plutôt que de l'emporter — la licence achetée existe toujours.
+        modelBuilder.Entity<SoftwareLicense>()
+            .HasOne(item => item.Supplier)
+            .WithMany()
+            .HasForeignKey(item => item.SupplierId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<SoftwareLicense>()
+            .HasOne(item => item.Contract)
+            .WithMany()
+            .HasForeignKey(item => item.ContractId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<PhoneLine>()
+            .HasOne(item => item.Supplier)
+            .WithMany()
+            .HasForeignKey(item => item.SupplierId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<PhoneLine>()
+            .HasOne(item => item.Contract)
+            .WithMany()
+            .HasForeignKey(item => item.ContractId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Certificate>()
+            .HasOne(item => item.Supplier)
+            .WithMany()
+            .HasForeignKey(item => item.SupplierId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Certificate>()
+            .HasOne(item => item.Contract)
+            .WithMany()
+            .HasForeignKey(item => item.ContractId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Domain>()
+            .HasOne(item => item.Supplier)
+            .WithMany()
+            .HasForeignKey(item => item.SupplierId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Domain>()
+            .HasOne(item => item.Contract)
+            .WithMany()
+            .HasForeignKey(item => item.ContractId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Datacenter>()
+            .HasOne(item => item.Supplier)
+            .WithMany()
+            .HasForeignKey(item => item.SupplierId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Datacenter>()
+            .HasOne(item => item.Contract)
+            .WithMany()
+            .HasForeignKey(item => item.ContractId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Appliance>()
+            .HasOne(item => item.Supplier)
+            .WithMany()
+            .HasForeignKey(item => item.SupplierId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Appliance>()
+            .HasOne(item => item.Contract)
+            .WithMany()
+            .HasForeignKey(item => item.ContractId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // L'historique du module Gestion est polymorphe (une table pour ses douze types, comme
+        // glpi_logs) : c'est le couple type/identifiant qui est lu à chaque ouverture de fiche.
+        modelBuilder.Entity<ManagementHistoryEntry>()
+            .HasIndex(entry => new { entry.ItemType, entry.ItemId, entry.OccurredAt });
+
+        // Suivis et tâches sont polymorphes (ItemType + ItemId), comme glpi_itilfollowups : une
+        // seule table pour les tickets, les problèmes et ce qui viendra. Pas de clé étrangère, donc
+        // pas de cascade — ce sont les pages qui les suppriment avec leur objet.
+        modelBuilder.Entity<ItilFollowup>()
+            .HasIndex(entry => new { entry.ItemType, entry.ItemId, entry.CreatedAt });
+
+        modelBuilder.Entity<ItilTask>()
+            .HasIndex(entry => new { entry.ItemType, entry.ItemId });
+
+        // Une catégorie encore portée par un ticket ne peut pas disparaître sous lui : la liste des
+        // catégories refuse déjà la suppression, et cette contrainte le garantit en base.
+        modelBuilder.Entity<Ticket>()
+            .HasOne(ticket => ticket.Category)
+            .WithMany()
+            .HasForeignKey(ticket => ticket.CategoryId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Problem>()
+            .HasOne(problem => problem.Category)
+            .WithMany()
+            .HasForeignKey(problem => problem.CategoryId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Le rattachement d'un incident à un problème part avec l'un ou l'autre, et n'emporte
+        // jamais l'objet d'en face : supprimer un problème laisse ses incidents, supprimer un
+        // incident laisse le problème. Deux cascades vers la même table sont ici acceptées par SQL
+        // Server — Problems et Tickets ne se référencent pas, donc pas de chemin partagé (1785).
+        modelBuilder.Entity<ProblemTicket>()
+            .HasOne(link => link.Problem)
+            .WithMany()
+            .HasForeignKey(link => link.ProblemId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ProblemTicket>()
+            .HasOne(link => link.Ticket)
+            .WithMany()
+            .HasForeignKey(link => link.TicketId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Un incident ne se rattache qu'une fois au même problème : deux lignes feraient compter
+        // deux fois le même incident dans la mesure du problème.
+        modelBuilder.Entity<ProblemTicket>()
+            .HasIndex(link => new { link.ProblemId, link.TicketId })
+            .IsUnique();
+
+        modelBuilder.Entity<Problem>()
+            .HasIndex(problem => new { problem.Status, problem.OpenedAt });
+
+        modelBuilder.Entity<Problem>()
+            .HasIndex(problem => problem.AssignedUserId);
+
+        // Changements : mêmes règles que les problèmes pour la catégorie et les rattachements —
+        // le lien part avec l'un ou l'autre bout, jamais l'objet d'en face. Changes, Tickets et
+        // Problems ne se référencent pas entre eux : aucune des cascades ne partage de chemin.
+        modelBuilder.Entity<Change>()
+            .HasOne(change => change.Category)
+            .WithMany()
+            .HasForeignKey(change => change.CategoryId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Change>()
+            .HasIndex(change => new { change.Status, change.OpenedAt });
+
+        modelBuilder.Entity<Change>()
+            .HasIndex(change => change.AssignedUserId);
+
+        modelBuilder.Entity<ChangeTicket>()
+            .HasOne(link => link.Change)
+            .WithMany()
+            .HasForeignKey(link => link.ChangeId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ChangeTicket>()
+            .HasOne(link => link.Ticket)
+            .WithMany()
+            .HasForeignKey(link => link.TicketId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ChangeTicket>()
+            .HasIndex(link => new { link.ChangeId, link.TicketId })
+            .IsUnique();
+
+        modelBuilder.Entity<ChangeProblem>()
+            .HasOne(link => link.Change)
+            .WithMany()
+            .HasForeignKey(link => link.ChangeId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ChangeProblem>()
+            .HasOne(link => link.Problem)
+            .WithMany()
+            .HasForeignKey(link => link.ProblemId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ChangeProblem>()
+            .HasIndex(link => new { link.ChangeId, link.ProblemId })
+            .IsUnique();
+
+        // Une approbation n'existe que pour son changement ; l'index sur l'approbateur sert à
+        // retrouver ce qu'un utilisateur a encore à approuver.
+        modelBuilder.Entity<ChangeValidation>()
+            .HasOne(validation => validation.Change)
+            .WithMany()
+            .HasForeignKey(validation => validation.ChangeId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ChangeValidation>()
+            .HasIndex(validation => new { validation.ValidatorUserId, validation.Status });
+
+        modelBuilder.Entity<TicketCategory>()
+            .HasOne(category => category.Parent)
+            .WithMany()
+            .HasForeignKey(category => category.ParentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Les requêtes de la liste : les tickets ouverts, et ceux d'un technicien.
+        modelBuilder.Entity<Ticket>()
+            .HasIndex(ticket => new { ticket.Status, ticket.OpenedAt });
+
+        modelBuilder.Entity<Ticket>()
+            .HasIndex(ticket => ticket.AssignedUserId);
+
+        // Même table polymorphe que l'historique de la Gestion, pour les mêmes raisons.
+        modelBuilder.Entity<AssistanceHistoryEntry>()
+            .HasIndex(entry => new { entry.ItemType, entry.ItemId, entry.OccurredAt });
+
+        // Niveaux de service. Un calendrier porte ses plages et ses fermetures, un niveau porte ses
+        // engagements, un engagement ses niveaux d'escalade, et ceux-ci leurs actions : toute la
+        // chaîne part en cascade, chaque maillon n'existant que par celui du dessus.
+        modelBuilder.Entity<Calendar>()
+            .HasMany(calendar => calendar.Segments)
+            .WithOne(segment => segment.Calendar!)
+            .HasForeignKey(segment => segment.CalendarId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Calendar>()
+            .HasMany(calendar => calendar.Holidays)
+            .WithOne(holiday => holiday.Calendar!)
+            .HasForeignKey(holiday => holiday.CalendarId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Le calendrier, lui, survit à ce qui s'en sert : supprimer un calendrier encore utilisé
+        // ferait basculer en silence des engagements en temps réel. L'écran le refuse déjà, et
+        // cette contrainte le garantit en base.
+        modelBuilder.Entity<ServiceLevel>()
+            .HasOne(level => level.Calendar)
+            .WithMany()
+            .HasForeignKey(level => level.CalendarId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ServiceLevel>()
+            .HasMany(level => level.Agreements)
+            .WithOne(agreement => agreement.ServiceLevel!)
+            .HasForeignKey(agreement => agreement.ServiceLevelId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ServiceLevelAgreement>()
+            .HasMany(agreement => agreement.Escalations)
+            .WithOne(escalation => escalation.Agreement!)
+            .HasForeignKey(escalation => escalation.ServiceLevelAgreementId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ServiceLevelEscalation>()
+            .HasMany(escalation => escalation.Actions)
+            .WithOne(action => action.Escalation!)
+            .HasForeignKey(action => action.ServiceLevelEscalationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Les quatre engagements d'un ticket sont en Restrict, et non en SetNull : quatre chemins
+        // de suppression partant de ServiceLevelAgreements vers Tickets seraient refusés par SQL
+        // Server (1785). Les écrans refusent donc de supprimer un engagement encore porté.
+        modelBuilder.Entity<Ticket>()
+            .HasOne(ticket => ticket.SlaTimeToOwn)
+            .WithMany()
+            .HasForeignKey(ticket => ticket.SlaTimeToOwnId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Ticket>()
+            .HasOne(ticket => ticket.SlaTimeToResolve)
+            .WithMany()
+            .HasForeignKey(ticket => ticket.SlaTimeToResolveId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Ticket>()
+            .HasOne(ticket => ticket.OlaTimeToOwn)
+            .WithMany()
+            .HasForeignKey(ticket => ticket.OlaTimeToOwnId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Ticket>()
+            .HasOne(ticket => ticket.OlaTimeToResolve)
+            .WithMany()
+            .HasForeignKey(ticket => ticket.OlaTimeToResolveId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Trace d'escalade : elle part avec le ticket comme avec le niveau qui l'a produite. Deux
+        // cascades vers la même table, mais Tickets et ServiceLevelEscalations ne se référencent
+        // pas — pas de chemin partagé, donc pas de 1785.
+        modelBuilder.Entity<TicketEscalation>()
+            .HasOne(entry => entry.Ticket)
+            .WithMany()
+            .HasForeignKey(entry => entry.TicketId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<TicketEscalation>()
+            .HasOne(entry => entry.Escalation)
+            .WithMany()
+            .HasForeignKey(entry => entry.ServiceLevelEscalationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Un niveau ne s'applique qu'une fois par ticket : la contrainte le garantit même si deux
+        // passages de la tâche cron se chevauchaient.
+        modelBuilder.Entity<TicketEscalation>()
+            .HasIndex(entry => new { entry.TicketId, entry.ServiceLevelEscalationId })
+            .IsUnique();
+
+        // La requête de la tâche d'escalade : les tickets dont une échéance approche.
+        modelBuilder.Entity<Ticket>()
+            .HasIndex(ticket => ticket.TimeToResolve);
+
+        modelBuilder.Entity<CustomAssetDefinition>()
+            .HasMany(definition => definition.Fields)
+            .WithOne(field => field.Definition)
+            .HasForeignKey(field => field.CustomAssetDefinitionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Le nom technique est la clé publique du type : segment d'URL, et type d'objet des
+        // documents et des notes. Deux types homonymes partageraient leurs pièces jointes.
+        modelBuilder.Entity<CustomAssetDefinition>()
+            .HasIndex(definition => definition.SystemName)
+            .IsUnique();
+
+        modelBuilder.Entity<CustomAsset>()
+            .HasOne(asset => asset.Definition)
+            .WithMany()
+            .HasForeignKey(asset => asset.CustomAssetDefinitionId)
+            // Pas de cascade ici, alors que supprimer un type doit bien emporter ses actifs : la
+            // valeur d'un champ dépend à la fois de son actif et de son champ, tous deux rattachés
+            // au type. Deux chemins de cascade aboutiraient donc à CustomAssetValues, ce que SQL
+            // Server refuse (erreur 1785, constatée à l'application de la migration). La suppression
+            // des actifs est donc faite explicitement avant celle du type — voir
+            // Components/Pages/CustomAssets/Detail.DeleteAsync —, ce qui emporte leurs valeurs et
+            // leur historique par les cascades ci-dessous.
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<CustomAsset>()
+            .HasMany(asset => asset.Values)
+            .WithOne(value => value.Asset)
+            .HasForeignKey(value => value.CustomAssetId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Supprimer un champ efface les valeurs saisies pour lui : sans cascade, elles resteraient
+        // en base sans rien pour les nommer ni les afficher.
+        modelBuilder.Entity<CustomAssetValue>()
+            .HasOne(value => value.Field)
+            .WithMany()
+            .HasForeignKey(value => value.CustomAssetFieldId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Une valeur par champ et par actif : deux lignes pour le même couple feraient dépendre la
+        // valeur affichée de l'ordre de lecture.
+        modelBuilder.Entity<CustomAssetValue>()
+            .HasIndex(value => new { value.CustomAssetId, value.CustomAssetFieldId })
+            .IsUnique();
+
+        // C'est la requête de chaque liste : « les actifs de ce type ».
+        modelBuilder.Entity<CustomAsset>()
+            .HasIndex(asset => asset.CustomAssetDefinitionId);
+
+        modelBuilder.Entity<CustomAssetHistoryEntry>()
+            .HasOne(entry => entry.Asset)
+            .WithMany()
+            .HasForeignKey(entry => entry.CustomAssetId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<CustomAssetHistoryEntry>()
+            .HasIndex(entry => new { entry.CustomAssetId, entry.OccurredAt });
+
+        // Clé primaire textuelle (nom de section, ex. "ParcSettings") plutôt qu'un Id auto-incrémenté :
+        // longueur bornée nécessaire pour qu'une clé primaire soit indexable sous MySQL (utf8mb4).
+        modelBuilder.Entity<AppSetting>()
+            .HasKey(s => s.SectionName);
+
+        modelBuilder.Entity<AppSetting>()
+            .Property(s => s.SectionName)
+            .HasMaxLength(100);
+
+        // Un verrou ne peut exister qu'une fois par champ et par élément — la pose est idempotente
+        // côté écran, cet index en fait une garantie.
+        modelBuilder.Entity<LockedField>()
+            .HasIndex(l => new { l.ItemType, l.ItemId, l.Field })
+            .IsUnique();
+
+        ConfigureKnowledgeBase(modelBuilder);
+
+        ConfigureDocuments(modelBuilder);
+
+        ConfigureNotes(modelBuilder);
+
+        ConfigureEntityScoping(modelBuilder);
+    }
+
+    /// <summary>
+    /// Base de connaissances (module GlpiNg.Modules.KnowledgeBase) : arborescence des catégories,
+    /// articles, révisions, cibles de visibilité et historique des changements.
+    /// </summary>
+    private static void ConfigureKnowledgeBase(ModelBuilder modelBuilder)
+    {
+        // Supprimer une catégorie ne doit jamais emporter ses sous-catégories ni les articles
+        // qu'elle range : l'écran des catégories les remonte d'un niveau lui-même, et une cascade
+        // ferait disparaître en silence des articles que personne n'a demandé à supprimer.
+        modelBuilder.Entity<KnowledgeBaseCategory>()
+            .HasOne(category => category.Parent)
+            .WithMany(category => category.Children)
+            .HasForeignKey(category => category.ParentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<KnowledgeBaseArticle>()
+            .HasOne(article => article.Category)
+            .WithMany(category => category.Articles)
+            .HasForeignKey(article => article.CategoryId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Les révisions et les cibles, elles, n'ont pas d'existence sans leur article : elles
+        // partent avec lui.
+        modelBuilder.Entity<KnowledgeBaseArticleRevision>()
+            .HasOne(revision => revision.Article)
+            .WithMany(article => article.Revisions)
+            .HasForeignKey(revision => revision.ArticleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<KnowledgeBaseArticleTarget>()
+            .HasOne(target => target.Article)
+            .WithMany(article => article.Targets)
+            .HasForeignKey(target => target.ArticleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<KnowledgeBaseArticleHistoryEntry>()
+            .HasOne(entry => entry.Article)
+            .WithMany(article => article.History)
+            .HasForeignKey(entry => entry.ArticleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Numérotation des révisions : une seule par numéro et par article (voir
+        // KnowledgeBaseService.SaveAsync, qui calcule le suivant).
+        modelBuilder.Entity<KnowledgeBaseArticleRevision>()
+            .HasIndex(revision => new { revision.ArticleId, revision.Number })
+            .IsUnique();
+
+        // Une même cible ne s'ajoute qu'une fois à un article : deux lignes identiques ne
+        // changeraient rien à la visibilité mais s'afficheraient en double. La portée par entité
+        // fait partie de la clé — un même profil peut légitimement être visé dans deux entités
+        // différentes, ce qui fait bien deux cibles distinctes.
+        //
+        // HasFilter(null) retire le filtre « ScopeEntityId IS NOT NULL » que SQL Server pose
+        // d'office sur un index unique contenant une colonne nullable : sans cela, l'unicité ne
+        // couvrirait plus les cibles *sans* portée — c'est-à-dire le cas courant, celui qu'il
+        // s'agit justement de protéger.
+        modelBuilder.Entity<KnowledgeBaseArticleTarget>()
+            .HasIndex(target => new { target.ArticleId, target.Type, target.ItemId, target.ScopeEntityId })
+            .IsUnique()
+            .HasFilter(null);
+
+        // L'onglet "Historique" lit toujours les entrées d'un article, de la plus récente à la
+        // plus ancienne ; la purge (HistoryPurgeCronTask) balaie sur la seule date.
+        modelBuilder.Entity<KnowledgeBaseArticleHistoryEntry>()
+            .HasIndex(entry => new { entry.ArticleId, entry.OccurredAt });
+
+        // La liste est rangée par catégorie à chaque ouverture de la page.
+        modelBuilder.Entity<KnowledgeBaseArticle>()
+            .HasIndex(article => article.CategoryId);
+    }
+
+    /// <summary>
+    /// Documents (voir Models/Documents/Document.cs) : arborescence des catégories, fiches et
+    /// rattachements polymorphes.
+    /// </summary>
+    private static void ConfigureDocuments(ModelBuilder modelBuilder)
+    {
+        // Supprimer une catégorie ne doit pas emporter les documents qu'elle rangeait — même
+        // choix que pour les catégories de la base de connaissances.
+        modelBuilder.Entity<DocumentCategory>()
+            .HasOne(category => category.Parent)
+            .WithMany(category => category.Children)
+            .HasForeignKey(category => category.ParentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Document>()
+            .HasOne(document => document.Category)
+            .WithMany(category => category.Documents)
+            .HasForeignKey(document => document.CategoryId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Un rattachement n'a pas d'existence sans son document : il part avec lui. L'objet
+        // rattaché, lui, n'est pas contraint (référence polymorphe) — supprimer un article laisse
+        // donc une ligne orpheline, que DocumentService ignore et que rien ne fait remonter.
+        modelBuilder.Entity<DocumentItem>()
+            .HasOne(link => link.Document)
+            .WithMany(document => document.Items)
+            .HasForeignKey(link => link.DocumentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Un même document ne se rattache qu'une fois au même objet.
+        modelBuilder.Entity<DocumentItem>()
+            .HasIndex(link => new { link.DocumentId, link.ItemType, link.ItemId })
+            .IsUnique();
+
+        // Lecture de référence : « les documents de cet objet », faite à chaque ouverture d'une
+        // fiche qui en porte.
+        modelBuilder.Entity<DocumentItem>()
+            .HasIndex(link => new { link.ItemType, link.ItemId });
+
+        // Déduplication par empreinte : UploadAsync cherche systématiquement un contenu déjà connu.
+        modelBuilder.Entity<Document>()
+            .HasIndex(document => document.Sha256);
+
+        // Idempotence de l'import.
+        modelBuilder.Entity<Document>()
+            .HasIndex(document => document.SourceGlpiId);
+    }
+
+    /// <summary>
+    /// Notes libres rattachées aux objets (voir Models/Notes/Notepad.cs).
+    /// </summary>
+    private static void ConfigureNotes(ModelBuilder modelBuilder)
+    {
+        // Lecture de référence : « les notes de cet objet », faite à chaque ouverture d'une fiche
+        // qui en porte — y compris pour n'afficher que leur nombre sur l'onglet.
+        modelBuilder.Entity<Notepad>()
+            .HasIndex(note => new { note.ItemType, note.ItemId });
+    }
+
+    /// <summary>
+    /// Cloisonnement par entité : pour chaque type implémentant <see cref="IEntityScoped"/>,
+    /// pose la FK optionnelle vers <see cref="GlpiEntity"/>, un index sur la colonne, et le
+    /// filtre global de visibilité.
+    ///
+    /// Fait par balayage du modèle plutôt qu'entité par entité : les 35 types concernés sont
+    /// répartis entre l'hôte et les modules Inventory/Deployment, et un type ajouté plus tard est
+    /// pris en compte du seul fait qu'il implémente l'interface — impossible d'oublier un filtre.
+    ///
+    /// <see cref="DeleteBehavior.Restrict"/> : supprimer une entité ne doit surtout pas emporter
+    /// en cascade les objets qui y sont rattachés.
+    /// </summary>
+    private void ConfigureEntityScoping(ModelBuilder modelBuilder)
+    {
+        MethodInfo apply = typeof(GlpiNgDbContext)
+            .GetMethod(nameof(ApplyEntityScoping), BindingFlags.Instance | BindingFlags.NonPublic)!;
+
+        foreach (IMutableEntityType entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            if (!typeof(IEntityScoped).IsAssignableFrom(entityType.ClrType))
+            {
+                continue;
+            }
+
+            apply.MakeGenericMethod(entityType.ClrType).Invoke(this, [modelBuilder]);
+        }
+    }
+
+    private void ApplyEntityScoping<TEntity>(ModelBuilder modelBuilder) where TEntity : class, IEntityScoped
+    {
+        modelBuilder.Entity<TEntity>()
+            .HasOne<GlpiEntity>()
+            .WithMany()
+            .HasForeignKey(e => e.EntityId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<TEntity>()
+            .HasIndex(e => e.EntityId);
+
+        // Règle de visibilité de GLPI, voir EntityScope. Le filtre lit EntityScope sur l'instance
+        // de contexte : il est donc re-paramétré à chaque requête (EF traite l'accès au membre
+        // comme une variable capturée), et c'est la fabrique de contextes qui l'a positionné —
+        // voir EntityScopedDbContextFactory. Un contexte non estampillé reste sur
+        // EntityScope.Unrestricted, ce qui neutralise le filtre : c'est le cas du protocole agent,
+        // des tâches cron et des imports.
+        modelBuilder.Entity<TEntity>().HasQueryFilter(e =>
+            EntityScope.IsUnrestricted
+            || e.EntityId == null
+            || EntityScope.VisibleEntityIds.Contains(e.EntityId.Value)
+            || (e.IsRecursive && EntityScope.AncestorEntityIds.Contains(e.EntityId.Value)));
+    }
+
+    /// <summary>
+    /// Cloisonnement applicable aux requêtes de ce contexte. <see cref="EntityScope.Unrestricted"/>
+    /// par défaut : un contexte obtenu autrement que par la fabrique cloisonnée (protocole agent,
+    /// cron, imports, services singleton via <c>IRootDbContextFactory</c>) voit tout.
+    /// </summary>
+    public EntityScope EntityScope { get; set; } = EntityScope.Unrestricted;
+
+    /// <summary>
+    /// Rattache tout nouvel objet cloisonné à l'entité active, quand le formulaire ne l'a pas fait
+    /// lui-même. Évite d'avoir à ajouter le champ « Entité » aux quelque 40 formulaires de
+    /// l'application pour que la création soit correcte : un objet créé depuis l'entité active y
+    /// est rattaché, ce qui est le comportement de GLPI.
+    /// </summary>
+    /// <summary>
+    /// Droits applicables aux écritures de ce contexte. <see cref="ProfileRights.Full"/> par
+    /// défaut, comme <see cref="EntityScope"/> : un contexte obtenu autrement que par la fabrique
+    /// (protocole agent, cron, imports, <see cref="IRootDbContextFactory"/>) écrit sans contrôle.
+    /// </summary>
+    public ProfileRights ProfileRights { get; set; } = ProfileRights.Full;
+
+    /// <summary>
+    /// Refuse une écriture sur un type dont l'utilisateur n'a pas le droit en écriture. Filet de
+    /// sécurité de second rang : la protection de premier rang est le garde-fou de routes, qui
+    /// empêche d'atteindre l'écran. Il attrape ce que le garde-fou de routes ne peut pas voir —
+    /// une écriture déclenchée depuis une page d'une autre section, un composant partagé — et
+    /// couvre d'un coup les quelque 40 formulaires, dont aucun bouton n'a besoin d'être modifié.
+    ///
+    /// Lève plutôt que d'ignorer silencieusement : une écriture refusée doit se voir.
+    /// </summary>
+    private void EnforceWriteRights()
+    {
+        foreach (EntityEntry entry in ChangeTracker.Entries())
+        {
+            if (entry.State is not (EntityState.Added or EntityState.Modified or EntityState.Deleted))
+            {
+                continue;
+            }
+
+            ProfileSection? section = ProfileSectionMap.ForEntityType(entry.Entity.GetType());
+
+            if (section is not null && !ProfileRights.CanWrite(section.Value))
+            {
+                throw new UnauthorizedAccessException(
+                    $"Droits insuffisants pour modifier « {entry.Entity.GetType().Name} » : le profil n'a pas le droit d'écriture sur la section « {section} ».");
+            }
+        }
+    }
+
+    private void StampActiveEntityOnNewEntries()
+    {
+        if (EntityScope.ActiveEntityId is not int activeEntityId)
+        {
+            return;
+        }
+
+        foreach (EntityEntry entry in ChangeTracker.Entries())
+        {
+            if (entry.State == EntityState.Added && entry.Entity is IEntityScoped scoped && scoped.EntityId is null)
+            {
+                scoped.EntityId = activeEntityId;
+            }
+        }
+    }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        EnforceWriteRights();
+        StampActiveEntityOnNewEntries();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        EnforceWriteRights();
+        StampActiveEntityOnNewEntries();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }
 
     /// <summary>
@@ -67,18 +1760,33 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     /// SQLite n'est volontairement pas géré ici : seuls SQL Server, MySQL et PostgreSQL
     /// sont autorisés pour GlpiNg (voir <c>SetupOptions.AllowedProviders</c> dans Program.cs).
     /// </summary>
-    public static void ConfigureProvider(DbContextOptionsBuilder builder, DbProvider provider, string connectionString)
+    /// <param name="builder">Le builder d'options EF Core à configurer.</param>
+    /// <param name="provider">Le provider de base de données choisi lors de l'installation.</param>
+    /// <param name="connectionString">La chaîne de connexion vers le serveur principal.</param>
+    /// <param name="fallbackConnectionString">
+    /// Chaîne de connexion vers un serveur de secours, optionnelle. Si renseignée, le serveur
+    /// principal (<paramref name="connectionString"/>) est sondé au démarrage ; s'il n'est pas
+    /// joignable, c'est le serveur de secours qui est utilisé à sa place.
+    /// </param>
+    public static void ConfigureProvider(DbContextOptionsBuilder builder, DbProvider provider, string connectionString,
+        string? fallbackConnectionString = null)
     {
+        string effectiveConnectionString = connectionString;
+        if (!string.IsNullOrWhiteSpace(fallbackConnectionString) && !CanConnect(provider, connectionString))
+        {
+            effectiveConnectionString = fallbackConnectionString;
+        }
+
         switch (provider)
         {
             case DbProvider.SqlServer:
-                builder.UseSqlServer(connectionString);
+                builder.UseSqlServer(effectiveConnectionString);
                 break;
             case DbProvider.MySql:
-                builder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+                builder.UseMySql(effectiveConnectionString, ServerVersion.AutoDetect(effectiveConnectionString));
                 break;
             case DbProvider.Postgres:
-                builder.UseNpgsql(connectionString);
+                builder.UseNpgsql(effectiveConnectionString);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(provider), provider,
@@ -87,10 +1795,47 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     }
 
     /// <summary>Construit un GlpiNgDbContext autonome (hors DI) pour le provider et la chaîne donnés.</summary>
-    public static GlpiNgDbContext Create(DbProvider provider, string connectionString)
+    public static GlpiNgDbContext Create(DbProvider provider, string connectionString, string? fallbackConnectionString = null)
     {
         DbContextOptionsBuilder<GlpiNgDbContext> optionsBuilder = new DbContextOptionsBuilder<GlpiNgDbContext>();
-        ConfigureProvider(optionsBuilder, provider, connectionString);
+        ConfigureProvider(optionsBuilder, provider, connectionString, fallbackConnectionString);
         return new GlpiNgDbContext(optionsBuilder.Options);
+    }
+
+    /// <summary>
+    /// Sonde la joignabilité d'un serveur en tentant une connexion ADO.NET avec un timeout
+    /// court (indépendant du "Connect Timeout" propre à la chaîne, pensé lui pour l'usage
+    /// normal de l'application) : on ne veut pas bloquer le démarrage le temps du timeout
+    /// complet avant de basculer sur le serveur de secours.
+    /// </summary>
+    private static bool CanConnect(DbProvider provider, string connectionString)
+    {
+        const int probeTimeoutSeconds = 3;
+        try
+        {
+            using DbConnection connection = provider switch
+            {
+                DbProvider.SqlServer => new SqlConnection(new SqlConnectionStringBuilder(connectionString)
+                {
+                    ConnectTimeout = probeTimeoutSeconds
+                }.ConnectionString),
+                DbProvider.MySql => new MySqlConnection(new MySqlConnectionStringBuilder(connectionString)
+                {
+                    ConnectionTimeout = probeTimeoutSeconds
+                }.ConnectionString),
+                DbProvider.Postgres => new NpgsqlConnection(new NpgsqlConnectionStringBuilder(connectionString)
+                {
+                    Timeout = probeTimeoutSeconds
+                }.ConnectionString),
+                _ => throw new ArgumentOutOfRangeException(nameof(provider), provider,
+                    "GlpiNg n'autorise que SQL Server, MySQL et PostgreSQL.")
+            };
+            connection.Open();
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

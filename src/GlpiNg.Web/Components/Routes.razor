@@ -1,14 +1,34 @@
-@using GlpiNg.Web.Components.Layout
+﻿@using GlpiNg.Web.Components.Layout
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Reflection
+@inject GlpiNg.Web.Services.Plugins.LoadedPlugins Plugins
 
-<Router AppAssembly="@typeof(Program).Assembly">
+<Router AppAssembly="@typeof(Program).Assembly"
+        AdditionalAssemblies="AdditionalAssemblies">
     <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+        <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+            <NotAuthorized>
+                <RedirectToLogin />
+            </NotAuthorized>
+        </AuthorizeRouteView>
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />
     </Found>
     <NotFound>
-        <PageTitle>Page introuvable</PageTitle>
+        <PageTitle>@T("Page introuvable — GlpiNg")</PageTitle>
         <LayoutView Layout="@typeof(MainLayout)">
-            <p>Désolé, cette page n'existe pas.</p>
+            <p>@T("Désolé, cette page n'existe pas.")</p>
         </LayoutView>
     </NotFound>
 </Router>
+
+@code {
+    private IEnumerable<Assembly> AdditionalAssemblies =>
+    [
+        typeof(GlpiNg.Modules.Inventory.InventoryModuleServiceCollectionExtensions).Assembly,
+        typeof(GlpiNg.Modules.Deployment.DeploymentModuleServiceCollectionExtensions).Assembly,
+        typeof(GlpiNg.Modules.KnowledgeBase.KnowledgeBaseModuleServiceCollectionExtensions).Assembly,
+        typeof(GlpiNg.Modules.Management.ManagementModuleServiceCollectionExtensions).Assembly,
+        typeof(GlpiNg.Modules.Assistance.AssistanceModuleServiceCollectionExtensions).Assembly,
+        .. Plugins.Assemblies,
+    ];
+}

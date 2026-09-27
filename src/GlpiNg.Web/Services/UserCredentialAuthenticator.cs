@@ -1,0 +1,214 @@
+﻿using GlpiNg.Web.Data;
+using GlpiNg.Web.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+
+namespace GlpiNg.Web.Services;
+
+/// <summary>
+/// Authentifie un identifiant/mot de passe contre un compte local ou, à défaut, par bind LDAP
+/// (voir <see cref="LdapAuthenticationService"/>) — logique partagée entre la connexion cookie
+/// (<see cref="Controllers.AccountController"/>) et le grant OAuth2 "password"
+/// (<see cref="Controllers.OAuthController"/>), pour que les deux se comportent identiquement
+/// vis-à-vis d'un compte local, LDAP existant, ou LDAP à provisionner.
+/// </summary>
+public class UserCredentialAuthenticator(
+    GlpiNgDbContext db,
+    SettingsCacheService settingsStore,
+    LdapAuthenticationService ldapAuth,
+    LdapAccountProvisioner provisioner,
+    ILogger<UserCredentialAuthenticator> logger)
+{
+    private static readonly PasswordHasher<GlpiUser> Hasher = new();
+
+    /// <summary>
+    /// Authentifie <paramref name="userName"/>/<paramref name="password"/>. Si
+    /// <paramref name="forcedSource"/> vaut 0, seul le mot de passe local est vérifié ; s'il vaut
+    /// un AuthLdapServer.Id, seul cet annuaire est essayé ; sinon (null), choix automatique :
+    /// mot de passe local d'abord, puis bind LDAP si celui-ci échoue ou si le compte est déjà
+    /// rattaché à un annuaire (annuaire connu pour ce compte en priorité, sinon tous les annuaires
+    /// actifs, celui par défaut d'abord).
+    /// </summary>
+    public async Task<GlpiUser?> AuthenticateAsync(string userName, string password, int? forcedSource, CancellationToken ct)
+    {
+        GlpiUser? user = await db.Users.FirstOrDefaultAsync(u => u.UserName == userName, ct);
+
+        if (forcedSource == 0)
+        {
+            // Source imposée à « Base GlpiNg (local) » depuis le sélecteur : aucun annuaire n'est
+            // essayé, même si le compte en a un. C'est voulu, mais c'est une cause d'échec très
+            // déroutante quand le sélecteur a été laissé sur sa valeur par défaut.
+            if (user is not null && user.AuthSource == UserAuthSource.Local && VerifyLocalPassword(user, password))
+            {
+                return user;
+            }
+
+            logger.LogInformation(
+                "Connexion refusée pour « {User} » : la source « Base GlpiNg (local) » a été imposée depuis la page de connexion, aucun annuaire LDAP n'a donc été essayé.",
+                userName);
+
+            return null;
+        }
+
+        if (forcedSource is { } ldapServerId)
+        {
+            (bool authenticated, GlpiUser? result) = await AuthenticateLdapAsync(user, userName, password, ldapServerId, ct);
+            return authenticated ? result : null;
+        }
+
+        // Compte marqué "local" : on vérifie d'abord son mot de passe local, mais un échec ne
+        // conclut pas — on enchaîne sur les annuaires. C'est indispensable pour le cas le plus
+        // courant de mise en place d'un annuaire : l'administrateur crée le compte à la main dans
+        // /admin/users (donc AuthSource = Local, le défaut) pour ne pas avoir à activer le
+        // provisionnement automatique, puis l'utilisateur se connecte avec son mot de passe
+        // d'annuaire. Un retour direct ici refusait cette connexion sans même interroger
+        // l'annuaire, et c'est aussi ce qui rendait inopérant le contournement « créez d'abord le
+        // compte ». Un bind LDAP réussi rebascule ensuite le compte sur AuthSource = Ldap (voir
+        // AuthenticateLdapAsync).
+        if (user is not null && user.AuthSource == UserAuthSource.Local)
+        {
+            if (VerifyLocalPassword(user, password))
+            {
+                return user;
+            }
+
+            logger.LogInformation(
+                "Mot de passe local incorrect pour « {User} » : tentative sur les annuaires LDAP configurés.",
+                userName);
+        }
+
+        (bool ldapAuthenticated, GlpiUser? ldapUser) = await AuthenticateLdapAsync(user, userName, password, user?.LdapServerId, ct);
+        return ldapAuthenticated ? ldapUser : null;
+    }
+
+    private static bool VerifyLocalPassword(GlpiUser user, string password) =>
+        Hasher.VerifyHashedPassword(user, user.PasswordHash, password) != PasswordVerificationResult.Failed;
+
+    /// <summary>
+    /// Tente le bind LDAP puis, en cas de succès, rattache <paramref name="existingUser"/> à
+    /// l'annuaire trouvé (ou provisionne un nouveau compte si AuthSettings.AutoAddUsersFromExternalAuth
+    /// est activé et qu'aucun compte local ne correspond).
+    /// </summary>
+    private async Task<(bool Authenticated, GlpiUser? User)> AuthenticateLdapAsync(
+        GlpiUser? existingUser, string userName, string password, int? preferredServerId, CancellationToken ct)
+    {
+        LdapAuthResult result = await ldapAuth.TryAuthenticateAsync(userName, password, preferredServerId, ct);
+        if (!result.Success || result.Server is null)
+        {
+            logger.LogWarning("Aucun annuaire LDAP n'a authentifié « {User} ». La ligne « Bind LDAP échoué » qui précède en donne la raison ; si aucune n'apparaît, aucun annuaire actif n'a été essayé.", userName);
+            return (false, existingUser);
+        }
+
+        if (existingUser is not null)
+        {
+            existingUser.AuthSource = UserAuthSource.Ldap;
+            existingUser.LdapServerId = result.Server.Id;
+            existingUser.ExternalDn = result.Dn;
+
+            // La correspondance d'attributs est réappliquée à chaque connexion, pas seulement à la
+            // création : c'est ce qui fait que l'annuaire reste la source de vérité pour ces
+            // champs, sans tâche de synchronisation séparée.
+            provisioner.ApplyAttributes(existingUser, result.Server, result.Attributes);
+            await SynchronizeGroupsAsync(existingUser, result, ct);
+
+            await db.SaveChangesAsync(ct);
+            return (true, existingUser);
+        }
+
+        AuthSettings authSettings = await settingsStore.ReadSectionAsync<AuthSettings>("AuthSettings", ct);
+        if (!authSettings.AutoAddUsersFromExternalAuth)
+        {
+            // Le bind LDAP a REUSSI : l'identifiant et le mot de passe sont bons. Le refus vient
+            // uniquement de l'absence de compte local et du provisionnement desactive. Sans cette
+            // trace, l'ecran de connexion renvoie « Nom d'utilisateur ou mot de passe incorrect »,
+            // ce qui designe la mauvaise cause et laisse chercher du cote de l'annuaire.
+            logger.LogWarning(
+                "Connexion refusee pour « {User} » : le bind sur l'annuaire « {Server} » a pourtant reussi, mais aucun compte local ne correspond et « Ajouter automatiquement les utilisateurs depuis une source externe » est desactive (Configuration > Authentification).",
+                userName, result.Server.Name);
+
+            return (false, null);
+        }
+
+        logger.LogInformation("Compte « {User} » provisionne depuis l'annuaire « {Server} ».", userName, result.Server.Name);
+
+        GlpiUser newUser = new()
+        {
+            UserName = userName,
+            DisplayName = userName,
+            // Un compte LDAP ne vérifie jamais PasswordHash (voir GlpiUser.AuthSource) : un hash
+            // aléatoire plutôt qu'une chaîne vide, pour rester un hash valide si jamais quelque
+            // chose l'appelle malgré tout.
+            PasswordHash = string.Empty,
+            AuthSource = UserAuthSource.Ldap,
+            LdapServerId = result.Server.Id,
+            ExternalDn = result.Dn,
+        };
+        newUser.PasswordHash = Hasher.HashPassword(newUser, Guid.NewGuid().ToString("N"));
+
+        provisioner.ApplyAttributes(newUser, result.Server, result.Attributes);
+
+        db.Users.Add(newUser);
+        await db.SaveChangesAsync(ct);
+
+        // Après le premier SaveChangesAsync : appartenances et habilitation référencent
+        // l'utilisateur par son identifiant, qui n'existe qu'une fois la ligne insérée.
+        await SynchronizeGroupsAsync(newUser, result, ct);
+        await provisioner.AssignDefaultHabilitationAsync(newUser, result.Server, ct);
+        await db.SaveChangesAsync(ct);
+
+        return (true, newUser);
+    }
+
+    /// <summary>
+    /// Aligne les appartenances du compte sur les groupes remontés par l'annuaire, quand la
+    /// synchronisation est activée sur la fiche annuaire.
+    ///
+    /// Rapprochement par nom, et uniquement sur des groupes qui existent déjà dans GlpiNg : un
+    /// groupe de l'annuaire sans équivalent local est ignoré plutôt que créé, pour que l'annuaire
+    /// ne peuple pas le référentiel des groupes de lui-même.
+    ///
+    /// Les appartenances retirées ne le sont que parmi les groupes connus de l'annuaire : un
+    /// rattachement fait à la main dans GlpiNg, sur un groupe que l'annuaire ne connaît pas, est
+    /// conservé.
+    /// </summary>
+    private async Task SynchronizeGroupsAsync(GlpiUser user, LdapAuthResult result, CancellationToken ct)
+    {
+        AuthLdapServer server = result.Server!;
+
+        if (!server.SynchronizeGroups || result.GroupNames.Count == 0)
+        {
+            return;
+        }
+
+        List<string> names = [.. result.GroupNames];
+
+        List<GlpiGroup> matched = await db.Groups
+            .IgnoreQueryFilters()
+            .Where(group => names.Contains(group.Name))
+            .ToListAsync(ct);
+
+        List<GlpiGroupUser> current = await db.GroupUsers
+            .Where(membership => membership.UserId == user.Id)
+            .ToListAsync(ct);
+
+        HashSet<int> targetIds = [.. matched.Select(group => group.Id)];
+
+        foreach (GlpiGroup group in matched.Where(group => current.All(membership => membership.GroupId != group.Id)))
+        {
+            db.GroupUsers.Add(new GlpiGroupUser { GroupId = group.Id, UserId = user.Id });
+        }
+
+        // Retraits limités aux groupes portant un nom connu de l'annuaire : voir la remarque
+        // ci-dessus sur les rattachements manuels.
+        List<int> knownLocalIds = await db.Groups
+            .IgnoreQueryFilters()
+            .Where(group => names.Contains(group.Name))
+            .Select(group => group.Id)
+            .ToListAsync(ct);
+
+        foreach (GlpiGroupUser membership in current.Where(m => knownLocalIds.Contains(m.GroupId) && !targetIds.Contains(m.GroupId)))
+        {
+            db.GroupUsers.Remove(membership);
+        }
+    }
+}

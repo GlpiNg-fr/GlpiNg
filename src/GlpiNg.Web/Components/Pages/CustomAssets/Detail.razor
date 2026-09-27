@@ -1,0 +1,224 @@
+@page "/config/custom-assets/{DefinitionId:int}"
+@using GlpiNg.Modules.Inventory.Models
+@using GlpiNg.Web.Models.CustomAssets
+@rendermode InteractiveServer
+
+<PageTitle>@(_definition?.LabelSingular ?? T("Actif personnalisé")) — GlpiNg</PageTitle>
+
+@if (_definition is null)
+{
+    <div class="card">
+        <div class="card-body text-center text-secondary py-5">@T("Type d'actif introuvable.")</div>
+    </div>
+}
+else
+{
+    <div class="glping-fiche">
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h3 class="card-title mb-0">
+                    <i class="ti @_definition.Icon me-2"></i>@_definition.LabelSingular
+                </h3>
+                <div class="btn-list">
+                    <a class="btn" href="@($"/parc/custom/{_definition.SystemName}")">
+                        <i class="ti ti-list me-1"></i>@T("Voir les actifs")
+                    </a>
+                    <div class="dropdown">
+                        <button type="button" class="btn btn-icon text-danger" data-bs-toggle="dropdown" aria-expanded="false"
+                                title="@(T("Supprimer ce type"))">
+                            <i class="ti ti-trash"></i>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end p-3" style="min-width: 300px;">
+                            <p class="mb-2">
+                                @T("Supprimer ce type d'actif ?")
+                                @if (_assetCount > 0)
+                                {
+                                    <strong>@T("{0} actif(s) enregistré(s) seront supprimés avec lui", _assetCount)</strong>
+                                    <text>@T(", ainsi que leurs valeurs, notes et historique.")</text>
+                                }
+                                @T("Cette action est définitive.")
+                            </p>
+                            <div class="d-flex justify-content-end gap-2">
+                                <button type="button" class="btn btn-sm">@T("Annuler")</button>
+                                <button type="button" class="btn btn-sm btn-danger" @onclick="DeleteAsync">@T("Supprimer")</button>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-warning" disabled="@_isSaving" @onclick="SaveAsync">
+                        <i class="ti ti-device-floppy me-1"></i>@T("Enregistrer")
+                    </button>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="glping-fiche-field">
+                            <label>@T("Libellé au singulier")</label>
+                            <input class="form-control" @bind="_definition.LabelSingular" />
+                        </div>
+                        <div class="glping-fiche-field">
+                            <label>@T("Libellé au pluriel")</label>
+                            <input class="form-control" @bind="_definition.LabelPlural" />
+                        </div>
+                        <div class="glping-fiche-field">
+                            <label>@T("Nom technique")</label>
+                            <input class="form-control" value="@_definition.SystemName" disabled />
+                            <p class="hint">
+                                @T("Définitif : les documents, notes et historique déjà rattachés le portent.")
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="glping-fiche-field">
+                            <label>@T("Icône")</label>
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="ti @_definition.Icon fs-2"></i>
+                                <select class="form-select" @bind="_definition.Icon">
+                                    @foreach ((string icon, string label) in IconChoices)
+                                    {
+                                        <option value="@icon">@T(label)</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="glping-fiche-field">
+                            <label>@T("Actif")</label>
+                            <select class="form-select" value="@(_definition.IsActive ? "true" : "false")"
+                                    @onchange="@(e => _definition.IsActive = e.Value?.ToString() == "true")">
+                                <option value="true">@T("Oui")</option>
+                                <option value="false">@T("Non")</option>
+                            </select>
+                        </div>
+                        <div class="glping-fiche-field">
+                            <label>@T("Commentaires")</label>
+                            <textarea class="form-control" rows="2" @bind="_definition.Comment"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <hr />
+
+                <h4>@T("Onglets proposés sur la fiche")</h4>
+                <div class="row">
+                    <div class="col-md-4">
+                        <label class="form-check">
+                            <input class="form-check-input" type="checkbox" checked="@_definition.DocumentsEnabled"
+                                   @onchange="@((ChangeEventArgs e) => _definition.DocumentsEnabled = (bool)(e.Value ?? false))" />
+                            <span class="form-check-label">@T("Documents")</span>
+                        </label>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-check">
+                            <input class="form-check-input" type="checkbox" checked="@_definition.NotesEnabled"
+                                   @onchange="@((ChangeEventArgs e) => _definition.NotesEnabled = (bool)(e.Value ?? false))" />
+                            <span class="form-check-label">@T("Notes")</span>
+                        </label>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-check">
+                            <input class="form-check-input" type="checkbox" checked="@_definition.HistoryEnabled"
+                                   @onchange="@((ChangeEventArgs e) => _definition.HistoryEnabled = (bool)(e.Value ?? false))" />
+                            <span class="form-check-label">@T("Historique")</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h3 class="card-title mb-0"><i class="ti ti-forms me-2"></i>@T("Champs")</h3>
+                <button type="button" class="btn btn-primary" @onclick="AddField">
+                    <i class="ti ti-plus me-1"></i>@T("Ajouter un champ")
+                </button>
+            </div>
+
+            <div class="card-body">
+                <p class="hint">
+                    @T("Tout actif porte déjà un nom et un commentaire. Les champs ci-dessous s'y ajoutent, dans cet ordre, sur la fiche comme dans la liste. Enregistrer supprime aussi les valeurs saisies pour un champ retiré.")
+                </p>
+
+                @if (_fields.Count == 0)
+                {
+                    <div class="glping-config-placeholder">
+                        <i class="ti ti-forms"></i>
+                        <p class="mb-0">@T("Aucun champ : les actifs de ce type n'auront qu'un nom et un commentaire.")</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-vcenter">
+                            <thead>
+                                <tr>
+                                    <th>@T("Libellé")</th>
+                                    <th style="width: 12rem;">@T("Type")</th>
+                                    <th style="width: 14rem;">@T("Liste déroulante")</th>
+                                    <th style="width: 8rem;">@T("Obligatoire")</th>
+                                    <th style="width: 7rem;">@T("Ordre")</th>
+                                    <th style="width: 3rem;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (CustomAssetField field in _fields.OrderBy(f => f.SortOrder).ToList())
+                                {
+                                    <tr>
+                                        <td>
+                                            <input class="form-control" @bind="field.Label" @bind:event="oninput" />
+                                        </td>
+                                        <td>
+                                            <select class="form-select" value="@field.Type"
+                                                    @onchange="@(e => OnFieldTypeChanged(field, e))">
+                                                @foreach (CustomAssetFieldType type in Enum.GetValues<CustomAssetFieldType>())
+                                                {
+                                                    <option value="@type">@CustomAssetValueFormat.LabelFor(type)</option>
+                                                }
+                                            </select>
+                                        </td>
+                                        <td>
+                                            @if (field.Type == CustomAssetFieldType.Dropdown)
+                                            {
+                                                <select class="form-select" value="@(field.DropdownType?.ToString() ?? "")"
+                                                        @onchange="@(e => OnDropdownTypeChanged(field, e))">
+                                                    <option value="">-----</option>
+                                                    @foreach (DropdownType type in DropdownTypeCatalog.Labels)
+                                                    {
+                                                        <option value="@type">@DropdownTypeCatalog.Label(type)</option>
+                                                    }
+                                                </select>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-secondary">—</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <input class="form-check-input" type="checkbox" checked="@field.IsMandatory"
+                                                   @onchange="@((ChangeEventArgs e) => field.IsMandatory = (bool)(e.Value ?? false))" />
+                                        </td>
+                                        <td>
+                                            <input class="form-control" type="number" value="@field.SortOrder"
+                                                   @onchange="@(e => OnSortOrderChanged(field, e))" />
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-icon btn-sm text-danger" title="@(T("Retirer ce champ"))"
+                                                    @onclick="() => RemoveField(field)">
+                                                <i class="ti ti-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    @if (_fieldError is not null)
+                    {
+                        <div class="alert alert-danger">@_fieldError</div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+}

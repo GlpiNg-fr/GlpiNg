@@ -1,0 +1,89 @@
+﻿@page "/config/automatic-actions"
+@using GlpiNg.Modules.Cron.Models
+@rendermode InteractiveServer
+
+<PageTitle>@T("Actions automatiques — GlpiNg")</PageTitle>
+
+<div class="glping-list-page">
+<div class="card">
+    <div class="card-header d-flex align-items-center justify-content-between glping-list-toolbar">
+        <span class="fw-semibold">@T("{0} action(s)", _rows.Count)</span>
+        <div class="btn-list align-items-center">
+            <button type="button" class="btn btn-icon" @onclick="LoadAsync" title="@(T("Rafraîchir"))">
+                <i class="ti ti-refresh"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th>@T("Nom")</th>
+                    <th>@T("Fréquence")</th>
+                    <th>@T("Dernière exécution")</th>
+                    <th>@T("Statut")</th>
+                    <th>@T("Activée")</th>
+                    <th style="width: 8rem;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (_rows.Count == 0)
+                {
+                    <tr>
+                        <td colspan="6" class="text-center text-secondary py-4">@T("Aucune action automatique disponible.")</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (Row row in _rows)
+                    {
+                        <tr>
+                            <td>
+                                <a href="@($"/config/automatic-actions/{row.Task.Key}")" class="text-reset fw-semibold">
+                                    <i class="ti ti-robot me-1 text-secondary"></i>@T(row.Task.Name)
+                                </a>
+                            </td>
+                            <td>@FrequencyLabel(row)</td>
+                            <td>@LastRunLabel(row.State)</td>
+                            <td>
+                                @if (row.State.LastRunAt is null)
+                                {
+                                    <span class="badge bg-secondary">—</span>
+                                }
+                                else if (row.State.LastRunSuccess == true)
+                                {
+                                    <span class="badge bg-success">@T("Succès")</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">@T("Échec")</span>
+                                }
+                            </td>
+                            <td>
+                                <label class="glping-switch">
+                                    <input type="checkbox" checked="@row.State.IsEnabled" @onchange="() => ToggleEnabledAsync(row)" />
+                                    <span class="glping-switch-slider"></span>
+                                </label>
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-icon btn-sm" title="@(T("Lancer maintenant"))"
+                                        disabled="@_runningKeys.Contains(row.Task.Key)" @onclick="() => RunNowAsync(row)">
+                                    @if (_runningKeys.Contains(row.Task.Key))
+                                    {
+                                        <span class="spinner-border spinner-border-sm"></span>
+                                    }
+                                    else
+                                    {
+                                        <i class="ti ti-player-play"></i>
+                                    }
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>

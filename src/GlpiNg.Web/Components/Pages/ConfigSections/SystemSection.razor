@@ -1,0 +1,136 @@
+﻿@using GlpiNg.Modules.Abstractions.Storage
+@using GlpiNg.Modules.Cron
+@using GlpiNg.Modules.Cron.Models
+@using GlpiNg.Web.Data
+@using GlpiNg.Web.Models
+@using GlpiNg.Web.Services
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<GlpiNgDbContext> DbFactory
+@inject CronIntervalState IntervalState
+@inject AppSettingsFileStore FileStore
+@inject IStoragePaths StoragePaths
+@inject ToastService ToastService
+
+<p class="hint" style="margin-left:0;">
+    @T("Les adresses d'écoute du serveur ont été déplacées dans l'onglet \"Configuration générale\", et l'activation de Swagger dans l'onglet \"API\".")
+</p>
+
+@if (_intervalMinutes is null)
+{
+    <p>@T("Chargement…")</p>
+}
+else
+{
+    <EditForm Model="this" OnValidSubmit="SaveAsync" class="glping-config-form">
+        <div class="glping-config-field">
+            <label for="cron-interval">@T("Intervalle d'exécution du service cron (minutes)")</label>
+            <input id="cron-interval" type="number" min="@CronIntervalState.MinMinutes" max="@CronIntervalState.MaxMinutes"
+                   class="glping-config-input-sm" @bind="_intervalMinutes" />
+        </div>
+        <p class="hint">
+            @T("Fréquence à laquelle le service principal exécute ses tâches planifiées (purge de l'historique, nettoyage des agents inactifs, ...). Pris en compte immédiatement, sans redémarrage.")
+        </p>
+
+        <div class="glping-config-field">
+            <label for="storage-root">@T("Emplacement de stockage des fichiers")</label>
+            <input id="storage-root" class="glping-config-input" @bind="_storageRootPath"
+                   placeholder="@_defaultRootHint" />
+        </div>
+        <p class="hint">
+            @T("Racine des fichiers écrits par GlpiNg : paquets de déploiement, clés de chiffrement")
+            (mots de passe des annuaires LDAP) et <code>appsettings.local.json</code>. Un chemin
+            @T("relatif est résolu depuis la racine du programme. Laisser vide pour utiliser le dossier")
+            <code>data</code> à cet emplacement.
+            <strong>@T("Un redémarrage est nécessaire")</strong>@T(", comme pour les adresses d'écoute.")
+        </p>
+        <p class="hint">
+            <strong>@T("Avant de redémarrer après un changement de racine")</strong>@T(", déplacez le contenu")
+            de l'ancienne racine vers la nouvelle — <code>appsettings.local.json</code> en premier :
+            @T("il porte la chaîne de connexion et l'état de l'installation. Sans lui, GlpiNg ne")
+            @T("retrouve pas son installation au démarrage. Les clés de chiffrement laissées derrière")
+            @T("rendraient par ailleurs illisibles les mots de passe des annuaires LDAP.")
+        </p>
+
+        @* Les chemins effectifs sont affichés parce que plusieurs sources peuvent les décider —
+           valeur configurée, défaut, et pour les paquets un éventuel PackageStorage:RootPath
+           hérité. Sans ça, « où sont mes fichiers » se répond en lisant le code. *@
+        <div class="glping-config-field">
+            <label>@T("Emplacements effectifs (au dernier démarrage)")</label>
+            <ul class="mb-0">
+                <li><code>@StoragePaths.Root</code> — racine</li>
+                <li><code>@StoragePaths.LocalSettings</code> — configuration de l'installation</li>
+                <li><code>@StoragePaths.Keys</code> — clés de chiffrement</li>
+                <li><code>@StoragePaths.Packages</code> — paquets de déploiement</li>
+            </ul>
+        </div>
+
+        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? T("Enregistrement…") : T("Enregistrer"))</button>
+    </EditForm>
+}
+
+@code {
+    private int? _intervalMinutes;
+    private bool _isSaving;
+    private string? _storageRootPath;
+    private string _defaultRootHint = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using GlpiNgDbContext db = await DbFactory.CreateDbContextAsync();
+        CronSettings? settings = await db.CronSettings.FirstOrDefaultAsync();
+        _intervalMinutes = settings?.IntervalMinutes ?? CronIntervalState.DefaultMinutes;
+
+        ServerSettings serverSettings = await FileStore.ReadAsync();
+        _storageRootPath = serverSettings.StorageRootPath;
+
+        // Repère montré en filigrane du champ : l'emplacement retenu si on le laisse vide.
+        _defaultRootHint = Path.Combine(AppContext.BaseDirectory, GlpiNg.Web.Services.StoragePaths.DefaultFolderName);
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_intervalMinutes is null)
+        {
+            return;
+        }
+
+        _isSaving = true;
+
+        try
+        {
+            int clamped = CronIntervalState.Clamp(_intervalMinutes.Value);
+
+            await using GlpiNgDbContext db = await DbFactory.CreateDbContextAsync();
+            CronSettings? settings = await db.CronSettings.FirstOrDefaultAsync();
+            if (settings is null)
+            {
+                db.CronSettings.Add(new CronSettings { IntervalMinutes = clamped });
+            }
+            else
+            {
+                settings.IntervalMinutes = clamped;
+                settings.UpdatedAt = DateTime.UtcNow;
+            }
+
+            await db.SaveChangesAsync();
+
+            // Écrit dans appsettings.json, comme les adresses d'écoute : la racine de stockage est
+            // lue au démarrage, avant tout accès à la base.
+            ServerSettings serverSettings = await FileStore.ReadAsync();
+            serverSettings.StorageRootPath = _storageRootPath;
+            await FileStore.SaveAsync(serverSettings);
+
+            // Réveille immédiatement CronBackgroundService pour qu'il reprenne son attente
+            // avec le nouvel intervalle, sans attendre la fin du tick en cours.
+            IntervalState.UpdateInterval(clamped);
+
+            _intervalMinutes = clamped;
+            ToastService.Notify(new ToastMessage(ToastType.Success,
+                "Configuration enregistrée. L'emplacement de stockage prendra effet au prochain redémarrage."));
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+}

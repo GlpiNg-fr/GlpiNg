@@ -1,0 +1,85 @@
+@using GlpiNg.Web.Models.CustomAssets
+@* Alias : BlazorBootstrap expose lui aussi un « DropdownItem », importé globalement par _Imports. *@
+@using DropdownItemModel = GlpiNg.Modules.Inventory.Models.DropdownItem
+
+@* Saisie d'un champ personnalisé, partagée par la fenêtre de création et la fiche : les huit
+   natures de champ ne se rendent qu'ici, plutôt qu'une fois par écran. *@
+
+<div class="glping-fiche-field">
+    <label>
+        @Field.Label
+        @if (Field.IsMandatory)
+        {
+            <span class="text-danger ms-1" title="@(T("Champ obligatoire"))">*</span>
+        }
+    </label>
+
+    @switch (Field.Type)
+    {
+        case CustomAssetFieldType.LongText:
+            <textarea class="form-control" rows="3" value="@Value"
+                      @onchange="OnChanged"></textarea>
+            break;
+
+        case CustomAssetFieldType.Number:
+            <input class="form-control" type="number" step="any" value="@Value" @onchange="OnChanged" />
+            break;
+
+        case CustomAssetFieldType.Boolean:
+            <select class="form-select" value="@(CustomAssetValueFormat.IsTrue(Value) ? "true" : "false")"
+                    @onchange="OnChanged">
+                <option value="false">@T("Non")</option>
+                <option value="true">@T("Oui")</option>
+            </select>
+            break;
+
+        case CustomAssetFieldType.Date:
+            <input class="form-control" type="date" value="@Value" @onchange="OnChanged" />
+            break;
+
+        case CustomAssetFieldType.DateTime:
+            <input class="form-control" type="datetime-local" value="@Value" @onchange="OnChanged" />
+            break;
+
+        case CustomAssetFieldType.Url:
+            <input class="form-control" type="url" placeholder="https://…" value="@Value" @onchange="OnChanged" />
+            break;
+
+        case CustomAssetFieldType.Dropdown:
+            <select class="form-select" value="@Value" @onchange="OnChanged">
+                <option value="">-----</option>
+                @foreach (DropdownItemModel option in Options)
+                {
+                    <option value="@option.Id">@option.Name</option>
+                }
+            </select>
+            @if (Field.DropdownType is null)
+            {
+                @* Un champ « liste déroulante » sans catégorie ne propose rien : le dire ici plutôt
+                   que de laisser une liste vide sans explication. *@
+                <p class="hint">@T("Aucune catégorie d'intitulés choisie pour ce champ.")</p>
+            }
+            break;
+
+        default:
+            <input class="form-control" value="@Value" @onchange="OnChanged" />
+            break;
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required CustomAssetField Field { get; set; }
+
+    [Parameter]
+    public string? Value { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<DropdownItemModel> Options { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<string?> ValueChanged { get; set; }
+
+    private async Task OnChanged(ChangeEventArgs args) =>
+        await ValueChanged.InvokeAsync(args.Value?.ToString());
+}

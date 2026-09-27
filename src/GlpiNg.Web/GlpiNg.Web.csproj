@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>GlpiNg.Web</RootNamespace>
@@ -13,24 +13,47 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.8">
+    <PackageReference Include="Blazor.Bootstrap" Version="4.0.0" />
+    <!-- Exports des rapports (/tools/reports) : XLSX et PDF. Mêmes bibliothèques que l'export de
+         la liste des ordinateurs (voir ComputerExportWriter, module Inventory) — l'ODS et le CSV
+         sont écrits à la main, sans dépendance. -->
+    <PackageReference Include="ClosedXML" Version="0.105.1" />
+    <PackageReference Include="QuestPDF" Version="2026.8.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.12" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.8" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.8" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
-    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.3" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
-    <PackageReference Include="AnthoDingo.Setup" Version="2.0.0" />
-    <!-- Contournement de CVE-2025-6965 / GHSA-2m69-gcr7-jv3q : AnthoDingo.Setup dépend de
-         Microsoft.Data.Sqlite (pour tester une connexion SQLite dans son wizard), qui ramène
-         SQLitePCLRaw.lib.e_sqlite3 2.1.11 (vulnérable, non corrigé en amont — dotnet/efcore#38257). -->
-    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.53.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.12" />
+    <PackageReference Include="ReverseMarkdown" Version="6.2.1" />
+	<PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    <PackageReference Include="Microting.EntityFrameworkCore.MySql" Version="10.0.11" />
+    <PackageReference Include="MySqlConnector" Version="2.6.2" />
+    <PackageReference Include="AnthoDingo.Setup" Version="2.1.1" />
+    <PackageReference Include="System.DirectoryServices.Protocols" Version="10.0.12" />
+    <!-- Envoi SMTP réel des notifications (voir Services/Notifications/SmtpMailSender.cs) :
+         System.Net.Mail.SmtpClient est déconseillé par Microsoft pour du code neuf
+         (STARTTLS/TLS peu fiable), MailKit est le remplacement standard de l'écosystème .NET. -->
+    <PackageReference Include="MailKit" Version="4.17.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Métadonnées de GLPI (tables, options de recherche, schémas et documentation de l'API v2)
+         reproduites par les API REST — voir Api/Glpi/GlpiMetadata.cs et tools/glpi-api-metadata. -->
+    <EmbeddedResource Include="Api\Glpi\Metadata\*.gz" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\GlpiNg.Modules.Inventory\GlpiNg.Modules.Inventory.csproj" />
+    <ProjectReference Include="..\GlpiNg.Modules.Abstractions\GlpiNg.Modules.Abstractions.csproj" />
+    <ProjectReference Include="..\GlpiNg.Modules.Cron\GlpiNg.Modules.Cron.csproj" />
+    <ProjectReference Include="..\GlpiNg.Modules.Deployment\GlpiNg.Modules.Deployment.csproj" />
+    <ProjectReference Include="..\GlpiNg.Modules.Scheduler\GlpiNg.Modules.Scheduler.csproj" />
+    <ProjectReference Include="..\GlpiNg.Modules.KnowledgeBase\GlpiNg.Modules.KnowledgeBase.csproj" />
+    <ProjectReference Include="..\GlpiNg.Modules.Management\GlpiNg.Modules.Management.csproj" />
+    <ProjectReference Include="..\GlpiNg.Modules.Assistance\GlpiNg.Modules.Assistance.csproj" />
+    <ProjectReference Include="..\GlpiNg.Plugins.Sdk\GlpiNg.Plugins.Sdk.csproj" />
   </ItemGroup>
 
 </Project>

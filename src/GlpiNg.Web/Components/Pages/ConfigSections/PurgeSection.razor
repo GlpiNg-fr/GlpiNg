@@ -1,0 +1,93 @@
+@using GlpiNg.Web.Models
+@using GlpiNg.Web.Services
+@inject SettingsCacheService SettingsStore
+@inject ConfigHistoryService History
+@inject ToastService ToastService
+
+@if (_model is null)
+{
+    <p>@T("Chargement…")</p>
+}
+else
+{
+    <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
+        <p class="hint" style="margin-left:0;">@T("Délai de conservation avant purge définitive, par type d'entrée d'historique.")</p>
+
+        <div class="glping-config-table-wrap" style="max-width:100%;">
+            <table class="glping-config-table">
+                <thead>
+                    <tr>
+                        <th>@T("Type d'entrée")</th>
+                        <th>@T("Politique de purge")</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var (key, label) in PurgeSettings.Fields)
+                    {
+                        <tr>
+                            <td>@T(label)</td>
+                            <td>
+                                <select @bind="_model.RetentionMonths[key]">
+                                    @foreach (var option in Options)
+                                    {
+                                        <option value="@option.Value">@T(option.Label)</option>
+                                    }
+                                </select>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? T("Enregistrement…") : T("Enregistrer"))</button>
+    </EditForm>
+}
+
+@code {
+    private const string SectionName = "PurgeSettings";
+
+    private static readonly List<(int Value, string Label)> Options = PurgeSettings.RetentionOptions().ToList();
+
+    private PurgeSettings? _model;
+    private bool _isSaving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _model = await SettingsStore.ReadSectionAsync<PurgeSettings>(SectionName);
+
+        foreach (var (key, _) in PurgeSettings.Fields)
+        {
+            if (!_model.RetentionMonths.ContainsKey(key))
+            {
+                _model.RetentionMonths[key] = key == "All" ? 0 : 3;
+            }
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_model is null)
+        {
+            return;
+        }
+
+        _isSaving = true;
+
+        try
+        {
+            var before = await SettingsStore.ReadSectionAsync<PurgeSettings>(SectionName);
+            await SettingsStore.SaveSectionAsync(SectionName, _model);
+            await History.AppendAsync("Administrateur", SettingsDiff.Compare(before, _model));
+            ToastService.Notify(new ToastMessage(ToastType.Success, T("Configuration enregistrée.")));
+        }
+        catch (IOException ex)
+        {
+            ToastService.Notify(new ToastMessage(ToastType.Danger, T("Échec de l'enregistrement : {0}", ex.Message)));
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+}

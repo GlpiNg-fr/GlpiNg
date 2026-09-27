@@ -1,0 +1,85 @@
+﻿@page "/config/auth/ldap/{ServerId:int}"
+@using GlpiNg.Web.Models
+@rendermode InteractiveServer
+
+<PageTitle>@(_server?.Name ?? T("Annuaire LDAP")) — GlpiNg</PageTitle>
+
+<AuthTabStrip Current="ldap" />
+
+@if (_server is null)
+{
+    <div class="text-center text-secondary py-5">
+        <i class="ti ti-address-book fs-1"></i>
+        <p class="mt-2">@T("Cet annuaire est introuvable.")</p>
+    </div>
+}
+else
+{
+    <div class="glping-fiche-topbar">
+        <div class="glping-fiche-crumb">
+            <i class="ti ti-address-book"></i>
+            <span>@T("Annuaire LDAP - {0} - ID {1}", _server.Name, _server.Id)</span>
+        </div>
+    </div>
+
+    <div class="glping-fiche-layout">
+        <aside class="glping-fiche-sidebar">
+            <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "main" ? "active" : "")" @onclick='() => SetTab("main")'>
+                <i class="ti ti-address-book"></i>
+                <span>@T("Annuaire LDAP")</span>
+            </button>
+            <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "users" ? "active" : "")" @onclick='() => SetTab("users")'>
+                <i class="ti ti-user"></i>
+                <span>@T("Utilisateurs")</span>
+            </button>
+            <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "groups" ? "active" : "")" @onclick='() => SetTab("groups")'>
+                <i class="ti ti-users"></i>
+                <span>@T("Groupes")</span>
+            </button>
+            <button type="button" class="glping-fiche-tab-item @(_activeTabKey == "advanced" ? "active" : "")" @onclick='() => SetTab("advanced")'>
+                <i class="ti ti-adjustments"></i>
+                <span>@T("Informations avancées")</span>
+            </button>
+        </aside>
+
+        <div class="glping-fiche-panel">
+            @* Un seul EditForm pour les quatre onglets : ils éditent le même annuaire, et changer
+               d'onglet ne doit pas obliger à enregistrer entre-temps. Les boutons restent donc
+               visibles quel que soit l'onglet affiché. *@
+            <EditForm Model="_server" OnValidSubmit="SaveAsync">
+                @switch (_activeTabKey)
+                {
+                    case "users":
+                        <LdapUserFields Server="_server" />
+                        break;
+
+                    case "groups":
+                        <LdapGroupFields Server="_server" />
+                        break;
+
+                    case "advanced":
+                        <LdapAdvancedFields Server="_server" />
+                        break;
+
+                    default:
+                        <LdapServerFormFields Server="_server" HasStoredPassword="@(_server.BindPasswordProtected is not null)"
+                                              StoredPasswordUnreadable="_storedPasswordUnreadable"
+                                              @bind-BindPasswordPlain="_bindPasswordPlain" />
+                        break;
+                }
+
+                <div class="d-flex justify-content-end gap-2 mt-3">
+                    <button type="button" class="btn btn-outline-secondary" disabled="@_isTesting" @onclick="TestConnectionAsync">
+                        <i class="ti ti-plug-connected me-1"></i>@(_isTesting ? T("Test en cours…") : T("Tester la connexion"))
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" @onclick="DeleteAsync">
+                        <i class="ti ti-trash me-1"></i>@T("Supprimer définitivement")
+                    </button>
+                    <button type="submit" class="btn btn-primary" disabled="@_isSaving">
+                        <i class="ti ti-device-floppy me-1"></i>@(_isSaving ? T("Enregistrement…") : T("Sauvegarder"))
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}

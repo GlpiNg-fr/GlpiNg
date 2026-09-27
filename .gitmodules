@@ -1,0 +1,27 @@
+[submodule "src/GlpiNg.Plugins.Sdk"]
+	path = src/GlpiNg.Plugins.Sdk
+	url = https://github.com/GlpiNg-fr/GlpiNg.Plugins.Sdk.git
+[submodule "src/GlpiNg.Modules.Abstractions"]
+	path = src/GlpiNg.Modules.Abstractions
+	url = https://github.com/GlpiNg-fr/GlpiNg.Modules.Abstractions.git
+[submodule "src/GlpiNg.Modules.Scheduler"]
+	path = src/GlpiNg.Modules.Scheduler
+	url = https://github.com/GlpiNg-fr/GlpiNg.Modules.Scheduler.git
+[submodule "src/GlpiNg.Modules.Assistance"]
+	path = src/GlpiNg.Modules.Assistance
+	url = https://github.com/GlpiNg-fr/GlpiNg.Modules.Assistance.git
+[submodule "src/GlpiNg.Modules.Cron"]
+	path = src/GlpiNg.Modules.Cron
+	url = https://github.com/GlpiNg-fr/GlpiNg.Modules.Cron.git
+[submodule "src/GlpiNg.Modules.Deployment"]
+	path = src/GlpiNg.Modules.Deployment
+	url = https://github.com/GlpiNg-fr/GlpiNg.Modules.Deployment.git
+[submodule "src/GlpiNg.Modules.Inventory"]
+	path = src/GlpiNg.Modules.Inventory
+	url = https://github.com/GlpiNg-fr/GlpiNg.Modules.Inventory.git
+[submodule "src/GlpiNg.Modules.KnowledgeBase"]
+	path = src/GlpiNg.Modules.KnowledgeBase
+	url = https://github.com/GlpiNg-fr/GlpiNg.Modules.KnowledgeBase.git
+[submodule "src/GlpiNg.Modules.Management"]
+	path = src/GlpiNg.Modules.Management
+	url = https://github.com/GlpiNg-fr/GlpiNg.Modules.Management.git

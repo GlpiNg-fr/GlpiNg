@@ -1,0 +1,278 @@
+﻿@page "/admin/users"
+@using GlpiNg.Web.Models
+@using GlpiNg.Web.Services
+@rendermode InteractiveServer
+
+<PageTitle>@T("Utilisateurs — GlpiNg")</PageTitle>
+
+<div class="glping-list-page">
+<div class="card">
+    <div class="card-header d-flex align-items-center justify-content-between glping-list-toolbar">
+        <div class="btn-list">
+            <div class="dropdown">
+                <button type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="ti ti-search me-1"></i>@T("Rechercher")
+                </button>
+                <div class="dropdown-menu p-3" style="min-width: 280px;">
+                    <div class="input-icon">
+                        <span class="input-icon-addon">
+                            <i class="ti ti-search"></i>
+                        </span>
+                        <input type="text" class="form-control" placeholder="@(T("Rechercher un utilisateur..."))"
+                               @bind="_searchTerm" @bind:event="oninput" @onkeyup="OnSearchChanged" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="btn-list align-items-center">
+            <label class="form-check m-0 px-2" title="@(T("Tout sélectionner"))">
+                <input class="form-check-input m-0" type="checkbox" checked="@AllSelected"
+                       @onchange="@((ChangeEventArgs e) => ToggleSelectAll((bool)(e.Value ?? false)))" />
+            </label>
+
+            <div class="dropdown">
+                <button type="button" class="btn btn-icon text-danger" data-bs-toggle="dropdown" aria-expanded="false"
+                        disabled="@(_selectedIds.Count == 0)" title="@(T("Supprimer la sélection"))">
+                    <i class="ti ti-trash"></i>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end p-3" style="min-width: 260px;">
+                    <p class="mb-2">@T("Supprimer {0} utilisateur(s) sélectionné(s) ? Cette action est définitive.", _selectedIds.Count)</p>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-sm">@T("Annuler")</button>
+                        <button type="button" class="btn btn-sm btn-danger" @onclick="DeleteSelectedAsync">@T("Supprimer")</button>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-icon" @onclick="OnRefreshAsync" title="@(T("Rafraîchir"))">
+                <i class="ti ti-refresh"></i>
+            </button>
+
+            @* Bouton scinde : l'action courante reste accessible d'un clic, l'import depuis un
+               annuaire est dans le menu — meme disposition que GLPI. L'entree est desactivee, avec
+               son motif en infobulle, plutot que masquee : sinon l'absence de la fonction
+               ressemble a une fonction manquante. *@
+            <div class="btn-group">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newUserModal">
+                    <i class="ti ti-plus me-1"></i>@T("Nouvel utilisateur")
+                </button>
+                <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="visually-hidden">@T("Autres actions d'ajout")</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                        <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#newUserModal">
+                            <i class="ti ti-plus me-2"></i>@T("Nouvel utilisateur")
+                        </button>
+                    </li>
+                    <li><hr class="dropdown-divider" /></li>
+                    <li>
+                        <button type="button" class="dropdown-item @(_ldapServers.Count == 0 ? "disabled" : "")"
+                                disabled="@(_ldapServers.Count == 0)"
+                                title="@(_ldapServers.Count == 0 ? T("Aucun annuaire LDAP actif : à configurer dans Configuration > Authentification.") : null)"
+                                @onclick="OpenImportAsync">
+                            <i class="ti ti-address-book me-2"></i>@T("Ajout depuis une source externe")
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th style="width: 2.5rem;">
+                        @* Ne coche que les lignes affichées — la page courante là où le tableau est
+                           paginé : cocher ici ne doit jamais engager plus que ce qu'on voit. *@
+                        <input class="form-check-input m-0" type="checkbox" title="@(T("Sélectionner les éléments visibles"))"
+                               checked="@AllSelected"
+                               @onchange="@((ChangeEventArgs e) => ToggleSelectAll((bool)(e.Value ?? false)))" />
+                    </th>
+                    <th></th>
+                    <th>@T("Identifiant")</th>
+                    <th>@T("Nom de famille")</th>
+                    <th>@T("Prénom")</th>
+                    <th>@T("E-mail")</th>
+                    <th>@T("Téléphone")</th>
+                    <th>@T("Lieu")</th>
+                    <th>@T("Actif")</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (_filteredUsers.Count == 0)
+                {
+                    <tr>
+                        <td colspan="9" class="text-center text-secondary py-4">@T("Aucun utilisateur trouvé.")</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (GlpiUser user in _filteredUsers)
+                    {
+                        <tr>
+                            <td>
+                                <input class="form-check-input m-0" type="checkbox" checked="@_selectedIds.Contains(user.Id)"
+                                       @onchange="@((ChangeEventArgs e) => ToggleSelect(user.Id, (bool)(e.Value ?? false)))" />
+                            </td>
+                            <td>
+                                <span style="display:inline-flex;align-items:center;justify-content:center;width:1.75rem;height:1.75rem;border-radius:50%;color:#fff;font-size:0.7rem;font-weight:600;background:@UserAvatar.Color(user)">@UserAvatar.Initials(user)</span>
+                            </td>
+                            <td>
+                                <a href="@($"/admin/users/{user.Id}")" class="text-reset fw-semibold">@user.UserName</a>
+                            </td>
+                            <td>@(user.LastName ?? "—")</td>
+                            <td>@(user.FirstName ?? "—")</td>
+                            <td>@(user.Email ?? "—")</td>
+                            <td>@(user.Phone ?? "—")</td>
+                            <td>@(user.Location ?? "—")</td>
+                            <td>@(user.IsActive ? T("Oui") : T("Non"))</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
+
+<div class="modal fade" id="newUserModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="ti ti-user me-2"></i>@T("Nouvel élément - Utilisateur")</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@(T("Fermer"))"></button>
+            </div>
+            <div class="modal-body">
+                <UserFormFields User="_newUser" OnChanged="StateHasChanged" />
+
+                <div class="glping-fiche-block-title mt-2"><i class="ti ti-key"></i>@T("Authentification")</div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="glping-fiche-field">
+                            <label>@T("Mot de passe")</label>
+                            <input class="form-control" type="password" @bind="_newPassword" @bind:event="oninput" @bind:after="StateHasChanged" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="glping-fiche-field">
+                            <label>@T("Confirmer")</label>
+                            <input class="form-control" type="password" @bind="_newPasswordConfirm" @bind:event="oninput" @bind:after="StateHasChanged" />
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-warning" disabled="@(!CanCreate)" @onclick="CreateUserAsync">
+                    <i class="ti ti-plus me-1"></i>@T("Ajouter")
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@* Import depuis un annuaire — equivalent de front/ldap.import.php cote GLPI. Complete le
+   provisionnement a la connexion, qui ne cree un compte qu'au moment ou son titulaire se connecte
+   et seulement si le reglage correspondant est actif. *@
+<div class="modal fade" id="ldapImportModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="ti ti-address-book me-2"></i>@T("Ajout depuis une source externe")</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@(T("Fermer"))"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-2 align-items-end mb-3">
+                    <div class="col-md-5">
+                        <label class="form-label">@T("Annuaire")</label>
+                        <select class="form-select" value="@_importServerId"
+                                @onchange="@((ChangeEventArgs e) => _importServerId = int.Parse((string)e.Value!))">
+                            @foreach (AuthLdapServer server in _ldapServers)
+                            {
+                                <option value="@server.Id">@server.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label">@T("Filtrer sur l'identifiant")</label>
+                        <input class="form-control" @bind="_importTerm" @bind:event="oninput"
+                               placeholder="@(T("vide = tous les comptes"))" />
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-primary w-100" disabled="@_isSearchingLdap" @onclick="SearchLdapAsync">
+                            <i class="ti ti-search me-1"></i>@(_isSearchingLdap ? "…" : T("Chercher"))
+                        </button>
+                    </div>
+                </div>
+
+                @if (_ldapImportError is not null)
+                {
+                    <div class="alert alert-danger"><i class="ti ti-alert-circle me-1"></i>@_ldapImportError</div>
+                }
+
+                @if (_ldapCandidates.Count > 0)
+                {
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 2.5rem;">
+                                        @* Les candidats déjà présents ont leur case désactivée : les
+                                           inclure ici cocherait des lignes qu'on ne peut pas importer. *@
+                                        <input class="form-check-input m-0" type="checkbox" title="@(T("Sélectionner les candidats importables"))"
+                                               checked="@AllCandidatesSelected"
+                                               @onchange="@((ChangeEventArgs e) => ToggleSelectAllCandidates((bool)(e.Value ?? false)))" />
+                                    </th>
+                                    <th>@T("Identifiant")</th>
+                                    <th>@T("Nom")</th>
+                                    <th>@T("Courriel")</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (LdapImportCandidate candidate in _ldapCandidates)
+                                {
+                                    <tr class="@(candidate.AlreadyPresent ? "text-secondary" : "")">
+                                        <td>
+                                            <input class="form-check-input m-0" type="checkbox"
+                                                   disabled="@candidate.AlreadyPresent"
+                                                   checked="@_selectedLogins.Contains(candidate.Login)"
+                                                   @onchange="@((ChangeEventArgs e) => ToggleLogin(candidate.Login, (bool)(e.Value ?? false)))" />
+                                        </td>
+                                        <td class="fw-semibold">@candidate.Login</td>
+                                        <td>@(candidate.DisplayName ?? "—")</td>
+                                        <td>
+                                            @(candidate.Email ?? "—")
+                                            @if (candidate.AlreadyPresent)
+                                            {
+                                                <span class="badge bg-secondary-lt ms-2">@T("déjà présent")</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else if (_hasSearchedLdap && _ldapImportError is null)
+                {
+                    <div class="glping-config-placeholder">
+                        <i class="ti ti-user-search"></i>
+                        <p class="mb-0">@T("Aucun compte ne correspond dans cet annuaire.")</p>
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <span class="text-secondary me-auto">@T("{0} compte(s) sélectionné(s)", _selectedLogins.Count)</span>
+                <button type="button" class="btn btn-primary" disabled="@(_selectedLogins.Count == 0 || _isImportingLdap)"
+                        @onclick="ImportLdapUsersAsync">
+                    <i class="ti ti-download me-1"></i>@(_isImportingLdap ? T("Import en cours…") : T("Importer"))
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

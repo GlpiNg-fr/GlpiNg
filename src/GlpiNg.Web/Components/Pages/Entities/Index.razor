@@ -1,0 +1,120 @@
+﻿@page "/admin/entities"
+@using GlpiNg.Web.Models
+@rendermode InteractiveServer
+
+<PageTitle>@T("Entités — GlpiNg")</PageTitle>
+
+<div class="glping-list-page">
+<div class="card">
+    <div class="card-header d-flex align-items-center justify-content-between glping-list-toolbar">
+        <div class="btn-list">
+            <div class="dropdown">
+                <button type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="ti ti-search me-1"></i>@T("Rechercher")
+                </button>
+                <div class="dropdown-menu p-3" style="min-width: 280px;">
+                    <div class="input-icon">
+                        <span class="input-icon-addon">
+                            <i class="ti ti-search"></i>
+                        </span>
+                        <input type="text" class="form-control" placeholder="@(T("Rechercher une entité..."))"
+                               @bind="_searchTerm" @bind:event="oninput" @onkeyup="OnSearchChanged" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="btn-list align-items-center">
+            <label class="form-check m-0 px-2" title="@(T("Tout sélectionner"))">
+                <input class="form-check-input m-0" type="checkbox" checked="@AllSelected"
+                       @onchange="@((ChangeEventArgs e) => ToggleSelectAll((bool)(e.Value ?? false)))" />
+            </label>
+
+            <div class="dropdown">
+                <button type="button" class="btn btn-icon text-danger" data-bs-toggle="dropdown" aria-expanded="false"
+                        disabled="@(_selectedIds.Count == 0)" title="@(T("Supprimer la sélection"))">
+                    <i class="ti ti-trash"></i>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end p-3" style="min-width: 260px;">
+                    <p class="mb-2">@T("Supprimer {0} entité(s) sélectionnée(s) ? Cette action est définitive.", _selectedIds.Count)</p>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-sm">@T("Annuler")</button>
+                        <button type="button" class="btn btn-sm btn-danger" @onclick="DeleteSelectedAsync">@T("Supprimer")</button>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-icon" @onclick="OnRefreshAsync" title="@(T("Rafraîchir"))">
+                <i class="ti ti-refresh"></i>
+            </button>
+
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newEntityModal">
+                <i class="ti ti-plus me-1"></i>@T("Nouvelle entité")
+            </button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th style="width: 2.5rem;">
+                        @* Ne coche que les lignes affichées — la page courante là où le tableau est
+                           paginé : cocher ici ne doit jamais engager plus que ce qu'on voit. *@
+                        <input class="form-check-input m-0" type="checkbox" title="@(T("Sélectionner les éléments visibles"))"
+                               checked="@AllSelected"
+                               @onchange="@((ChangeEventArgs e) => ToggleSelectAll((bool)(e.Value ?? false)))" />
+                    </th>
+                    <th>@T("Nom complet")</th>
+                    <th>@T("Commentaires")</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (_filteredEntities.Count == 0)
+                {
+                    <tr>
+                        <td colspan="3" class="text-center text-secondary py-4">@T("Aucune entité trouvée.")</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (GlpiEntity entity in _filteredEntities)
+                    {
+                        <tr>
+                            <td>
+                                <input class="form-check-input m-0" type="checkbox" checked="@_selectedIds.Contains(entity.Id)"
+                                       @onchange="@((ChangeEventArgs e) => ToggleSelect(entity.Id, (bool)(e.Value ?? false)))" />
+                            </td>
+                            <td>
+                                <a href="@($"/admin/entities/{entity.Id}")" class="text-reset fw-semibold">
+                                    <i class="ti ti-sitemap me-1 text-secondary"></i>@FullName(entity)
+                                </a>
+                            </td>
+                            <td>@(entity.Comment ?? "—")</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
+
+<div class="modal fade" id="newEntityModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="ti ti-sitemap me-2"></i>@T("Nouvel élément - Entité")</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@(T("Fermer"))"></button>
+            </div>
+            <div class="modal-body">
+                <EntityFormFields Entity="_newEntity" ParentCandidates="_entities" FullNameOf="FullName" OnChanged="StateHasChanged" />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-warning" disabled="@string.IsNullOrWhiteSpace(_newEntity.Name)" @onclick="CreateEntityAsync">
+                    <i class="ti ti-plus me-1"></i>@T("Ajouter")
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

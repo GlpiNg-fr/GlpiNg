@@ -1,0 +1,107 @@
+@using GlpiNg.Modules.Abstractions.Entities
+@using GlpiNg.Web.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IEntityScopeProvider ScopeProvider
+@inject UserEntityAccessService EntityAccess
+@inject EntityTreeCache EntityTree
+@inject NavigationManager Nav
+
+@* Sélecteur d'entité active, équivalent de celui de GLPI. Les bascules passent par un POST de
+   formulaire classique vers /Account/SwitchEntity et non par le circuit : réémettre le cookie
+   d'authentification (qui porte l'entité active) exige un HttpContext — même contrainte que le
+   formulaire de déconnexion juste à côté. Le rechargement qui s'ensuit reconstruit le circuit avec
+   le nouveau cloisonnement. *@
+
+<div class="glping-topbar-entity dropdown">
+    <a href="#" class="glping-entity-toggle dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" title="@(T("Entité active"))">
+        <i class="ti ti-sitemap"></i>
+        <span class="glping-entity-label">@ActiveLabel</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end glping-entity-menu">
+        @if (_scope.IsUnrestricted)
+        {
+            <li><span class="dropdown-item-text text-secondary">@T("Compte non cloisonné : toutes les entités sont visibles.")</span></li>
+        }
+        else if (_activatable.Count == 0)
+        {
+            <li><span class="dropdown-item-text text-secondary">@T("Aucune entité habilitée. Contactez un administrateur.")</span></li>
+        }
+
+        @if (_scope.ActiveEntityId is int activeId)
+        {
+            <li>
+                <form method="post" action="/Account/SwitchEntity">
+                    <AntiforgeryToken />
+                    <input type="hidden" name="entityId" value="@activeId" />
+                    <input type="hidden" name="recursive" value="@((!_scope.IncludesSubEntities).ToString().ToLowerInvariant())" />
+                    <input type="hidden" name="returnUrl" value="@CurrentPath" />
+                    <button type="submit" class="dropdown-item">
+                        <i class="ti @(_scope.IncludesSubEntities ? "ti-square-check" : "ti-square")"></i>
+                        @T("Voir les sous-entités")
+                    </button>
+                </form>
+            </li>
+            <li><hr class="dropdown-divider" /></li>
+        }
+
+        @foreach (EntityHabilitation entity in _activatable)
+        {
+            <li>
+                <form method="post" action="/Account/SwitchEntity">
+                    <AntiforgeryToken />
+                    <input type="hidden" name="entityId" value="@entity.EntityId" />
+                    @* Conserve le mode de vue courant en changeant d'entité, sauf si l'habilitation
+                       sur la cible n'est pas récursive : on ne peut alors pas voir ses sous-entités. *@
+                    <input type="hidden" name="recursive" value="@((entity.IsRecursive && _scope.IncludesSubEntities).ToString().ToLowerInvariant())" />
+                    <input type="hidden" name="returnUrl" value="@CurrentPath" />
+                    <button type="submit" class="dropdown-item @(entity.EntityId == _scope.ActiveEntityId ? "active" : "")">
+                        <i class="ti ti-building"></i> @entity.Name
+                    </button>
+                </form>
+            </li>
+        }
+    </ul>
+</div>
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    private EntityScope _scope = EntityScope.Unrestricted;
+    private List<EntityHabilitation> _activatable = [];
+    private string? _activeEntityName;
+
+    private string ActiveLabel => _scope.IsUnrestricted
+        ? T("Toutes les entités")
+        : _activeEntityName is null
+            ? T("Aucune entité")
+            : _scope.IncludesSubEntities ? T("{0} (arborescence)", _activeEntityName) : _activeEntityName;
+
+    private string CurrentPath => Nav.ToBaseRelativePath(Nav.Uri) is { Length: > 0 } relative ? $"/{relative}" : "/";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _scope = ScopeProvider.Current;
+
+        if (_scope.ActiveEntityId is int activeId)
+        {
+            Dictionary<int, string> names = await EntityTree.GetNamesAsync();
+            names.TryGetValue(activeId, out _activeEntityName);
+        }
+
+        if (AuthenticationState is null)
+        {
+            return;
+        }
+
+        AuthenticationState state = await AuthenticationState;
+        if (!int.TryParse(state.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out int userId))
+        {
+            return;
+        }
+
+        // Relu en base plutôt que déduit des revendications : la liste des entités activables
+        // dépend des habilitations, qui peuvent avoir changé depuis la connexion.
+        _activatable = await EntityAccess.GetActivatableForUserIdAsync(userId, EntityTree);
+    }
+}

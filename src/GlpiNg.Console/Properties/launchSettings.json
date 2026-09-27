@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "GlpiNg.Console": {
+      "commandName": "Project",
+      "commandLineArgs": "user:resetpassword admin"
+    }
+  }
+}

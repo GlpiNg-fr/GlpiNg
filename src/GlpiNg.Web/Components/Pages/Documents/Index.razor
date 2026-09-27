@@ -1,0 +1,105 @@
+@page "/management/documents"
+@using GlpiNg.Web.Models.Documents
+@rendermode InteractiveServer
+
+<PageTitle>@T("Documents — GlpiNg")</PageTitle>
+
+<div class="glping-page-header">
+    <h1><i class="ti ti-file me-2"></i>@T("Documents")</h1>
+</div>
+
+<p class="text-secondary">
+    @T("Fichiers de l'installation, rattachables à plusieurs objets à la fois. Un document téléversé depuis un article apparaît ici ; le supprimer le retire de partout, alors que le détacher depuis une fiche ne touche qu'à ce rattachement.")
+</p>
+
+<div class="row g-2 align-items-end mb-3">
+    <div class="col-md-5">
+        <label class="form-label" for="doc-search">@T("Rechercher")</label>
+        <div class="input-group">
+            <input id="doc-search" class="form-control" @bind="_search" @bind:event="oninput"
+                   placeholder="@(T("Nom ou nom de fichier"))" />
+            <button type="button" class="btn" @onclick="LoadAsync"><i class="ti ti-search me-1"></i>@T("Chercher")</button>
+        </div>
+    </div>
+    <div class="col-md-5">
+        <label class="form-label" for="doc-upload">@T("Téléverser un document")</label>
+        <InputFile id="doc-upload" class="form-control" OnChange="UploadAsync" disabled="@_isUploading" />
+    </div>
+</div>
+
+@if (_error is { Length: > 0 } error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+@if (_isUploading)
+{
+    <div class="text-secondary mb-3"><i class="ti ti-loader me-1"></i>@T("Téléversement en cours…")</div>
+}
+
+@if (_documents.Count == 0)
+{
+    <div class="glping-config-placeholder">
+        <i class="ti ti-file-off"></i>
+        <p class="mb-0">@T("Aucun document.")</p>
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th>@T("Nom")</th>
+                    <th>@T("Fichier")</th>
+                    <th>@T("Catégorie")</th>
+                    <th>@T("Taille")</th>
+                    <th>@T("Rattachements")</th>
+                    <th>@T("Ajouté le")</th>
+                    <th class="w-1"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (DocumentRow row in _documents)
+                {
+                    <tr>
+                        <td>@row.Document.Name</td>
+                        <td class="text-secondary">@row.Document.FileName</td>
+                        <td class="text-secondary">@(row.Document.Category?.Name ?? "—")</td>
+                        <td class="text-secondary text-nowrap">@FormatSize(row.Document.SizeBytes)</td>
+                        <td class="text-secondary">@row.AttachmentCount</td>
+                        <td class="text-secondary text-nowrap">@Display.Date(row.Document.CreatedAt)</td>
+                        <td class="text-nowrap">
+                            @if (row.Document.IsContentMissing)
+                            {
+                                <span class="badge bg-orange-lt" title="@(T("Importé sans accès au dossier files/ de GLPI"))">
+                                    <i class="ti ti-file-off me-1"></i>@T("Sans fichier")
+                                </span>
+                            }
+                            else
+                            {
+                                <a class="btn btn-sm" href="@($"/documents/{row.Document.Id}/download")" target="_blank" rel="noopener">
+                                    <i class="ti ti-download me-1"></i>@T("Télécharger")
+                                </a>
+                            }
+                            @if (_confirmDeleteId == row.Document.Id)
+                            {
+                                <button type="button" class="btn btn-sm btn-danger" @onclick="() => DeleteAsync(row.Document.Id)">
+                                    @T("Confirmer")
+                                </button>
+                                <button type="button" class="btn btn-sm" @onclick="() => _confirmDeleteId = null">@T("Annuler")</button>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-icon btn-ghost-danger" title="@(T("Supprimer partout"))"
+                                        @onclick="() => _confirmDeleteId = row.Document.Id">
+                                    <i class="ti ti-trash"></i>
+                                </button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

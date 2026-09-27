@@ -1,0 +1,47 @@
+@* Onglet "Tous" : empile chaque section sur une seule page, comme GLPI. Chaque section
+   garde son propre bouton "Enregistrer" (les fusionner en un seul formulaire géant
+   dupliquerait toute la logique de sauvegarde déjà écrite pour chaque onglet). *@
+
+@foreach (var (icon, label) in SectionOrder)
+{
+    <div class="glping-config-divider" style="margin-top:2.5rem;">
+        <span><i class="ti @icon"></i> @T(label)</span>
+    </div>
+
+    @if (label == "Configuration générale") { <GeneralSection /> }
+    else if (label == "Valeurs par défaut") { <DefaultValuesSection /> }
+    else if (label == "Parc") { <ParcSection /> }
+    else if (label == "Assistance") { <AssistanceSection /> }
+    else if (label == "Gestion") { <GestionSection /> }
+    else if (label == "Purge de l'historique") { <PurgeSection /> }
+    else if (label == "Système") { <SystemSection /> }
+    else if (label == "Sécurité") { <SecuritySection /> }
+    else if (label == "Performance") { <PerformanceSection /> }
+    else if (label == "API") { <ApiSection /> }
+    else if (label == "Analyse d'impact") { <ImpactAnalysisSection /> }
+    else if (label == "Colonnes par défaut") { <DisplayColumnsSection /> }
+    else if (label == "GLPI Network") { <GlpiNetworkSection /> }
+    else if (label == "Helpdesk") { <HelpdeskSection /> }
+    else if (label == "Historique") { <HistorySection /> }
+}
+
+@code {
+    private static readonly List<(string Icon, string Label)> SectionOrder =
+    [
+        ("ti-adjustments-horizontal", "Configuration générale"),
+        ("ti-adjustments", "Valeurs par défaut"),
+        ("ti-box", "Parc"),
+        ("ti-headset", "Assistance"),
+        ("ti-wallet", "Gestion"),
+        ("ti-trash", "Purge de l'historique"),
+        ("ti-settings", "Système"),
+        ("ti-shield-lock", "Sécurité"),
+        ("ti-gauge", "Performance"),
+        ("ti-plug", "API"),
+        ("ti-affiliate", "Analyse d'impact"),
+        ("ti-columns", "Colonnes par défaut"),
+        ("ti-network", "GLPI Network"),
+        ("ti-lifebuoy", "Helpdesk"),
+        ("ti-history", "Historique"),
+    ];
+}

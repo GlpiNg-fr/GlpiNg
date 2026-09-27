@@ -1,0 +1,302 @@
+﻿@page "/admin/inventory"
+@using GlpiNg.Web.Models
+@using GlpiNg.Web.Services
+@using GlpiNg.Web.Services.Notifications
+@inject SettingsCacheService SettingsStore
+@inject ConfigHistoryService History
+@inject NotificationDispatchService NotificationDispatch
+@inject GlpiNg.Modules.Abstractions.Deployment.IComputerDeploymentAssignmentService DeploymentAssignmentService
+@inject GlpiNg.Modules.Abstractions.FieldUnicity.IFieldUnicityChecker FieldUnicity
+@inject GlpiNg.Web.Services.EntityTreeCache EntityTree
+@inject IHttpContextAccessor HttpContextAccessor
+@rendermode InteractiveServer
+
+<PageTitle>@T("Inventaire — GlpiNg")</PageTitle>
+
+<div class="page-header d-flex align-items-center justify-content-between mb-3">
+    <h2 class="page-title mb-0">@T("Inventaire")</h2>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#importInventoryModal">
+        <i class="ti ti-upload me-1"></i>@T("Importer depuis un fichier")
+    </button>
+</div>
+
+@if (_model is null)
+{
+    <p>@T("Chargement…")</p>
+}
+else
+{
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="ti ti-adjustments me-1"></i>@T("Configuration")</h3>
+        </div>
+        <div class="glping-config">
+            <div class="glping-config-body">
+                <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form glping-config-form-wide">
+                    <div class="glping-config-field checkbox">
+                        <label for="inv-enabled">@T("Activer l'inventaire")</label>
+                        <label class="glping-switch">
+                            <input id="inv-enabled" type="checkbox" @bind="_model.Enabled" />
+                            <span class="glping-switch-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="glping-config-field">
+                        <label for="inv-frequency">@T("Fréquence de l'inventaire (en heures)")</label>
+                        <input id="inv-frequency" type="number" min="1" @bind="_model.InventoryFrequencyHours" />
+                    </div>
+
+                    <div class="glping-config-field">
+                        <label for="inv-entity">@T("Entité par défaut")</label>
+                        <input id="inv-entity" type="text" @bind="_model.DefaultEntity" />
+                    </div>
+
+                    @* Choisi dans la liste des intitulés plutôt que saisi : l'import rapproche la
+                       valeur d'un intitulé par son nom exact. Une saisie libre aurait fait créer un
+                       statut parasite à la première faute de frappe. *@
+                    <div class="glping-config-field">
+                        <label for="inv-default-status">@T("Statut par défaut d'un poste créé par un inventaire")</label>
+                        <select id="inv-default-status" @bind="_model.DefaultComputerStatus">
+                            <option value="">@T("— aucun statut —")</option>
+                            @foreach (string status in _statusOptions)
+                            {
+                                <option value="@status">@status</option>
+                            }
+                        </select>
+                    </div>
+                    <p class="hint">
+                        @T("Appliqué à la") <strong>@T("création")</strong> @T("du poste uniquement. Les inventaires suivants ne touchent plus à son statut : celui qu'un administrateur ou une règle aura posé depuis est conservé.")
+                    </p>
+
+                    <div class="glping-fiche-block-title mt-3"><i class="ti ti-download"></i>@T("Options d'importation")</div>
+
+                    <div class="glping-config-field-grid">
+                        <div class="glping-config-field checkbox">
+                            <label for="inv-volumes"><i class="ti ti-server-2 me-2"></i>@T("Volumes")</label>
+                            <label class="glping-switch">
+                                <input id="inv-volumes" type="checkbox" @bind="_model.ImportVolumes" />
+                                <span class="glping-switch-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="glping-config-field checkbox">
+                            <label for="inv-network-drives"><i class="ti ti-server-2 me-2"></i>@T("Lecteurs réseaux")</label>
+                            <label class="glping-switch">
+                                <input id="inv-network-drives" type="checkbox" @bind="_model.ImportNetworkDrives" />
+                                <span class="glping-switch-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="glping-config-field checkbox">
+                            <label for="inv-removable-drives"><i class="ti ti-server-2 me-2"></i>@T("Lecteurs amovibles")</label>
+                            <label class="glping-switch">
+                                <input id="inv-removable-drives" type="checkbox" @bind="_model.ImportRemovableDrives" />
+                                <span class="glping-switch-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="glping-config-field checkbox">
+                            <label for="inv-softwares"><i class="ti ti-apps me-2"></i>@T("Logiciels")</label>
+                            <label class="glping-switch">
+                                <input id="inv-softwares" type="checkbox" @bind="_model.ImportSoftwares" />
+                                <span class="glping-switch-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="glping-config-field checkbox">
+                            <label for="inv-monitors"><i class="ti ti-device-desktop me-2"></i>@T("Moniteurs")</label>
+                            <label class="glping-switch">
+                                <input id="inv-monitors" type="checkbox" @bind="_model.ImportMonitors" />
+                                <span class="glping-switch-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="glping-config-field checkbox">
+                            <label for="inv-monitor-partial"><i class="ti ti-device-desktop me-2"></i>@T("Importer un moniteur avec une correspondance partielle du numéro de série")</label>
+                            <label class="glping-switch">
+                                <input id="inv-monitor-partial" type="checkbox" @bind="_model.ImportMonitorWithPartialSerialMatch" />
+                                <span class="glping-switch-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="glping-config-field checkbox">
+                            <label for="inv-printers"><i class="ti ti-printer me-2"></i>@T("Imprimantes")</label>
+                            <label class="glping-switch">
+                                <input id="inv-printers" type="checkbox" @bind="_model.ImportPrinters" />
+                                <span class="glping-switch-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="glping-config-field checkbox">
+                            <label for="inv-peripherals"><i class="ti ti-mouse me-2"></i>@T("Périphériques")</label>
+                            <label class="glping-switch">
+                                <input id="inv-peripherals" type="checkbox" @bind="_model.ImportPeripherals" />
+                                <span class="glping-switch-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="glping-config-field checkbox">
+                            <label for="inv-antivirus"><i class="ti ti-virus-search me-2"></i>@T("Antivirus")</label>
+                            <label class="glping-switch">
+                                <input id="inv-antivirus" type="checkbox" @bind="_model.ImportAntivirus" />
+                                <span class="glping-switch-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="glping-config-field checkbox">
+                            <label for="inv-processes"><i class="ti ti-bolt me-2"></i>@T("Processus")</label>
+                            <label class="glping-switch">
+                                <input id="inv-processes" type="checkbox" @bind="_model.ImportProcesses" />
+                                <span class="glping-switch-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="glping-config-field checkbox">
+                            <label for="inv-environments"><i class="ti ti-terminal-2 me-2"></i>@T("Environnements")</label>
+                            <label class="glping-switch">
+                                <input id="inv-environments" type="checkbox" @bind="_model.ImportEnvironments" />
+                                <span class="glping-switch-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="glping-config-field checkbox">
+                            <label for="inv-unmanaged"><i class="ti ti-question-mark me-2"></i>@T("Actifs non gérés")</label>
+                            <label class="glping-switch">
+                                <input id="inv-unmanaged" type="checkbox" @bind="_model.ImportUnmanaged" />
+                                <span class="glping-switch-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="glping-fiche-block-title mt-3"><i class="ti ti-cpu"></i>@T("Composants")</div>
+
+                    <div class="glping-config-field checkbox">
+                        <label for="inv-cpus">@T("Processeurs")</label>
+                        <label class="glping-switch">
+                            <input id="inv-cpus" type="checkbox" @bind="_model.ImportCpus" />
+                            <span class="glping-switch-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="glping-config-field checkbox">
+                        <label for="inv-memories">@T("Mémoires")</label>
+                        <label class="glping-switch">
+                            <input id="inv-memories" type="checkbox" @bind="_model.ImportMemories" />
+                            <span class="glping-switch-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="glping-config-field checkbox">
+                        <label for="inv-disks">@T("Disques durs")</label>
+                        <label class="glping-switch">
+                            <input id="inv-disks" type="checkbox" @bind="_model.ImportDisks" />
+                            <span class="glping-switch-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="glping-config-field checkbox">
+                        <label for="inv-network-cards">@T("Cartes réseau")</label>
+                        <label class="glping-switch">
+                            <input id="inv-network-cards" type="checkbox" @bind="_model.ImportNetworkCards" />
+                            <span class="glping-switch-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="glping-config-field checkbox">
+                        <label for="inv-batteries">@T("Batteries")</label>
+                        <label class="glping-switch">
+                            <input id="inv-batteries" type="checkbox" @bind="_model.ImportBatteries" />
+                            <span class="glping-switch-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="glping-fiche-block-title mt-3"><i class="ti ti-box"></i>@T("Virtualisation")</div>
+
+                    <div class="glping-config-field checkbox">
+                        <label for="inv-vm">@T("Importer des machines virtuelles")</label>
+                        <label class="glping-switch">
+                            <input id="inv-vm" type="checkbox" @bind="_model.ImportVirtualMachines" />
+                            <span class="glping-switch-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="glping-config-field checkbox">
+                        <label for="inv-vm-computer">@T("Créer un ordinateur pour les machines virtuelles")</label>
+                        <label class="glping-switch">
+                            <input id="inv-vm-computer" type="checkbox" @bind="_model.CreateComputerForVirtualMachines" />
+                            <span class="glping-switch-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="glping-config-field checkbox">
+                        <label for="inv-vm-components">@T("Créer les composants pour les machines virtuelles")</label>
+                        <label class="glping-switch">
+                            <input id="inv-vm-components" type="checkbox" @bind="_model.CreateComponentsForVirtualMachines" />
+                            <span class="glping-switch-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="glping-fiche-block-title mt-3"><i class="ti ti-robot"></i>@T("Nettoyage de l'agent")</div>
+
+                    <div class="glping-config-field">
+                        <label for="inv-cleanup-days">@T("Mettre à jour les agents qui n'ont pas contacté le serveur depuis (en jours)")</label>
+                        <input id="inv-cleanup-days" type="number" min="1" @bind="_model.AgentCleanupDays" />
+                    </div>
+
+                    <p class="hint mt-3">
+                        @T("Réglages réellement appliqués par") <code>AgentController</code> @T("et")
+                        <code>InventoryImportService</code>@T(", sur l'endpoint") <code>/inventory</code> @T("utilisé par les")
+                        @T("vrais agents GLPI-Agent : « Activer l'inventaire » (rejette silencieusement les inventaires")
+                        @T("tant qu'il est désactivé), « Fréquence de l'inventaire » (pilote l'« expiration » renvoyée à")
+                        @T("l'agent sur contact/inventory, qui lui indique son délai avant prochain contact), « Volumes")
+                        @T("»/« Lecteurs réseaux »/« Lecteurs amovibles » (répartis d'après le code") <code>DriveType</code>
+                        @T("Windows remonté par l'agent), « Logiciels », « Moniteurs », « Batteries » et les composants")
+                        @T("« Processeurs », « Mémoires », « Disques durs », « Cartes réseau ». « Nettoyage de l'agent »")
+                        @T("est appliqué séparément par") <code>AgentCleanupCronTask</code> @T("(tâche planifiée du module")
+                        @T("Cron, pas l'endpoint lui-même). Les autres réglages ci-dessus (imprimantes, périphériques,")
+                        @T("antivirus, processus, environnements, actifs non gérés, entité par défaut, virtualisation)")
+                        @T("sont conservés pour la fidélité avec l'écran GLPI mais ne pilotent aucun comportement :")
+                        @T("GlpiNg n'analyse pas encore ces sections du format d'inventaire GLPI-Agent (voir")
+                        <code>InventoryContent</code>).
+                    </p>
+
+                    <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? T("Enregistrement…") : T("Enregistrer"))</button>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="modal fade" id="importInventoryModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="ti ti-upload me-2"></i>@T("Importer des fichiers d'inventaire")</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@(T("Fermer"))"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-secondary">
+                    @T("Vous pouvez utiliser ce menu pour importer un ou plusieurs fichiers d'inventaire au format JSON")
+                    natif GLPI-Agent (<code>{"deviceid": ..., "content": {...}}</code>, ou directement l'objet
+                    <code>content</code>). Il est possible d'importer directement une archive <code>.zip</code>
+                    contenant plusieurs fichiers <code>.json</code>.
+                </p>
+                <p class="hint">
+                    @T("GlpiNg ne traite que le protocole JSON natif de GLPI-Agent : contrairement à GLPI, les formats")
+                    @T("XML (FusionInventory/OCS) et OCS ne sont pas supportés ici (voir le commentaire d'en-tête")
+                    d'<code>AgentController</code>).
+                </p>
+
+                <InputFile OnChange="OnFilesSelectedAsync" multiple accept=".json,.zip" disabled="@_isImporting" />
+
+                @if (_isImporting)
+                {
+                    <p class="status mt-2">@T("Import en cours…")</p>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" data-bs-dismiss="modal">@T("Fermer")</button>
+            </div>
+        </div>
+    </div>
+</div>

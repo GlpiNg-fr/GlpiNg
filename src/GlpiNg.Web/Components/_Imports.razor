@@ -4,4 +4,12 @@
 @using Microsoft.AspNetCore.Components.Web
 @using static Microsoft.AspNetCore.Components.Web.RenderMode
 @using Microsoft.JSInterop
+@using GlpiNg.Modules.Inventory.Models
 @using GlpiNg.Web.Components
+@using BlazorBootstrap
+
+@* Formatage selon les préférences de l'utilisateur : dates, fuseau... — voir UserDisplay. *@
+@inject GlpiNg.Modules.Abstractions.Preferences.UserDisplay Display
+
+@* Traduction de l'interface : @T("texte français") — voir Tr. *@
+@using static GlpiNg.Modules.Abstractions.Localization.Tr

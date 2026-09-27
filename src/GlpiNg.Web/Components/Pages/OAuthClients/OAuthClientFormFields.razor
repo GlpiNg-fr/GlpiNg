@@ -1,0 +1,96 @@
+@using GlpiNg.Web.Models
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="glping-fiche-field">
+            <label>@T("Nom")</label>
+            <input class="form-control" @bind="Client.Name" @bind:event="oninput" @bind:after="NotifyChangedAsync" />
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Activé")</label>
+            @YesNoSelect(Client.IsActive, v => Client.IsActive = v)
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Grants")</label>
+            <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column gap-1">
+                @GrantCheckbox(OAuthGrantTypes.ClientCredentials, "Client credentials", "Machine à machine — fonctionnel.")
+                @GrantCheckbox(OAuthGrantTypes.Password, "Mot de passe (Resource Owner)", "Identifiants utilisateur GlpiNg/LDAP — fonctionnel.")
+                @GrantCheckbox(OAuthGrantTypes.AuthorizationCode, "Code d'autorisation", "Non fonctionnel dans GlpiNg (pas d'écran de consentement) — conservé pour la fidélité avec GLPI.")
+            </div>
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Scopes")</label>
+            <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column gap-1">
+                @ScopeCheckbox(OAuthScopes.Api, "api")
+                @ScopeCheckbox(OAuthScopes.Inventory, "inventory")
+                @ScopeCheckbox(OAuthScopes.User, "user")
+                @ScopeCheckbox(OAuthScopes.Email, "email")
+                @ScopeCheckbox(OAuthScopes.Status, "status")
+                @ScopeCheckbox(OAuthScopes.GraphQl, "graphql")
+            </div>
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Commentaires")</label>
+            <textarea class="form-control" rows="2" @bind="Client.Comment"></textarea>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="glping-fiche-field">
+            <label>@T("URI de redirection autorisées (une par ligne)")</label>
+            <textarea class="form-control" rows="3" @bind="RedirectUris" placeholder="https://exemple.tld/callback"></textarea>
+            <span class="text-secondary small">@T("Utilisées seulement par le grant \"Code d'autorisation\" (non fonctionnel — voir ci-dessus).")</span>
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Restrictions d'IP (une par ligne, IP ou CIDR, optionnel)")</label>
+            <textarea class="form-control" rows="3" @bind="IpRestrictions" placeholder="203.0.113.0/24"></textarea>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public OAuthClient Client { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback OnChanged { get; set; }
+
+    // Le modèle stocke une chaîne "une valeur par ligne" (voir OAuthClient.RedirectUrisRaw/
+    // IpRestrictionsRaw) : pas de table enfant dédiée pour de simples listes sans métadonnées.
+    private string RedirectUris
+    {
+        get => Client.RedirectUrisRaw ?? string.Empty;
+        set => Client.RedirectUrisRaw = value;
+    }
+
+    private string IpRestrictions
+    {
+        get => Client.IpRestrictionsRaw ?? string.Empty;
+        set => Client.IpRestrictionsRaw = value;
+    }
+
+    private Task NotifyChangedAsync() => OnChanged.InvokeAsync();
+
+    private RenderFragment YesNoSelect(bool value, Action<bool> setter) =>
+        @<select class="form-select" value="@(value ? "true" : "false")" @onchange="@(e => setter(e.Value?.ToString() == "true"))">
+            <option value="false">Non</option>
+            <option value="true">Oui</option>
+        </select>;
+
+    private RenderFragment GrantCheckbox(OAuthGrantTypes grant, string label, string hint) =>
+        @<label class="form-check">
+            <input class="form-check-input" type="checkbox" checked="@Client.Grants.HasFlag(grant)"
+                   @onchange="@(e => ToggleGrant(grant, (bool)(e.Value ?? false)))" />
+            <span class="form-check-label">@label <span class="text-secondary small">— @hint</span></span>
+        </label>;
+
+    private RenderFragment ScopeCheckbox(OAuthScopes scope, string label) =>
+        @<label class="form-check">
+            <input class="form-check-input" type="checkbox" checked="@Client.Scopes.HasFlag(scope)"
+                   @onchange="@(e => ToggleScope(scope, (bool)(e.Value ?? false)))" />
+            <span class="form-check-label">@label</span>
+        </label>;
+
+    private void ToggleGrant(OAuthGrantTypes flag, bool set) => Client.Grants = set ? Client.Grants | flag : Client.Grants & ~flag;
+
+    private void ToggleScope(OAuthScopes flag, bool set) => Client.Scopes = set ? Client.Scopes | flag : Client.Scopes & ~flag;
+}

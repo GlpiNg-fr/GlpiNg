@@ -1,140 +1,195 @@
-@inherits LayoutComponentBase
-@implements IDisposable
-@inject NavigationManager Nav
+﻿@inherits LayoutComponentBase
 
-<div class="glpi-app">
-    <aside class="glpi-sidebar">
-        <a href="/" class="glpi-brand">
-            <i class="ti ti-server-2"></i>
+@* « Afficher les compteurs » (préférences) : une classe ici masque ceux de tous les onglets de fiche. *@
+<div class="glping-app @(Display.ShowTabCounters ? "" : "glping-hide-tab-counts")">
+    <aside class="glping-sidebar @(_collapsed ? "collapsed" : "")">
+        <a href="/" class="glping-brand">
+            <img src="logo.svg" alt="" class="glping-logo" />
             <span>GlpiNg</span>
         </a>
-        <nav>
-            <NavLink href="/" Match="NavLinkMatch.All" class="nav-link">
-                <i class="ti ti-layout-dashboard"></i>
-                <span>Tableau de bord</span>
-            </NavLink>
-            <NavLink href="/computers" class="nav-link">
-                <i class="ti ti-device-desktop"></i>
-                <span>Ordinateurs</span>
-            </NavLink>
-            <NavLink href="/agents" class="nav-link">
-                <i class="ti ti-cpu"></i>
-                <span>Agents</span>
-            </NavLink>
-            <NavLink href="/deployments" class="nav-link">
-                <i class="ti ti-package"></i>
-                <span>Déploiements</span>
-            </NavLink>
-            <NavLink href="/config" class="nav-link">
-                <i class="ti ti-settings"></i>
-                <span>Configuration</span>
-            </NavLink>
+
+        @if (_searchOpen)
+        {
+            <div class="glping-menu-search open">
+                <i class="ti ti-search"></i>
+                <input type="text" placeholder="@(T("Chercher dans le menu"))"
+                       value="@_searchTerm" @oninput="OnSearchInput" />
+                <button type="button" class="glping-menu-search-close" @onclick="ToggleSearch">
+                    <i class="ti ti-x"></i>
+                </button>
+            </div>
+        }
+        else
+        {
+            <button type="button" class="glping-menu-search" @onclick="ToggleSearch">
+                <i class="ti ti-arrow-right"></i>
+                <span>@T("Chercher dans le menu")</span>
+            </button>
+        }
+
+        <nav class="glping-nav">
+            @foreach (var group in Groups)
+            {
+                if (!GroupMatches(group))
+                {
+                    continue;
+                }
+
+                var isOpen = IsGroupOpen(group);
+                <div class="glping-nav-group @(isOpen ? "open" : "")">
+                    <button type="button" class="glping-nav-group-toggle" @onclick="() => ToggleGroup(group.Key)">
+                        <i class="ti @group.Icon"></i>
+                        <span>@T(group.Label)</span>
+                        <i class="ti ti-chevron-down glping-chevron"></i>
+                    </button>
+                    @if (isOpen)
+                    {
+                        <div class="glping-nav-group-items">
+                            @foreach (var item in FilteredItems(group))
+                            {
+                                if (item.Href is not null)
+                                {
+                                    <NavLink href="@item.Href" Match="@(item.Href == "/" ? NavLinkMatch.All : NavLinkMatch.Prefix)" class="glping-nav-subitem">
+                                        <i class="ti @(item.Icon ?? "ti-point")"></i>
+                                        <span>@T(item.Label)</span>
+                                    </NavLink>
+                                }
+                                else
+                                {
+                                    <span class="glping-nav-subitem disabled" title="@(T("Pas encore disponible"))">
+                                        <i class="ti @(item.Icon ?? "ti-point")"></i>
+                                        <span>@T(item.Label)</span>
+                                    </span>
+                                }
+                            }
+                        </div>
+                    }
+                    <div class="glping-nav-flyout">
+                        <div class="glping-nav-flyout-panel">
+                            <div class="glping-nav-flyout-header">@T(group.Label)</div>
+                            <div class="glping-nav-flyout-items">
+                                @foreach (var item in FilteredItems(group))
+                                {
+                                    if (item.Href is not null)
+                                    {
+                                        <NavLink href="@item.Href" Match="@(item.Href == "/" ? NavLinkMatch.All : NavLinkMatch.Prefix)" class="glping-nav-subitem">
+                                            <i class="ti @(item.Icon ?? "ti-point")"></i>
+                                            <span>@T(item.Label)</span>
+                                        </NavLink>
+                                    }
+                                    else
+                                    {
+                                        <span class="glping-nav-subitem disabled" title="@(T("Pas encore disponible"))">
+                                            <i class="ti @(item.Icon ?? "ti-point")"></i>
+                                            <span>@T(item.Label)</span>
+                                        </span>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
         </nav>
+
+        <button type="button" class="glping-sidebar-collapse" @onclick="ToggleSidebarCollapse">
+            <i class="ti @(_collapsed ? "ti-chevrons-right" : "ti-chevrons-left")"></i>
+            @if (!_collapsed)
+            {
+                <span>@T("Réduire le menu")</span>
+            }
+        </button>
     </aside>
 
-    <div class="glpi-content">
-        <header class="glpi-topbar">
-            <nav class="glpi-breadcrumb">
+    <div class="glping-content">
+        <header class="glping-topbar">
+            <nav class="glping-breadcrumb">
                 @for (int i = 0; i < Breadcrumb.Count; i++)
                 {
                     var crumb = Breadcrumb[i];
-                    var isLast = i == Breadcrumb.Count - 1;
                     if (i > 0)
                     {
-                        <span class="glpi-breadcrumb-sep">/</span>
+                        <span class="glping-breadcrumb-sep">/</span>
                     }
-                    if (isLast || crumb.Href is null)
+                    @* Cliquable dès qu'il mène ailleurs que là où l'on est : c'est la destination
+                       qui décide, pas la position dans le fil. *@
+                    if (crumb.Href is null || IsCurrentPage(crumb.Href))
                     {
-                        <span class="glpi-breadcrumb-item active">
+                        <span class="glping-breadcrumb-item active">
                             <i class="ti @crumb.Icon"></i>
-                            <span>@crumb.Label</span>
+                            <span>@T(crumb.Label)</span>
                         </span>
                     }
                     else
                     {
-                        <a href="@crumb.Href" class="glpi-breadcrumb-item">
+                        <a href="@crumb.Href" class="glping-breadcrumb-item">
                             <i class="ti @crumb.Icon"></i>
-                            <span>@crumb.Label</span>
+                            <span>@T(crumb.Label)</span>
                         </a>
                     }
                 }
             </nav>
 
-            <div class="input-icon glpi-search">
+            <div class="input-icon glping-search">
                 <span class="input-icon-addon">
                     <i class="ti ti-search"></i>
                 </span>
-                <input type="text" class="form-control" placeholder="Rechercher..." />
+                <input type="text" class="form-control" placeholder="@(T("Rechercher..."))" />
             </div>
 
-            <div class="glpi-topbar-user dropdown">
-                <a href="#" class="glpi-user-toggle dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                    <span class="glpi-user-info">
-                        <span class="glpi-user-name">Super-Admin</span>
-                        <span class="glpi-user-entity">Root entity (Arborescence)</span>
+            <EntitySelector />
+
+            <div class="glping-topbar-user dropdown">
+                <a href="#" class="glping-user-toggle dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="glping-user-info">
+                        <span class="glping-user-name">@_userName</span>
                     </span>
-                    <span class="glpi-avatar">I</span>
+                    <span class="glping-avatar">@_userInitial</span>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="#"><i class="ti ti-user"></i> Mon profil</a></li>
-                    <li><a class="dropdown-item" href="/config"><i class="ti ti-settings"></i> Préférences</a></li>
+                    <li><a class="dropdown-item" href="/mon-profil"><i class="ti ti-user"></i> @T("Mon profil")</a></li>
+                    <li><a class="dropdown-item" href="/preferences"><i class="ti ti-settings"></i> @T("Préférences")</a></li>
                     <li><hr class="dropdown-divider" /></li>
-                    <li><a class="dropdown-item" href="#"><i class="ti ti-logout"></i> Se déconnecter</a></li>
+                    <li>
+                        <form method="post" action="/Account/Logout">
+                            <AntiforgeryToken />
+                            <button type="submit" class="dropdown-item glping-logout-button"><i class="ti ti-logout"></i> @T("Se déconnecter")</button>
+                        </form>
+                    </li>
                 </ul>
             </div>
         </header>
 
-        <main class="glpi-page-body">
-            @Body
+        <main class="glping-page-body">
+            @* Droits par profil : pendant, côté circuit Blazor, du SectionAccessMiddleware, qui ne
+               voit passer que les entrées par l'URL. Sans ça, un lien interne mènerait quand même
+               à la page. *@
+            @* Renvoi du SectionAccessMiddleware après un accès direct refusé : sans ce message,
+               l'utilisateur se retrouverait sur le tableau de bord sans explication. *@
+            @if (DeniedSection is { } denied)
+            {
+                <div class="alert alert-warning alert-dismissible" role="alert">
+                    <i class="ti ti-lock"></i>
+                    @T("Accès refusé à la section « {0} » : votre profil ne l'autorise pas pour l'entité active.", denied)
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@(T("Fermer"))"></button>
+                </div>
+            }
+
+            @if (!CanViewCurrentPage)
+            {
+                <div class="alert alert-warning" role="alert">
+                    <h4 class="alert-title"><i class="ti ti-lock"></i> @T("Droits insuffisants")</h4>
+                    <p class="mb-0">
+                        @T("Votre profil ne donne pas accès à la section « {0} » pour l'entité active. Changez d'entité active depuis le bandeau, ou demandez une habilitation à un administrateur.", CurrentSection)
+                    </p>
+                </div>
+            }
+            else
+            {
+                @Body
+            }
         </main>
     </div>
 </div>
 
-@code {
-    private List<(string Icon, string Label, string? Href)> Breadcrumb { get; set; } = [];
-
-    protected override void OnInitialized()
-    {
-        Nav.LocationChanged += OnLocationChanged;
-        Breadcrumb = BuildBreadcrumb();
-    }
-
-    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
-    {
-        Breadcrumb = BuildBreadcrumb();
-        InvokeAsync(StateHasChanged);
-    }
-
-    private List<(string Icon, string Label, string? Href)> BuildBreadcrumb()
-    {
-        var path = new Uri(Nav.Uri).AbsolutePath.Trim('/');
-        var items = new List<(string Icon, string Label, string? Href)>
-        {
-            ("ti-home", "Accueil", "/")
-        };
-
-        if (path.StartsWith("computers", StringComparison.OrdinalIgnoreCase))
-        {
-            items.Add(("ti-device-desktop", "Ordinateurs", "/computers"));
-        }
-        else if (path.StartsWith("agents", StringComparison.OrdinalIgnoreCase))
-        {
-            items.Add(("ti-cpu", "Agents", "/agents"));
-        }
-        else if (path.StartsWith("deployments", StringComparison.OrdinalIgnoreCase))
-        {
-            items.Add(("ti-package", "Déploiements", "/deployments"));
-        }
-        else if (path.StartsWith("config", StringComparison.OrdinalIgnoreCase))
-        {
-            items.Add(("ti-settings", "Configuration", "/config"));
-        }
-
-        return items;
-    }
-
-    public void Dispose()
-    {
-        Nav.LocationChanged -= OnLocationChanged;
-    }
-}
+<Toasts class="p-3" Placement="ToastsPlacement.TopRight" AutoHide="true" Delay="5000" />

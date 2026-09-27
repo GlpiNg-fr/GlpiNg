@@ -1,0 +1,194 @@
+@page "/tools/reports/{Key}"
+@using GlpiNg.Modules.Abstractions.Reports
+@rendermode InteractiveServer
+
+<PageTitle>@(_definition?.Title ?? T("Rapport")) — GlpiNg</PageTitle>
+
+@if (_definition is null)
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <div class="text-secondary mb-3">
+                @T("Ce rapport n'existe pas, ou n'est plus fourni par aucun module actif.")
+            </div>
+            <a href="/tools/reports" class="btn btn-primary"><i class="ti ti-arrow-left me-1"></i>@T("Retour aux rapports")</a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="glping-list-page">
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between glping-list-toolbar">
+                <div>
+                    <h3 class="card-title mb-0"><i class="ti @_definition.Icon me-1"></i>@T(_definition.Title)</h3>
+                    <div class="text-secondary">@T(_definition.Description)</div>
+                </div>
+
+                <div class="btn-list align-items-center">
+                    <button type="button" class="btn btn-icon" @onclick="RunAsync" disabled="@_isRunning" title="@(T("Rafraîchir"))">
+                        <i class="ti ti-refresh @(_isRunning ? "glping-spin" : "")"></i>
+                    </button>
+
+                    <div class="dropdown">
+                        <button type="button" class="btn btn-icon" data-bs-toggle="dropdown" aria-expanded="false"
+                                disabled="@(_result is null || _isRunning)" title="@(T("Exporter"))">
+                            <i class="ti ti-download"></i>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end p-0 glping-export-menu">
+                            <button type="button" class="dropdown-item" @onclick='() => ExportAsync("pdf-landscape")'>
+                                <i class="ti ti-file-type-pdf"></i>@T("PDF paysage")
+                            </button>
+                            <button type="button" class="dropdown-item" @onclick='() => ExportAsync("pdf-portrait")'>
+                                <i class="ti ti-file-type-pdf"></i>@T("PDF portrait")
+                            </button>
+                            <button type="button" class="dropdown-item" @onclick='() => ExportAsync("csv")'>
+                                <i class="ti ti-file-type-csv"></i>@T("CSV")
+                            </button>
+                            <button type="button" class="dropdown-item" @onclick='() => ExportAsync("ods")'>
+                                <i class="ti ti-table"></i>@T("Tableau (ODS)")
+                            </button>
+                            <button type="button" class="dropdown-item" @onclick='() => ExportAsync("xlsx")'>
+                                <i class="ti ti-table"></i>@T("Tableau (XLSX)")
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (_filters.Count > 0)
+            {
+                <div class="card-body">
+                    <div class="row g-2 align-items-end">
+                        @foreach (ReportFilter filter in _filters)
+                        {
+                            <div class="col-auto">
+                                <label class="form-label" for="filter-@filter.Key">@T(filter.Label)</label>
+                                @switch (filter.Kind)
+                                {
+                                    case ReportFilterKind.Select:
+                                        <select id="filter-@filter.Key" class="form-select" style="min-width: 12rem;"
+                                                value="@ValueOf(filter)"
+                                                @onchange="@((ChangeEventArgs e) => SetValue(filter.Key, (string?)e.Value))">
+                                            @if (filter.DefaultValue is null)
+                                            {
+                                                <option value="">@T("Tous")</option>
+                                            }
+                                            @foreach (ReportFilterOption option in filter.Options)
+                                            {
+                                                <option value="@option.Value" selected="@(ValueOf(filter) == option.Value)">@T(option.Label)</option>
+                                            }
+                                        </select>
+                                        break;
+
+                                    case ReportFilterKind.Date:
+                                        <input id="filter-@filter.Key" type="date" class="form-control" value="@ValueOf(filter)"
+                                               @onchange="@((ChangeEventArgs e) => SetValue(filter.Key, (string?)e.Value))" />
+                                        break;
+
+                                    case ReportFilterKind.Number:
+                                        <input id="filter-@filter.Key" type="number" class="form-control" style="width: 9rem;" value="@ValueOf(filter)"
+                                               @onchange="@((ChangeEventArgs e) => SetValue(filter.Key, (string?)e.Value))" />
+                                        break;
+                                }
+                            </div>
+                        }
+
+                        <div class="col-auto">
+                            <button type="button" class="btn btn-primary" @onclick="RunAsync" disabled="@_isRunning">
+                                <i class="ti ti-player-play me-1"></i>@T("Générer")
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <div class="card-footer text-secondary">
+                @if (_generatedAt is DateTime generatedAt)
+                {
+                    <span>@T("Généré le {0}", Display.DateTime(generatedAt))</span>
+                }
+                else
+                {
+                    <span>@T("Génération en cours...")</span>
+                }
+            </div>
+        </div>
+
+        @if (_isRunning)
+        {
+            <div class="card mt-3">
+                <div class="card-body text-center py-5 text-secondary">
+                    <div class="spinner-border" role="status"></div>
+                    <div class="mt-2">@T("Calcul du rapport...")</div>
+                </div>
+            </div>
+        }
+        else if (_result is not null)
+        {
+            @foreach (ReportTable table in _result.Tables)
+            {
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h3 class="card-title">@T(table.Title)</h3>
+                    </div>
+
+                    @if (table.Rows.Count == 0)
+                    {
+                        <div class="card-body text-center text-secondary py-4">
+                            @(table.EmptyMessage ?? T("Aucune donnée."))
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-vcenter card-table">
+                                <thead>
+                                    <tr>
+                                        @foreach (ReportColumn column in table.Columns)
+                                        {
+                                            <th class="@(column.Kind == ReportColumnKind.Number ? "text-end" : "")">@T(column.Label)</th>
+                                        }
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (ReportRow row in table.Rows)
+                                    {
+                                        <tr class="@(row.IsTotal ? "fw-bold" : "")">
+                                            @for (int index = 0; index < row.Cells.Count; index++)
+                                            {
+                                                ReportCell cell = row.Cells[index];
+                                                ReportColumnKind kind = index < table.Columns.Count ? table.Columns[index].Kind : ReportColumnKind.Text;
+
+                                                <td class="@(kind == ReportColumnKind.Number ? "text-end" : "")">
+                                                    @if (kind == ReportColumnKind.Share && cell.Share is double share)
+                                                    {
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <div class="progress progress-sm flex-fill" style="min-width: 4rem;">
+                                                                <div class="progress-bar" style="width: @BarWidth(share)%" role="progressbar"
+                                                                     aria-valuenow="@BarWidth(share)" aria-valuemin="0" aria-valuemax="100"></div>
+                                                            </div>
+                                                            <span class="text-secondary text-nowrap">@cell.Text</span>
+                                                        </div>
+                                                    }
+                                                    else if (cell.Href is not null)
+                                                    {
+                                                        <a href="@cell.Href" class="text-reset">@cell.Text</a>
+                                                    }
+                                                    else
+                                                    {
+                                                        @cell.Text
+                                                    }
+                                                </td>
+                                            }
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            }
+        }
+    </div>
+}

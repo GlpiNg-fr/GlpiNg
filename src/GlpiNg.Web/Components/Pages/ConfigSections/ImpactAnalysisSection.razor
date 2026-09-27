@@ -1,0 +1,87 @@
+﻿@using GlpiNg.Web.Models
+@using GlpiNg.Web.Services
+@inject SettingsCacheService SettingsStore
+@inject ConfigHistoryService History
+@inject ToastService ToastService
+
+@if (_model is null)
+{
+    <p>@T("Chargement…")</p>
+}
+else
+{
+    <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
+        <p class="hint" style="margin-left:0;">@T("Types d'éléments proposés dans les graphes d'analyse d'impact.")</p>
+
+        <div class="glping-switch-grid">
+            @foreach (var (key, label) in ImpactAnalysisSettings.AvailableItemTypes)
+            {
+                var inputId = $"impact-{key}";
+                <div class="glping-switch-grid-item">
+                    <label class="glping-switch">
+                        <input id="@inputId" type="checkbox" checked="@_model.EnabledItemTypes.Contains(key)" @onchange="e => Toggle(key, (bool)e.Value!)" />
+                        <span class="glping-switch-slider"></span>
+                    </label>
+                    <label for="@inputId">@T(label)</label>
+                </div>
+            }
+        </div>
+
+        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? T("Enregistrement…") : T("Enregistrer"))</button>
+    </EditForm>
+}
+
+@code {
+    private const string SectionName = "ImpactAnalysisSettings";
+
+    private ImpactAnalysisSettings? _model;
+    private bool _isSaving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _model = await SettingsStore.ReadSectionAsync<ImpactAnalysisSettings>(SectionName);
+    }
+
+    private void Toggle(string itemType, bool enabled)
+    {
+        if (_model is null)
+        {
+            return;
+        }
+
+        if (enabled && !_model.EnabledItemTypes.Contains(itemType))
+        {
+            _model.EnabledItemTypes.Add(itemType);
+        }
+        else if (!enabled)
+        {
+            _model.EnabledItemTypes.Remove(itemType);
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_model is null)
+        {
+            return;
+        }
+
+        _isSaving = true;
+
+        try
+        {
+            var before = await SettingsStore.ReadSectionAsync<ImpactAnalysisSettings>(SectionName);
+            await SettingsStore.SaveSectionAsync(SectionName, _model);
+            await History.AppendAsync("Administrateur", SettingsDiff.Compare(before, _model));
+            ToastService.Notify(new ToastMessage(ToastType.Success, T("Configuration enregistrée.")));
+        }
+        catch (IOException ex)
+        {
+            ToastService.Notify(new ToastMessage(ToastType.Danger, T("Échec de l'enregistrement : {0}", ex.Message)));
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+}

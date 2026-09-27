@@ -1,0 +1,71 @@
+@using GlpiNg.Web.Models
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="glping-fiche-field">
+            <label>@T("Téléphone")</label>
+            <input class="form-control" @bind="Entity.Phone" />
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Matricule")</label>
+            <input class="form-control" @bind="Entity.Registration" />
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Fax")</label>
+            <input class="form-control" @bind="Entity.Fax" />
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Site Web")</label>
+            <input class="form-control" @bind="Entity.Website" />
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("E-mail")</label>
+            <input class="form-control" type="email" @bind="Entity.Email" />
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="glping-fiche-field">
+            <label>@T("Code postal")</label>
+            <input class="form-control" @bind="Entity.Postcode" />
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Adresse")</label>
+            <textarea class="form-control" rows="2" @bind="Entity.Address"></textarea>
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Ville")</label>
+            <input class="form-control" @bind="Entity.Town" />
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("État")</label>
+            <input class="form-control" @bind="Entity.State" />
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Pays")</label>
+            <input class="form-control" @bind="Entity.Country" />
+        </div>
+    </div>
+</div>
+
+<div class="glping-fiche-block-title mt-2"><i class="ti ti-map-pin"></i>@T("Emplacement sur la carte")</div>
+<div class="row">
+    <div class="col-md-6">
+        <div class="glping-fiche-field">
+            <label>@T("Longitude")</label>
+            <input class="form-control" @bind="Entity.Longitude" />
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Latitude")</label>
+            <input class="form-control" @bind="Entity.Latitude" />
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Altitude")</label>
+            <input class="form-control" @bind="Entity.Altitude" />
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public GlpiEntity Entity { get; set; } = null!;
+}

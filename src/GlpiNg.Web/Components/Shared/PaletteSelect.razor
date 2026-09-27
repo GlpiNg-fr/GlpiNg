@@ -1,0 +1,61 @@
+@using GlpiNg.Web.Services
+
+@* Liste déroulante de palettes avec un aperçu de chacune — ce qu'un <select> ne sait pas faire,
+   ses options n'acceptant que du texte. Menu déroulant Bootstrap (flèches du clavier, Échap), au
+   gabarit des champs de configuration pour se ranger parmi eux. *@
+
+<div class="dropdown glping-palette-select">
+    <button type="button" id="@Id" class="glping-palette-select-toggle" data-bs-toggle="dropdown" aria-expanded="false"
+            aria-haspopup="listbox">
+        @Swatch(PaletteCatalog.KeyOf(Value))
+        <span class="glping-palette-select-label">@PaletteCatalog.LabelOf(Value)</span>
+        <i class="ti ti-chevron-down ms-auto"></i>
+    </button>
+    <div class="dropdown-menu glping-palette-select-menu" role="listbox" aria-labelledby="@Id">
+        @foreach ((string label, string key) in PaletteCatalog.Palettes)
+        {
+            bool selected = PaletteCatalog.KeyOf(Value) == key;
+            <button type="button" class="dropdown-item glping-palette-select-item @(selected ? "active" : "")"
+                    role="option" aria-selected="@(selected ? "true" : "false")" @onclick="() => SelectAsync(label)">
+                @Swatch(key)
+                <span>@label</span>
+                @if (selected)
+                {
+                    <i class="ti ti-check ms-auto"></i>
+                }
+            </button>
+        }
+    </div>
+</div>
+
+@code {
+    /// <summary>Palette choisie, sous son libellé (« Auror », « Light Blue »...) — celui que stocke la configuration.</summary>
+    [Parameter]
+    public string? Value { get; set; }
+
+    [Parameter]
+    public EventCallback<string> ValueChanged { get; set; }
+
+    /// <summary>Identifiant du bouton, pour que le libellé du champ (label for) le désigne.</summary>
+    [Parameter]
+    public string? Id { get; set; }
+
+    private Task SelectAsync(string label)
+    {
+        Value = label;
+        return ValueChanged.InvokeAsync(label);
+    }
+
+    /// <summary>Aperçu miniature : bande de menu avec son accent, fond de page et pastille primaire.</summary>
+    private static RenderFragment Swatch(string key) => __builder =>
+    {
+        PalettePreview preview = PaletteCatalog.Previews[key];
+
+        <span class="glping-palette-swatch" style="background: @preview.Page;" aria-hidden="true">
+            <span class="glping-palette-swatch-menu" style="background: @preview.MenuBg;">
+                <span class="glping-palette-swatch-dot" style="background: @preview.Accent;"></span>
+            </span>
+            <span class="glping-palette-swatch-primary" style="background: @preview.Primary;"></span>
+        </span>
+    };
+}

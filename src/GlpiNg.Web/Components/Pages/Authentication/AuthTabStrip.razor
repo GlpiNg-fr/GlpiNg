@@ -1,0 +1,31 @@
+<div class="card mb-3">
+    <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs" style="border-bottom: none;">
+            <li class="nav-item">
+                <a href="/config/auth/config" class="nav-link @(Current == "config" ? "active" : "")">
+                    <i class="ti ti-settings me-1"></i>@T("Configuration")
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/config/auth/ldap" class="nav-link @(Current == "ldap" ? "active" : "")">
+                    <i class="ti ti-address-book me-1"></i>@T("Annuaire LDAP")
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/config/auth/mail" class="nav-link @(Current == "mail" ? "active" : "")">
+                    <i class="ti ti-mail me-1"></i>@T("Serveur mails")
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/config/auth/others" class="nav-link @(Current == "others" ? "active" : "")">
+                    <i class="ti ti-key me-1"></i>@T("Autres méthodes d'authentification")
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Current { get; set; } = string.Empty;
+}

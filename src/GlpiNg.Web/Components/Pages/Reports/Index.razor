@@ -1,0 +1,55 @@
+@page "/tools/reports"
+@using GlpiNg.Modules.Abstractions.Reports
+@rendermode InteractiveServer
+
+<PageTitle>@T("Rapports — GlpiNg")</PageTitle>
+
+<div class="glping-list-page">
+    <div class="card">
+        <div class="card-header d-flex align-items-center justify-content-between glping-list-toolbar">
+            <div class="btn-list">
+                <div class="input-icon" style="width: 260px;">
+                    <span class="input-icon-addon"><i class="ti ti-search"></i></span>
+                    <input type="text" class="form-control" placeholder="@(T("Rechercher un rapport..."))" value="@_search"
+                           @oninput="@((ChangeEventArgs e) => OnSearchInput((string?)e.Value))" />
+                </div>
+            </div>
+            <div class="text-secondary">@MatchCountLabel</div>
+        </div>
+
+        <div class="card-body">
+            @if (_visibleGroups.Count == 0)
+            {
+                <div class="text-center text-secondary py-4">
+                    @T("Aucun rapport ne correspond à cette recherche.")
+                </div>
+            }
+
+            @foreach ((string Category, List<ReportDefinition> Reports) group in _visibleGroups)
+            {
+                <div class="mb-4">
+                    <h3 class="mb-2">@T(group.Category)</h3>
+                    <div class="row row-cards">
+                        @foreach (ReportDefinition report in group.Reports)
+                        {
+                            <div class="col-md-6 col-xl-4">
+                                <div class="card card-link card-link-pop h-100">
+                                    <div class="card-body">
+                                        <a href="/tools/reports/@report.Key" class="stretched-link" aria-label="@T(report.Title)"></a>
+                                        <div class="d-flex align-items-start">
+                                            <span class="bg-primary text-white avatar me-3"><i class="ti @report.Icon"></i></span>
+                                            <div>
+                                                <div class="fw-semibold">@T(report.Title)</div>
+                                                <div class="text-secondary">@T(report.Description)</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

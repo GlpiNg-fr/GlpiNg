@@ -1,0 +1,76 @@
+@using GlpiNg.Web.Models
+@using GlpiNg.Web.Services
+@inject SettingsCacheService SettingsStore
+@inject ConfigHistoryService History
+@inject ToastService ToastService
+
+@if (_model is null)
+{
+    <p>@T("Chargement…")</p>
+}
+else
+{
+    <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
+        <div class="glping-config-divider">
+            <span><i class="ti ti-key"></i> @T("Enregistrement")</span>
+        </div>
+
+        <div class="glping-config-field">
+            <label for="net-key">@T("Clé d'enregistrement")</label>
+            <input id="net-key" @bind="_model.RegistrationKey" placeholder="@(T("XXXX-XXXX-XXXX-XXXX"))" />
+        </div>
+
+        <div class="glping-config-divider">
+            <span><i class="ti ti-apps"></i> @T("Marketplace")</span>
+        </div>
+
+        <div class="glping-config-field">
+            <label for="net-marketplace">@T("Page des plugins")</label>
+            <select id="net-marketplace" @bind="_model.MarketplaceBehavior">
+                <option value="ask">@T("Demander avant de remplacer")</option>
+                <option value="replace">@T("Remplacer la page des plugins par celle du Marketplace")</option>
+                <option value="never">@T("Ne jamais remplacer la page des plugins")</option>
+            </select>
+        </div>
+
+        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? T("Enregistrement…") : T("Enregistrer"))</button>
+    </EditForm>
+}
+
+@code {
+    private const string SectionName = "GlpiNetworkSettings";
+
+    private GlpiNetworkSettings? _model;
+    private bool _isSaving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _model = await SettingsStore.ReadSectionAsync<GlpiNetworkSettings>(SectionName);
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_model is null)
+        {
+            return;
+        }
+
+        _isSaving = true;
+
+        try
+        {
+            var before = await SettingsStore.ReadSectionAsync<GlpiNetworkSettings>(SectionName);
+            await SettingsStore.SaveSectionAsync(SectionName, _model);
+            await History.AppendAsync("Administrateur", SettingsDiff.Compare(before, _model));
+            ToastService.Notify(new ToastMessage(ToastType.Success, T("Configuration enregistrée.")));
+        }
+        catch (IOException ex)
+        {
+            ToastService.Notify(new ToastMessage(ToastType.Danger, T("Échec de l'enregistrement : {0}", ex.Message)));
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+}

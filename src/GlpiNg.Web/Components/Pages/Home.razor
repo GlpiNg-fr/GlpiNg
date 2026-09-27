@@ -1,20 +1,77 @@
-@page "/"
-@using GlpiNg.Web.Data
-@inject GlpiNgDbContext Db
+﻿@page "/"
 @rendermode InteractiveServer
 
-<PageTitle>GlpiNg — Tableau de bord</PageTitle>
+<PageTitle>@T("Tableau de bord — GlpiNg")</PageTitle>
 
-<h1>Tableau de bord</h1>
-
-<div class="stats">
-    <div class="stat-card">
-        <span class="stat-value">@_computerCount</span>
-        <span class="stat-label">Postes inventoriés</span>
-    </div>
-    <div class="stat-card">
-        <span class="stat-value">@_agentCount</span>
-        <span class="stat-label">Agents enregistrés</span>
+<div class="page-header glping-dashboard-header mb-3">
+    <h2 class="page-title mb-0">@T("Tableau de bord")</h2>
+    <div class="glping-dashboard-header-actions">
+        @if (_isEditMode)
+        {
+            <select class="form-select w-auto" disabled="@(AvailableCards.Count == 0)" @bind="_selectedCardKeyToAdd">
+                @if (AvailableCards.Count == 0)
+                {
+                    <option value="">@T("Aucune carte disponible")</option>
+                }
+                else
+                {
+                    <option value="">@T("Ajouter une carte...")</option>
+                    @foreach (var card in AvailableCards)
+                    {
+                        <option value="@card.Key">@T(card.Title)</option>
+                    }
+                }
+            </select>
+            <button type="button" class="btn btn-outline-primary" disabled="@string.IsNullOrEmpty(_selectedCardKeyToAdd)" @onclick="AddSelectedCard">
+                <i class="ti ti-plus"></i> @T("Ajouter")
+            </button>
+        }
+        <button type="button" class="btn btn-icon @(_isEditMode ? "btn-primary" : "btn-outline-secondary")"
+                title="@(_isEditMode ? T("Terminer l'édition") : T("Modifier les cartes"))"
+                @onclick="ToggleEditMode">
+            <i class="ti @(_isEditMode ? "ti-check" : "ti-pencil")"></i>
+        </button>
     </div>
 </div>
 
+<div class="row row-cards">
+    @for (var i = 0; i < _cards.Count; i++)
+    {
+        var index = i;
+        var card = _cards[i];
+        <div class="glping-dashboard-card-col">
+            <div class="card glping-dashboard-card @(_draggedIndex == index ? "dragging" : "")"
+                 draggable="@_isEditMode"
+                 @ondragstart="() => OnCardDragStart(index)"
+                 @ondragend="OnCardDragEnd"
+                 @ondragover:preventDefault="true"
+                 @ondrop="() => OnCardDrop(index)">
+                <div class="card-body">
+                    @if (!_isEditMode)
+                    {
+                        <a href="@card.Href" class="stretched-link" aria-label="@T(card.Title)"></a>
+                    }
+                    <div class="d-flex align-items-center">
+                        @if (_isEditMode)
+                        {
+                            <span class="glping-dashboard-drag-handle" title="@(T("Glisser pour réorganiser"))">
+                                <i class="ti ti-grip-vertical"></i>
+                            </span>
+                        }
+                        <span class="@card.BadgeClass text-white avatar me-3"><i class="ti @card.Icon"></i></span>
+                        <div class="flex-fill">
+                            <div class="text-secondary">@T(card.Title)</div>
+                            <div class="h2 mb-0">@card.Value</div>
+                        </div>
+                        @if (_isEditMode)
+                        {
+                            <button type="button" class="btn btn-icon btn-ghost-danger" title="@(T("Supprimer la carte"))" @onclick="() => RemoveCard(index)">
+                                <i class="ti ti-x"></i>
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

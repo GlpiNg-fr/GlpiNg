@@ -1,0 +1,177 @@
+@page "/config/field-unicity"
+@using GlpiNg.Web.Models.FieldUnicity
+@using GlpiNg.Web.Services.FieldUnicity
+@rendermode InteractiveServer
+
+<PageTitle>@T("Unicité des champs — GlpiNg")</PageTitle>
+
+<div class="glping-list-page">
+<div class="card">
+    <div class="card-header d-flex align-items-center justify-content-between glping-list-toolbar">
+        <div class="btn-list">
+            <div class="dropdown">
+                <button type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="ti ti-search me-1"></i>@T("Rechercher")
+                </button>
+                <div class="dropdown-menu p-3" style="min-width: 280px;">
+                    <div class="input-icon">
+                        <span class="input-icon-addon">
+                            <i class="ti ti-search"></i>
+                        </span>
+                        <input type="text" class="form-control" placeholder="@(T("Rechercher un critère..."))"
+                               @bind="_searchTerm" @bind:event="oninput" @onkeyup="OnSearchChanged" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="btn-list align-items-center">
+            <div class="dropdown">
+                <button type="button" class="btn btn-icon text-danger" data-bs-toggle="dropdown" aria-expanded="false"
+                        disabled="@(_selectedIds.Count == 0)" title="@(T("Supprimer la sélection"))">
+                    <i class="ti ti-trash"></i>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end p-3" style="min-width: 260px;">
+                    <p class="mb-2">@T("Supprimer {0} critère(s) sélectionné(s) ? Cette action est définitive.", _selectedIds.Count)</p>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-sm">@T("Annuler")</button>
+                        <button type="button" class="btn btn-sm btn-danger" @onclick="DeleteSelectedAsync">@T("Supprimer")</button>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-icon" @onclick="OnRefreshAsync" title="@(T("Rafraîchir"))">
+                <i class="ti ti-refresh"></i>
+            </button>
+
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newCriterionModal">
+                <i class="ti ti-plus me-1"></i>@T("Ajouter")
+            </button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th style="width: 2.5rem;">
+                        @* Ne coche que les lignes affichées : cocher ici ne doit jamais engager
+                           plus que ce qu'on voit. *@
+                        <input class="form-check-input m-0" type="checkbox" title="@(T("Sélectionner les éléments visibles"))"
+                               checked="@AllSelected"
+                               @onchange="@((ChangeEventArgs e) => ToggleSelectAll((bool)(e.Value ?? false)))" />
+                    </th>
+                    <th>@T("Nom")</th>
+                    <th>@T("Type d'objet")</th>
+                    <th>@T("Champs uniques")</th>
+                    <th>@T("Actif")</th>
+                    <th>@T("Action")</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (_filtered.Count == 0)
+                {
+                    <tr>
+                        <td colspan="6" class="text-center text-secondary py-4">@T("Aucun critère d'unicité configuré.")</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (FieldUnicityCriterion criterion in _filtered)
+                    {
+                        <tr>
+                            <td>
+                                <input class="form-check-input m-0" type="checkbox" checked="@_selectedIds.Contains(criterion.Id)"
+                                       @onchange="@((ChangeEventArgs e) => ToggleSelect(criterion.Id, (bool)(e.Value ?? false)))" />
+                            </td>
+                            <td>
+                                <a href="@($"/config/field-unicity/{criterion.Id}")" class="text-reset fw-semibold">
+                                    <i class="ti ti-fingerprint me-1 text-secondary"></i>@criterion.Name
+                                </a>
+                            </td>
+                            <td class="text-secondary">@FieldUnicityCatalog.LabelFor(criterion.ItemType)</td>
+                            <td>
+                                @if (criterion.Fields.Count == 0)
+                                {
+                                    @* Un critère sans champ ne contrôle rien : le dire ici évite de
+                                       chercher pourquoi il ne se déclenche jamais. *@
+                                    <span class="badge bg-warning-lt">@T("Aucun — critère sans effet")</span>
+                                }
+                                else
+                                {
+                                    <div class="d-flex flex-wrap gap-1">
+                                        @foreach (FieldUnicityField field in criterion.Fields.OrderBy(f => f.FieldName))
+                                        {
+                                            <span class="badge bg-secondary-lt">@FieldUnicityCatalog.LabelForField(field.FieldName)</span>
+                                        }
+                                    </div>
+                                }
+                            </td>
+                            <td>
+                                @if (criterion.IsActive)
+                                {
+                                    <span class="badge bg-success-lt">@T("Oui")</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary-lt">@T("Non")</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="d-flex flex-wrap gap-1">
+                                    @if (criterion.RefuseCreation)
+                                    {
+                                        <span class="badge bg-danger-lt">@T("Refuser la création")</span>
+                                    }
+                                    @if (criterion.NotifyOnDuplicate)
+                                    {
+                                        <span class="badge bg-azure-lt">@T("Notifier")</span>
+                                    }
+                                    @if (!criterion.RefuseCreation && !criterion.NotifyOnDuplicate)
+                                    {
+                                        <span class="badge bg-warning-lt">@T("Aucune — doublon seulement journalisé")</span>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
+
+<div class="modal fade" id="newCriterionModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="ti ti-fingerprint me-2"></i>@T("Nouvel élément - Unicité des champs")</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@(T("Fermer"))"></button>
+            </div>
+            <div class="modal-body">
+                <div class="glping-fiche-field">
+                    <label>@T("Nom")</label>
+                    <input class="form-control" @bind="_newCriterion.Name" @bind:event="oninput" />
+                </div>
+                <div class="glping-fiche-field">
+                    <label>@T("Type d'objet")</label>
+                    <select class="form-select" @bind="_newCriterion.ItemType">
+                        @foreach ((string itemType, string label) in FieldUnicityCatalog.ItemTypes)
+                        {
+                            <option value="@itemType">@T(label)</option>
+                        }
+                    </select>
+                </div>
+                <p class="hint">
+                    @T("Les champs dont la combinaison doit être unique se choisissent sur la fiche du critère, une fois celui-ci créé.")
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-warning" disabled="@(!CanCreate)" @onclick="CreateAsync">
+                    <i class="ti ti-plus me-1"></i>@T("Ajouter")
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,26 @@
+<div class="card mb-3">
+    <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs" style="border-bottom: none;">
+            <li class="nav-item">
+                <a href="/config/webhooks/settings" class="nav-link @(Current == "settings" ? "active" : "")">
+                    <i class="ti ti-settings me-1"></i>@T("Configuration")
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/config/webhooks" class="nav-link @(Current == "list" ? "active" : "")">
+                    <i class="ti ti-webhook me-1"></i>@T("Webhooks")
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/config/webhooks/queue" class="nav-link @(Current == "queue" ? "active" : "")">
+                    <i class="ti ti-list-details me-1"></i>@T("File d'attente")
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Current { get; set; } = string.Empty;
+}

@@ -1,0 +1,35 @@
+@using GlpiNg.Web.Models
+
+<div class="glping-module-toggles">
+    @foreach (var item in Items)
+    {
+        var enabled = Modules.IsEnabled(GroupKey, item.Label);
+        <div class="glping-module-toggle-item @(enabled && !Disabled ? "" : "disabled")">
+            <span class="glping-module-toggle-label">
+                <i class="ti @item.Icon"></i>
+                <span>@T(item.Label)</span>
+            </span>
+            <label class="glping-switch">
+                <input type="checkbox" checked="@enabled" disabled="@Disabled" @onchange="e => OnToggle.InvokeAsync((item.Label, (bool)e.Value!))" />
+                <span class="glping-switch-slider"></span>
+            </label>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string GroupKey { get; set; } = "";
+
+    [Parameter, EditorRequired]
+    public List<(string Label, string Icon)> Items { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public ModulesSettings Modules { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<(string Label, bool Enabled)> OnToggle { get; set; }
+
+    [Parameter]
+    public bool Disabled { get; set; }
+}

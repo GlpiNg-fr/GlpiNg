@@ -1,0 +1,81 @@
+@using GlpiNg.Web.Models.Notifications
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="glping-fiche-field">
+            <label>@T("Nom")</label>
+            <input class="form-control" @bind="Rule.Name" @bind:event="oninput" @bind:after="NotifyChangedAsync" />
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Activé")</label>
+            @YesNoSelect(Rule.IsActive, v => Rule.IsActive = v)
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Commentaires")</label>
+            <textarea class="form-control" rows="2" @bind="Rule.Comment"></textarea>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="glping-fiche-field">
+            <label>@T("Type d'objet")</label>
+            <select class="form-select" value="@Rule.ItemType" @onchange="OnItemTypeChanged">
+                @foreach ((string itemType, string label) in NotificationEventCatalog.ItemTypes)
+                {
+                    <option value="@itemType">@T(label)</option>
+                }
+            </select>
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Événement")</label>
+            <select class="form-select" @bind="Rule.Event" @bind:after="NotifyChangedAsync">
+                @foreach (NotificationEventDefinition evt in NotificationEventCatalog.EventsFor(Rule.ItemType))
+                {
+                    <option value="@evt.EventKey">@T(evt.EventLabel)</option>
+                }
+            </select>
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Gabarit")</label>
+            <select class="form-select" @bind="Rule.NotificationTemplateId" @bind:after="NotifyChangedAsync">
+                <option value="0">@T("-- Choisir --")</option>
+                @foreach (NotificationTemplate template in TemplatesForItemType)
+                {
+                    <option value="@template.Id">@template.Name</option>
+                }
+            </select>
+        </div>
+        @if (TemplatesForItemType.Count == 0)
+        {
+            <p class="hint">@T("Aucun gabarit pour ce type d'objet —") <a href="/config/notifications/templates">@T("créez-en un")</a> @T("d'abord.")</p>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public Notification Rule { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public List<NotificationTemplate> AllTemplates { get; set; } = [];
+
+    [Parameter]
+    public EventCallback OnChanged { get; set; }
+
+    private List<NotificationTemplate> TemplatesForItemType => AllTemplates.Where(t => t.ItemType == Rule.ItemType).ToList();
+
+    private Task NotifyChangedAsync() => OnChanged.InvokeAsync();
+
+    private async Task OnItemTypeChanged(ChangeEventArgs e)
+    {
+        Rule.ItemType = e.Value?.ToString() ?? Rule.ItemType;
+        Rule.Event = NotificationEventCatalog.EventsFor(Rule.ItemType).FirstOrDefault()?.EventKey ?? Rule.Event;
+        Rule.NotificationTemplateId = 0;
+        await NotifyChangedAsync();
+    }
+
+    private RenderFragment YesNoSelect(bool value, Action<bool> setter) =>
+        @<select class="form-select" value="@(value ? "true" : "false")" @onchange="@(e => setter(e.Value?.ToString() == "true"))">
+            <option value="false">Non</option>
+            <option value="true">Oui</option>
+        </select>;
+}

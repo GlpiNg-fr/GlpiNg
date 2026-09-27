@@ -1,0 +1,146 @@
+@page "/config/field-unicity/{CriterionId:int}"
+@using GlpiNg.Web.Models.FieldUnicity
+@using GlpiNg.Web.Services.FieldUnicity
+@rendermode InteractiveServer
+
+<PageTitle>@(_criterion?.Name ?? T("Critère d'unicité")) — GlpiNg</PageTitle>
+
+@if (_criterion is null)
+{
+    <div class="card">
+        <div class="card-body text-center text-secondary py-5">@T("Critère introuvable.")</div>
+    </div>
+}
+else
+{
+    <div class="glping-fiche">
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h3 class="card-title mb-0">
+                    <i class="ti ti-fingerprint me-2"></i>@_criterion.Name
+                </h3>
+                <div class="btn-list">
+                    <div class="dropdown">
+                        <button type="button" class="btn btn-icon text-danger" data-bs-toggle="dropdown" aria-expanded="false"
+                                title="@(T("Supprimer ce critère"))">
+                            <i class="ti ti-trash"></i>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end p-3" style="min-width: 260px;">
+                            <p class="mb-2">@T("Supprimer ce critère d'unicité ? Cette action est définitive.")</p>
+                            <div class="d-flex justify-content-end gap-2">
+                                <button type="button" class="btn btn-sm">@T("Annuler")</button>
+                                <button type="button" class="btn btn-sm btn-danger" @onclick="DeleteAsync">@T("Supprimer")</button>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-warning" disabled="@_isSaving" @onclick="SaveAsync">
+                        <i class="ti ti-device-floppy me-1"></i>@T("Enregistrer")
+                    </button>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="glping-fiche-field">
+                            <label>@T("Nom")</label>
+                            <input class="form-control" @bind="_criterion.Name" />
+                        </div>
+                        <div class="glping-fiche-field">
+                            <label>@T("Type d'objet")</label>
+                            <select class="form-select" value="@_criterion.ItemType" @onchange="OnItemTypeChanged">
+                                @foreach ((string itemType, string label) in FieldUnicityCatalog.ItemTypes)
+                                {
+                                    <option value="@itemType">@T(label)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="glping-fiche-field">
+                            <label>@T("Sous-entités visibles")</label>
+                            <select class="form-select" value="@(_criterion.IsRecursive ? "true" : "false")"
+                                    @onchange="@(e => _criterion.IsRecursive = e.Value?.ToString() == "true")">
+                                <option value="false">@T("Non")</option>
+                                <option value="true">@T("Oui")</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="glping-fiche-field">
+                            <label>@T("Actif")</label>
+                            <select class="form-select" value="@(_criterion.IsActive ? "true" : "false")"
+                                    @onchange="@(e => _criterion.IsActive = e.Value?.ToString() == "true")">
+                                <option value="true">@T("Oui")</option>
+                                <option value="false">@T("Non")</option>
+                            </select>
+                        </div>
+                        <div class="glping-fiche-field">
+                            <label>@T("Commentaires")</label>
+                            <textarea class="form-control" rows="3" @bind="_criterion.Comment"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <hr />
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4>@T("Champs dont la combinaison doit être unique")</h4>
+                        <p class="hint">
+                            @T("Les champs cochés comptent") <strong>@T("ensemble")</strong> : deux champs dans un
+                            @T("même critère interdisent deux objets portant ces deux mêmes valeurs. Pour")
+                            @T("interdire séparément deux doublons de nom et deux doublons de numéro de")
+                            @T("série, créez deux critères d'un champ chacun.")
+                            @T("Un champ laissé vide sur un objet ne participe pas au contrôle.")
+                        </p>
+
+                        @if (_fieldOptions.Count == 0)
+                        {
+                            <p class="text-secondary">@T("Aucun champ texte disponible pour ce type d'objet.")</p>
+                        }
+                        else
+                        {
+                            <div class="row">
+                                @foreach (FieldUnicityFieldOption option in _fieldOptions)
+                                {
+                                    <div class="col-sm-6">
+                                        <label class="form-check">
+                                            <input class="form-check-input" type="checkbox"
+                                                   checked="@_selectedFields.Contains(option.FieldName)"
+                                                   @onchange="@((ChangeEventArgs e) => ToggleField(option.FieldName, (bool)(e.Value ?? false)))" />
+                                            <span class="form-check-label">@T(option.Label)</span>
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <div class="col-md-6">
+                        <h4>@T("Que faire sur un doublon")</h4>
+                        <label class="form-check">
+                            <input class="form-check-input" type="checkbox" checked="@_criterion.RefuseCreation"
+                                   @onchange="@((ChangeEventArgs e) => _criterion.RefuseCreation = (bool)(e.Value ?? false))" />
+                            <span class="form-check-label">@T("Refuser la création")</span>
+                        </label>
+                        <label class="form-check">
+                            <input class="form-check-input" type="checkbox" checked="@_criterion.NotifyOnDuplicate"
+                                   @onchange="@((ChangeEventArgs e) => _criterion.NotifyOnDuplicate = (bool)(e.Value ?? false))" />
+                            <span class="form-check-label">@T("Envoyer une notification")</span>
+                        </label>
+
+                        <p class="hint mt-2">
+                            @T("Le contrôle porte sur la création : import d'inventaire pour les ordinateurs, saisie manuelle pour les autres types. Un doublon détecté est toujours journalisé, même sans aucune des deux actions ci-dessus.")
+                        </p>
+
+                        @if (_selectedFields.Count == 0)
+                        {
+                            <div class="alert alert-warning mt-3 mb-0">
+                                @T("Aucun champ coché : ce critère ne contrôle rien pour l'instant.")
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}

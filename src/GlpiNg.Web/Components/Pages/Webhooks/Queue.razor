@@ -1,0 +1,135 @@
+@page "/config/webhooks/queue"
+@using GlpiNg.Web.Models.Webhooks
+@rendermode InteractiveServer
+
+<PageTitle>@T("File d'attente des webhooks — GlpiNg")</PageTitle>
+
+<WebhooksTabStrip Current="queue" />
+
+<div class="glping-list-page">
+<div class="card">
+    <div class="card-header d-flex align-items-center justify-content-between glping-list-toolbar">
+        <span class="fw-semibold">@T("{0} livraison(s)", _items.Count)</span>
+        <div class="btn-list align-items-center">
+            <button type="button" class="btn btn-icon" @onclick="LoadAsync" title="@(T("Rafraîchir"))">
+                <i class="ti ti-refresh"></i>
+            </button>
+            <button type="button" class="btn btn-outline-danger" disabled="@(SentOrFailedCount == 0)" @onclick="PurgeSentAndFailedAsync">
+                <i class="ti ti-trash me-1"></i>@T("Purger envoyés/échoués")
+            </button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th>@T("Webhook")</th>
+                    <th>@T("Événement")</th>
+                    <th>@T("Créé le")</th>
+                    <th>@T("Cible")</th>
+                    <th>@T("Statut")</th>
+                    <th>@T("Réponse")</th>
+                    <th>@T("Tentatives")</th>
+                    <th style="width: 10rem;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (_items.Count == 0)
+                {
+                    <tr>
+                        <td colspan="8" class="text-center text-secondary py-4">@T("La file d'attente est vide.")</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (QueuedWebhook item in _items)
+                    {
+                        <tr>
+                            <td>@item.WebhookName</td>
+                            <td class="text-secondary">@EventLabel(item)</td>
+                            <td class="text-nowrap">@Display.DateTime(item.CreatedAt)</td>
+                            <td class="text-secondary" style="word-break: break-all;">
+                                <span class="badge bg-secondary-lt me-1">@item.Method.ToString().ToUpperInvariant()</span>@item.Url
+                            </td>
+                            <td>
+                                <span class="badge @StatusBadgeClass(item.Status)">@StatusLabel(item.Status)</span>
+                                @if (!string.IsNullOrEmpty(item.LastError))
+                                {
+                                    <div class="text-danger small">@item.LastError</div>
+                                }
+                            </td>
+                            <td>@(item.ResponseStatusCode?.ToString() ?? "—")</td>
+                            <td>@item.Attempts</td>
+                            <td>
+                                <div class="btn-list">
+                                    <button type="button" class="btn btn-icon btn-sm" title="@(T("Voir le détail"))"
+                                            @onclick="() => Inspect(item)">
+                                        <i class="ti ti-eye"></i>
+                                    </button>
+                                    @if (item.Status == QueuedWebhookStatus.Failed)
+                                    {
+                                        <button type="button" class="btn btn-icon btn-sm" title="@(T("Remettre en file"))"
+                                                @onclick="() => RetryAsync(item.Id)">
+                                            <i class="ti ti-reload"></i>
+                                        </button>
+                                    }
+                                    <button type="button" class="btn btn-icon btn-sm text-danger" title="@(T("Supprimer"))"
+                                            @onclick="() => DeleteAsync(item.Id)">
+                                        <i class="ti ti-x"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
+
+@if (_inspected is { } inspected)
+{
+    <div class="card mt-3">
+        <div class="card-header d-flex align-items-center justify-content-between">
+            <span class="fw-semibold">
+                <i class="ti ti-eye me-2"></i>@T("Livraison #{0} — {1}", inspected.Id, inspected.WebhookName)
+            </span>
+            <button type="button" class="btn btn-icon btn-sm" title="@(T("Fermer"))" @onclick="() => _inspected = null">
+                <i class="ti ti-x"></i>
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="glping-fiche-field">
+                <label>@T("Cible")</label>
+                <div class="glping-fiche-value-box">@inspected.Method.ToString().ToUpperInvariant() @inspected.Url</div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(inspected.HeadersJson))
+            {
+                <div class="glping-fiche-block-title mt-3"><i class="ti ti-list-details"></i>@T("En-têtes supplémentaires")</div>
+                <pre class="small mb-0" style="white-space: pre-wrap; word-break: break-all;">@FormatHeaders(inspected.HeadersJson)</pre>
+            }
+
+            <div class="glping-fiche-block-title mt-3"><i class="ti ti-code"></i>@T("Corps envoyé")</div>
+            <pre class="small mb-0" style="white-space: pre-wrap; word-break: break-all;">@(inspected.Payload ?? T("(aucun corps — méthode GET)"))</pre>
+
+            @if (!string.IsNullOrEmpty(inspected.ResponseBody))
+            {
+                <div class="glping-fiche-block-title mt-3"><i class="ti ti-arrow-back"></i>@T("Réponse du destinataire")</div>
+                <pre class="small mb-0" style="white-space: pre-wrap; word-break: break-all;">@inspected.ResponseBody</pre>
+            }
+            else
+            {
+                @* Distinguer « pas de réponse » de « on ne l'a pas gardée » : sans ça, une
+                   livraison réussie sans corps affiché se lit comme un défaut. *@
+                <p class="hint mt-3">
+                    @(inspected.SaveResponseBody
+                        ? T("Le destinataire n'a rien renvoyé.")
+                        : T("La réponse n'est pas conservée pour ce webhook (option « Conserver la réponse »)."))
+                </p>
+            }
+        </div>
+    </div>
+}

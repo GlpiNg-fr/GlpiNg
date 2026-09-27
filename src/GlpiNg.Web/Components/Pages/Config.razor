@@ -1,45 +1,73 @@
-@page "/config"
-@using GlpiNg.Web.Models
-@using GlpiNg.Web.Services
-@inject AppSettingsFileStore SettingsStore
+﻿@page "/config"
+@using GlpiNg.Web.Components.Pages.ConfigSections
 @rendermode InteractiveServer
 
-<PageTitle>GlpiNg — Configuration</PageTitle>
+<PageTitle>@T("Configuration — GlpiNg")</PageTitle>
 
-<h1>Configuration</h1>
-
-@if (_settings is null)
-{
-    <p>Chargement…</p>
-}
-else
-{
-    <EditForm Model="_settings" OnValidSubmit="SaveAsync" class="config-form">
-        <div class="field">
-            <label for="urls">Adresses d'écoute du serveur</label>
-            <input id="urls" @bind="_settings.Urls" placeholder="http://0.0.0.0:5000" />
-            <p class="hint">
-                Clé de configuration "Urls" (adresses d'écoute Kestrel). Un
-                redémarrage de l'application est nécessaire pour appliquer ce
-                changement. Si un argument <code>--urls</code> ou une autre source de
-                configuration définit aussi les adresses d'écoute, vérifiez laquelle
-                l'emporte sur votre déploiement avant de vous fier uniquement à cette page.
-            </p>
-        </div>
-
-        <div class="field">
-            <label class="checkbox-label">
-                <input type="checkbox" @bind="_settings.SwaggerEnabled" />
-                Activer Swagger (/swagger)
-            </label>
-            <p class="hint">Pris en compte immédiatement, sans redémarrage.</p>
-        </div>
-
-        @if (_statusMessage is not null)
+<div class="glping-config">
+    <aside class="glping-config-sidebar">
+        @foreach (var section in Sections)
         {
-            <p class="status">@_statusMessage</p>
+            <button type="button"
+                    class="glping-config-nav-item @(section.Key == _activeSection ? "active" : "")"
+                    @onclick="() => SelectSection(section.Key)">
+                <i class="ti @section.Icon"></i>
+                <span>@T(section.Label)</span>
+            </button>
         }
+    </aside>
 
-        <button type="submit" disabled="@_isSaving">@(_isSaving ? "Enregistrement…" : "Enregistrer")</button>
-    </EditForm>
-}
+    <div class="glping-config-body">
+        @switch (_activeSection)
+        {
+            case "generale":
+                <GeneralSection />
+                break;
+            case "valeurs-par-defaut":
+                <DefaultValuesSection />
+                break;
+            case "parc":
+                <ParcSection />
+                break;
+            case "assistance":
+                <AssistanceSection />
+                break;
+            case "gestion":
+                <GestionSection />
+                break;
+            case "purge":
+                <PurgeSection />
+                break;
+            case "systeme":
+                <SystemSection />
+                break;
+            case "securite":
+                <SecuritySection />
+                break;
+            case "performance":
+                <PerformanceSection />
+                break;
+            case "api":
+                <ApiSection />
+                break;
+            case "analyse-impact":
+                <ImpactAnalysisSection />
+                break;
+            case "colonnes":
+                <DisplayColumnsSection />
+                break;
+            case "network":
+                <GlpiNetworkSection />
+                break;
+            case "helpdesk":
+                <HelpdeskSection />
+                break;
+            case "historique":
+                <HistorySection />
+                break;
+            case "tous":
+                <AllSections />
+                break;
+        }
+    </div>
+</div>

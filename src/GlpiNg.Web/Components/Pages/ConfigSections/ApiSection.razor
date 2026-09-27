@@ -1,0 +1,109 @@
+@using GlpiNg.Web.Models
+@using GlpiNg.Web.Services
+@inject SettingsCacheService SettingsStore
+@inject AppSettingsFileStore FileStore
+@inject ConfigHistoryService History
+@inject ToastService ToastService
+
+@if (_model is null || _server is null)
+{
+    <p>@T("Chargement…")</p>
+}
+else
+{
+    <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
+        <div class="glping-config-field checkbox">
+            <label for="api-hlapi">@T("Activer l'API")</label>
+            <label class="glping-switch">
+                <input id="api-hlapi" type="checkbox" @bind="_model.EnableHighLevelApi" />
+                <span class="glping-switch-slider"></span>
+            </label>
+        </div>
+
+        <div class="glping-config-field checkbox">
+            <label for="api-legacy">@T("Activer l'API REST legacy")</label>
+            <label class="glping-switch">
+                <input id="api-legacy" type="checkbox" @bind="_model.EnableLegacyRestApi" />
+                <span class="glping-switch-slider"></span>
+            </label>
+        </div>
+
+        <div class="glping-config-field checkbox">
+            <label for="swagger">@T("Activer Swagger (/swagger)")</label>
+            <label class="glping-switch">
+                <input id="swagger" type="checkbox" @bind="_server.SwaggerEnabled" />
+                <span class="glping-switch-slider"></span>
+            </label>
+        </div>
+        <p class="hint">@T("Pris en compte immédiatement, sans redémarrage.")</p>
+
+        <div class="glping-config-field">
+            <label for="api-url">@T("URL de l'API")</label>
+            <input id="api-url" @bind="_model.LegacyApiUrl" />
+        </div>
+        <p class="hint">
+            @T("L'API REST de GLPI est servie sur apirest.php et api.php/v1 ; l'API de haut niveau (v2) sur api.php, jetons OAuth sur api.php/token.")
+        </p>
+
+        <div class="glping-config-field checkbox">
+            <label for="api-login-creds">@T("Activer la connexion avec identifiants")</label>
+            <label class="glping-switch">
+                <input id="api-login-creds" type="checkbox" @bind="_model.EnableLoginWithCredentials" />
+                <span class="glping-switch-slider"></span>
+            </label>
+        </div>
+
+        <div class="glping-config-field checkbox">
+            <label for="api-login-token">@T("Activer la connexion avec un jeton externe")</label>
+            <label class="glping-switch">
+                <input id="api-login-token" type="checkbox" @bind="_model.EnableLoginWithExternalToken" />
+                <span class="glping-switch-slider"></span>
+            </label>
+        </div>
+
+        <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? T("Enregistrement…") : T("Enregistrer"))</button>
+    </EditForm>
+
+    <ApiClientsPanel />
+}
+
+@code {
+    private const string SectionName = "ApiSettings";
+
+    private ApiSettings? _model;
+    private ServerSettings? _server;
+    private bool _isSaving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _model = await SettingsStore.ReadSectionAsync<ApiSettings>(SectionName);
+        _server = await FileStore.ReadAsync();
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_model is null || _server is null)
+        {
+            return;
+        }
+
+        _isSaving = true;
+
+        try
+        {
+            var before = await SettingsStore.ReadSectionAsync<ApiSettings>(SectionName);
+            await SettingsStore.SaveSectionAsync(SectionName, _model);
+            await FileStore.SaveAsync(_server);
+            await History.AppendAsync("Administrateur", SettingsDiff.Compare(before, _model));
+            ToastService.Notify(new ToastMessage(ToastType.Success, T("Configuration enregistrée.")));
+        }
+        catch (IOException ex)
+        {
+            ToastService.Notify(new ToastMessage(ToastType.Danger, T("Échec de l'enregistrement : {0}", ex.Message)));
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+}

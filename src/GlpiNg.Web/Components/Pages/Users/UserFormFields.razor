@@ -1,0 +1,71 @@
+@using GlpiNg.Web.Models
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="glping-fiche-field">
+            <label>@T("Identifiant")</label>
+            <input class="form-control" @bind="User.UserName" @bind:event="oninput" @bind:after="NotifyChangedAsync" />
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Nom de famille")</label>
+            <input class="form-control" @bind="User.LastName" />
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Actif")</label>
+            <select class="form-select" value="@(User.IsActive ? "true" : "false")" @onchange="@(e => User.IsActive = e.Value?.ToString() == "true")">
+                <option value="false">@T("Non")</option>
+                <option value="true">@T("Oui")</option>
+            </select>
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Lieu")</label>
+            <input class="form-control" @bind="User.Location" />
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="glping-fiche-field">
+            <label>@T("Image")</label>
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:2.5rem;height:2.5rem;border-radius:6px;color:#fff;font-size:1rem;font-weight:600;background:@UserAvatar.Color(User)">@UserAvatar.Initials(User)</span>
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Prénom")</label>
+            <input class="form-control" @bind="User.FirstName" />
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Administrateur")</label>
+            <select class="form-select" value="@(User.IsAdmin ? "true" : "false")" @onchange="@(e => User.IsAdmin = e.Value?.ToString() == "true")">
+                <option value="false">@T("Non")</option>
+                <option value="true">@T("Oui")</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<div class="glping-fiche-block-title mt-2"><i class="ti ti-address-book"></i>@T("Information de contact")</div>
+<div class="row">
+    <div class="col-md-6">
+        <div class="glping-fiche-field">
+            <label>@T("E-mail")</label>
+            <input class="form-control" type="email" @bind="User.Email" />
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="glping-fiche-field">
+            <label>@T("Téléphone")</label>
+            <input class="form-control" @bind="User.Phone" />
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public GlpiUser User { get; set; } = null!;
+
+    // User est muté directement (référence partagée avec le parent) : ça ne déclenche pas
+    // le re-rendu du parent tout seul, d'où ce callback pour les cas où le parent affiche un
+    // état dérivé de User (ex. le bouton "Ajouter" désactivé tant que UserName est vide).
+    [Parameter]
+    public EventCallback OnChanged { get; set; }
+
+    private Task NotifyChangedAsync() => OnChanged.InvokeAsync();
+}

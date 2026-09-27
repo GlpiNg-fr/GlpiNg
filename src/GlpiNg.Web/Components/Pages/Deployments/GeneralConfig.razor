@@ -1,0 +1,72 @@
+﻿@page "/tools/deployments/config"
+@using GlpiNg.Modules.Deployment.Components.Pages.Deployments
+@using GlpiNg.Modules.Deployment.Models
+@rendermode InteractiveServer
+
+<PageTitle>@T("Déploiements — GlpiNg")</PageTitle>
+
+<DeploymentTopMenu Current="deploymentconfig" />
+
+@if (_model is null)
+{
+    <p>@T("Chargement…")</p>
+}
+else
+{
+    <div class="card">
+        <div class="glping-config">
+            <div class="glping-config-body">
+                <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
+                    <div class="glping-config-field">
+                        <label for="cfg-retention">@T("Supprimer les logs des tâches après (jours)")</label>
+                        <input id="cfg-retention" type="number" min="1" @bind="_model.TaskLogRetentionDays" />
+                    </div>
+
+                    <div class="glping-config-field checkbox">
+                        <label for="cfg-repare">@T("Préparer de nouveau les jobs réussis")</label>
+                        <label class="glping-switch">
+                            <input id="cfg-repare" type="checkbox" @bind="_model.RepareSuccessfulJobs" />
+                            <span class="glping-switch-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="glping-config-field">
+                        <label for="cfg-wake">@T("Nombre maximum d'agents à réveiller dans une tâche")</label>
+                        <input id="cfg-wake" type="number" min="1" @bind="_model.MaxAgentsToWakePerTask" />
+                    </div>
+
+                    <div class="glping-config-field checkbox">
+                        <label for="cfg-debug">@T("Extra-debug")</label>
+                        <label class="glping-switch">
+                            <input id="cfg-debug" type="checkbox" @bind="_model.ExtraDebug" />
+                            <span class="glping-switch-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="glping-config-divider">
+                        <span><i class="ti ti-server-2"></i> @T("Gestion de paquets")</span>
+                    </div>
+
+                    <div class="glping-config-field checkbox">
+                        <label for="cfg-mirror">@T("Utiliser ce serveur GlpiNg comme un serveur miroir")</label>
+                        <label class="glping-switch">
+                            <input id="cfg-mirror" type="checkbox" @bind="_model.UseCentralServerAsMirror" />
+                            <span class="glping-switch-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="glping-config-field">
+                        <label for="cfg-mirror-match">@T("Faire correspondre un miroir aux agents")</label>
+                        <select id="cfg-mirror-match" class="glping-config-input" @bind="_model.MirrorMatchMode">
+                            <option value="@DeploymentMirrorMatchMode.Location">@T("en se basant sur le lieu")</option>
+                            <option value="@DeploymentMirrorMatchMode.Entity">@T("en se basant sur l'entité")</option>
+                            <option value="@DeploymentMirrorMatchMode.Both">@T("en se basant sur les deux")</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? T("Enregistrement…") : T("Enregistrer"))</button>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}

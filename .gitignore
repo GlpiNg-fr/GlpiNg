@@ -1,6 +1,7 @@
 ## .NET
 bin/
 obj/
+obj_check/
 *.user
 *.suo
 
@@ -8,6 +9,12 @@ obj/
 *.db
 *.db-shm
 *.db-wal
+
+## AnthoDingo.Setup — écrit à la fin de l'installation, contient la chaîne de connexion
+appsettings.local.json
+
+## Historique des modifications enregistrées depuis /config (onglet "Historique")
+src/GlpiNg.Web/config-history.json
 
 ## IDE
 .vs/
@@ -17,3 +24,15 @@ obj/
 ## OS
 .DS_Store
 Thumbs.db
+
+## Racine du stockage (StoragePaths) : clés DataProtection, fragments de paquets, fichiers
+## documentaires, et appsettings.local.json (déjà ignoré par son nom plus haut). Rien de tout cela
+## ne se versionne.
+## Les deux orthographes sont couvertes : sous Windows, « data » se résout vers le dossier source
+## « Data/ » déjà présent, alors qu'un système sensible à la casse crée bien « data/ ».
+src/GlpiNg.Web/[Dd]ata/keys/
+src/GlpiNg.Web/[Dd]ata/packages/
+src/GlpiNg.Web/[Dd]ata/documents/
+
+## Cache du graphe de connaissances graphify (régénéré par `graphify update .`)
+graphify-out/
