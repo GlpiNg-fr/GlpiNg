@@ -1,5 +1,10 @@
 # GlpiNg
 
+> **Avertissement** — GlpiNg est un projet indépendant. Il n'est ni affilié à, ni approuvé,
+> soutenu ou sponsorisé par Teclib' ou le projet GLPI. « GLPI » et « GLPI-Agent » sont des
+> marques de leurs propriétaires respectifs ; elles ne sont citées ici que pour décrire la
+> compatibilité de GlpiNg avec le protocole GLPI-Agent et l'import depuis une base GLPI.
+
 Réimplémentation d'un serveur de gestion de parc informatique compatible avec le
 protocole **GLPI-Agent**, en .NET / Blazor Server. GlpiNg expose l'endpoint
 `/inventory` afin que de vrais agents GLPI-Agent (contact, inventory, deploy)
