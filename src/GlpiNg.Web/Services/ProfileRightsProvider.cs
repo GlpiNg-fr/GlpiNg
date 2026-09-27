@@ -24,6 +24,12 @@ public sealed class ProfileRightsProvider(
 
     private ProfileRights Resolve()
     {
+        // Appel d'API : droits du profil actif de la session (voir EntityScopeProvider).
+        if (httpContextAccessor.HttpContext?.Items[Api.GlpiApiAccess.RightsItemKey] is ProfileRights apiRights)
+        {
+            return apiRights;
+        }
+
         ClaimsPrincipal? user = GetUser();
 
         if (user?.Identity?.IsAuthenticated != true)

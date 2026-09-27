@@ -25,6 +25,13 @@ public sealed class EntityScopeProvider(
 
     private EntityScope Resolve()
     {
+        // Appel d'API : la session d'API porte ses entités actives, que des revendications ne
+        // sauraient pas toujours exprimer (« toutes les entités » d'un profil à plusieurs racines).
+        if (httpContextAccessor.HttpContext?.Items[Api.GlpiApiAccess.ScopeItemKey] is EntityScope apiScope)
+        {
+            return apiScope;
+        }
+
         ClaimsPrincipal? user = GetUser();
 
         if (user?.Identity?.IsAuthenticated != true)

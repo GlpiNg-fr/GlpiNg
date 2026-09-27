@@ -1,0 +1,86 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@using GlpiNg.Web.Api
+@using GlpiNg.Web.Data
+@using GlpiNg.Web.Models
+@using Microsoft.EntityFrameworkCore
+@inject IRootDbContextFactory DbFactory
+@inject GlpiApiSessionStore Sessions
+
+@* « Clés d'accès distant » des préférences de GLPI : jeton d'API personnel, qui ouvre une session
+   d'API sans mot de passe (Authorization: user_token ...). Seule son empreinte est conservée. *@
+
+<div class="card mt-3">
+    <div class="card-body">
+        <h3 class="card-title">@T("Clés d'accès distant")</h3>
+        <p class="text-secondary small">
+            @T("Le jeton d'API permet à un programme d'ouvrir une session d'API à votre nom, sans mot de passe (en-tête « Authorization: user_token … »).")
+        </p>
+        @if (_token is not null)
+        {
+            <div class="alert alert-warning">
+                @T("Copiez ce jeton maintenant, il ne sera plus affiché :")
+                <code class="d-block mt-1 user-select-all">@_token</code>
+            </div>
+        }
+        <p class="mb-2">
+            @if (_tokenDate is DateTime date)
+            {
+                @T("Jeton généré le {0}.", Display.DateTime(date))
+            }
+            else
+            {
+                @T("Aucun jeton d'API.")
+            }
+        </p>
+        <button type="button" class="btn btn-outline-primary btn-sm" @onclick="RegenerateAsync">@T("Régénérer")</button>
+        @if (_tokenDate is not null)
+        {
+            <button type="button" class="btn btn-outline-danger btn-sm ms-1" @onclick="RevokeAsync">@T("Supprimer")</button>
+        }
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthState { get; set; }
+
+    private int? _userId;
+    private DateTime? _tokenDate;
+    private string? _token;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthState is not null && int.TryParse((await AuthState).User.FindFirstValue(ClaimTypes.NameIdentifier), out int id))
+        {
+            _userId = id;
+            await using GlpiNgDbContext db = DbFactory.CreateDbContext();
+            _tokenDate = await db.Users.Where(u => u.Id == id).Select(u => u.ApiTokenDate).FirstOrDefaultAsync();
+        }
+    }
+
+    private async Task RegenerateAsync() => await SetAsync(GlpiApiAccess.NewToken());
+
+    private async Task RevokeAsync() => await SetAsync(null);
+
+    private async Task SetAsync(string? token)
+    {
+        if (_userId is not int id)
+        {
+            return;
+        }
+        await using GlpiNgDbContext db = DbFactory.CreateDbContext();
+        GlpiUser? user = await db.Users.FirstOrDefaultAsync(u => u.Id == id);
+        if (user is null)
+        {
+            return;
+        }
+        user.ApiTokenHash = token is null ? null : GlpiApiAccess.HashToken(token);
+        user.ApiTokenDate = token is null ? null : DateTime.UtcNow;
+        await db.SaveChangesAsync();
+        // Un jeton remplacé ne doit plus rien ouvrir, ni les sessions ouvertes avec lui.
+        Sessions.RemoveForUser(id);
+        _token = token;
+        _tokenDate = user.ApiTokenDate;
+    }
+}

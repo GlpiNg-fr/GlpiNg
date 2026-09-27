@@ -39,6 +39,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Métadonnées de GLPI (tables, options de recherche, schémas et documentation de l'API v2)
+         reproduites par les API REST — voir Api/Glpi/GlpiMetadata.cs et tools/glpi-api-metadata. -->
+    <EmbeddedResource Include="Api\Glpi\Metadata\*.gz" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\GlpiNg.Modules.Inventory\GlpiNg.Modules.Inventory.csproj" />
     <ProjectReference Include="..\GlpiNg.Modules.Abstractions\GlpiNg.Modules.Abstractions.csproj" />
     <ProjectReference Include="..\GlpiNg.Modules.Cron\GlpiNg.Modules.Cron.csproj" />
@@ -47,6 +53,7 @@
     <ProjectReference Include="..\GlpiNg.Modules.KnowledgeBase\GlpiNg.Modules.KnowledgeBase.csproj" />
     <ProjectReference Include="..\GlpiNg.Modules.Management\GlpiNg.Modules.Management.csproj" />
     <ProjectReference Include="..\GlpiNg.Modules.Assistance\GlpiNg.Modules.Assistance.csproj" />
+    <ProjectReference Include="..\GlpiNg.Plugins.Sdk\GlpiNg.Plugins.Sdk.csproj" />
   </ItemGroup>
 
 </Project>

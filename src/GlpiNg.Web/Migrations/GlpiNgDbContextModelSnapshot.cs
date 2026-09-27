@@ -5666,6 +5666,54 @@ namespace GlpiNg.Web.Migrations
                     b.ToTable("SupplierContacts");
                 });
 
+            modelBuilder.Entity("GlpiNg.Web.Models.ApiClient", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("AppTokenDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AppTokenHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("Ipv4RangeEnd")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("Ipv4RangeStart")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Ipv6")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("LogMethod")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ApiClients");
+                });
+
             modelBuilder.Entity("GlpiNg.Web.Models.AppSetting", b =>
                 {
                     b.Property<string>("SectionName")
@@ -6801,6 +6849,13 @@ namespace GlpiNg.Web.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime?>("ApiTokenDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ApiTokenHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
                     b.Property<int>("AuthSource")
                         .HasColumnType("int");
 
@@ -6894,6 +6949,8 @@ namespace GlpiNg.Web.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ApiTokenHash");
 
                     b.HasIndex("LdapServerId");
 

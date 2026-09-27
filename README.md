@@ -875,6 +875,85 @@ simplification assumée de la matrice très fine de GLPI.
 `user:enable`, `user:disable` — utile quand l'UI n'est pas accessible (base à
 initialiser, mot de passe admin perdu).
 
+### API REST de GLPI (`apirest.php` et `api.php`)
+
+Les deux API de GLPI 11, servies telles qu'un client écrit pour GLPI les attend :
+mêmes URL, mêmes paramètres, mêmes réponses, mêmes codes d'erreur. Elles reposent
+sur les **tables virtuelles** de `src/GlpiNg.Web/Api/Glpi/Data` — `glpi_computers`,
+`glpi_tickets`... avec les colonnes, les identifiants et les conventions de GLPI
+(0 = entité racine, 0 = « aucune valeur »), alimentées colonne par colonne par le
+modèle GlpiNg (`GlpiTableCatalog.*.cs`). Les métadonnées — colonnes de chaque
+table, options de recherche de chaque itemtype, schémas et documentation OpenAPI
+de l'API v2, profils et configuration par défaut — ne sont pas réécrites à la
+main : elles sont produites depuis une version publiée de GLPI (11.0.9) par
+`tools/glpi-api-metadata/generate.php`, qui exécute le code de GLPI hors base.
+
+**API v1** (`/apirest.php`, `/api.php/v1`, et `/api/` pour la réécriture
+documentée par GLPI) — `Api/Legacy` :
+
+- **Session** : `initSession` (Basic, `Authorization: user_token …`, ou
+  login/password), `killSession`, `getFullSession`, profils (`getMyProfiles`,
+  `getActiveProfile`, `changeActiveProfile`), entités (`getMyEntities`,
+  `getActiveEntities`, `changeActiveEntities`), `getGlpiConfig`.
+- **Lecture** : `getItem` (avec `expand_dropdowns`, `get_hateoas`, `get_sha1`,
+  `add_keys_names`, `with_devices`, `with_disks`, `with_networkports`,
+  `with_documents`, `with_notes`, `with_logs`...), `getItems` (`range`, `sort`,
+  `order`, `searchText`, `is_deleted`, `only_id`), sous-éléments
+  (`/:itemtype/:id/:sub_itemtype`), `getMultipleItems`, `listSearchOptions`, et
+  `search` : le moteur à options numérotées de GLPI, jointures comprises
+  (`criteria` imbriqués, `forcedisplay`, `withindexes`, `uid_cols`, `AllAssets`).
+  206 + `Content-Range` / `Accept-Range` sur les pages partielles.
+- **Écriture** : `POST`, `PUT`/`PATCH`, `DELETE` (`force_purge`), en entrée unique
+  ou multiple (207 en échec partiel), téléversement de documents
+  (`uploadManifest`), téléchargement (`Accept: application/octet-stream`),
+  actions massives (`getMassiveActions`, `applyMassiveAction`).
+- La racine de l'API sert `apirest.md`, la documentation de GLPI.
+
+**API v2** (`/api.php`, versions 2.0 à 2.3 par préfixe `/v2.x/` ou en-tête
+`GLPI-API-Version`) — `Api/HighLevel` :
+
+- Jeton : `POST /api.php/token` (grants `password` et `client_credentials` des
+  clients OAuth de `/config/oauth-clients`), puis `Authorization: Bearer …` ;
+  en-têtes `GLPI-Profile`, `GLPI-Entity`, `GLPI-Entity-Recursive`.
+- Les routes sont celles de la documentation OpenAPI de GLPI (servie sur
+  `/api.php/doc.json`, Swagger sur `/api.php/doc`) : recherche avec filtres
+  **RSQL** (`filter`), `start`, `limit` (100 par défaut), `sort`, lecture,
+  création, modification (`PATCH`), suppression (`force`), sous-ressources
+  (`/Assets/Computer/{id}/Antivirus`...), `/session`, `/Session/EntityTree`,
+  `/Administration/User/Me`, `/Assets/Global`, listes de types (`/Assets/`...).
+  Les objets rendus suivent les schémas de GLPI, jointures (`entity`, `status`,
+  `location`...) et équipe des tickets comprises.
+
+**Accès** (commun) :
+
+- **Clients d'API** (`/config`, onglet API) : un appel n'est accepté que si un
+  client actif couvre l'adresse de l'appelant et, s'il en a un, présente son
+  `App-Token`. L'installation en sème deux, comme GLPI : « full access from
+  localhost » actif, « full access from anywhere » désactivé. Les jetons
+  d'application et les jetons d'API personnels (`/preferences`, « Clés d'accès
+  distant ») ne sont conservés que sous forme d'empreinte : ils ne s'affichent
+  qu'à leur génération.
+- **Cloisonnement et droits** : la session d'API est rattachée à la requête, donc
+  tout contexte EF porte le périmètre d'entité et les droits du profil actif. Les
+  droits nommés de GLPI (une centaine) sont dérivés des six droits par section de
+  GlpiNg — voir `Api/GlpiApiProfiles`. La visibilité des articles de la base de
+  connaissances s'applique aussi à l'API.
+- Réglages (`/config`, onglet API) : activation de chaque API, de la connexion par
+  identifiants et par jeton utilisateur.
+
+Limites connues :
+
+- Un itemtype de GLPI sans équivalent dans GlpiNg (logiciels, projets, infocoms...)
+  est valide mais **vide** ; une colonne que GlpiNg n'alimente pas est servie à sa
+  valeur par défaut et ignorée en écriture (`comment` d'un ordinateur, par exemple).
+- Les champs que GlpiNg stocke en texte (fabricant, modèle, utilisateur d'un actif)
+  sont exposés comme l'identifiant de l'intitulé de même nom, 0 s'il n'existe pas.
+- v1 : sessions en mémoire (un redémarrage les perd) ; critères « meta » de la
+  recherche non évalués (ils ne retiennent rien) ; `lostPassword` indisponible.
+- v2 : pas de grant `authorization_code` ni `refresh_token`, pas de GraphQL ;
+  les routes dont le périmètre ne se déduit pas du chemin répondent 501.
+- Les écritures par l'API n'alimentent pas encore l'historique des objets.
+
 ### Protocole GLPI-Agent (`/inventory`)
 
 Endpoint POST unique dispatché sur un champ `action` :
@@ -1203,9 +1282,6 @@ matrice appliquée est celle de GLPI par défaut, en dur.
 
 ### Manques transverses
 
-- **Pas d'API REST générique** — rien d'équivalent à `apirest.php` (CRUD et
-  recherche par itemtype). Les seuls endpoints exposés sont `/inventory`,
-  `/oauth2/token`, `/admin/import/glpi` et l'upload de fichiers de paquet.
 - **Traductions à relire** — les dix catalogues (toutes les langues sauf le français) ont été
   produits d'un bloc et n'ont pas été relus par des locuteurs natifs ; certaines
   phrases longues, coupées par du balisage (`<code>`, `<strong>`), sont traduites

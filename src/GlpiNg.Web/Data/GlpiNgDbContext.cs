@@ -132,6 +132,8 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
 
     public DbSet<OAuthClient> OAuthClients => Set<OAuthClient>();
 
+    public DbSet<ApiClient> ApiClients => Set<ApiClient>();
+
     public DbSet<CronSettings> CronSettings => Set<CronSettings>();
 
     public DbSet<AutomaticActionState> AutomaticActionStates => Set<AutomaticActionState>();
@@ -687,6 +689,18 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
         modelBuilder.Entity<OAuthClient>()
             .HasIndex(c => c.Name)
             .IsUnique();
+
+        // Recherche d'un compte par son jeton d'API personnel (initSession avec user_token). Longueur
+        // bornée : SQL Server n'indexe pas un nvarchar(max). Empreinte SHA-256 en hexadécimal.
+        modelBuilder.Entity<GlpiUser>()
+            .Property(u => u.ApiTokenHash)
+            .HasMaxLength(64);
+        modelBuilder.Entity<GlpiUser>()
+            .HasIndex(u => u.ApiTokenHash);
+
+        modelBuilder.Entity<ApiClient>()
+            .Property(c => c.AppTokenHash)
+            .HasMaxLength(64);
 
         modelBuilder.Entity<SavedSearchOrder>()
             .HasIndex(o => new { o.UserId, o.SavedSearchId })

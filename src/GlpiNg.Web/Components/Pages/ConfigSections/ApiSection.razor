@@ -42,9 +42,7 @@ else
             <input id="api-url" @bind="_model.LegacyApiUrl" />
         </div>
         <p class="hint">
-            GlpiNg expose déjà sa propre API REST (voir <code>/swagger</code> ci-dessus) : ces
-            @T("réglages ne font que documenter des équivalents GLPI, ils ne pilotent pas encore ce")
-            @T("endpoint.")
+            @T("L'API REST de GLPI est servie sur apirest.php et api.php/v1 ; l'API de haut niveau (v2) sur api.php, jetons OAuth sur api.php/token.")
         </p>
 
         <div class="glping-config-field checkbox">
@@ -65,6 +63,8 @@ else
 
         <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? T("Enregistrement…") : T("Enregistrer"))</button>
     </EditForm>
+
+    <ApiClientsPanel />
 }
 
 @code {

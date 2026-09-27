@@ -13,6 +13,9 @@ overview — read it for feature scope, current state, and known limitations.
 ## Commands
 
 ```bash
+# Every GlpiNg.Modules.* project and the plugin SDK is a git submodule (own AGPL-3.0 repo under GlpiNg-fr)
+git submodule update --init
+
 # Restore, build, run (from repo root or src/GlpiNg.Web)
 dotnet restore
 dotnet build GlpiNg.sln
@@ -69,6 +72,30 @@ a plain class library referenced only by the host — never the reverse.
   knowledge base's "Documents" tab does. Bytes live under `StoragePaths.Documents`, sharded
   by SHA-256, so identical content is stored once; `/documents/{id}/download` always serves
   `application/octet-stream` as an attachment, never the declared MIME type.
+
+**Plugins** (`GlpiNg.Plugins.Sdk`, packed to NuGet together with `GlpiNg.Modules.Abstractions`, its
+dependency): a plugin is a class library with one public `IGlpiNgPlugin`, whose `ConfigureServices`
+is called by `Services/Plugins/PluginLoader` after every built-in module — it contributes
+`IMenuProvider`/`IReportProvider`/`ICronTask`... exactly like an `AddXxxModule`. The host loads
+`{StoragePaths.Plugins}/{Name}/{Name}.dll` at startup (setup complete only) into the **default**
+load context, so shared contracts unify with the host's; plugins must reference the SDK with
+`ExcludeAssets="runtime"`. Their `@page`s are routed via `LoadedPlugins` (Routes.razor and
+`AddAdditionalAssemblies`). No DB tables, no `wwwroot`, no unload yet — distribution/installation
+is a follow-up.
+
+**GLPI REST APIs** (`GlpiNg.Web/Api`, mapped in `Program.cs` with `MapMethods` on `/apirest.php`,
+`/api/` → v1 `Legacy/LegacyApiHandler`, and `/api.php` → v2 `HighLevel/HighLevelApiHandler`, v1 when
+prefixed `/v1`). Both run on **virtual GLPI tables** (`Api/Glpi/Data`): `GlpiTableCatalog.*.cs`
+declares, per GLPI table, which model property feeds which GLPI column (`Col`, `Fk` 0↔null, `Entity`
+root↔0, `Named` for dropdowns GlpiNg stores as text, `Computed` for in-memory values, `UnionGlpiTable`
+when GLPI has rows GlpiNg keeps as fields). Undeclared tables are valid but empty; undeclared columns
+render GLPI's default. `EfGlpiTable` pushes filters/sort/paging to SQL when every column involved has an
+expression, else evaluates in memory — keep big tables translatable. GLPI metadata (columns, search
+options, v2 schemas with `x-field`/`x-join`, OpenAPI) is **generated, never hand-edited**: rerun
+`tools/glpi-api-metadata/generate.php <glpi release> src/GlpiNg.Web/Api/Glpi/Metadata`. Auth:
+`GlpiApiAccess` checks API clients (IP + App-Token hash), opens a `GlpiApiSession`, and attaches it to
+`HttpContext.Items` — `EntityScopeProvider`/`ProfileRightsProvider` read it first, so every EF context
+and service is scoped to the session's active entities and profile.
 
 **Module registration pattern**: each module exposes a single `AddXxxModule(...)`
 extension (e.g. `InventoryModuleServiceCollectionExtensions.AddInventoryModule`)
@@ -249,3 +276,13 @@ adaptation, not a certified reproduction of the wire protocol. `DeployJobJsonBui
 constructs the job JSON (`jobs.checks/associatedFiles/actions`, files keyed by SHA512
 hash) served to agents; `GET /inventory/deploy/file/{sha512}` serves package files
 by hash.
+
+## graphify
+
+This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+
+Rules:
+- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
+- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
+- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
+- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
