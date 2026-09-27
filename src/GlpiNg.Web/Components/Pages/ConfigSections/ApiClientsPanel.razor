@@ -1,0 +1,201 @@
+@using System.Net
+@using System.Net.Sockets
+@using GlpiNg.Web.Api
+@using GlpiNg.Web.Data
+@using GlpiNg.Web.Models
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<GlpiNgDbContext> DbFactory
+@inject ToastService ToastService
+
+@* Clients de l'API (glpi_apiclients de GLPI) : l'API n'accepte un appel que d'une adresse couverte
+   par un client actif, et exige son jeton d'application s'il en a un. Le jeton n'est conservé que
+   sous forme d'empreinte : il est montré une seule fois, à sa génération. *@
+
+<h3 class="glping-config-subtitle">@T("Clients de l'API")</h3>
+<p class="hint" style="margin-left:0;">
+    @T("Un appel à l'API n'est accepté que si un client actif couvre l'adresse IP de l'appelant. Si ce client a un jeton d'application, l'appel doit le présenter dans l'en-tête App-Token.")
+</p>
+
+@if (_newToken is not null)
+{
+    <div class="alert alert-warning">
+        @T("Jeton d'application de « {0} » — copiez-le maintenant, il ne sera plus affiché :", _newTokenClient ?? string.Empty)
+        <code class="d-block mt-1 user-select-all">@_newToken</code>
+    </div>
+}
+
+@if (_clients is null)
+{
+    <p>@T("Chargement…")</p>
+}
+else
+{
+    <table class="table table-sm align-middle">
+        <thead>
+            <tr>
+                <th>@T("Nom")</th>
+                <th>@T("Actif")</th>
+                <th>@T("Plage IPv4")</th>
+                <th>@T("Adresse IPv6")</th>
+                <th>@T("Jeton d'application")</th>
+                <th>@T("Journalisation")</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (ApiClientRow row in _clients)
+            {
+                <tr>
+                    <td><input class="form-control form-control-sm" @bind="row.Name" /></td>
+                    <td><input type="checkbox" @bind="row.IsActive" /></td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <input class="form-control form-control-sm" placeholder="@T("toutes")" @bind="row.Ipv4Start" />
+                            <input class="form-control form-control-sm" placeholder="@T("toutes")" @bind="row.Ipv4End" />
+                        </div>
+                    </td>
+                    <td><input class="form-control form-control-sm" placeholder="@T("toutes")" @bind="row.Ipv6" /></td>
+                    <td>
+                        @(row.HasToken ? T("Oui") : T("Non"))
+                        <button type="button" class="btn btn-link btn-sm" @onclick="() => row.RegenerateToken = true" disabled="@(row.RegenerateToken)">@T("Régénérer")</button>
+                        @if (row.HasToken)
+                        {
+                            <button type="button" class="btn btn-link btn-sm" @onclick="() => row.RemoveToken = true" disabled="@(row.RemoveToken)">@T("Retirer")</button>
+                        }
+                    </td>
+                    <td>
+                        <select class="form-select form-select-sm" @bind="row.LogMethod">
+                            <option value="@ApiClientLogMethod.None">@T("Aucune")</option>
+                            <option value="@ApiClientLogMethod.Historical">@T("Historique")</option>
+                            <option value="@ApiClientLogMethod.Logs">@T("Journaux")</option>
+                        </select>
+                    </td>
+                    <td class="text-nowrap">
+                        <button type="button" class="btn btn-primary btn-sm" @onclick="() => SaveAsync(row)">@T("Enregistrer")</button>
+                        @if (row.Id != 0)
+                        {
+                            <button type="button" class="btn btn-outline-danger btn-sm" @onclick="() => DeleteAsync(row)">@T("Supprimer")</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <button type="button" class="btn btn-outline-primary btn-sm" @onclick="Add">@T("Ajouter un client")</button>
+}
+
+@code {
+    private List<ApiClientRow>? _clients;
+    private string? _newToken;
+    private string? _newTokenClient;
+
+    private sealed class ApiClientRow
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public bool IsActive { get; set; } = true;
+        public string? Ipv4Start { get; set; }
+        public string? Ipv4End { get; set; }
+        public string? Ipv6 { get; set; }
+        public bool HasToken { get; set; }
+        public bool RegenerateToken { get; set; }
+        public bool RemoveToken { get; set; }
+        public ApiClientLogMethod LogMethod { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        await using GlpiNgDbContext db = await DbFactory.CreateDbContextAsync();
+        _clients = [.. (await db.ApiClients.AsNoTracking().OrderBy(c => c.Name).ToListAsync()).Select(c => new ApiClientRow
+        {
+            Id = c.Id,
+            Name = c.Name,
+            IsActive = c.IsActive,
+            Ipv4Start = LongToIp(c.Ipv4RangeStart),
+            Ipv4End = LongToIp(c.Ipv4RangeEnd),
+            Ipv6 = c.Ipv6,
+            HasToken = !string.IsNullOrEmpty(c.AppTokenHash),
+            LogMethod = c.LogMethod,
+        })];
+    }
+
+    private void Add() => _clients?.Add(new ApiClientRow { Name = T("Nouveau client") });
+
+    private async Task SaveAsync(ApiClientRow row)
+    {
+        if (string.IsNullOrWhiteSpace(row.Name))
+        {
+            ToastService.Notify(new ToastMessage(ToastType.Danger, T("Le nom est obligatoire.")));
+            return;
+        }
+        if (!TryIp(row.Ipv4Start, out long? start) || !TryIp(row.Ipv4End ?? row.Ipv4Start, out long? end)
+            || (!string.IsNullOrWhiteSpace(row.Ipv6) && !(IPAddress.TryParse(row.Ipv6, out IPAddress? v6) && v6.AddressFamily == AddressFamily.InterNetworkV6)))
+        {
+            ToastService.Notify(new ToastMessage(ToastType.Danger, T("Adresse IP invalide.")));
+            return;
+        }
+
+        await using GlpiNgDbContext db = await DbFactory.CreateDbContextAsync();
+        ApiClient? client = row.Id == 0 ? null : await db.ApiClients.FirstOrDefaultAsync(c => c.Id == row.Id);
+        if (client is null)
+        {
+            client = new ApiClient { Name = row.Name };
+            db.ApiClients.Add(client);
+        }
+        client.Name = row.Name.Trim();
+        client.IsActive = row.IsActive;
+        client.Ipv4RangeStart = start;
+        client.Ipv4RangeEnd = start is null ? null : end ?? start;
+        client.Ipv6 = string.IsNullOrWhiteSpace(row.Ipv6) ? null : row.Ipv6.Trim();
+        client.LogMethod = row.LogMethod;
+        client.UpdatedAt = DateTime.UtcNow;
+
+        _newToken = null;
+        if (row.RemoveToken)
+        {
+            client.AppTokenHash = null;
+            client.AppTokenDate = null;
+        }
+        if (row.RegenerateToken)
+        {
+            string token = GlpiApiAccess.NewToken();
+            client.AppTokenHash = GlpiApiAccess.HashToken(token);
+            client.AppTokenDate = DateTime.UtcNow;
+            _newToken = token;
+            _newTokenClient = client.Name;
+        }
+
+        await db.SaveChangesAsync();
+        ToastService.Notify(new ToastMessage(ToastType.Success, T("Client de l'API enregistré.")));
+        await LoadAsync();
+    }
+
+    private async Task DeleteAsync(ApiClientRow row)
+    {
+        await using GlpiNgDbContext db = await DbFactory.CreateDbContextAsync();
+        await db.ApiClients.Where(c => c.Id == row.Id).ExecuteDeleteAsync();
+        _newToken = null;
+        await LoadAsync();
+    }
+
+    private static bool TryIp(string? text, out long? value)
+    {
+        value = null;
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return true;
+        }
+        if (!IPAddress.TryParse(text.Trim(), out IPAddress? ip) || ip.AddressFamily != AddressFamily.InterNetwork)
+        {
+            return false;
+        }
+        byte[] b = ip.GetAddressBytes();
+        value = ((long)b[0] << 24) | ((long)b[1] << 16) | ((long)b[2] << 8) | b[3];
+        return true;
+    }
+
+    private static string? LongToIp(long? value)
+        => value is long v ? $"{(v >> 24) & 255}.{(v >> 16) & 255}.{(v >> 8) & 255}.{v & 255}" : null;
+}

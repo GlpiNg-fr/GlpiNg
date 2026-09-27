@@ -95,4 +95,13 @@ public class GlpiUser
     public bool TwoFactorAuthDisabled { get; set; }
 
     public List<GlpiGroupUser> GroupMemberships { get; set; } = [];
+
+    /// <summary>
+    /// « Clé d'accès distant » de GLPI (glpi_users.api_token) : jeton personnel ouvrant une session
+    /// d'API sans mot de passe (<c>Authorization: user_token ...</c>). Seule son empreinte SHA-256
+    /// est conservée — le jeton n'est montré qu'une fois, à sa génération.
+    /// </summary>
+    public string? ApiTokenHash { get; set; }
+
+    public DateTime? ApiTokenDate { get; set; }
 }

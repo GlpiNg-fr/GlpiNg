@@ -45,6 +45,7 @@ public sealed class StoragePaths : IStoragePaths
         Keys = Path.Combine(Root, "keys");
         Packages = Path.Combine(Root, "packages");
         Documents = Path.Combine(Root, "documents");
+        Plugins = Path.Combine(Root, "plugins");
         LocalSettings = Path.Combine(Root, LocalSettingsFileName);
     }
 
@@ -72,6 +73,9 @@ public sealed class StoragePaths : IStoragePaths
     public string LocalSettings { get; }
 
     public string Keys { get; }
+
+    /// <summary>Plugins installés, un dossier par plugin (voir <c>PluginLoader</c>).</summary>
+    public string Plugins { get; }
 
     public string Packages { get; }
 

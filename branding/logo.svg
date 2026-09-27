@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="GlpiNg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4f71bd"/>
+      <stop offset="1" stop-color="#2b4275"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <!-- G : un arc ouvert en haut à droite, dont la barre rejoint le nœud central -->
+  <path d="M43.5 19.5A18 18 0 1 0 50 34H34" fill="none" stroke="#fff" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- « ping » : un point et ses ondes, dans l'ouverture du G -->
+  <circle cx="50" cy="14" r="3.2" fill="#f7b731"/>
+  <path d="M50 7.5a6.5 6.5 0 0 1 6.5 6.5" fill="none" stroke="#f7b731" stroke-width="2.4" stroke-linecap="round"/>
+</svg>

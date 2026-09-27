@@ -36,6 +36,7 @@ using GlpiNg.Web.Services.Notifications;
 using GlpiNg.Modules.Abstractions.ExternalLinks;
 using GlpiNg.Web.Services.ExternalLinks;
 using GlpiNg.Web.Services.Webhooks;
+using GlpiNg.Web.Services.Plugins;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -282,6 +283,9 @@ public class Program
         // dans appsettings.local.json (ou une variable d'environnement) pour l'activer.
         string? fallbackConnectionString = builder.Configuration.GetConnectionString("FallbackConnection");
 
+        // Rempli seulement une fois l'installation terminée, comme les modules ; enregistré dans
+        // tous les cas pour Routes.razor.
+        LoadedPlugins loadedPlugins = new([]);
         if (builder.Configuration["Setup:IsComplete"] == "true"
             && configuredProviderRaw is not null
             && configuredConnectionString is not null
@@ -324,6 +328,12 @@ public class Program
             builder.Services.AddSingleton<EntityTreeCache>();
             builder.Services.AddScoped<IEntityScopeProvider, EntityScopeProvider>();
             builder.Services.AddScoped<IProfileRightsProvider, ProfileRightsProvider>();
+
+            // API REST de GLPI (voir Api/) : catalogue des tables virtuelles et sessions d'API
+            // partagés par tout le serveur ; l'accès (client, compte, cloisonnement) est par requête.
+            builder.Services.AddSingleton<GlpiNg.Web.Api.Glpi.Data.GlpiTableCatalog>();
+            builder.Services.AddSingleton<GlpiNg.Web.Api.GlpiApiSessionStore>();
+            builder.Services.AddScoped<GlpiNg.Web.Api.GlpiApiAccess>();
 
             // Préférences d'affichage du compte connecté, consultées par les pages des modules
             // (taille des tableaux, adresses MAC, dates, fuseau, noms...). Scoped : une lecture par
@@ -571,7 +581,12 @@ public class Program
             builder.Services.AddScoped<EventLogService>();
 
             builder.Services.AddCronModule();
+
+            // Plugins personnels (voir GlpiNg.Plugins.Sdk) : après tous les modules, pour qu'un
+            // plugin se branche sur les mêmes services qu'eux.
+            loadedPlugins = PluginLoader.Load(storagePaths.Plugins, builder.Services, builder.Configuration);
         }
+        builder.Services.AddSingleton(loadedPlugins);
 
         WebApplication app = builder.Build();
 
@@ -666,6 +681,20 @@ public class Program
         // et /Account/Login|Logout ne portent pas de cookie de session applicative.
         app.MapControllers();
 
+        // API REST de GLPI, sur ses propres URL : apirest.php et api.php/v1 (v1), api.php (v2), et
+        // api/ que GLPI documente comme réécriture de apirest.php. Anonymes au sens du cookie :
+        // l'authentification est celle de GLPI (jetons de session, d'utilisateur, OAuth).
+        string[] glpiApiVerbs = ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"];
+        app.MapMethods("/apirest.php/{**path}", glpiApiVerbs,
+                (HttpContext context, string? path) => GlpiNg.Web.Api.Legacy.LegacyApiHandler.HandleAsync(context, path))
+            .AllowAnonymous().DisableAntiforgery().ExcludeFromDescription();
+        app.MapMethods("/api/{**path}", glpiApiVerbs,
+                (HttpContext context, string? path) => GlpiNg.Web.Api.Legacy.LegacyApiHandler.HandleAsync(context, path))
+            .AllowAnonymous().DisableAntiforgery().ExcludeFromDescription();
+        app.MapMethods("/api.php/{**path}", glpiApiVerbs,
+                (HttpContext context, string? path) => GlpiNg.Web.Api.HighLevel.HighLevelApiHandler.HandleAsync(context, path))
+            .AllowAnonymous().DisableAntiforgery().ExcludeFromDescription();
+
         // Toutes les pages Blazor exigent une session authentifiée, sauf celles marquées
         // @attribute [AllowAnonymous] (Login.razor). AddAdditionalAssemblies expose les pages
         // @page définies dans les modules (ex. Components/Pages/Computers dans Inventory), dont
@@ -678,11 +707,14 @@ public class Program
             // déclaré au seul Router donne des pages qui s'ouvrent depuis le menu mais répondent
             // 404 quand on colle leur adresse — c'était le cas de la base de connaissances.
             .AddAdditionalAssemblies(
-                typeof(InventoryModuleServiceCollectionExtensions).Assembly,
-                typeof(DeploymentModuleServiceCollectionExtensions).Assembly,
-                typeof(KnowledgeBaseModuleServiceCollectionExtensions).Assembly,
-                typeof(ManagementModuleServiceCollectionExtensions).Assembly,
-                typeof(AssistanceModuleServiceCollectionExtensions).Assembly)
+                [
+                    typeof(InventoryModuleServiceCollectionExtensions).Assembly,
+                    typeof(DeploymentModuleServiceCollectionExtensions).Assembly,
+                    typeof(KnowledgeBaseModuleServiceCollectionExtensions).Assembly,
+                    typeof(ManagementModuleServiceCollectionExtensions).Assembly,
+                    typeof(AssistanceModuleServiceCollectionExtensions).Assembly,
+                    .. loadedPlugins.Assemblies,
+                ])
             .RequireAuthorization()
             // Les conventions posées ici (RequireAuthorization ci-dessus) ne s'appliquent pas
             // qu'aux pages : elles retombent aussi sur les endpoints du hub SignalR (/_blazor,
