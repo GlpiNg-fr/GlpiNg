@@ -1361,7 +1361,9 @@ dotnet run -- db:check --fix
 dotnet run -- user:resetpassword admin
 ```
 
-Il n'y a pas de projet de tests ni de pipeline CI dans ce repo actuellement.
+Il n'y a pas de projet de tests. Les workflows GitHub (`.github/workflows`) compilent
+la solution et vérifient les migrations à chaque PR, et publient une release (archives
+et image de conteneur) à chaque tag de version.
 `appsettings.local.json` (écrit par l'assistant d'installation, gitignored) a
 priorité sur `appsettings.json` une fois l'installation terminée et ne doit
 jamais être committé.
@@ -1384,3 +1386,27 @@ par-dessus une base déjà remplie.
 > (système de fichiers insensible à la casse) : les fichiers d'exécution
 > atterrissent donc dans `src/GlpiNg.Web/Data/`. Régler `Storage:RootPath` sur un
 > chemin explicite, hors de l'arborescence des sources, évite ce mélange.
+
+### Conteneur
+
+Chaque release publie une image `ghcr.io/glping-fr/glping` (amd64, arm64), exécutée sans
+droits root (UID 1654) :
+
+```bash
+docker run -d --name glping -p 8080:8080 -v glping-data:/data ghcr.io/glping-fr/glping:1.0.0-RC1
+```
+
+L'application écoute sur le port 8080 et ouvre l'assistant `/setup` au premier démarrage.
+La racine du stockage est `/data` : c'est le seul volume à conserver et à sauvegarder
+(`appsettings.local.json`, clés, paquets, documents, plugins). Un volume monté depuis
+l'hôte doit être accessible en écriture à l'UID 1654. L'adresse d'écoute est fixée par
+l'image (`Urls`) : la modifier depuis `/config` n'a pas d'effet, publier un autre port
+avec `-p`. L'historique de `/config` et le réglage Swagger ne sont pas dans `/data` et
+repartent de zéro quand le conteneur est recréé.
+
+`docker-compose.yml`, à la racine, est un modèle complet : GlpiNg avec PostgreSQL (variantes
+MySQL et SQL Server en commentaires), et les valeurs à saisir dans l'assistant.
+`GLPING_DB_PASSWORD='…' docker compose up -d`, puis http://localhost:8080.
+
+Pour construire l'image soi-même, depuis la racine du dépôt (sous-modules récupérés) :
+`docker build -t glping .`
