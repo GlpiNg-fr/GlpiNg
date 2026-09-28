@@ -54,3 +54,41 @@ jobs:
         run: |
           dotnet tool restore
           dotnet ef migrations has-pending-model-changes --no-build --configuration Release
+
+  # L'image se construit, démarre sans droits root et répond (redirection vers l'assistant
+  # d'installation, faute de base configurée).
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          load: true
+          tags: glping:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Démarrage rootless
+        run: |
+          docker run -d --name glping -p 8080:8080 glping:ci
+          uid=$(docker exec glping id -u)
+          echo "UID du processus : $uid"
+          if [ "$uid" = "0" ]; then echo "::error::Le conteneur tourne en root."; exit 1; fi
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/ || true)
+            [ "$code" != "000" ] && break
+            sleep 2
+          done
+          location=$(curl -s -o /dev/null -w "%{redirect_url}" http://localhost:8080/)
+          echo "HTTP $code → $location"
+          docker logs glping | tail -20
+          case "$location" in
+            */setup*) ;;
+            *) echo "::error::GlpiNg ne répond pas comme attendu (HTTP $code)."; exit 1 ;;
+          esac

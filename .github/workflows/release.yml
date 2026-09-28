@@ -1,6 +1,7 @@
 # Publie une release GitHub à chaque tag de version (1.0.0, 1.0.0-RC1, v1.2.0...) : GlpiNg.Web et
-# GlpiNg.Console compilés pour Linux et Windows, en archives zip. Un tag contenant un tiret
-# (1.0.0-RC1) donne une préversion.
+# GlpiNg.Console compilés pour Linux et Windows, en archives zip, et l'image de conteneur rootless
+# ghcr.io/glping-fr/glping (amd64, arm64). Une version stable (exactement X.Y.Z) donne l'image
+# « latest » ; toute autre (1.0.0-RC1...) donne une préversion et l'image « beta ».
 name: Release
 
 on:
@@ -13,6 +14,62 @@ permissions:
   contents: write
 
 jobs:
+  docker:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      # Nécessaire au RUN apt-get de l'étape finale en arm64 ; la compilation, elle, se fait en natif.
+      - uses: docker/setup-qemu-action@v4
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      # Stable = exactement X.Y.Z. Tout suffixe (1.0.0-RC1, 1.0.0rc1, 1.0.0-beta.2...) = beta.
+      - id: version
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          echo "value=$version" >> "$GITHUB_OUTPUT"
+          if [[ "$version" =~ ^([0-9]+)\.([0-9]+)\.[0-9]+$ ]]; then
+            echo "stable=true" >> "$GITHUB_OUTPUT"
+            echo "minor=${BASH_REMATCH[1]}.${BASH_REMATCH[2]}" >> "$GITHUB_OUTPUT"
+          else
+            echo "stable=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # 1.2.3 → 1.2.3, 1.2 et latest ; 1.0.0-RC1 → 1.0.0-RC1 et beta.
+      - id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/glping-fr/glping
+          flavor: latest=false
+          tags: |
+            type=raw,value=${{ steps.version.outputs.value }}
+            type=raw,value=${{ steps.version.outputs.minor }},enable=${{ steps.version.outputs.stable == 'true' }}
+            type=raw,value=latest,enable=${{ steps.version.outputs.stable == 'true' }}
+            type=raw,value=beta,enable=${{ steps.version.outputs.stable != 'true' }}
+
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: VERSION=${{ steps.version.outputs.value }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
   build:
     runs-on: ubuntu-latest
     strategy:
@@ -64,7 +121,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
         run: |
-          prerelease=""
-          [[ "$TAG" == *-* ]] && prerelease="--prerelease"
+          # Même règle que l'image : tout ce qui n'est pas exactement X.Y.Z est une préversion.
+          prerelease="--prerelease"
+          [[ "${TAG#v}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] && prerelease=""
           gh release create "$TAG" dist/*.zip --repo "$GITHUB_REPOSITORY" --verify-tag \
             --title "GlpiNg ${TAG#v}" --generate-notes $prerelease
