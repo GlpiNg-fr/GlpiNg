@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a vulnerability
+    url: https://github.com/GlpiNg-fr/GlpiNg/security/advisories/new
+    about: Report security issues privately, never in a public issue.
+  - name: Plugin SDK documentation
+    url: https://glping-fr.github.io/GlpiNg.Plugins.Sdk/
+    about: How to write a GlpiNg plugin.

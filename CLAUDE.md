@@ -26,8 +26,11 @@ dotnet ef migrations add <Name>
 dotnet ef database update
 ```
 
-There is no test project and no CI workflow in this repo currently — don't assume
-`dotnet test` or a `.github/workflows` pipeline exists.
+There is no test project — don't assume `dotnet test` exists. `.github/workflows` has `ci.yml`
+(Release build with submodules, vulnerable-package audit, and `dotnet ef migrations
+has-pending-model-changes` against a simulated install), `codeql.yml` (whose results the `dev/main`
+ruleset requires, so direct pushes there are refused — go through a PR) and `release.yml` (a version
+tag such as `1.0.0-RC1` publishes Web + Console zips for linux-x64/win-x64 as a GitHub release).
 
 **Never overwrite or edit an existing EF Core migration** (including regenerating one
 under the same name/timestamp after a model change). Always add a new migration

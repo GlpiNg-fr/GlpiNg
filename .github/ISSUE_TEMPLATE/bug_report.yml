@@ -1,0 +1,99 @@
+name: Bug report
+description: Something in GlpiNg does not work as expected.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. GlpiNg is an independent project: please report
+        issues with GLPI itself to the GLPI project, not here. Security vulnerabilities must **not**
+        be reported publicly — use the "Report a vulnerability" link instead.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Inventory / assets
+        - GLPI-Agent protocol (contact, inventory, deploy, collect)
+        - Deployment / network discovery
+        - Assistance (tickets, problems, changes)
+        - Management (contracts, budgets, licenses...)
+        - Knowledge base
+        - Administration / configuration
+        - Import from a GLPI database
+        - REST API
+        - Plugins / SDK
+        - Installation / update
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: GlpiNg version
+      description: Release tag (e.g. 1.0.0-RC1) or commit.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: database
+    attributes:
+      label: Database
+      options:
+        - SQL Server
+        - MySQL
+        - PostgreSQL
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Server OS, and GLPI-Agent version if an agent is involved.
+      placeholder: Windows Server 2022, GLPI-Agent 1.11
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant server or agent logs. Remove passwords, tokens and connection strings.
+      render: shell
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched the existing issues and this is not a duplicate.
+          required: true
+        - label: This is about GlpiNg, not about GLPI.
+          required: true
