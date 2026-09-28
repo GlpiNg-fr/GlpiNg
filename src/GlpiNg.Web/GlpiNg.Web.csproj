@@ -18,7 +18,7 @@
          la liste des ordinateurs (voir ComputerExportWriter, module Inventory) — l'ODS et le CSV
          sont écrits à la main, sans dépendance. -->
     <PackageReference Include="ClosedXML" Version="0.105.1" />
-    <PackageReference Include="QuestPDF" Version="2026.8.0" />
+    <PackageReference Include="QuestPDF" Version="2026.9.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.12" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
       <PrivateAssets>all</PrivateAssets>
