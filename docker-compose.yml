@@ -1,0 +1,87 @@
+# Modèle de déploiement : GlpiNg + PostgreSQL.
+#
+#   GLPING_DB_PASSWORD='un-mot-de-passe-fort' docker compose up -d
+#   (ou GLPING_DB_PASSWORD=... dans un fichier .env à côté de ce fichier)
+#
+# Puis ouvrir http://localhost:8080 et, dans l'assistant /setup :
+#   Fournisseur PostgreSQL · serveur db · port 5432 · base glping · utilisateur glping
+#   · mot de passe : la valeur de GLPING_DB_PASSWORD
+#
+# À sauvegarder : les volumes glping-data (appsettings.local.json, clés, paquets, documents,
+# plugins) et glping-db (la base).
+
+services:
+  glping:
+    image: ghcr.io/glping-fr/glping:1.0.0-RC1
+    # Pour construire depuis les sources (sous-modules récupérés) à la place de l'image publiée :
+    # build: .
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - glping-data:/data
+    environment:
+      TZ: Europe/Paris
+    depends_on:
+      db:
+        condition: service_healthy
+    # L'image tourne déjà sans droits root (UID 1654) ; on lui retire en plus toute capacité.
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: glping
+      POSTGRES_USER: glping
+      POSTGRES_PASSWORD: ${GLPING_DB_PASSWORD:?Définir GLPING_DB_PASSWORD (variable d'environnement ou fichier .env)}
+    volumes:
+      - glping-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U glping -d glping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # Pas de port publié : seul GlpiNg joint la base, par le réseau du projet.
+
+  # --- Variante MySQL : remplacer le service « db » ci-dessus par celui-ci. ---
+  # Assistant : MySQL · serveur db · port 3306 · base glping · utilisateur glping
+  # db:
+  #   image: mysql:8.4
+  #   restart: unless-stopped
+  #   environment:
+  #     MYSQL_DATABASE: glping
+  #     MYSQL_USER: glping
+  #     MYSQL_PASSWORD: ${GLPING_DB_PASSWORD:?Définir GLPING_DB_PASSWORD}
+  #     MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+  #   volumes:
+  #     - glping-db:/var/lib/mysql
+  #   healthcheck:
+  #     test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 10
+
+  # --- Variante SQL Server : remplacer le service « db » ci-dessus par celui-ci. ---
+  # Assistant : SQL Server · serveur db · base glping · utilisateur sa · cocher « faire confiance
+  # au certificat » (certificat auto-signé). Mot de passe : 8 caractères minimum, avec
+  # majuscules, minuscules, chiffres et symboles.
+  # db:
+  #   image: mcr.microsoft.com/mssql/server:2022-latest
+  #   restart: unless-stopped
+  #   environment:
+  #     ACCEPT_EULA: "Y"
+  #     MSSQL_SA_PASSWORD: ${GLPING_DB_PASSWORD:?Définir GLPING_DB_PASSWORD}
+  #   volumes:
+  #     - glping-db:/var/opt/mssql
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 10
+
+volumes:
+  glping-data:
+  glping-db:

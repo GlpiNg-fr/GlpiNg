@@ -1,0 +1,18 @@
+**/bin/
+**/obj/
+**/obj_check/
+.git
+**/.git
+.vs/
+.vscode/
+.claude/
+graphify-out/
+tools/
+branding/
+# Données d'exécution locales (Windows : « data » tombe sur Data/) — jamais dans l'image.
+src/GlpiNg.Web/[Dd]ata/keys/
+src/GlpiNg.Web/[Dd]ata/packages/
+src/GlpiNg.Web/[Dd]ata/documents/
+src/GlpiNg.Web/[Dd]ata/plugins/
+**/appsettings.local.json
+**/config-history.json
