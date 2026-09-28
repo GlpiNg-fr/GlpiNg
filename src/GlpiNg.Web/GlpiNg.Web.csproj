@@ -35,7 +35,7 @@
     <!-- Envoi SMTP réel des notifications (voir Services/Notifications/SmtpMailSender.cs) :
          System.Net.Mail.SmtpClient est déconseillé par Microsoft pour du code neuf
          (STARTTLS/TLS peu fiable), MailKit est le remplacement standard de l'écosystème .NET. -->
-    <PackageReference Include="MailKit" Version="4.17.0" />
+    <PackageReference Include="MailKit" Version="4.18.1" />
   </ItemGroup>
 
   <ItemGroup>
