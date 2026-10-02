@@ -93,8 +93,11 @@ is called by `Services/Plugins/PluginLoader` after every built-in module — it 
 `{StoragePaths.Plugins}/{Name}/{Name}.dll` at startup (setup complete only) into the **default**
 load context, so shared contracts unify with the host's; plugins must reference the SDK with
 `ExcludeAssets="runtime"`. Their `@page`s are routed via `LoadedPlugins` (Routes.razor and
-`AddAdditionalAssemblies`). No DB tables, no `wwwroot`, no unload yet — distribution/installation
-is a follow-up.
+`AddAdditionalAssemblies`). A plugin's `wwwroot/` is published beside its DLL (MSBuild targets shipped in the package) and
+served at `/_content/{AssemblyName}/`, RCL-style; only that folder is exposed. A plugin declares
+`MinimumHostVersion`/`MaximumHostVersion` and is **skipped, not fatal**, when the host falls
+outside — as is any unloadable DLL; `LoadedPlugins.Skipped` carries the reason and `/config` →
+Système shows it. No DB tables and no unload yet — hot load/unload is issue #12.
 
 **GLPI REST APIs** (`GlpiNg.Web/Api`, mapped in `Program.cs` with `MapMethods` on `/apirest.php`,
 `/api/` → v1 `Legacy/LegacyApiHandler`, and `/api.php` → v2 `HighLevel/HighLevelApiHandler`, v1 when
