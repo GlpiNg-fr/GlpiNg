@@ -53,7 +53,27 @@ namespace GlpiNg.Web;
 
 public class Program
 {
-    public static void Main(string[] args)
+    /// <summary>
+    /// glping est à la fois le serveur et la CLI d'administration : sans argument, l'aide ;
+    /// <c>glping serve</c> lance le serveur. Deux lanceurs ne passent pas « serve » et démarrent
+    /// le serveur directement : <c>dotnet ef</c> (qui appelle Main pour construire l'hôte) et IIS
+    /// (le module ANCM, reconnu à la variable qu'il définit, au cas où le web.config aurait perdu
+    /// son <c>arguments="serve"</c>).
+    /// </summary>
+    public static int Main(string[] args)
+    {
+        bool serve = args is ["serve", ..] && !args.Any(a => a is "-h" or "--help");
+
+        if (serve || EF.IsDesignTime || Environment.GetEnvironmentVariable("ASPNETCORE_IIS_PHYSICAL_PATH") is not null)
+        {
+            RunServer(args is ["serve", .. var rest] ? rest : args);
+            return 0;
+        }
+
+        return Cli.GlpiNgCli.Run(args);
+    }
+
+    public static void RunServer(string[] args)
     {
         WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 

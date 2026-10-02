@@ -19,8 +19,18 @@ git submodule update --init
 # Restore, build, run (from repo root or src/GlpiNg.Web)
 dotnet restore
 dotnet build GlpiNg.sln
-cd src/GlpiNg.Web && dotnet run
+cd src/GlpiNg.Web && dotnet run   # launchSettings passes `serve`
+```
 
+`GlpiNg.Web` builds as `glping(.exe)`, which is **both the server and the admin CLI**
+(`Cli/`, Spectre.Console.Cli): no argument → help, `glping serve` → server, `db:install`,
+`db:check`, `user:*` → CLI. `Program.Main` routes `serve` straight to `RunServer` (Spectre would
+swallow `--urls` & co.), and also starts the server without `serve` under `dotnet ef`
+(`EF.IsDesignTime`) and under IIS (`ASPNETCORE_IIS_PHYSICAL_PATH`, set by ANCM) — the shipped
+`web.config` passes `arguments="serve"` anyway. Docker: `ENTRYPOINT glping.dll`, `CMD ["serve"]`.
+The CLI reads config from the current directory, like the server's content root.
+
+```bash
 # EF Core migrations (run from src/GlpiNg.Web)
 dotnet ef migrations add <Name>
 dotnet ef database update
@@ -30,7 +40,7 @@ There is no test project — don't assume `dotnet test` exists. `.github/workflo
 (Release build with submodules, vulnerable-package audit, and `dotnet ef migrations
 has-pending-model-changes` against a simulated install), `codeql.yml` (whose results the `dev/main`
 ruleset requires, so direct pushes there are refused — go through a PR) and `release.yml` (a version
-tag such as `1.0.0-RC1` publishes Web + Console zips for linux-x64/win-x64 as a GitHub release).
+tag such as `1.0.0-RC1` publishes one `glping` zip per RID (linux-x64/win-x64) as a GitHub release).
 
 **Never overwrite or edit an existing EF Core migration** (including regenerating one
 under the same name/timestamp after a model change). Always add a new migration

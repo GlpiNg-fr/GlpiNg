@@ -28,7 +28,7 @@ Assistance, Gestion, Outils, Administration, Configuration).
 - Notifications par courriel (gabarits, règles, file d'attente), webhooks
   sortants signés, et actions automatiques (cron applicatif)
 - Assistant d'installation intégré (`/setup`) et gestion des migrations EF Core
-  depuis l'UI (`/update`), doublés d'une CLI d'administration (`GlpiNg.Console`)
+  depuis l'UI (`/update`), doublés d'une CLI d'administration (`glping`)
 
 ## Stack
 
@@ -36,8 +36,9 @@ Assistance, Gestion, Outils, Administration, Configuration).
   tous les modules ciblent également .NET 10
 - EF Core — SQL Server, MySQL ou PostgreSQL (SQLite volontairement exclu, y
   compris de l'assistant d'installation)
-- CLI d'administration `GlpiNg.Console` (Spectre.Console.Cli) : installation et
-  vérification de la base, gestion des comptes
+- Un seul programme, `glping` : `glping serve` lance le serveur, les autres
+  commandes forment la CLI d'administration (Spectre.Console.Cli) — installation
+  et vérification de la base, gestion des comptes. Sans argument, il affiche l'aide
 - Authentification par cookie (`/login`), avec bind LDAP optionnel et
   provisionnement automatique des comptes externes
 - Émission de jetons OAuth2 (`client_credentials` / `password`) pour l'accès
@@ -123,7 +124,6 @@ src/
                                      #   Documents (IDocumentAttachments), Notes (IItemNotes),
                                      #   Items (ItemTypes), FieldUnicity (IFieldUnicityChecker),
                                      #   Notifications (INotificationPublisher)
-  GlpiNg.Console/                   # CLI d'administration (db:install, db:check, user:*)
 ```
 
 Les modules (`GlpiNg.Modules.*`) sont des bibliothèques de classes autonomes,
@@ -869,11 +869,22 @@ simplification assumée de la matrice très fine de GLPI.
   notifications, envoi et purge de la file des webhooks, nettoyage des agents,
   déclenchement des tâches de déploiement, réseau et Wake-on-LAN.
 
-### CLI d'administration (`GlpiNg.Console`)
+### CLI d'administration (`glping`)
 
-`db:install`, `db:check --fix`, `user:create`, `user:resetpassword`,
-`user:enable`, `user:disable` — utile quand l'UI n'est pas accessible (base à
-initialiser, mot de passe admin perdu).
+Le serveur et la CLI sont le même exécutable, `glping` (`glping.exe` sous
+Windows) : `glping serve` lance le serveur (options ASP.NET Core acceptées, ex.
+`--urls`), et sans argument il affiche l'aide. `db:install`, `db:check --fix`,
+`user:create`, `user:resetpassword`, `user:enable`, `user:disable` — utile quand
+l'UI n'est pas accessible (base à initialiser, mot de passe admin perdu). La CLI
+lit la configuration depuis le dossier courant, comme le serveur : lancez-la
+depuis le dossier d'installation.
+
+- **IIS** : le `web.config` publié passe `arguments="serve"` au module ASP.NET
+  Core. Sous IIS, `glping` démarre de toute façon en serveur, même sans
+  argument.
+- **Docker** : `serve` est la commande par défaut de l'image ; `docker run
+  <image> user:resetpassword admin` lance une commande de la CLI à la place.
+- `dotnet ef` lance aussi le serveur sans `serve` (`EF.IsDesignTime`).
 
 ### API REST de GLPI (`apirest.php` et `api.php`)
 
@@ -1355,10 +1366,11 @@ dotnet ef database update
 ```
 
 ```bash
-# CLI d'administration (depuis src/GlpiNg.Console) — alternative à l'UI
-dotnet run -- db:install --provider SqlServer --connection-string "..."
-dotnet run -- db:check --fix
-dotnet run -- user:resetpassword admin
+# CLI d'administration (depuis src/GlpiNg.Web) — alternative à l'UI ;
+# `dotnet run` seul lance le serveur (launchSettings passe « serve »)
+dotnet run --no-launch-profile -- db:install --provider SqlServer --connection-string "..."
+dotnet run --no-launch-profile -- db:check --fix
+dotnet run --no-launch-profile -- user:resetpassword admin
 ```
 
 Il n'y a pas de projet de tests. Les workflows GitHub (`.github/workflows`) compilent
