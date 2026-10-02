@@ -5,6 +5,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>GlpiNg.Web</RootNamespace>
+    <!-- Binaire publié sous le nom glping(.exe) plutôt que GlpiNg.Web(.exe). -->
+    <AssemblyName>glping</AssemblyName>
     <UserSecretsId>glpi-ng-web-secrets</UserSecretsId>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <!-- CS1591 : commentaire XML manquant sur un membre public — pas pertinent ici,
@@ -26,6 +28,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.12" />
     <PackageReference Include="ReverseMarkdown" Version="6.2.1" />
+    <PackageReference Include="Spectre.Console.Cli" Version="0.55.0" />
 	<PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
     <PackageReference Include="Microting.EntityFrameworkCore.MySql" Version="10.0.11" />
@@ -54,6 +57,12 @@
     <ProjectReference Include="..\GlpiNg.Modules.Management\GlpiNg.Modules.Management.csproj" />
     <ProjectReference Include="..\GlpiNg.Modules.Assistance\GlpiNg.Modules.Assistance.csproj" />
     <ProjectReference Include="..\GlpiNg.Plugins.Sdk\GlpiNg.Plugins.Sdk.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="appsettings.local.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

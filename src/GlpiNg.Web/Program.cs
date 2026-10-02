@@ -23,6 +23,7 @@ using GlpiNg.Modules.KnowledgeBase;
 using GlpiNg.Modules.Management;
 using GlpiNg.Modules.Assistance;
 using GlpiNg.Modules.Scheduler;
+using Microsoft.Extensions.FileProviders;
 using GlpiNg.Web.Components;
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Import;
@@ -53,7 +54,27 @@ namespace GlpiNg.Web;
 
 public class Program
 {
-    public static void Main(string[] args)
+    /// <summary>
+    /// glping est à la fois le serveur et la CLI d'administration : sans argument, l'aide ;
+    /// <c>glping serve</c> lance le serveur. Deux lanceurs ne passent pas « serve » et démarrent
+    /// le serveur directement : <c>dotnet ef</c> (qui appelle Main pour construire l'hôte) et IIS
+    /// (le module ANCM, reconnu à la variable qu'il définit, au cas où le web.config aurait perdu
+    /// son <c>arguments="serve"</c>).
+    /// </summary>
+    public static int Main(string[] args)
+    {
+        bool serve = args is ["serve", ..] && !args.Any(a => a is "-h" or "--help");
+
+        if (serve || EF.IsDesignTime || Environment.GetEnvironmentVariable("ASPNETCORE_IIS_PHYSICAL_PATH") is not null)
+        {
+            RunServer(args is ["serve", .. var rest] ? rest : args);
+            return 0;
+        }
+
+        return Cli.GlpiNgCli.Run(args);
+    }
+
+    public static void RunServer(string[] args)
     {
         WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -645,6 +666,33 @@ public class Program
         // permet à un administrateur de confirmer leur application. Placé après
         // UseSetupMiddleware pour la même raison que GlpiNgDbContext est garanti enregistré ici.
         app.UseMigrationsGate();
+
+        // Fichiers statiques des plugins : chaque plugin publie son « wwwroot » à côté de sa DLL
+        // (voir les cibles MSBuild du paquet GlpiNg.Plugins.Sdk) et il est servi ici sous
+        // « /_content/{NomDuPlugin}/ », le chemin qu'ASP.NET Core donne aux bibliothèques de
+        // classes Razor — un plugin qui en deviendrait une garde ses liens.
+        //
+        // Seul le sous-dossier wwwroot est exposé : la DLL du plugin et ses dépendances, qui sont
+        // au niveau au-dessus, restent hors de portée d'une requête.
+        foreach (Assembly pluginAssembly in loadedPlugins.Assemblies)
+        {
+            if (pluginAssembly.GetName().Name is not { Length: > 0 } pluginName)
+            {
+                continue;
+            }
+
+            string webRoot = Path.Combine(storagePaths.Plugins, pluginName, "wwwroot");
+            if (!Directory.Exists(webRoot))
+            {
+                continue;
+            }
+
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(webRoot),
+                RequestPath = $"/_content/{pluginName}",
+            });
+        }
 
         app.UseAuthentication();
         app.UseAuthorization();

@@ -2,6 +2,7 @@
   "profiles": {
     "GlpiNg.Web": {
       "commandName": "Project",
+      "commandLineArgs": "serve",
       "launchBrowser": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"

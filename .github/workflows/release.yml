@@ -1,5 +1,5 @@
-# Publie une release GitHub à chaque tag de version (1.0.0, 1.0.0-RC1, v1.2.0...) : GlpiNg.Web et
-# GlpiNg.Console compilés pour Linux et Windows, en archives zip, et l'image de conteneur rootless
+# Publie une release GitHub à chaque tag de version (1.0.0, 1.0.0-RC1, v1.2.0...) : glping (serveur
+# et CLI d'administration) compilé pour Linux et Windows, en archives zip, et l'image de conteneur rootless
 # ghcr.io/glping-fr/glping (amd64, arm64). Une version stable (exactement X.Y.Z) donne l'image
 # « latest » ; toute autre (1.0.0-RC1...) donne une préversion et l'image « beta ».
 name: Release
@@ -95,16 +95,14 @@ jobs:
           VERSION: ${{ steps.version.outputs.value }}
           RID: ${{ matrix.rid }}
         run: |
-          for project in Web Console; do
-            dotnet publish "src/GlpiNg.$project/GlpiNg.$project.csproj" -c Release -r "$RID" \
-              --self-contained false -p:Version="$VERSION" -o "publish/$project"
-            (cd "publish/$project" && zip -qr "$GITHUB_WORKSPACE/GlpiNg.$project-$VERSION-$RID.zip" .)
-          done
+          dotnet publish src/GlpiNg.Web/GlpiNg.Web.csproj -c Release -r "$RID" \
+            --self-contained false -p:Version="$VERSION" -o publish
+          (cd publish && zip -qr "$GITHUB_WORKSPACE/glping-$VERSION-$RID.zip" .)
 
       - uses: actions/upload-artifact@v7
         with:
           name: glping-${{ matrix.rid }}
-          path: GlpiNg.*.zip
+          path: glping-*.zip
           if-no-files-found: error
 
   release:

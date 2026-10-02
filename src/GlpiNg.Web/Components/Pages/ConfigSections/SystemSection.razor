@@ -1,4 +1,5 @@
-﻿@using GlpiNg.Modules.Abstractions.Storage
+﻿@using System.Reflection
+@using GlpiNg.Modules.Abstractions.Storage
 @using GlpiNg.Modules.Cron
 @using GlpiNg.Modules.Cron.Models
 @using GlpiNg.Web.Data
@@ -9,6 +10,7 @@
 @inject CronIntervalState IntervalState
 @inject AppSettingsFileStore FileStore
 @inject IStoragePaths StoragePaths
+@inject GlpiNg.Web.Services.Plugins.LoadedPlugins Plugins
 @inject ToastService ToastService
 
 <p class="hint" style="margin-left:0;">
@@ -68,7 +70,99 @@ else
     </EditForm>
 }
 
+@* Versions : ce qu'un exploitant lit avant d'ouvrir un ticket, et la première chose qu'on lui
+   demande. Les modules et les plugins sont des dépôts séparés (sous-modules git, paquets NuGet),
+   donc rien ne garantit qu'ils partagent la version de l'hôte — d'où une ligne par assembly. *@
+<div class="glping-config-field">
+    <label>@T("Versions")</label>
+    <ul class="mb-0">
+        <li><strong>GlpiNg</strong> — <code>@VersionOf(typeof(Program).Assembly)</code></li>
+        <li>@T("Version de GLPI reproduite par les API et le protocole") — <code>@GlpiNg.Web.Api.Glpi.GlpiMetadata.Instance.GlpiVersion</code></li>
+        <li>.NET — <code>@Environment.Version</code></li>
+    </ul>
+</div>
+
+<div class="glping-config-field">
+    <label>@T("Modules")</label>
+    <ul class="mb-0">
+        @foreach ((string name, string version) in ModuleVersions)
+        {
+            <li>@name — <code>@version</code></li>
+        }
+    </ul>
+</div>
+
+<div class="glping-config-field">
+    <label>@T("Plugins chargés")</label>
+    @if (PluginVersions.Count == 0)
+    {
+        <p class="mb-0 hint" style="margin-left:0;">
+            @T("Aucun plugin chargé.")@if (PluginsFolder is { } folder) { <text> <code>@folder</code></text> }
+        </p>
+    }
+    else
+    {
+        <ul class="mb-0">
+            @foreach ((string name, string version) in PluginVersions)
+            {
+                <li>@name — <code>@version</code></li>
+            }
+        </ul>
+    }
+</div>
+
+@if (Plugins.Skipped.Count > 0)
+{
+    @* Un plugin écarté en silence est indiagnosticable : c'est ici qu'on apprend pourquoi la
+       fonctionnalité attendue après une mise à jour n'est pas là. *@
+    <div class="glping-config-field">
+        <label>@T("Plugins écartés")</label>
+        <ul class="mb-0">
+            @foreach (GlpiNg.Web.Services.Plugins.SkippedPlugin entry in Plugins.Skipped)
+            {
+                <li><strong>@entry.Name</strong> — @entry.Reason</li>
+            }
+        </ul>
+    </div>
+}
+
 @code {
+    /// <summary>
+    /// Version informationnelle de l'assembly (« 1.0.0+abc1234 »), avec l'empreinte du commit
+    /// raccourcie : elle sert au support, ses quarante caractères non.
+    /// </summary>
+    private static string VersionOf(Assembly assembly)
+    {
+        string raw = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+            ?? assembly.GetName().Version?.ToString()
+            ?? "?";
+
+        int plus = raw.IndexOf('+');
+        return plus < 0 || raw.Length - plus <= 8 ? raw : raw[..(plus + 8)];
+    }
+
+    /// <summary>
+    /// Modules chargés, relevés sur les assemblies plutôt que sur une liste tenue à la main : un
+    /// module ajouté apparaît sans que cet écran soit modifié.
+    /// </summary>
+    private static List<(string Name, string Version)> ModuleVersions =>
+        [.. AppDomain.CurrentDomain.GetAssemblies()
+            .Where(a => a.GetName().Name is { } n
+                && (n.StartsWith("GlpiNg.Modules.", StringComparison.Ordinal) || n == "GlpiNg.Plugins.Sdk"))
+            .Select(a => (a.GetName().Name!, VersionOf(a)))
+            .OrderBy(entry => entry.Item1, StringComparer.Ordinal)];
+
+    private List<(string Name, string Version)> PluginVersions =>
+        [.. Plugins.Assemblies
+            .Select(a => (a.GetName().Name ?? "?", VersionOf(a)))
+            .OrderBy(entry => entry.Item1, StringComparer.Ordinal)];
+
+    /// <summary>
+    /// Dossier où déposer un plugin. Porté par l'implémentation et non par <c>IStoragePaths</c>,
+    /// que les modules partagent : eux n'ont rien à y faire.
+    /// </summary>
+    private string? PluginsFolder => (StoragePaths as GlpiNg.Web.Services.StoragePaths)?.Plugins;
+
     private int? _intervalMinutes;
     private bool _isSaving;
     private string? _storageRootPath;

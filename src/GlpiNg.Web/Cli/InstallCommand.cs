@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
-namespace GlpiNg.Console.Db;
+namespace GlpiNg.Web.Cli;
 
 public class InstallCommand : AsyncCommand<InstallCommand.Settings>
 {
@@ -24,16 +24,16 @@ public class InstallCommand : AsyncCommand<InstallCommand.Settings>
         [Description("Chaîne de connexion vers la base de données")]
         public string? ConnectionString { get; init; }
 
-        [CommandOption("--web-path <PATH>")]
-        [Description("Chemin vers le dossier GlpiNg.Web (y lire Storage:RootPath, où écrire appsettings.local.json)")]
-        public string? WebPath { get; init; }
+        [CommandOption("--content-root <PATH>")]
+        [Description("Racine de contenu du serveur (y lire Storage:RootPath) — par défaut le dossier courant, comme « glping serve »")]
+        public string? ContentRoot { get; init; }
     }
 
     protected override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellation)
     {
-        var webPath = ResolveWebPath(settings.WebPath);
+        var webPath = Path.GetFullPath(settings.ContentRoot ?? Directory.GetCurrentDirectory());
 
-        // Même emplacement que celui où GlpiNg.Web ira le lire : la racine du stockage, dont le
+        // Même emplacement que celui où le serveur ira le lire : la racine du stockage, dont le
         // chemin se lit dans appsettings.json (voir StoragePaths).
         var localConfigPath = StoragePaths.ResolveLocalSettings(ReadStorageRootPath(webPath), webPath);
 
@@ -106,23 +106,6 @@ public class InstallCommand : AsyncCommand<InstallCommand.Settings>
                 .AddChoices(AllowedProviders));
     }
 
-    private static string ResolveWebPath(string? explicit_path)
-    {
-        if (explicit_path is not null)
-            return Path.GetFullPath(explicit_path);
-
-        var candidate = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "GlpiNg.Web"));
-        if (Directory.Exists(candidate))
-            return candidate;
-
-        candidate = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "..", "GlpiNg.Web"));
-        if (Directory.Exists(candidate))
-            return candidate;
-
-        throw new InvalidOperationException(
-            "Impossible de trouver le dossier GlpiNg.Web. Utilisez --web-path pour le spécifier.");
-    }
-
     /// <summary>
     /// Racine du stockage telle que configurée dans appsettings.json, ou <c>null</c> pour le
     /// dossier par défaut. Lue à la main plutôt que par ConfigurationBuilder : à l'installation,
@@ -144,7 +127,7 @@ public class InstallCommand : AsyncCommand<InstallCommand.Settings>
         catch (JsonException)
         {
             // appsettings.json illisible : le dossier par défaut reste le meilleur pari, et
-            // l'erreur se manifestera plus clairement au démarrage de GlpiNg.Web.
+            // l'erreur se manifestera plus clairement au démarrage du serveur.
             return null;
         }
     }
