@@ -39,4 +39,6 @@ VOLUME /data
 EXPOSE 8080
 
 USER $APP_UID
-ENTRYPOINT ["dotnet", "GlpiNg.Web.dll"]
+# glping est aussi la CLI : « docker run <image> user:create jdupont » remplace « serve ».
+ENTRYPOINT ["dotnet", "glping.dll"]
+CMD ["serve"]

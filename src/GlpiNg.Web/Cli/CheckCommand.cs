@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
-namespace GlpiNg.Console.Db;
+namespace GlpiNg.Web.Cli;
 
 public class CheckCommand : AsyncCommand<CheckCommand.Settings>
 {

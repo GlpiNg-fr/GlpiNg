@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
-namespace GlpiNg.Console.User;
+namespace GlpiNg.Web.Cli;
 
 public class ResetPasswordCommand : AsyncCommand<ResetPasswordCommand.Settings>
 {

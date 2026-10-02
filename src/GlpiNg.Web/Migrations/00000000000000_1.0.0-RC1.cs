@@ -6426,6 +6426,10 @@ namespace GlpiNg.Web.Migrations
             // ici. Sans elles, une installation neuve n'a ni entité racine, ni profil, ni client
             // d'API — et l'API répondrait ERROR_NOT_ALLOWED_IP à tout appel, même local.
             //
+            // Toute colonne NOT NULL sans valeur par défaut côté base doit être fournie : dans
+            // l'historique d'origine ces semences précédaient les colonnes ajoutées plus tard
+            // (TwoFactorAuthRequired, CustomCssEnabled), qui recevaient alors un defaultValue au
+            // moment de l'AddColumn. Une table créée d'un bloc n'a plus ce défaut.
             // Les profils sont insérés dans leur état final : Super-Admin n'est pas le profil par
             // défaut, Technician l'est, comme dans GLPI. Inutile de rejouer l'insertion puis la
             // correction que l'historique avait dû faire en deux temps.
@@ -6433,10 +6437,13 @@ namespace GlpiNg.Web.Migrations
 
             migrationBuilder.InsertData(
                 table: "Entities",
-                columns: new[] { "Name", "Comment", "CreatedAt", "UpdatedAt" },
+                columns: new[]
+                {
+                    "Name", "Comment", "TwoFactorAuthRequired", "CustomCssEnabled", "CreatedAt", "UpdatedAt"
+                },
                 values: new object[]
                 {
-                    "Root entity", null, Seeded, Seeded
+                    "Root entity", null, false, false, Seeded, Seeded
                 });
 
             migrationBuilder.InsertData(
@@ -6445,13 +6452,13 @@ namespace GlpiNg.Web.Migrations
                 {
                     "Name", "Comment", "Code", "IsRecursive", "VisibleAsRequester", "VisibleAsObserver",
                     "VisibleAsAssignee", "VisibleAsTask", "CanBeNotified", "CanBeProjectSupervisor",
-                    "CanContainItems", "CanContainUsers", "CreatedAt", "UpdatedAt"
+                    "CanContainItems", "CanContainUsers", "TwoFactorAuthRequired", "CreatedAt", "UpdatedAt"
                 },
                 values: new object[]
                 {
                     "IT Coordinator", "Groupe contenant tous les IT Coordinator.", null, false, true, true,
                     true, true, true, true,
-                    false, true, Seeded, Seeded
+                    false, true, false, Seeded, Seeded
                 });
 
             migrationBuilder.InsertData(

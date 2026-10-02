@@ -19,8 +19,18 @@ git submodule update --init
 # Restore, build, run (from repo root or src/GlpiNg.Web)
 dotnet restore
 dotnet build GlpiNg.sln
-cd src/GlpiNg.Web && dotnet run
+cd src/GlpiNg.Web && dotnet run   # launchSettings passes `serve`
+```
 
+`GlpiNg.Web` builds as `glping(.exe)`, which is **both the server and the admin CLI**
+(`Cli/`, Spectre.Console.Cli): no argument → help, `glping serve` → server, `db:install`,
+`db:check`, `user:*` → CLI. `Program.Main` routes `serve` straight to `RunServer` (Spectre would
+swallow `--urls` & co.), and also starts the server without `serve` under `dotnet ef`
+(`EF.IsDesignTime`) and under IIS (`ASPNETCORE_IIS_PHYSICAL_PATH`, set by ANCM) — the shipped
+`web.config` passes `arguments="serve"` anyway. Docker: `ENTRYPOINT glping.dll`, `CMD ["serve"]`.
+The CLI reads config from the current directory, like the server's content root.
+
+```bash
 # EF Core migrations (run from src/GlpiNg.Web)
 dotnet ef migrations add <Name>
 dotnet ef database update
@@ -30,13 +40,35 @@ There is no test project — don't assume `dotnet test` exists. `.github/workflo
 (Release build with submodules, vulnerable-package audit, and `dotnet ef migrations
 has-pending-model-changes` against a simulated install), `codeql.yml` (whose results the `dev/main`
 ruleset requires, so direct pushes there are refused — go through a PR) and `release.yml` (a version
-tag such as `1.0.0-RC1` publishes Web + Console zips for linux-x64/win-x64 as a GitHub release).
+tag such as `1.0.0-RC1` publishes one `glping` zip per RID (linux-x64/win-x64) as a GitHub release).
 
-**Never overwrite or edit an existing EF Core migration** (including regenerating one
-under the same name/timestamp after a model change). Always add a new migration
-instead — existing migrations may already be applied to a real database, and
-`GlpiNgDbContextModelSnapshot.cs` must stay in sync with the applied migration
-history, not just the latest model.
+**EF Core migrations — one rule per branch.** On `dev/main`, add them freely: one per change,
+named after the change. On `main`, a version ships with **a single migration covering everything
+since the previous version** — cutting a release squashes `dev/main`'s migrations into one
+regenerated from the model and named after the version (`1.0.0-RC1`).
+
+**Never edit a migration that has already applied anywhere**, and never regenerate one under a
+name/timestamp already in use: it may be applied to a real database. On `dev/main` that means
+adding a new migration rather than amending the last one. The release squash is the only
+exception, and only because it happens before that version exists anywhere.
+
+Squashing has three traps, all found the hard way:
+- A regenerated migration carries **schema only** — every `InsertData` is lost. Fold the seeds
+  back into `Up()` by hand, or a fresh install comes up with no root entity, no profile, and an
+  API that refuses every call for want of an API client.
+- A seed written before a column existed omits it. That column arrived later via an `AddColumn`
+  carrying a `defaultValue`; a table created in one block has no such default, so every `NOT NULL`
+  column without one must now be supplied explicitly (this broke a preprod install on
+  `Entities.TwoFactorAuthRequired`).
+- The migration id must keep a 14-character prefix (`00000000000000_1.0.0-RC1`). EF's scaffolder
+  does `lastMigrationId.Substring(15)`, so a bare `1.0.0-RC1` breaks `migrations add`, `list` and
+  `remove` outright.
+
+Prove a squash by running `dotnet ef migrations script` against an **empty** database rather than
+by reading the diff — `sqlcmd -S "(localdb)\MSSQLLocalDB" -I -i script.sql`, where `-I` is
+required or the filtered indexes are rejected. `GlpiNgDbContextModelSnapshot.cs` must stay in sync
+with the applied migration history, not just the latest model; CI checks it with
+`migrations has-pending-model-changes`.
 
 ## Architecture
 
@@ -83,8 +115,11 @@ is called by `Services/Plugins/PluginLoader` after every built-in module — it 
 `{StoragePaths.Plugins}/{Name}/{Name}.dll` at startup (setup complete only) into the **default**
 load context, so shared contracts unify with the host's; plugins must reference the SDK with
 `ExcludeAssets="runtime"`. Their `@page`s are routed via `LoadedPlugins` (Routes.razor and
-`AddAdditionalAssemblies`). No DB tables, no `wwwroot`, no unload yet — distribution/installation
-is a follow-up.
+`AddAdditionalAssemblies`). A plugin's `wwwroot/` is published beside its DLL (MSBuild targets shipped in the package) and
+served at `/_content/{AssemblyName}/`, RCL-style; only that folder is exposed. A plugin declares
+`MinimumHostVersion`/`MaximumHostVersion` and is **skipped, not fatal**, when the host falls
+outside — as is any unloadable DLL; `LoadedPlugins.Skipped` carries the reason and `/config` →
+Système shows it. No DB tables and no unload yet — hot load/unload is issue #12.
 
 **GLPI REST APIs** (`GlpiNg.Web/Api`, mapped in `Program.cs` with `MapMethods` on `/apirest.php`,
 `/api/` → v1 `Legacy/LegacyApiHandler`, and `/api.php` → v2 `HighLevel/HighLevelApiHandler`, v1 when
