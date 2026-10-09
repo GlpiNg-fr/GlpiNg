@@ -13,6 +13,7 @@ public partial class Config
         new("gestion", "ti-wallet", "Gestion"),
         new("purge", "ti-trash", "Purge de l'historique"),
         new("systeme", "ti-settings", "Système"),
+        new("plugins", "ti-puzzle", "Plugins"),
         new("securite", "ti-shield-lock", "Sécurité"),
         new("performance", "ti-gauge", "Performance"),
         new("api", "ti-plug", "API"),

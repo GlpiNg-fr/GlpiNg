@@ -2,6 +2,7 @@
 using GlpiNg.Web.Data;
 using GlpiNg.Web.Models;
 using GlpiNg.Web.Services;
+using GlpiNg.Web.Services.Plugins;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -13,8 +14,15 @@ public partial class MainLayout : IDisposable
     [Inject]
     private NavigationManager Nav { get; set; } = null!;
 
+    /// <summary>
+    /// Résout les <c>IMenuProvider</c> à chaque reconstruction du menu plutôt qu'une fois par
+    /// circuit : un plugin chargé ou déchargé à chaud ajoute ou retire les siens.
+    /// </summary>
     [Inject]
-    private IEnumerable<IMenuProvider> MenuProviders { get; set; } = null!;
+    private IServiceProvider Services { get; set; } = null!;
+
+    [Inject]
+    private PluginRegistry Plugins { get; set; } = null!;
 
     [Inject]
     private SettingsCacheService SettingsStore { get; set; } = null!;
@@ -134,6 +142,7 @@ public partial class MainLayout : IDisposable
         Groups = BuildGroups(modules, await LoadCustomAssetItemsAsync());
         Nav.LocationChanged += OnLocationChanged;
         SettingsStore.SectionSaved += OnSettingsSectionSaved;
+        Plugins.Changed += RebuildMenu;
         Breadcrumb = BuildBreadcrumb();
         _expandedGroup = FindGroupForPath();
 
@@ -199,7 +208,7 @@ public partial class MainLayout : IDisposable
         }
 
         var hostByKey = HostGroups.ToDictionary(g => g.Key);
-        var moduleGroups = MenuProviders.SelectMany(p => p.GetMenuGroups()).ToList();
+        var moduleGroups = Services.GetServices<IMenuProvider>().SelectMany(p => p.GetMenuGroups()).ToList();
 
         foreach (var key in GroupOrder)
         {
@@ -271,11 +280,18 @@ public partial class MainLayout : IDisposable
     /// </summary>
     private void OnSettingsSectionSaved(string sectionName)
     {
-        if (sectionName != "ModulesSettings")
+        if (sectionName == "ModulesSettings")
         {
-            return;
+            RebuildMenu();
         }
+    }
 
+    /// <summary>
+    /// Reconstruit le menu de ce circuit sur place — après un changement de modules, ou un plugin
+    /// chargé ou déchargé. Levé sur le fil de l'appelant, d'où le passage par InvokeAsync.
+    /// </summary>
+    private void RebuildMenu()
+    {
         _ = InvokeAsync(async () =>
         {
             try
@@ -413,5 +429,6 @@ public partial class MainLayout : IDisposable
     {
         Nav.LocationChanged -= OnLocationChanged;
         SettingsStore.SectionSaved -= OnSettingsSectionSaved;
+        Plugins.Changed -= RebuildMenu;
     }
 }

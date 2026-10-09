@@ -1,7 +1,8 @@
 ﻿@using GlpiNg.Web.Components.Layout
 @using Microsoft.AspNetCore.Components.Authorization
 @using System.Reflection
-@inject GlpiNg.Web.Services.Plugins.LoadedPlugins Plugins
+@inject GlpiNg.Web.Services.Plugins.PluginRegistry Plugins
+@implements IDisposable
 
 <Router AppAssembly="@typeof(Program).Assembly"
         AdditionalAssemblies="AdditionalAssemblies">
@@ -31,4 +32,13 @@
         typeof(GlpiNg.Modules.Assistance.AssistanceModuleServiceCollectionExtensions).Assembly,
         .. Plugins.Assemblies,
     ];
+
+    // Un plugin chargé ou déchargé à chaud : le Router reçoit la nouvelle liste et reconstruit sa
+    // table de routes. La page en cours est re-routée — celle d'un plugin retiré retombe sur la page
+    // attrape-tout (PluginFallback), sans fermer le circuit.
+    protected override void OnInitialized() => Plugins.Changed += OnPluginsChanged;
+
+    private void OnPluginsChanged() => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Plugins.Changed -= OnPluginsChanged;
 }

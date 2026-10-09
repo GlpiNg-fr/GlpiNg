@@ -1,0 +1,269 @@
+@using System.Diagnostics
+@using System.Reflection
+@using GlpiNg.Web.Services
+@using GlpiNg.Web.Services.Plugins
+@using Microsoft.AspNetCore.Components.Authorization
+@implements IDisposable
+@inject PluginRegistry Registry
+@inject ConfigHistoryService History
+@inject AuthenticationStateProvider Auth
+@inject ToastService ToastService
+
+@* Plugins installés sous {racine du stockage}/plugins : chargés, déchargés, mis à jour et supprimés
+   à chaud (voir PluginRegistry). L'état se relit à chaque changement, d'où qu'il vienne — un autre
+   administrateur sur le même écran compris. *@
+
+<p class="hint" style="margin-left:0;">
+    @T("Un plugin s'installe depuis l'archive zip de son dotnet publish, et s'exécute avec les droits du serveur : n'installez que des plugins de confiance.")
+    @T("Ses pages vivent sous /plugins/.")@(PluginRegistry.PropertyInjection ? null : " " + T("Ses propres services s'injectent par le constructeur de ses composants : @inject ne les reçoit qu'à partir de .NET 11."))
+</p>
+<p class="hint" style="margin-left:0;">
+    @T("Dossier des plugins :") <code>@Registry.Folder</code>
+</p>
+
+<div class="glping-config-field">
+    <label for="plugin-upload">@T("Installer ou mettre à jour un plugin")</label>
+    <InputFile id="plugin-upload" class="form-control" accept=".zip" OnChange="InstallAsync" disabled="@_busy" />
+</div>
+
+@if (_retained.Count > 0)
+{
+    <div class="alert alert-info">
+        <div>
+            @T("Mémoire encore occupée par des plugins déchargés, libérée au prochain redémarrage :")
+            <strong>@string.Join(", ", _retained)</strong>.
+            @T("Blazor garde en cache les composants déjà affichés.")
+            <button type="button" class="btn btn-link btn-sm p-0 ms-1 align-baseline" disabled="@_busy" @onclick="CheckMemory">@T("Vérifier à nouveau")</button>
+        </div>
+    </div>
+}
+
+@if (_rows.Count == 0)
+{
+    <div class="glping-config-placeholder">
+        <i class="ti ti-puzzle"></i>
+        <p class="mb-0">@T("Aucun plugin installé.")</p>
+    </div>
+}
+else
+{
+    <table class="table table-sm align-middle">
+        <thead>
+            <tr>
+                <th>@T("Nom")</th>
+                <th>@T("Version")</th>
+                <th>@T("État")</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (PluginRow row in _rows)
+            {
+                <tr>
+                    <td><strong>@row.Name</strong></td>
+                    <td><code>@(row.Version ?? "?")</code></td>
+                    <td>
+                        @switch (row.State)
+                        {
+                            case PluginState.Active:
+                                <span class="badge bg-success-lt">@T("Actif")</span>
+                                break;
+                            case PluginState.Disabled:
+                                <span class="badge bg-secondary-lt">@T("Désactivé")</span>
+                                break;
+                            case PluginState.Skipped:
+                                <span class="badge bg-danger-lt">@T("Écarté")</span>
+                                <div class="small">@row.Reason</div>
+                                break;
+                            default:
+                                <span class="badge bg-warning-lt">@T("Non chargé")</span>
+                                break;
+                        }
+                        @if (row.Warnings.Count > 0)
+                        {
+                            <ul class="small mb-0 mt-1 ps-3">
+                                @foreach (string warning in row.Warnings)
+                                {
+                                    <li>@warning</li>
+                                }
+                            </ul>
+                        }
+                    </td>
+                    <td class="text-end text-nowrap">
+                        @if (row.State == PluginState.Active)
+                        {
+                            <button type="button" class="btn btn-sm btn-outline-secondary" disabled="@_busy" @onclick="() => ReloadAsync(row)">@T("Recharger")</button>
+                        }
+                        else if (row.State == PluginState.Disabled)
+                        {
+                            <button type="button" class="btn btn-sm btn-outline-primary" disabled="@_busy" @onclick="() => EnableAsync(row)">@T("Activer")</button>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn btn-sm btn-outline-primary" disabled="@_busy" @onclick="() => LoadAsync(row)">@T("Charger")</button>
+                        }
+
+                        @if (row.State != PluginState.Disabled)
+                        {
+                            <button type="button" class="btn btn-sm btn-outline-secondary" disabled="@_busy" @onclick="() => DisableAsync(row)">@T("Désactiver")</button>
+                        }
+
+                        @if (_confirmDelete == row.Name)
+                        {
+                            <button type="button" class="btn btn-sm btn-danger" disabled="@_busy" @onclick="() => DeleteAsync(row)">@T("Confirmer la suppression")</button>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn btn-sm btn-outline-danger" disabled="@_busy" @onclick="() => _confirmDelete = row.Name">@T("Supprimer")</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private const long MaxUploadBytes = 200L * 1024 * 1024;
+
+    private enum PluginState { Active, Disabled, Skipped, NotLoaded }
+
+    private sealed record PluginRow(string Name, string? Version, PluginState State, string? Reason, IReadOnlyList<string> Warnings);
+
+    private List<PluginRow> _rows = [];
+    private IReadOnlyList<string> _retained = [];
+    private string? _confirmDelete;
+    private bool _busy;
+
+    protected override void OnInitialized()
+    {
+        Refresh();
+        Registry.Changed += OnRegistryChanged;
+    }
+
+    private void OnRegistryChanged() => _ = InvokeAsync(() =>
+    {
+        Refresh();
+        StateHasChanged();
+    });
+
+    private void Refresh()
+    {
+        Dictionary<string, string> skipped = Registry.Skipped.ToDictionary(s => s.Name, s => s.Reason, StringComparer.OrdinalIgnoreCase);
+
+        _rows = [.. Registry.Installed()
+            .Union(skipped.Keys, StringComparer.OrdinalIgnoreCase)
+            .Order(StringComparer.OrdinalIgnoreCase)
+            .Select(name => Registry.Active.FirstOrDefault(p => string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase)) is { } active
+                ? new PluginRow(active.Name, VersionOf(active.Assembly), PluginState.Active, null, active.Warnings)
+                : new PluginRow(
+                    name,
+                    InstalledVersion(name),
+                    Registry.IsDisabled(name) ? PluginState.Disabled : skipped.ContainsKey(name) ? PluginState.Skipped : PluginState.NotLoaded,
+                    skipped.GetValueOrDefault(name),
+                    []))];
+    }
+
+    private static string? VersionOf(Assembly assembly)
+        => assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0]
+            ?? assembly.GetName().Version?.ToString();
+
+    /// <summary>Version lue dans la DLL déposée, pour un plugin qui n'est pas chargé.</summary>
+    private string? InstalledVersion(string name)
+    {
+        string dll = Path.Combine(Registry.Folder, name, name + ".dll");
+        return File.Exists(dll) ? FileVersionInfo.GetVersionInfo(dll).ProductVersion?.Split('+')[0] : null;
+    }
+
+    /// <summary>État pour l'historique : en français, comme tout texte stocké, lu par tous.</summary>
+    private string HistoryLabel(string name)
+        => _rows.FirstOrDefault(r => string.Equals(r.Name, name, StringComparison.OrdinalIgnoreCase)) is { } row
+            ? row.State switch
+            {
+                PluginState.Active => $"actif ({row.Version})",
+                PluginState.Disabled => "désactivé",
+                PluginState.Skipped => "écarté",
+                _ => "non chargé",
+            }
+            : "absent";
+
+    private async Task InstallAsync(InputFileChangeEventArgs args)
+    {
+        await RunAsync(null, async () =>
+        {
+            await using Stream content = args.File.OpenReadStream(MaxUploadBytes);
+            (string? name, string? error) = await Registry.InstallAsync(content);
+            return (name, error);
+        });
+    }
+
+    private Task LoadAsync(PluginRow row) => RunAsync(row.Name, () => Task.FromResult((row.Name, Registry.Load(row.Name))));
+
+    private Task EnableAsync(PluginRow row) => RunAsync(row.Name, () => Task.FromResult((row.Name, Registry.Enable(row.Name))));
+
+    private Task ReloadAsync(PluginRow row) => RunAsync(row.Name, async () => (row.Name, await Registry.ReloadAsync(row.Name)));
+
+    private Task DisableAsync(PluginRow row) => RunAsync(row.Name, async () =>
+    {
+        await Registry.DisableAsync(row.Name);
+        return (row.Name, (string?)null);
+    });
+
+    private Task DeleteAsync(PluginRow row) => RunAsync(row.Name, async () => (row.Name, await Registry.DeleteAsync(row.Name)));
+
+    /// <summary>
+    /// Exécute une action sur un plugin, la trace dans l'historique de configuration (état avant →
+    /// état après, en français comme tout texte d'historique), puis vérifie si la mémoire des
+    /// plugins déchargés a pu être rendue.
+    /// </summary>
+    private async Task RunAsync(string? name, Func<Task<(string? Name, string? Error)>> action)
+    {
+        _busy = true;
+        _confirmDelete = null;
+
+        // Relevé avant l'action : une installation ne connaît le nom du plugin qu'après.
+        Dictionary<string, string> before = _rows.ToDictionary(r => r.Name, r => HistoryLabel(r.Name), StringComparer.OrdinalIgnoreCase);
+
+        try
+        {
+            (string? affected, string? error) = await action();
+            Refresh();
+
+            if (affected is not null)
+            {
+                string user = (await Auth.GetAuthenticationStateAsync()).User.Identity?.Name ?? "Administrateur";
+                await History.AppendAsync(user, [($"Plugin {affected}", before.GetValueOrDefault(affected, "absent"), HistoryLabel(affected))]);
+            }
+
+            if (error is not null)
+            {
+                ToastService.Notify(new ToastMessage(ToastType.Danger, error));
+            }
+            else if (affected is not null)
+            {
+                ToastService.Notify(new ToastMessage(ToastType.Success, T("Plugin {0} : {1}.", affected, StateText(affected))));
+            }
+
+            _retained = Registry.RetainedInMemory();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    /// <summary>État traduit, pour l'écran.</summary>
+    private string StateText(string name)
+        => _rows.FirstOrDefault(r => string.Equals(r.Name, name, StringComparison.OrdinalIgnoreCase))?.State switch
+        {
+            PluginState.Active => T("actif"),
+            PluginState.Disabled => T("désactivé"),
+            PluginState.Skipped => T("écarté"),
+            PluginState.NotLoaded => T("non chargé"),
+            _ => T("supprimé"),
+        };
+
+    private void CheckMemory() => _retained = Registry.RetainedInMemory();
+
+    public void Dispose() => Registry.Changed -= OnRegistryChanged;
+}

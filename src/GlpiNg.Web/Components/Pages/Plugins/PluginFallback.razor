@@ -1,0 +1,28 @@
+@page "/plugins/{*Path}"
+
+@* Endpoint HTTP de toutes les pages de plugins. Les routes servies par l'URL sont figées au
+   démarrage (MapRazorComponents), alors qu'un plugin peut être chargé à chaud : une URL collée
+   arrive donc ici et n'affiche, au pré-rendu, qu'un chargement. Une fois le circuit ouvert, le
+   Router — qui connaît les plugins actifs (voir Routes.razor) — préfère la page du plugin, plus
+   précise que cette route attrape-tout. S'il n'en trouve aucune, c'est encore cette page qui
+   s'affiche, cette fois pour dire que la page n'existe pas : plugin absent, ou déchargé pendant
+   qu'on la consultait. *@
+
+<PageTitle>@T("Plugin — GlpiNg")</PageTitle>
+
+@if (RendererInfo.IsInteractive)
+{
+    <div class="glping-config-placeholder">
+        <i class="ti ti-puzzle"></i>
+        <p class="mb-0">@T("Cette page n'existe pas, ou le plugin qui la fournit n'est pas chargé.")</p>
+    </div>
+}
+else
+{
+    <p class="text-secondary"><i class="ti ti-loader me-1"></i>@T("Chargement…")</p>
+}
+
+@code {
+    [Parameter]
+    public string? Path { get; set; }
+}

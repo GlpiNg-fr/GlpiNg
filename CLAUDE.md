@@ -28,7 +28,11 @@ cd src/GlpiNg.Web && dotnet run   # launchSettings passes `serve`
 swallow `--urls` & co.), and also starts the server without `serve` under `dotnet ef`
 (`EF.IsDesignTime`) and under IIS (`ASPNETCORE_IIS_PHYSICAL_PATH`, set by ANCM) — the shipped
 `web.config` passes `arguments="serve"` anyway. Docker: `ENTRYPOINT glping.dll`, `CMD ["serve"]`.
-The CLI reads config from the current directory, like the server's content root.
+The CLI reads config from the current directory, like the server's content root — and **only** from
+there: it takes `Storage:RootPath` from `./appsettings.json`, never from a `Storage__RootPath` env var.
+Run from `src/GlpiNg.Web`, it therefore hits whatever database `Data/appsettings.local.json` points at
+(a real one on a dev machine). To target a test install, run it from a folder whose `appsettings.json`
+sets `Storage:RootPath` to that install.
 
 ```bash
 # EF Core migrations (run from src/GlpiNg.Web)
@@ -109,17 +113,36 @@ a plain class library referenced only by the host — never the reverse.
   `application/octet-stream` as an attachment, never the declared MIME type.
 
 **Plugins** (`GlpiNg.Plugins.Sdk`, packed to NuGet together with `GlpiNg.Modules.Abstractions`, its
-dependency): a plugin is a class library with one public `IGlpiNgPlugin`, whose `ConfigureServices`
-is called by `Services/Plugins/PluginLoader` after every built-in module — it contributes
-`IMenuProvider`/`IReportProvider`/`ICronTask`... exactly like an `AddXxxModule`. The host loads
-`{StoragePaths.Plugins}/{Name}/{Name}.dll` at startup (setup complete only) into the **default**
-load context, so shared contracts unify with the host's; plugins must reference the SDK with
-`ExcludeAssets="runtime"`. Their `@page`s are routed via `LoadedPlugins` (Routes.razor and
-`AddAdditionalAssemblies`). A plugin's `wwwroot/` is published beside its DLL (MSBuild targets shipped in the package) and
-served at `/_content/{AssemblyName}/`, RCL-style; only that folder is exposed. A plugin declares
-`MinimumHostVersion`/`MaximumHostVersion` and is **skipped, not fatal**, when the host falls
-outside — as is any unloadable DLL; `LoadedPlugins.Skipped` carries the reason and `/config` →
-Système shows it. No DB tables and no unload yet — hot load/unload is issue #12.
+dependency): a plugin is a class library with one public `IGlpiNgPlugin`. `Services/Plugins/PluginRegistry`
+loads `{StoragePaths.Plugins}/{Name}/{Name}.dll` at startup (setup complete only, after `Build`) and
+**at runtime** — `/config` → Plugins installs a `dotnet publish` zip, enables/disables (persisted in
+`plugins/disabled.json`, a file so startup never needs the DB), reloads, deletes (issue #12). Rules that
+keep hot loading working:
+- Each plugin gets its own **collectible** `PluginLoadContext`, loaded from a **shadow copy**
+  (`plugins/.loaded/`, purged at startup) — Windows locks a loaded DLL, and the copy is what lets an
+  update replace the folder. Anything in the host's TPA list resolves to the default context, so shared
+  contracts unify; plugins still reference the SDK with `ExcludeAssets="runtime"`.
+- `ConfigureServices` fills a **private** `ServiceCollection`, served by `PluginServiceProvider` (plugin
+  first, then the current host scope) through the scoped `PluginScopes`. Only descriptors whose
+  implementation comes from the plugin are kept; framework ones, keyed, open generics and
+  `IHostedService` are dropped and listed as warnings.
+- Contributions reach the host through `IEnumerable<T>` for `IMenuProvider`/`IReportProvider`/`ICronTask`
+  only: `AddPluginHost` (called after every module) moves the host's registrations under a key and
+  re-registers `IEnumerable<T>` explicitly — the container prefers an exact registration — so consumers
+  are untouched. A new contribution contract goes in `PluginServiceCollectionExtensions.Contributions`.
+  A consumer that must see changes live re-resolves on `PluginRegistry.Changed` (see `MainLayout`).
+- Plugin components and controllers are built by `PluginComponentActivator`/`PluginControllerActivator`
+  with the plugin's services — **constructor injection**. Before .NET 11, `@inject` only sees host
+  services (warned at load); `#if NET11_0_OR_GREATER` code (`IComponentPropertyActivator`) opens it.
+- Pages must live under `/plugins/` and not repeat an existing route (a duplicate breaks the Router
+  for everyone). URL entry hits the host's catch-all `Pages/Plugins/PluginFallback` (`/plugins/{*Path}`),
+  since `MapRazorComponents` assemblies are fixed at startup; once interactive, `Routes.razor`'s Router —
+  fed `PluginRegistry.Assemblies` and re-rendered on `Changed` — picks the plugin page.
+- `wwwroot/` is served at `/_content/{AssemblyName}/` by `PluginStaticFileProvider`; only that folder.
+- Unloading is logical: memory comes back only at restart once a plugin page was rendered — Blazor
+  caches component types statically and clears them only under hot reload. `RetainedInMemory` reports it.
+A plugin outside `MinimumHostVersion`/`MaximumHostVersion`, or any unloadable DLL, is **skipped, not
+fatal**; the reason shows in `/config` → Plugins and Système. No DB tables for plugins yet.
 
 **GLPI REST APIs** (`GlpiNg.Web/Api`, mapped in `Program.cs` with `MapMethods` on `/apirest.php`,
 `/api/` → v1 `Legacy/LegacyApiHandler`, and `/api.php` → v2 `HighLevel/HighLevelApiHandler`, v1 when

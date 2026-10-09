@@ -316,9 +316,9 @@ public class Program
         // dans appsettings.local.json (ou une variable d'environnement) pour l'activer.
         string? fallbackConnectionString = builder.Configuration.GetConnectionString("FallbackConnection");
 
-        // Rempli seulement une fois l'installation terminée, comme les modules ; enregistré dans
-        // tous les cas pour Routes.razor.
-        LoadedPlugins loadedPlugins = new([]);
+        // Plugins chargés seulement une fois l'installation terminée, comme les modules (voir
+        // LoadAll après Build).
+        bool installed = false;
         if (builder.Configuration["Setup:IsComplete"] == "true"
             && configuredProviderRaw is not null
             && configuredConnectionString is not null
@@ -615,13 +615,22 @@ public class Program
 
             builder.Services.AddCronModule();
 
-            // Plugins personnels (voir GlpiNg.Plugins.Sdk) : après tous les modules, pour qu'un
-            // plugin se branche sur les mêmes services qu'eux.
-            loadedPlugins = PluginLoader.Load(storagePaths.Plugins, builder.Services, builder.Configuration);
+            installed = true;
         }
-        builder.Services.AddSingleton(loadedPlugins);
+
+        // Plugins personnels (voir GlpiNg.Plugins.Sdk et PluginRegistry) : après tous les modules,
+        // dont AddPluginHost déplace les contributions (menus, rapports, tâches) pour y joindre
+        // celles des plugins. Enregistré même avant l'installation : Routes.razor lit le registre.
+        builder.Services.AddPluginHost();
 
         WebApplication app = builder.Build();
+
+        // Chargés une fois le conteneur construit, et non pendant : leurs services vivent dans un
+        // conteneur à eux, ce qui permet aussi de les charger et décharger à chaud (issue #12).
+        if (installed)
+        {
+            app.Services.GetRequiredService<PluginRegistry>().LoadAll();
+        }
 
         // Catalogues de traduction de l'interface (i18n/{code}.json, texte français → traduction),
         // chargés une fois : la langue de chaque utilisateur est posée par requête et par circuit
@@ -680,31 +689,14 @@ public class Program
         app.UseMigrationsGate();
 
         // Fichiers statiques des plugins : chaque plugin publie son « wwwroot » à côté de sa DLL
-        // (voir les cibles MSBuild du paquet GlpiNg.Plugins.Sdk) et il est servi ici sous
-        // « /_content/{NomDuPlugin}/ », le chemin qu'ASP.NET Core donne aux bibliothèques de
-        // classes Razor — un plugin qui en deviendrait une garde ses liens.
-        //
-        // Seul le sous-dossier wwwroot est exposé : la DLL du plugin et ses dépendances, qui sont
-        // au niveau au-dessus, restent hors de portée d'une requête.
-        foreach (Assembly pluginAssembly in loadedPlugins.Assemblies)
+        // (voir les cibles MSBuild du paquet GlpiNg.Plugins.Sdk), servi sous
+        // « /_content/{NomDuPlugin}/ ». Le fournisseur consulte le registre à chaque requête, pour
+        // suivre les plugins chargés ou déchargés à chaud (voir PluginStaticFileProvider).
+        app.UseStaticFiles(new StaticFileOptions
         {
-            if (pluginAssembly.GetName().Name is not { Length: > 0 } pluginName)
-            {
-                continue;
-            }
-
-            string webRoot = Path.Combine(storagePaths.Plugins, pluginName, "wwwroot");
-            if (!Directory.Exists(webRoot))
-            {
-                continue;
-            }
-
-            app.UseStaticFiles(new StaticFileOptions
-            {
-                FileProvider = new PhysicalFileProvider(webRoot),
-                RequestPath = $"/_content/{pluginName}",
-            });
-        }
+            FileProvider = new PluginStaticFileProvider(app.Services.GetRequiredService<PluginRegistry>()),
+            RequestPath = "/_content",
+        });
 
         app.UseAuthentication();
         app.UseAuthorization();
@@ -766,6 +758,8 @@ public class Program
             // cette liste sert les entrées par l'URL (lien collé, favori, rechargement). Un module
             // déclaré au seul Router donne des pages qui s'ouvrent depuis le menu mais répondent
             // 404 quand on colle leur adresse — c'était le cas de la base de connaissances.
+            // Les plugins n'y figurent pas : cette liste est figée au démarrage, et l'URL d'une de
+            // leurs pages arrive sur la page attrape-tout /plugins/{*path} (voir PluginFallback).
             .AddAdditionalAssemblies(
                 [
                     typeof(InventoryModuleServiceCollectionExtensions).Assembly,
@@ -773,7 +767,6 @@ public class Program
                     typeof(KnowledgeBaseModuleServiceCollectionExtensions).Assembly,
                     typeof(ManagementModuleServiceCollectionExtensions).Assembly,
                     typeof(AssistanceModuleServiceCollectionExtensions).Assembly,
-                    .. loadedPlugins.Assemblies,
                 ])
             .RequireAuthorization()
             // Les conventions posées ici (RequireAuthorization ci-dessus) ne s'appliquent pas
