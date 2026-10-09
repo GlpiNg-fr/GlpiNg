@@ -114,6 +114,9 @@ public class Program
         // échoue s'il n'existe pas encore.
         storagePaths.Ensure(storagePaths.Root);
 
+        // Anciens fichiers renommés par la mise à jour précédente, libérés par le redémarrage.
+        ReleaseUpdater.CleanupPreviousUpdate();
+
         // Fichier écrit par l'assistant d'installation (AnthoDingo.Setup) à la fin du wizard —
         // prioritaire sur appsettings.json une fois l'installation terminée. Ne doit jamais être
         // commité (voir .gitignore).
@@ -278,6 +281,15 @@ public class Program
         // Lecture/écriture de appsettings.json depuis la page /config (adresses d'écoute
         // du serveur, activation de Swagger).
         builder.Services.AddSingleton<AppSettingsFileStore>();
+
+        // Onglet Mises à jour de /config : releases GitHub. Délai large pour le téléchargement de
+        // l'archive (~35 Mo) ; la simple vérification pose son propre délai, court.
+        builder.Services.AddHttpClient(ReleaseUpdater.HttpClientName, client =>
+        {
+            client.Timeout = TimeSpan.FromMinutes(10);
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("GlpiNg");
+        });
+        builder.Services.AddSingleton<ReleaseUpdater>();
         builder.Services.AddSingleton<ConfigHistoryService>();
 
         // Assistant d'installation premier démarrage (page /setup intégrée). GlpiNg n'autorise
