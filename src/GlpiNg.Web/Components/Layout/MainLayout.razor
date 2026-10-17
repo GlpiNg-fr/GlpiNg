@@ -49,7 +49,7 @@
                             {
                                 if (item.Href is not null)
                                 {
-                                    <NavLink href="@item.Href" Match="@(item.Href == "/" ? NavLinkMatch.All : NavLinkMatch.Prefix)" class="glping-nav-subitem">
+                                    <NavLink href="@item.Href" Match="@MatchFor(item.Href)" class="glping-nav-subitem">
                                         <i class="ti @(item.Icon ?? "ti-point")"></i>
                                         <span>@T(item.Label)</span>
                                     </NavLink>
@@ -72,7 +72,7 @@
                                 {
                                     if (item.Href is not null)
                                     {
-                                        <NavLink href="@item.Href" Match="@(item.Href == "/" ? NavLinkMatch.All : NavLinkMatch.Prefix)" class="glping-nav-subitem">
+                                        <NavLink href="@item.Href" Match="@MatchFor(item.Href)" class="glping-nav-subitem">
                                             <i class="ti @(item.Icon ?? "ti-point")"></i>
                                             <span>@T(item.Label)</span>
                                         </NavLink>

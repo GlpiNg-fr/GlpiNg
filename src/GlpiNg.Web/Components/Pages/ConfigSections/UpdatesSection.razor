@@ -1,0 +1,167 @@
+@using GlpiNg.Web.Services
+@inject ReleaseUpdater Updater
+@inject ToastService ToastService
+
+<div class="glping-config-form">
+    <div class="glping-config-field">
+        <label>@T("Version installée")</label>
+        <code>@ReleaseUpdater.CurrentVersion</code> (@ReleaseUpdater.Rid)
+    </div>
+
+    @if (ReleaseUpdater.InContainer)
+    {
+        <p class="hint">
+            @T("GlpiNg tourne dans un conteneur : mettez à jour l'image (ghcr.io/glping-fr/glping) plutôt que le programme.")
+        </p>
+    }
+    else
+    {
+        @if (_checking)
+        {
+            <p>@T("Recherche d'une mise à jour…")</p>
+        }
+        else if (_offline)
+        {
+            <div class="alert alert-warning">
+                @T("Le serveur n'a pas pu joindre GitHub. Téléchargez la release depuis")
+                <a href="https://github.com/@ReleaseUpdater.Repository/releases" target="_blank" rel="noopener">github.com/@ReleaseUpdater.Repository/releases</a>
+                — @T("l'archive {0} — puis déposez-la ici.", $"glping-<version>-{ReleaseUpdater.Rid}.zip")
+            </div>
+            <div class="glping-config-field">
+                <label for="release-upload">@T("Archive de la release")</label>
+                <InputFile id="release-upload" class="form-control" accept=".zip" OnChange="UploadAsync" disabled="@_busy" />
+            </div>
+        }
+        else if (_latest is null)
+        {
+            <p>@T("Aucune release publiée.")</p>
+        }
+        else if (_latest.Tag == ReleaseUpdater.CurrentVersion)
+        {
+            <p>@T("GlpiNg est à jour.")</p>
+        }
+        else
+        {
+            <div class="glping-config-field">
+                <label>@T("Dernière version publiée")</label>
+                <a href="@_latest.PageUrl" target="_blank" rel="noopener"><code>@_latest.Tag</code></a>
+            </div>
+            @if (_latest.AssetUrl is null)
+            {
+                <p class="hint">@T("Cette release ne contient pas d'archive pour {0}.", ReleaseUpdater.Rid)</p>
+            }
+            else
+            {
+                <button type="button" class="btn btn-primary" disabled="@_busy" @onclick="DownloadAsync">
+                    <i class="ti ti-download me-1"></i>@T("Télécharger")
+                </button>
+            }
+        }
+
+        @if (_busy)
+        {
+            <p class="text-secondary mt-3"><i class="ti ti-loader me-1"></i>@T("Préparation de la mise à jour…")</p>
+        }
+
+        @if (_staged is not null)
+        {
+            <div class="alert alert-info mt-3">
+                <p>@T("La version {0} est prête à être installée.", _staged)</p>
+                <p class="mb-2">
+                    @T("Le serveur s'arrêtera après l'installation : IIS, systemd ou le service Windows le relancent ; lancé à la main, relancez « glping serve ». Si la version apporte des migrations, la page de mise à niveau de la base s'ouvrira.")
+                </p>
+                <button type="button" class="btn btn-danger" disabled="@_busy" @onclick="Apply">
+                    <i class="ti ti-player-play me-1"></i>@T("Installer et redémarrer")
+                </button>
+            </div>
+        }
+
+        @if (!_checking)
+        {
+            <button type="button" class="btn btn-link px-0 mt-3" disabled="@_busy" @onclick="CheckAsync">
+                <i class="ti ti-refresh me-1"></i>@T("Rechercher à nouveau")
+            </button>
+        }
+    }
+</div>
+
+@code {
+    private const long MaxUploadBytes = 500L * 1024 * 1024;
+
+    private ReleaseUpdater.ReleaseInfo? _latest;
+    private string? _staged;
+    private bool _checking;
+    private bool _offline;
+    private bool _busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _staged = Updater.StagedVersion;
+
+        if (!ReleaseUpdater.InContainer)
+        {
+            await CheckAsync();
+        }
+    }
+
+    private async Task CheckAsync()
+    {
+        _checking = true;
+        _offline = false;
+
+        try
+        {
+            using CancellationTokenSource timeout = new(TimeSpan.FromSeconds(10));
+            _latest = await Updater.GetLatestAsync(timeout.Token);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException)
+        {
+            _offline = true;
+        }
+        finally
+        {
+            _checking = false;
+        }
+    }
+
+    private Task DownloadAsync() => StageAsync(token => Updater.DownloadAsync(_latest!.AssetUrl!, token));
+
+    private Task UploadAsync(InputFileChangeEventArgs args)
+        => StageAsync(async token =>
+        {
+            await using Stream content = args.File.OpenReadStream(MaxUploadBytes, token);
+            return await Updater.StageAsync(content, token);
+        });
+
+    private async Task StageAsync(Func<CancellationToken, Task<string>> stage)
+    {
+        _busy = true;
+
+        try
+        {
+            _staged = await stage(CancellationToken.None);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or InvalidDataException or IOException)
+        {
+            ToastService.Notify(new ToastMessage(ToastType.Danger, ex.Message));
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private void Apply()
+    {
+        try
+        {
+            Updater.Apply();
+            ToastService.Notify(new ToastMessage(ToastType.Success, T("Mise à jour installée, redémarrage du serveur…")));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            ToastService.Notify(new ToastMessage(ToastType.Danger,
+                T("Installation annulée, la version actuelle est conservée : {0}", ex.Message)));
+        }
+    }
+}

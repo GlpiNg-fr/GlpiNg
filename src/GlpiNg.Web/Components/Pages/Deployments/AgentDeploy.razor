@@ -1,0 +1,163 @@
+@page "/tools/deployments/agent-deploy"
+@using GlpiNg.Modules.Deployment.Components.Pages.Deployments
+@using GlpiNg.Modules.Deployment.Services
+@rendermode InteractiveServer
+
+<PageTitle>@T("Déployer l'agent — GlpiNg")</PageTitle>
+
+<DeploymentTopMenu Current="agentdeploy" />
+
+@if (_settings is null)
+{
+    <p>@T("Chargement…")</p>
+}
+else if (string.IsNullOrWhiteSpace(_settings.InstallerFileName))
+{
+    <div class="alert alert-warning">
+        @T("Aucun installeur n'est configuré.")
+        <a href="/tools/deployments/agent-install">@T("Téléversez-en un dans « Installation de l'agent ».")</a>
+    </div>
+}
+else
+{
+    <div class="row">
+        <div class="col-lg-7">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="ti ti-devices me-1"></i>@T("Postes à équiper")</h3>
+                </div>
+                <div class="card-body">
+                    <label class="form-label" for="targets">@T("Un nom d'hôte ou une adresse IP par ligne")</label>
+                    <textarea id="targets" class="form-control font-monospace" rows="8" @bind="_targetsText" @bind:event="oninput"></textarea>
+                    <div class="form-hint">@T("{0} poste(s) retenu(s).", Targets().Count)</div>
+
+                    <hr />
+
+                    <label class="form-label" for="csv">@T("Importer depuis un CSV")</label>
+                    <InputFile id="csv" class="form-control" OnChange="ImportCsvAsync" accept=".csv,.txt" />
+                    <div class="form-hint">@T("Première colonne : le nom d'hôte. Les autres colonnes et la ligne d'en-tête sont ignorées.")</div>
+
+                    <hr />
+
+                    <label class="form-label" for="ldap-server">@T("Importer depuis un annuaire LDAP")</label>
+                    @if (_ldapServers.Count == 0)
+                    {
+                        <p class="text-secondary mb-0">@T("Aucun annuaire actif n'est configuré.")</p>
+                    }
+                    else
+                    {
+                        <div class="row g-2">
+                            <div class="col-md-5">
+                                <select id="ldap-server" class="form-select" @bind="_ldapServerId">
+                                    @foreach ((int id, string name) in _ldapServers)
+                                    {
+                                        <option value="@id">@name</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <input class="form-control" placeholder="@T("Filtrer par nom…")" @bind="_ldapTerm" />
+                            </div>
+                            <div class="col-md-3">
+                                <button type="button" class="btn btn-outline-primary w-100" @onclick="SearchLdapAsync" disabled="@_isSearching">
+                                    <i class="ti ti-search me-1"></i>@(_isSearching ? T("Recherche…") : T("Rechercher"))
+                                </button>
+                            </div>
+                        </div>
+
+                        @if (_ldapError is { Length: > 0 } ldapError)
+                        {
+                            <div class="alert alert-danger mt-2 mb-0">@ldapError</div>
+                        }
+                        else if (_ldapHosts.Count > 0)
+                        {
+                            <div class="mt-2">
+                                <div class="text-secondary mb-1">@T("{0} poste(s) trouvé(s).", _ldapHosts.Count)</div>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="AddLdapHosts">
+                                    <i class="ti ti-plus me-1"></i>@T("Ajouter à la liste")
+                                </button>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="ti ti-key me-1"></i>@T("Compte administrateur des postes")</h3>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label" for="winrm-user">@T("Identifiant")</label>
+                        <input id="winrm-user" class="form-control" autocomplete="off" @bind="_user" placeholder="DOMAINE\administrateur" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="winrm-password">@T("Mot de passe")</label>
+                        <input id="winrm-password" type="password" class="form-control" autocomplete="new-password" @bind="_password" />
+                    </div>
+                    <div class="form-hint mb-3">
+                        @T("Utilisé le temps du déploiement uniquement : il n'est jamais enregistré. Les postes doivent accepter WinRM sur le port {0}.", _settings.WinRmPort)
+                    </div>
+
+                    @if (_isRunning)
+                    {
+                        <button type="button" class="btn btn-outline-danger w-100" @onclick="Cancel">
+                            <i class="ti ti-player-stop me-1"></i>@T("Arrêter")
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-primary w-100" @onclick="DeployAsync" disabled="@(!CanDeploy)">
+                            <i class="ti ti-rocket me-1"></i>@T("Déployer l'agent")
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (_results.Count > 0)
+    {
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="ti ti-list-check me-1"></i>@T("Résultats")</h3>
+                @if (_isRunning)
+                {
+                    <span class="card-subtitle ms-auto">@T("{0} / {1}", _results.Count, Targets().Count)</span>
+                }
+            </div>
+            <div class="table-responsive">
+                <table class="table card-table table-vcenter">
+                    <thead>
+                        <tr>
+                            <th>@T("Poste")</th>
+                            <th>@T("État")</th>
+                            <th>@T("Détail")</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (AgentInstallOutcome result in _results)
+                        {
+                            <tr>
+                                <td>@result.Host</td>
+                                <td>
+                                    @if (result.Success)
+                                    {
+                                        <span class="badge bg-success text-white">@T("Installé")</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger text-white">@T("Échec")</span>
+                                    }
+                                </td>
+                                <td class="text-secondary font-monospace" style="white-space: pre-wrap;">@result.Message</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+}

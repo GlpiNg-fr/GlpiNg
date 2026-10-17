@@ -37,6 +37,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
     private string _activeTabKey = "main";
     private bool _isSaving;
     private bool _isTesting;
+    private string _filterTestLogin = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -58,6 +59,16 @@ public partial class Detail : ComponentBase, IAsyncDisposable
             return;
         }
 
+        // Un filtre mal formé ferait échouer toutes les connexions de l'annuaire : refusé ici, avec
+        // la raison, plutôt que découvert à la prochaine connexion dans le journal du serveur.
+        (string? loginFilter, string? filterError) = LdapFilter.Normalize(_server.LoginFilter);
+        if (filterError is not null)
+        {
+            ToastService.Notify(new ToastMessage(ToastType.Danger, Tr.T("Filtre de connexion invalide : {0}", filterError)));
+            return;
+        }
+
+        _server.LoginFilter = loginFilter;
         _isSaving = true;
 
         try
@@ -81,7 +92,15 @@ public partial class Detail : ComponentBase, IAsyncDisposable
     // Teste avec le mot de passe en cours de saisie (s'il y en a un) plutôt qu'avec la valeur
     // déjà enregistrée, sans l'écrire en base : évite d'imposer "Sauvegarder" avant de pouvoir
     // vérifier une modification du compte de connexion.
-    private async Task TestConnectionAsync()
+    private Task TestConnectionAsync() => RunTestAsync(probe => LdapAuth.TestServerConnection(probe));
+
+    /// <summary>
+    /// Ce compte peut-il se connecter ? Avec le filtre tel qu'il est saisi, enregistré ou non : c'est
+    /// en le mettant au point qu'on en a besoin.
+    /// </summary>
+    private Task TestFilterAsync() => RunTestAsync(probe => LdapAuth.CheckLoginFilter(probe, _filterTestLogin));
+
+    private async Task RunTestAsync(Func<AuthLdapServer, LdapConnectionTestResult> test)
     {
         if (_server is null)
         {
@@ -94,6 +113,8 @@ public partial class Detail : ComponentBase, IAsyncDisposable
             Host = _server.Host,
             Port = _server.Port,
             UseSsl = _server.UseSsl,
+            UseStartTls = _server.UseStartTls,
+            TimeoutSeconds = _server.TimeoutSeconds,
             BaseDn = _server.BaseDn,
             UseBind = _server.UseBind,
             BindDn = _server.BindDn,
@@ -101,13 +122,14 @@ public partial class Detail : ComponentBase, IAsyncDisposable
                 ? _server.BindPasswordProtected
                 : Protector.Protect(_bindPasswordPlain),
             LoginField = _server.LoginField,
+            LoginFilter = _server.LoginFilter,
         };
 
         _isTesting = true;
 
         try
         {
-            LdapConnectionTestResult testResult = await Task.Run(() => LdapAuth.TestServerConnection(probe));
+            LdapConnectionTestResult testResult = await Task.Run(() => test(probe));
             ToastService.Notify(new ToastMessage(testResult.Success ? ToastType.Success : ToastType.Danger, testResult.Message));
         }
         finally

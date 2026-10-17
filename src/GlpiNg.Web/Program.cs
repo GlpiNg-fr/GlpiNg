@@ -22,6 +22,7 @@ using GlpiNg.Modules.Inventory;
 using GlpiNg.Modules.KnowledgeBase;
 using GlpiNg.Modules.Management;
 using GlpiNg.Modules.Assistance;
+using GlpiNg.Modules.Reservations;
 using GlpiNg.Modules.Scheduler;
 using Microsoft.Extensions.FileProviders;
 using GlpiNg.Web.Components;
@@ -34,6 +35,7 @@ using GlpiNg.Web.Services.Documents;
 using GlpiNg.Web.Services.Notes;
 using GlpiNg.Web.Services.FieldUnicity;
 using GlpiNg.Web.Services.Notifications;
+using GlpiNg.Web.Services.Mail;
 using GlpiNg.Modules.Abstractions.ExternalLinks;
 using GlpiNg.Web.Services.ExternalLinks;
 using GlpiNg.Web.Services.Webhooks;
@@ -113,6 +115,9 @@ public class Program
         // fournisseur de fichiers de configuration surveille le dossier (reloadOnChange) et
         // échoue s'il n'existe pas encore.
         storagePaths.Ensure(storagePaths.Root);
+
+        // Anciens fichiers renommés par la mise à jour précédente, libérés par le redémarrage.
+        ReleaseUpdater.CleanupPreviousUpdate();
 
         // Fichier écrit par l'assistant d'installation (AnthoDingo.Setup) à la fin du wizard —
         // prioritaire sur appsettings.json une fois l'installation terminée. Ne doit jamais être
@@ -278,6 +283,15 @@ public class Program
         // Lecture/écriture de appsettings.json depuis la page /config (adresses d'écoute
         // du serveur, activation de Swagger).
         builder.Services.AddSingleton<AppSettingsFileStore>();
+
+        // Onglet Mises à jour de /config : releases GitHub. Délai large pour le téléchargement de
+        // l'archive (~35 Mo) ; la simple vérification pose son propre délai, court.
+        builder.Services.AddHttpClient(ReleaseUpdater.HttpClientName, client =>
+        {
+            client.Timeout = TimeSpan.FromMinutes(10);
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("GlpiNg");
+        });
+        builder.Services.AddSingleton<ReleaseUpdater>();
         builder.Services.AddSingleton<ConfigHistoryService>();
 
         // Assistant d'installation premier démarrage (page /setup intégrée). GlpiNg n'autorise
@@ -531,6 +545,14 @@ public class Program
             // du groupe « Assistance ». Même raison que ci-dessus pour l'ordre.
             builder.Services.AddAssistanceModule();
 
+            // Module Réservations (voir
+            // GlpiNg.Modules.Reservations.ReservationsModuleServiceCollectionExtensions) : les
+            // éléments réservables et leurs créneaux, entrée « Réservations » du groupe
+            // « Outils ». Même raison que ci-dessus pour l'ordre. Il rend IItemReservations, que
+            // les fiches des autres modules résolvent en facultatif pour leur onglet
+            // « Réservations » — d'où un enregistrement avant les pages qui s'en servent.
+            builder.Services.AddReservationsModule();
+
             // Rapports (/tools/reports) : vue unique sur les IReportProvider contribués par les
             // modules ci-dessus (Inventory, Deployment, Base de connaissances). Enregistré après eux, pour que la
             // résolution d'IEnumerable<IReportProvider> les voie tous — l'hôte ne déclare lui-même
@@ -560,6 +582,11 @@ public class Program
             // éteint en pleine installation) : sans elle, ils restent « en cours » pour toujours.
             builder.Services.AddScoped<ICronTask, DeploymentJobTimeoutCronTask>();
 
+            // Équipe de GLPI-Agent les matériels que la découverte réseau remonte sans agent, selon
+            // les réglages de /tools/deployments/agent-auto — voir AgentAutoDeployCronTask, sans
+            // effet tant que le déploiement automatique n'y est pas activé.
+            builder.Services.AddScoped<ICronTask, AgentAutoDeployCronTask>();
+
             // Notifications (voir /config/notifications, Models/Notifications et
             // Services/Notifications) : NotificationDispatchService dépose des QueuedNotification
             // au fil des événements réels de GlpiNg (nouvel ordinateur, nouvel agent, fin de
@@ -575,6 +602,12 @@ public class Program
 
             builder.Services.AddSingleton<SmtpMailSender>();
             builder.Services.AddScoped<ICronTask, QueuedNotificationSenderCronTask>();
+
+            // Collecteurs de courriels (voir /config/mail-collectors) : le pendant entrant du SMTP
+            // ci-dessus — une boîte IMAP relevée par la tâche cron, un ticket par message. Scoped
+            // comme les autres tâches : le service partage le GlpiNgDbContext de la portée.
+            builder.Services.AddScoped<MailCollectorService>();
+            builder.Services.AddScoped<ICronTask, MailCollectorCronTask>();
 
             // Unicité des champs (voir /config/field-unicity, Models/FieldUnicity et
             // Services/FieldUnicity) : les modules ne connaissent que le contrat
@@ -761,6 +794,7 @@ public class Program
                     typeof(KnowledgeBaseModuleServiceCollectionExtensions).Assembly,
                     typeof(ManagementModuleServiceCollectionExtensions).Assembly,
                     typeof(AssistanceModuleServiceCollectionExtensions).Assembly,
+                    typeof(ReservationsModuleServiceCollectionExtensions).Assembly,
                     .. loadedPlugins.Assemblies,
                 ])
             .RequireAuthorization()

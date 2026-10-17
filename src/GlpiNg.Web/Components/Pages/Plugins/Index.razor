@@ -1,0 +1,58 @@
+@page "/config/plugins"
+@rendermode InteractiveServer
+
+<PageTitle>@T("Plugins — GlpiNg")</PageTitle>
+
+@* Maquette seule : aucun chargement de plugin n'est branché ici pour l'instant. *@
+<div class="glping-list-page">
+    <div class="alert alert-info d-flex align-items-start" role="alert">
+        <i class="ti ti-info-circle me-2 mt-1"></i>
+        <div>
+            <h4 class="alert-title">@T("Les plugins ne sont pas disponibles dans cette version")</h4>
+            <div class="text-secondary">@T("Cette page présente l'interface à venir : l'installation et la gestion des plugins seront proposées dans une version ultérieure.")</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header d-flex align-items-center justify-content-between glping-list-toolbar">
+            <div class="btn-list">
+                <div class="input-icon">
+                    <span class="input-icon-addon"><i class="ti ti-search"></i></span>
+                    <input type="text" class="form-control" placeholder="@(T("Rechercher un plugin..."))" disabled />
+                </div>
+            </div>
+
+            <div class="btn-list align-items-center">
+                <button type="button" class="btn btn-icon" title="@(T("Rafraîchir"))" disabled>
+                    <i class="ti ti-refresh"></i>
+                </button>
+                <button type="button" class="btn btn-primary" disabled>
+                    <i class="ti ti-plus me-1"></i>@T("Installer un plugin")
+                </button>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+                <thead>
+                    <tr>
+                        <th>@T("Nom")</th>
+                        <th>@T("Version")</th>
+                        <th>@T("Auteur")</th>
+                        <th>@T("Licence")</th>
+                        <th>@T("État")</th>
+                        <th class="w-1"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="6" class="text-center text-secondary py-5">
+                            <i class="ti ti-plug-off d-block mb-2" style="font-size: 2rem;"></i>
+                            @T("Aucun plugin installé.")
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

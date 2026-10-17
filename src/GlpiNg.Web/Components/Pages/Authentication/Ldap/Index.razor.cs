@@ -38,7 +38,8 @@ public partial class Index : ComponentBase
 
     private bool CanCreate => !string.IsNullOrWhiteSpace(_newServer.Name)
         && !string.IsNullOrWhiteSpace(_newServer.Host)
-        && !string.IsNullOrWhiteSpace(_newServer.BaseDn);
+        && !string.IsNullOrWhiteSpace(_newServer.BaseDn)
+        && LdapFilter.Normalize(_newServer.LoginFilter).Error is null;
 
     protected override async Task OnInitializedAsync()
     {
@@ -139,6 +140,7 @@ public partial class Index : ComponentBase
         }
 
         _newServer.BindPasswordProtected = Protector.Protect(_newBindPassword);
+        _newServer.LoginFilter = LdapFilter.Normalize(_newServer.LoginFilter).Filter;
         db.AuthLdapServers.Add(_newServer);
         await db.SaveChangesAsync();
 

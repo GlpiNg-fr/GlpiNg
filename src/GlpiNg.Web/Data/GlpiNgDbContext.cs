@@ -10,6 +10,7 @@ using GlpiNg.Web.Models;
 using GlpiNg.Web.Models.Notifications;
 using GlpiNg.Modules.Management.Models;
 using GlpiNg.Modules.Assistance.Models;
+using GlpiNg.Modules.Reservations.Models;
 using GlpiNg.Web.Models.CustomAssets;
 using GlpiNg.Web.Models.ExternalLinks;
 using GlpiNg.Web.Models.FieldUnicity;
@@ -130,6 +131,8 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<AuthLdapServer> AuthLdapServers => Set<AuthLdapServer>();
     public DbSet<AuthMailServer> AuthMailServers => Set<AuthMailServer>();
 
+    public DbSet<MailCollector> MailCollectors => Set<MailCollector>();
+
     public DbSet<OAuthClient> OAuthClients => Set<OAuthClient>();
 
     public DbSet<ApiClient> ApiClients => Set<ApiClient>();
@@ -222,6 +225,9 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<DocumentItem> DocumentItems => Set<DocumentItem>();
 
     public DbSet<Notepad> Notepads => Set<Notepad>();
+
+    public DbSet<ReservableItem> ReservableItems => Set<ReservableItem>();
+    public DbSet<Reservation> Reservations => Set<Reservation>();
 
     public DbSet<EventLogEntry> EventLogEntries => Set<EventLogEntry>();
 
@@ -671,6 +677,18 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
         modelBuilder.Entity<AuthMailServer>()
             .HasIndex(s => s.Name)
             .IsUnique();
+
+        modelBuilder.Entity<MailCollector>()
+            .HasIndex(c => c.Name)
+            .IsUnique();
+
+        // SetNull comme pour les autres rattachements à une entité : supprimer une entité ne doit
+        // pas supprimer le collecteur, qui retombe simplement sur l'entité racine.
+        modelBuilder.Entity<MailCollector>()
+            .HasOne(c => c.Entity)
+            .WithMany()
+            .HasForeignKey(c => c.EntityId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         // SetNull plutôt que Restrict/Cascade : supprimer un annuaire LDAP ne doit pas empêcher
         // sa suppression ni supprimer les comptes qui s'y authentifiaient — ils retombent
@@ -1489,6 +1507,8 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
 
         ConfigureNotes(modelBuilder);
 
+        ConfigureReservations(modelBuilder);
+
         ConfigureEntityScoping(modelBuilder);
     }
 
@@ -1561,6 +1581,41 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
         // La liste est rangée par catégorie à chaque ouverture de la page.
         modelBuilder.Entity<KnowledgeBaseArticle>()
             .HasIndex(article => article.CategoryId);
+    }
+
+    /// <summary>
+    /// Réservations (module GlpiNg.Modules.Reservations) : autorisations de réserver, et créneaux.
+    /// </summary>
+    private static void ConfigureReservations(ModelBuilder modelBuilder)
+    {
+        // Un objet n'est réservable qu'une fois : l'autorisation est posée et reposée depuis sa
+        // fiche (ReservationService.EnableAsync), cet index en fait une garantie plutôt qu'une
+        // intention — deux lignes pour le même objet donneraient deux plannings concurrents, dont
+        // un seul serait vu par le contrôle de chevauchement.
+        modelBuilder.Entity<ReservableItem>()
+            .HasIndex(item => new { item.ItemType, item.ItemId })
+            .IsUnique();
+
+        // Les créneaux n'ont pas d'existence sans l'autorisation qui les porte : ils partent
+        // avec elle (voir Items.razor.cs, qui s'appuie sur cette cascade).
+        modelBuilder.Entity<Reservation>()
+            .HasOne(reservation => reservation.ReservableItem)
+            .WithMany(item => item.Reservations)
+            .HasForeignKey(reservation => reservation.ReservableItemId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Le planning lit toujours les créneaux d'un élément par date, et le contrôle de
+        // chevauchement fait exactement la même lecture.
+        modelBuilder.Entity<Reservation>()
+            .HasIndex(reservation => new { reservation.ReservableItemId, reservation.Begin });
+
+        // L'onglet « Réservations » d'une fiche utilisateur, et le rappel d'échéance, balaient sur
+        // ces deux colonnes-là.
+        modelBuilder.Entity<Reservation>()
+            .HasIndex(reservation => reservation.UserId);
+
+        modelBuilder.Entity<Reservation>()
+            .HasIndex(reservation => reservation.Begin);
     }
 
     /// <summary>

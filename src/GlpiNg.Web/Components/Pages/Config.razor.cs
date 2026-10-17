@@ -21,6 +21,7 @@ public partial class Config
         new("network", "ti-network", "GLPI Network"),
         new("helpdesk", "ti-lifebuoy", "Helpdesk"),
         new("historique", "ti-history", "Historique"),
+        new("mises-a-jour", "ti-cloud-download", "Mises à jour"),
         new("tous", "ti-apps", "Tous"),
     ];
 
