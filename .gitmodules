@@ -25,3 +25,6 @@
 [submodule "src/GlpiNg.Modules.Management"]
 	path = src/GlpiNg.Modules.Management
 	url = https://github.com/GlpiNg-fr/GlpiNg.Modules.Management.git
+[submodule "src/GlpiNg.Modules.Reservations"]
+	path = src/GlpiNg.Modules.Reservations
+	url = https://github.com/GlpiNg-fr/GlpiNg.Modules.Reservations.git
