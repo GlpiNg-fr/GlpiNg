@@ -5,6 +5,9 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using AnthoDingo.Setup;
+using Microsoft.Data.SqlClient;
+using MySqlConnector;
+using Npgsql;
 using GlpiNg.Modules.Abstractions.Cron;
 using GlpiNg.Modules.Abstractions.Deployment;
 using GlpiNg.Modules.Abstractions.Directory;
@@ -22,6 +25,7 @@ using GlpiNg.Modules.Inventory;
 using GlpiNg.Modules.KnowledgeBase;
 using GlpiNg.Modules.Management;
 using GlpiNg.Modules.Assistance;
+using GlpiNg.Modules.Reservations;
 using GlpiNg.Modules.Scheduler;
 using Microsoft.Extensions.FileProviders;
 using GlpiNg.Web.Components;
@@ -34,6 +38,7 @@ using GlpiNg.Web.Services.Documents;
 using GlpiNg.Web.Services.Notes;
 using GlpiNg.Web.Services.FieldUnicity;
 using GlpiNg.Web.Services.Notifications;
+using GlpiNg.Web.Services.Mail;
 using GlpiNg.Modules.Abstractions.ExternalLinks;
 using GlpiNg.Web.Services.ExternalLinks;
 using GlpiNg.Web.Services.Webhooks;
@@ -296,7 +301,13 @@ public class Program
         // que les bases relationnelles serveur — SQLite n'est volontairement pas proposé.
         builder.Services.AddFileBasedSetup<GlpiNgSetupInitializer>(setupOptions =>
         {
-            setupOptions.AllowedProviders = [DbProvider.SqlServer, DbProvider.MySql, DbProvider.Postgres];
+            // Depuis AnthoDingo.Setup 3.0.0, la bibliothèque n'embarque plus aucun pilote
+            // ADO.NET : l'application fournit ceux qu'elle référence déjà, et la liste des
+            // types de base proposés découle de ce qui est enregistré ici — d'où l'absence
+            // de SQLite. Le premier inscrit est présélectionné.
+            setupOptions.Providers[DbProvider.SqlServer] = SqlClientFactory.Instance;
+            setupOptions.Providers[DbProvider.MySql] = MySqlConnectorFactory.Instance;
+            setupOptions.Providers[DbProvider.Postgres] = NpgsqlFactory.Instance;
             setupOptions.AllowUsernameAdmin = true;
 
             // L'assistant écrit dans la racine du stockage et non à côté du binaire, comme le
@@ -543,6 +554,14 @@ public class Program
             // du groupe « Assistance ». Même raison que ci-dessus pour l'ordre.
             builder.Services.AddAssistanceModule();
 
+            // Module Réservations (voir
+            // GlpiNg.Modules.Reservations.ReservationsModuleServiceCollectionExtensions) : les
+            // éléments réservables et leurs créneaux, entrée « Réservations » du groupe
+            // « Outils ». Même raison que ci-dessus pour l'ordre. Il rend IItemReservations, que
+            // les fiches des autres modules résolvent en facultatif pour leur onglet
+            // « Réservations » — d'où un enregistrement avant les pages qui s'en servent.
+            builder.Services.AddReservationsModule();
+
             // Rapports (/tools/reports) : vue unique sur les IReportProvider contribués par les
             // modules ci-dessus (Inventory, Deployment, Base de connaissances). Enregistré après eux, pour que la
             // résolution d'IEnumerable<IReportProvider> les voie tous — l'hôte ne déclare lui-même
@@ -572,6 +591,11 @@ public class Program
             // éteint en pleine installation) : sans elle, ils restent « en cours » pour toujours.
             builder.Services.AddScoped<ICronTask, DeploymentJobTimeoutCronTask>();
 
+            // Équipe de GLPI-Agent les matériels que la découverte réseau remonte sans agent, selon
+            // les réglages de /tools/deployments/agent-auto — voir AgentAutoDeployCronTask, sans
+            // effet tant que le déploiement automatique n'y est pas activé.
+            builder.Services.AddScoped<ICronTask, AgentAutoDeployCronTask>();
+
             // Notifications (voir /config/notifications, Models/Notifications et
             // Services/Notifications) : NotificationDispatchService dépose des QueuedNotification
             // au fil des événements réels de GlpiNg (nouvel ordinateur, nouvel agent, fin de
@@ -587,6 +611,12 @@ public class Program
 
             builder.Services.AddSingleton<SmtpMailSender>();
             builder.Services.AddScoped<ICronTask, QueuedNotificationSenderCronTask>();
+
+            // Collecteurs de courriels (voir /config/mail-collectors) : le pendant entrant du SMTP
+            // ci-dessus — une boîte IMAP relevée par la tâche cron, un ticket par message. Scoped
+            // comme les autres tâches : le service partage le GlpiNgDbContext de la portée.
+            builder.Services.AddScoped<MailCollectorService>();
+            builder.Services.AddScoped<ICronTask, MailCollectorCronTask>();
 
             // Unicité des champs (voir /config/field-unicity, Models/FieldUnicity et
             // Services/FieldUnicity) : les modules ne connaissent que le contrat
@@ -773,6 +803,7 @@ public class Program
                     typeof(KnowledgeBaseModuleServiceCollectionExtensions).Assembly,
                     typeof(ManagementModuleServiceCollectionExtensions).Assembly,
                     typeof(AssistanceModuleServiceCollectionExtensions).Assembly,
+                    typeof(ReservationsModuleServiceCollectionExtensions).Assembly,
                     .. loadedPlugins.Assemblies,
                 ])
             .RequireAuthorization()

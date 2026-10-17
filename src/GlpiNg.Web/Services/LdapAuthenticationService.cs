@@ -140,9 +140,7 @@ public class LdapAuthenticationService(
                 ? $"({loginField}=*)"
                 : $"({loginField}=*{EscapeLdapFilterValue(term.Trim())}*)";
 
-            string filter = string.IsNullOrWhiteSpace(server.LoginFilter)
-                ? termFilter
-                : $"(&{termFilter}{server.LoginFilter})";
+            string filter = LdapFilter.Combine(termFilter, server.LoginFilter);
 
             string[] requested = [.. UserAttributeNames(server).Prepend(loginField)];
 
@@ -184,6 +182,69 @@ public class LdapAuthenticationService(
         }
     }
 
+    /// <summary>
+    /// Recherche des <b>postes</b> dans un annuaire (Active Directory), pour la page
+    /// « Déployer l'agent » : renvoie les noms d'hôte joignables, <c>dNSHostName</c> de
+    /// préférence au <c>cn</c>, qui n'est qu'un nom court. Même bind de service que
+    /// <see cref="SearchUsersAsync"/> ; le filtre de connexion de l'annuaire ne s'applique pas,
+    /// il concerne les comptes qui se connectent, pas les machines.
+    /// </summary>
+    public async Task<(IReadOnlyList<string> Hosts, string? Error)> SearchComputersAsync(int serverId, string? term, CancellationToken ct)
+    {
+        await using GlpiNgDbContext db = await dbFactory.CreateDbContextAsync(ct);
+        AuthLdapServer? server = await db.AuthLdapServers.AsNoTracking().FirstOrDefaultAsync(s => s.Id == serverId, ct);
+
+        if (server is null)
+        {
+            return ([], "Annuaire introuvable.");
+        }
+
+        try
+        {
+            using LdapConnection connection = CreateConnection(server);
+            BindService(connection, server);
+
+            string escaped = EscapeLdapFilterValue((term ?? string.Empty).Trim());
+            string filter = string.IsNullOrEmpty(escaped)
+                ? "(objectClass=computer)"
+                : $"(&(objectClass=computer)(|(cn=*{escaped}*)(dNSHostName=*{escaped}*)))";
+
+            SearchRequest request = new(server.BaseDn, filter, System.DirectoryServices.Protocols.SearchScope.Subtree,
+                "dNSHostName", "cn");
+
+            if (server.MaxResults > 0)
+            {
+                request.SizeLimit = server.MaxResults;
+            }
+
+            if (server.PageSize > 0)
+            {
+                request.Controls.Add(new PageResultRequestControl(server.PageSize));
+            }
+
+            SearchResponse response = (SearchResponse)connection.SendRequest(request);
+
+            List<string> hosts = [];
+            foreach (SearchResultEntry entry in response.Entries.OfType<SearchResultEntry>())
+            {
+                Dictionary<string, string> attributes = ReadAttributes(entry);
+                string? host = attributes.GetValueOrDefault("dNSHostName") ?? attributes.GetValueOrDefault("cn");
+
+                if (!string.IsNullOrWhiteSpace(host))
+                {
+                    hosts.Add(host.Trim());
+                }
+            }
+
+            return ([.. hosts.Distinct(StringComparer.OrdinalIgnoreCase).Order(StringComparer.CurrentCultureIgnoreCase)], null);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Recherche LDAP de postes échouée sur l'annuaire {Server}.", server.Name);
+            return ([], DescribeSearchFailure(server, ex));
+        }
+    }
+
     /// <summary>Vérifie qu'un annuaire est joignable et que le bind de service (ou anonyme) fonctionne — sans authentifier d'utilisateur.</summary>
     public LdapConnectionTestResult TestServerConnection(AuthLdapServer server)
     {
@@ -203,6 +264,47 @@ public class LdapAuthenticationService(
             // pour diagnostiquer, il doit donc donner la cause et pas le code d'erreur brut.
             return new LdapConnectionTestResult(false, $"Échec de connexion : {DescribeSearchFailure(server, ex)}");
         }
+    }
+
+    /// <summary>
+    /// Dit si un compte passe le filtre de connexion, sans mot de passe : cherché d'abord par son
+    /// seul identifiant, puis avec le filtre. Distingue ainsi « absent de l'annuaire » de « présent
+    /// mais exclu par le filtre » — les deux donnent le même refus à l'écran de connexion.
+    /// </summary>
+    public LdapConnectionTestResult CheckLoginFilter(AuthLdapServer server, string userName)
+    {
+        try
+        {
+            using LdapConnection connection = CreateConnection(server);
+            BindService(connection, server);
+
+            string termFilter = LoginTermFilter(server, userName.Trim());
+            if (FindDn(connection, server, termFilter) is not { } dn)
+            {
+                return new LdapConnectionTestResult(false,
+                    $"Aucun compte ne correspond à {termFilter} sous {server.BaseDn} (champ d'identifiant : « {server.LoginField} »).");
+            }
+
+            if (string.IsNullOrWhiteSpace(server.LoginFilter))
+            {
+                return new LdapConnectionTestResult(true, $"Compte trouvé ({dn}). Aucun filtre de connexion : il peut se connecter.");
+            }
+
+            return FindDn(connection, server, LdapFilter.Combine(termFilter, server.LoginFilter)) is not null
+                ? new LdapConnectionTestResult(true, $"Compte trouvé ({dn}) et accepté par le filtre de connexion : il peut se connecter.")
+                : new LdapConnectionTestResult(false, $"Compte trouvé ({dn}), mais exclu par le filtre de connexion : il ne pourra pas se connecter.");
+        }
+        catch (Exception ex)
+        {
+            return new LdapConnectionTestResult(false, $"Échec du test : {DescribeSearchFailure(server, ex)}");
+        }
+    }
+
+    private static string? FindDn(LdapConnection connection, AuthLdapServer server, string filter)
+    {
+        SearchRequest request = new(server.BaseDn, filter, System.DirectoryServices.Protocols.SearchScope.Subtree, "dn");
+        SearchResponse response = (SearchResponse)connection.SendRequest(request);
+        return response.Entries.Count > 0 ? response.Entries[0].DistinguishedName : null;
     }
 
     /// <summary>Ce qu'un bind rapporte : le DN si l'authentification a réussi, les attributs demandés, les groupes, ou la raison de l'échec.</summary>
@@ -476,14 +578,10 @@ public class LdapAuthenticationService(
     }
 
     private static string BuildFilter(AuthLdapServer server, string userName)
-    {
-        string escaped = EscapeLdapFilterValue(userName);
-        string baseFilter = $"({server.LoginField}={escaped})";
+        => LdapFilter.Combine(LoginTermFilter(server, userName), server.LoginFilter);
 
-        return string.IsNullOrWhiteSpace(server.LoginFilter)
-            ? baseFilter
-            : $"(&{baseFilter}{server.LoginFilter})";
-    }
+    private static string LoginTermFilter(AuthLdapServer server, string userName)
+        => $"({server.LoginField}={EscapeLdapFilterValue(userName)})";
 
     // RFC 4515 : échappement des caractères spéciaux d'une valeur de filtre LDAP.
     private static string EscapeLdapFilterValue(string value) => value

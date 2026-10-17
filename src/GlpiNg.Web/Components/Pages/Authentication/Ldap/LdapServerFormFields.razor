@@ -1,4 +1,5 @@
 ﻿@using GlpiNg.Web.Models
+@using GlpiNg.Web.Services
 
 @* Connexion a l'annuaire : ce qu'il faut pour joindre le serveur et s'y authentifier. La
    correspondance des attributs, les groupes et les reglages avances vivent dans les onglets
@@ -37,6 +38,27 @@
         </div>
     </div>
     <div class="col-md-6">
+        @* Même place que dans GLPI (onglet principal, au-dessus du BaseDN) : c'est lui qui décide
+           qui peut se connecter, il n'a pas à être cherché parmi la correspondance des attributs. *@
+        <div class="glping-fiche-field">
+            <label>@T("Filtre de connexion")</label>
+            @* Champ et aide dans un même bloc : la grille de la fiche placerait sinon l'aide dans la
+               colonne des libellés. *@
+            <div>
+                <textarea class="form-control" rows="2" @bind="Server.LoginFilter" @bind:event="oninput" @bind:after="NotifyChangedAsync"
+                          placeholder="(&(objectClass=user)(memberOf=CN=GLPI,OU=Groupes,DC=example,DC=com))"></textarea>
+                @if (LdapFilter.Normalize(Server.LoginFilter).Error is { } filterError)
+                {
+                    <div class="form-hint text-danger"><i class="ti ti-alert-triangle me-1"></i>@filterError</div>
+                }
+                else
+                {
+                    <div class="form-hint">
+                        @T("Condition LDAP qu'un compte doit remplir pour se connecter, combinée à son identifiant : (&(champ=identifiant)filtre). Vide : tout compte de l'annuaire.")
+                    </div>
+                }
+            </div>
+        </div>
         <div class="glping-fiche-field">
             <label>@T("BaseDN")</label>
             <input class="form-control" @bind="Server.BaseDn" @bind:event="oninput" @bind:after="NotifyChangedAsync" placeholder="@(T("dc=example,dc=com"))" />

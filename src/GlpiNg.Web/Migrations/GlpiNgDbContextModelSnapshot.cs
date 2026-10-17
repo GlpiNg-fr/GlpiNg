@@ -17,7 +17,7 @@ namespace GlpiNg.Web.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.12")
+                .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -54,7 +54,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ItemType", "ItemId", "OccurredAt");
 
-                    b.ToTable("AssistanceHistoryEntries", (string)null);
+                    b.ToTable("AssistanceHistoryEntries");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.Calendar", b =>
@@ -88,7 +88,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("EntityId");
 
-                    b.ToTable("Calendars", (string)null);
+                    b.ToTable("Calendars");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.CalendarHoliday", b =>
@@ -119,7 +119,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("CalendarId");
 
-                    b.ToTable("CalendarHolidays", (string)null);
+                    b.ToTable("CalendarHolidays");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.CalendarSegment", b =>
@@ -146,7 +146,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("CalendarId");
 
-                    b.ToTable("CalendarSegments", (string)null);
+                    b.ToTable("CalendarSegments");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.Change", b =>
@@ -246,7 +246,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("Status", "OpenedAt");
 
-                    b.ToTable("Changes", (string)null);
+                    b.ToTable("Changes");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.ChangeProblem", b =>
@@ -270,7 +270,7 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("ChangeId", "ProblemId")
                         .IsUnique();
 
-                    b.ToTable("ChangeProblems", (string)null);
+                    b.ToTable("ChangeProblems");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.ChangeTicket", b =>
@@ -294,7 +294,7 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("ChangeId", "TicketId")
                         .IsUnique();
 
-                    b.ToTable("ChangeTickets", (string)null);
+                    b.ToTable("ChangeTickets");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.ChangeValidation", b =>
@@ -335,7 +335,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ValidatorUserId", "Status");
 
-                    b.ToTable("ChangeValidations", (string)null);
+                    b.ToTable("ChangeValidations");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.ItilFollowup", b =>
@@ -370,7 +370,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ItemType", "ItemId", "CreatedAt");
 
-                    b.ToTable("ItilFollowups", (string)null);
+                    b.ToTable("ItilFollowups");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.ItilTask", b =>
@@ -420,7 +420,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ItemType", "ItemId");
 
-                    b.ToTable("ItilTasks", (string)null);
+                    b.ToTable("ItilTasks");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.Problem", b =>
@@ -514,7 +514,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("Status", "OpenedAt");
 
-                    b.ToTable("Problems", (string)null);
+                    b.ToTable("Problems");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.ProblemTicket", b =>
@@ -538,7 +538,7 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("ProblemId", "TicketId")
                         .IsUnique();
 
-                    b.ToTable("ProblemTickets", (string)null);
+                    b.ToTable("ProblemTickets");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.ServiceLevel", b =>
@@ -577,7 +577,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("EntityId");
 
-                    b.ToTable("ServiceLevels", (string)null);
+                    b.ToTable("ServiceLevels");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.ServiceLevelAgreement", b =>
@@ -623,7 +623,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ServiceLevelId");
 
-                    b.ToTable("ServiceLevelAgreements", (string)null);
+                    b.ToTable("ServiceLevelAgreements");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.ServiceLevelEscalation", b =>
@@ -654,7 +654,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ServiceLevelAgreementId");
 
-                    b.ToTable("ServiceLevelEscalations", (string)null);
+                    b.ToTable("ServiceLevelEscalations");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.ServiceLevelEscalationAction", b =>
@@ -678,7 +678,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ServiceLevelEscalationId");
 
-                    b.ToTable("ServiceLevelEscalationActions", (string)null);
+                    b.ToTable("ServiceLevelEscalationActions");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.Ticket", b =>
@@ -806,7 +806,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("Status", "OpenedAt");
 
-                    b.ToTable("Tickets", (string)null);
+                    b.ToTable("Tickets");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.TicketCategory", b =>
@@ -848,7 +848,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ParentId");
 
-                    b.ToTable("TicketCategories", (string)null);
+                    b.ToTable("TicketCategories");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.TicketEscalation", b =>
@@ -875,7 +875,7 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("TicketId", "ServiceLevelEscalationId")
                         .IsUnique();
 
-                    b.ToTable("TicketEscalations", (string)null);
+                    b.ToTable("TicketEscalations");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Cron.Models.AutomaticActionRunLog", b =>
@@ -906,7 +906,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("TaskKey", "RanAt");
 
-                    b.ToTable("AutomaticActionRunLogs", (string)null);
+                    b.ToTable("AutomaticActionRunLogs");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Cron.Models.AutomaticActionState", b =>
@@ -944,7 +944,7 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("TaskKey")
                         .IsUnique();
 
-                    b.ToTable("AutomaticActionStates", (string)null);
+                    b.ToTable("AutomaticActionStates");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Cron.Models.CronSettings", b =>
@@ -963,7 +963,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("CronSettings", (string)null);
+                    b.ToTable("CronSettings");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.CollectDefinition", b =>
@@ -997,7 +997,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("EntityId");
 
-                    b.ToTable("CollectDefinitions", (string)null);
+                    b.ToTable("CollectDefinitions");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.CollectFileSearchEntry", b =>
@@ -1029,7 +1029,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("CollectDefinitionId");
 
-                    b.ToTable("CollectFileSearchEntries", (string)null);
+                    b.ToTable("CollectFileSearchEntries");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.CollectRegistryEntry", b =>
@@ -1063,7 +1063,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("CollectDefinitionId");
 
-                    b.ToTable("CollectRegistryEntries", (string)null);
+                    b.ToTable("CollectRegistryEntries");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.CollectResult", b =>
@@ -1103,7 +1103,7 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("ComputerId", "CollectDefinitionId", "EntryName")
                         .IsUnique();
 
-                    b.ToTable("CollectResults", (string)null);
+                    b.ToTable("CollectResults");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.CollectWmiEntry", b =>
@@ -1135,7 +1135,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("CollectDefinitionId");
 
-                    b.ToTable("CollectWmiEntries", (string)null);
+                    b.ToTable("CollectWmiEntries");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeployComputerGroup", b =>
@@ -1166,7 +1166,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("EntityId");
 
-                    b.ToTable("DeployComputerGroups", (string)null);
+                    b.ToTable("DeployComputerGroups");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeployComputerGroupCriterion", b =>
@@ -1199,7 +1199,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("DeployComputerGroupId");
 
-                    b.ToTable("DeployComputerGroupCriteria", (string)null);
+                    b.ToTable("DeployComputerGroupCriteria");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeployComputerGroupMember", b =>
@@ -1223,7 +1223,7 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("DeployComputerGroupId", "ComputerId")
                         .IsUnique();
 
-                    b.ToTable("DeployComputerGroupMembers", (string)null);
+                    b.ToTable("DeployComputerGroupMembers");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentJob", b =>
@@ -1266,7 +1266,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("TaskId");
 
-                    b.ToTable("DeploymentJobs", (string)null);
+                    b.ToTable("DeploymentJobs");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentMirrorServer", b =>
@@ -1307,7 +1307,7 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("DeploymentMirrorServers", (string)null);
+                    b.ToTable("DeploymentMirrorServers");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentPackage", b =>
@@ -1363,7 +1363,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("SupersededByPackageId");
 
-                    b.ToTable("DeploymentPackages", (string)null);
+                    b.ToTable("DeploymentPackages");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentPackageFile", b =>
@@ -1392,7 +1392,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("DeploymentPackageId");
 
-                    b.ToTable("DeploymentPackageFiles", (string)null);
+                    b.ToTable("DeploymentPackageFiles");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentPackageFilePart", b =>
@@ -1426,7 +1426,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("Sha512");
 
-                    b.ToTable("DeploymentPackageFileParts", (string)null);
+                    b.ToTable("DeploymentPackageFileParts");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentPackageTarget", b =>
@@ -1450,7 +1450,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("DeploymentPackageId");
 
-                    b.ToTable("DeploymentPackageTargets", (string)null);
+                    b.ToTable("DeploymentPackageTargets");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentRule", b =>
@@ -1484,7 +1484,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("EntityId");
 
-                    b.ToTable("DeploymentRules", (string)null);
+                    b.ToTable("DeploymentRules");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentRuleAction", b =>
@@ -1507,7 +1507,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("PackageId");
 
-                    b.ToTable("DeploymentRuleAction", (string)null);
+                    b.ToTable("DeploymentRuleAction");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentRuleCriterion", b =>
@@ -1540,7 +1540,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("DeploymentRuleId");
 
-                    b.ToTable("DeploymentRuleCriterion", (string)null);
+                    b.ToTable("DeploymentRuleCriterion");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentTask", b =>
@@ -1602,7 +1602,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("PreparationTimeSlotId");
 
-                    b.ToTable("DeploymentTasks", (string)null);
+                    b.ToTable("DeploymentTasks");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentTaskPackage", b =>
@@ -1626,7 +1626,7 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("DeploymentTaskId", "PackageId")
                         .IsUnique();
 
-                    b.ToTable("DeploymentTaskPackages", (string)null);
+                    b.ToTable("DeploymentTaskPackages");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentTaskTarget", b =>
@@ -1657,7 +1657,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("GroupId");
 
-                    b.ToTable("DeploymentTaskTargets", (string)null);
+                    b.ToTable("DeploymentTaskTargets");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DeploymentUserInteractionTemplate", b =>
@@ -1701,7 +1701,7 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("DeploymentUserInteractionTemplates", (string)null);
+                    b.ToTable("DeploymentUserInteractionTemplates");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.DiscoveredNetworkDevice", b =>
@@ -1711,6 +1711,15 @@ namespace GlpiNg.Web.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AgentDeployAttempts")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("AgentDeployLastAttemptAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AgentDeployLastError")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("DiscoveredViaNetworkTaskId")
                         .HasColumnType("int");
@@ -1766,7 +1775,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("PromotedNetworkEquipmentId");
 
-                    b.ToTable("DiscoveredNetworkDevices", (string)null);
+                    b.ToTable("DiscoveredNetworkDevices");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.IpRange", b =>
@@ -1808,7 +1817,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("EntityId");
 
-                    b.ToTable("IpRanges", (string)null);
+                    b.ToTable("IpRanges");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.NetworkTask", b =>
@@ -1859,7 +1868,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ExecutionTimeSlotId");
 
-                    b.ToTable("NetworkTasks", (string)null);
+                    b.ToTable("NetworkTasks");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.NetworkTaskActor", b =>
@@ -1883,7 +1892,7 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("NetworkTaskId", "AgentId")
                         .IsUnique();
 
-                    b.ToTable("NetworkTaskActors", (string)null);
+                    b.ToTable("NetworkTaskActors");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.NetworkTaskCredential", b =>
@@ -1907,7 +1916,7 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("NetworkTaskId", "SnmpCredentialId")
                         .IsUnique();
 
-                    b.ToTable("NetworkTaskCredentials", (string)null);
+                    b.ToTable("NetworkTaskCredentials");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.NetworkTaskIpRange", b =>
@@ -1931,7 +1940,7 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("NetworkTaskId", "IpRangeId")
                         .IsUnique();
 
-                    b.ToTable("NetworkTaskIpRanges", (string)null);
+                    b.ToTable("NetworkTaskIpRanges");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.NetworkTaskJob", b =>
@@ -1969,7 +1978,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("NetworkTaskId");
 
-                    b.ToTable("NetworkTaskJobs", (string)null);
+                    b.ToTable("NetworkTaskJobs");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.SnmpCredential", b =>
@@ -2021,7 +2030,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("EntityId");
 
-                    b.ToTable("SnmpCredentials", (string)null);
+                    b.ToTable("SnmpCredentials");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.TimeSlot", b =>
@@ -2049,7 +2058,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("EntityId");
 
-                    b.ToTable("TimeSlots", (string)null);
+                    b.ToTable("TimeSlots");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.TimeSlotEntry", b =>
@@ -2076,7 +2085,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("TimeSlotId");
 
-                    b.ToTable("TimeSlotEntries", (string)null);
+                    b.ToTable("TimeSlotEntries");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.WakeOnLanTask", b =>
@@ -2124,7 +2133,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ExecutionTimeSlotId");
 
-                    b.ToTable("WakeOnLanTasks", (string)null);
+                    b.ToTable("WakeOnLanTasks");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.WakeOnLanTaskActor", b =>
@@ -2148,7 +2157,7 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("WakeOnLanTaskId", "AgentId")
                         .IsUnique();
 
-                    b.ToTable("WakeOnLanTaskActors", (string)null);
+                    b.ToTable("WakeOnLanTaskActors");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.WakeOnLanTaskJob", b =>
@@ -2190,7 +2199,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("WakeOnLanTaskId");
 
-                    b.ToTable("WakeOnLanTaskJobs", (string)null);
+                    b.ToTable("WakeOnLanTaskJobs");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.WakeOnLanTaskTarget", b =>
@@ -2221,7 +2230,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("WakeOnLanTaskId");
 
-                    b.ToTable("WakeOnLanTaskTargets", (string)null);
+                    b.ToTable("WakeOnLanTaskTargets");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.Cable", b =>
@@ -2278,7 +2287,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("StatusId");
 
-                    b.ToTable("Cables", (string)null);
+                    b.ToTable("Cables");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.CableHistoryEntry", b =>
@@ -2311,7 +2320,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("CableId");
 
-                    b.ToTable("CableHistoryEntries", (string)null);
+                    b.ToTable("CableHistoryEntries");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.Cartridge", b =>
@@ -2349,7 +2358,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("PrinterId");
 
-                    b.ToTable("Cartridges", (string)null);
+                    b.ToTable("Cartridges");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.CartridgeItem", b =>
@@ -2406,7 +2415,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("LocationId");
 
-                    b.ToTable("CartridgeItems", (string)null);
+                    b.ToTable("CartridgeItems");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.CartridgeItemHistoryEntry", b =>
@@ -2439,7 +2448,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("CartridgeItemId");
 
-                    b.ToTable("CartridgeItemHistoryEntries", (string)null);
+                    b.ToTable("CartridgeItemHistoryEntries");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.Computer", b =>
@@ -2551,7 +2560,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("StatusId");
 
-                    b.ToTable("Computers", (string)null);
+                    b.ToTable("Computers");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerAntivirus", b =>
@@ -2597,7 +2606,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ComputerId");
 
-                    b.ToTable("ComputerAntiviruses", (string)null);
+                    b.ToTable("ComputerAntiviruses");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerBattery", b =>
@@ -2640,7 +2649,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ComputerId");
 
-                    b.ToTable("ComputerBatteries", (string)null);
+                    b.ToTable("ComputerBatteries");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerComponent", b =>
@@ -2671,7 +2680,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ComputerId");
 
-                    b.ToTable("ComputerComponents", (string)null);
+                    b.ToTable("ComputerComponents");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerConnector", b =>
@@ -2702,7 +2711,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ComputerId");
 
-                    b.ToTable("ComputerConnectors", (string)null);
+                    b.ToTable("ComputerConnectors");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerHistoryEntry", b =>
@@ -2735,7 +2744,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ComputerId");
 
-                    b.ToTable("ComputerHistoryEntries", (string)null);
+                    b.ToTable("ComputerHistoryEntries");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerImportHistory", b =>
@@ -2770,7 +2779,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ComputerId");
 
-                    b.ToTable("ComputerImportHistories", (string)null);
+                    b.ToTable("ComputerImportHistories");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerNetworkPort", b =>
@@ -2828,7 +2837,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ComputerId");
 
-                    b.ToTable("ComputerNetworkPorts", (string)null);
+                    b.ToTable("ComputerNetworkPorts");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerPeripheral", b =>
@@ -2864,7 +2873,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("StatusId");
 
-                    b.ToTable("ComputerPeripherals", (string)null);
+                    b.ToTable("ComputerPeripherals");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerRule", b =>
@@ -2904,7 +2913,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("EntityId");
 
-                    b.ToTable("ComputerRules", (string)null);
+                    b.ToTable("ComputerRules");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerRuleAction", b =>
@@ -2932,7 +2941,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ComputerRuleId");
 
-                    b.ToTable("ComputerRuleAction", (string)null);
+                    b.ToTable("ComputerRuleAction");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerRuleCriterion", b =>
@@ -2960,7 +2969,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ComputerRuleId");
 
-                    b.ToTable("ComputerRuleCriterion", (string)null);
+                    b.ToTable("ComputerRuleCriterion");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerSoftware", b =>
@@ -2991,7 +3000,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ComputerId");
 
-                    b.ToTable("ComputerSoftwares", (string)null);
+                    b.ToTable("ComputerSoftwares");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerVolume", b =>
@@ -3031,7 +3040,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ComputerId");
 
-                    b.ToTable("ComputerVolumes", (string)null);
+                    b.ToTable("ComputerVolumes");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.Consumable", b =>
@@ -3055,7 +3064,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ConsumableItemId");
 
-                    b.ToTable("Consumables", (string)null);
+                    b.ToTable("Consumables");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ConsumableItem", b =>
@@ -3109,7 +3118,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("LocationId");
 
-                    b.ToTable("ConsumableItems", (string)null);
+                    b.ToTable("ConsumableItems");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ConsumableItemHistoryEntry", b =>
@@ -3142,7 +3151,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ConsumableItemId");
 
-                    b.ToTable("ConsumableItemHistoryEntries", (string)null);
+                    b.ToTable("ConsumableItemHistoryEntries");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.DictionaryRule", b =>
@@ -3188,7 +3197,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("EntityId");
 
-                    b.ToTable("DictionaryRules", (string)null);
+                    b.ToTable("DictionaryRules");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.DictionaryRuleCriterion", b =>
@@ -3215,7 +3224,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("DictionaryRuleId");
 
-                    b.ToTable("DictionaryRuleCriteria", (string)null);
+                    b.ToTable("DictionaryRuleCriteria");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.DropdownItem", b =>
@@ -3258,7 +3267,7 @@ namespace GlpiNg.Web.Migrations
                         .IsUnique()
                         .HasFilter("[EntityId] IS NOT NULL AND [ParentId] IS NOT NULL");
 
-                    b.ToTable("DropdownItems", (string)null);
+                    b.ToTable("DropdownItems");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.Enclosure", b =>
@@ -3326,7 +3335,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("StatusId");
 
-                    b.ToTable("Enclosures", (string)null);
+                    b.ToTable("Enclosures");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.EnclosureHistoryEntry", b =>
@@ -3359,7 +3368,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("EnclosureId");
 
-                    b.ToTable("EnclosureHistoryEntries", (string)null);
+                    b.ToTable("EnclosureHistoryEntries");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.GlpiAgent", b =>
@@ -3422,7 +3431,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("EntityId");
 
-                    b.ToTable("Agents", (string)null);
+                    b.ToTable("Agents");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ImportAssignmentRule", b =>
@@ -3459,7 +3468,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("EntityId");
 
-                    b.ToTable("ImportAssignmentRules", (string)null);
+                    b.ToTable("ImportAssignmentRules");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ImportAssignmentRuleAction", b =>
@@ -3483,7 +3492,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ImportAssignmentRuleId");
 
-                    b.ToTable("ImportAssignmentRuleAction", (string)null);
+                    b.ToTable("ImportAssignmentRuleAction");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ImportAssignmentRuleCriterion", b =>
@@ -3511,7 +3520,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ImportAssignmentRuleId");
 
-                    b.ToTable("ImportAssignmentRuleCriterion", (string)null);
+                    b.ToTable("ImportAssignmentRuleCriterion");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ImportBlacklistEntry", b =>
@@ -3543,7 +3552,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("EntityId");
 
-                    b.ToTable("ImportBlacklistEntries", (string)null);
+                    b.ToTable("ImportBlacklistEntries");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.LockedField", b =>
@@ -3576,7 +3585,7 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("ItemType", "ItemId", "Field")
                         .IsUnique();
 
-                    b.ToTable("LockedFields", (string)null);
+                    b.ToTable("LockedFields");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.NetworkEquipment", b =>
@@ -3647,7 +3656,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("StatusId");
 
-                    b.ToTable("NetworkEquipments", (string)null);
+                    b.ToTable("NetworkEquipments");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.NetworkEquipmentHistoryEntry", b =>
@@ -3680,7 +3689,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("NetworkEquipmentId");
 
-                    b.ToTable("NetworkEquipmentHistoryEntries", (string)null);
+                    b.ToTable("NetworkEquipmentHistoryEntries");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.PassiveEquipment", b =>
@@ -3745,7 +3754,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("StatusId");
 
-                    b.ToTable("PassiveEquipments", (string)null);
+                    b.ToTable("PassiveEquipments");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.PassiveEquipmentHistoryEntry", b =>
@@ -3778,7 +3787,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("PassiveEquipmentId");
 
-                    b.ToTable("PassiveEquipmentHistoryEntries", (string)null);
+                    b.ToTable("PassiveEquipmentHistoryEntries");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.Pdu", b =>
@@ -3843,7 +3852,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("StatusId");
 
-                    b.ToTable("Pdus", (string)null);
+                    b.ToTable("Pdus");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.PduHistoryEntry", b =>
@@ -3876,7 +3885,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("PduId");
 
-                    b.ToTable("PduHistoryEntries", (string)null);
+                    b.ToTable("PduHistoryEntries");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.Peripheral", b =>
@@ -3965,7 +3974,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("StatusId");
 
-                    b.ToTable("Peripherals", (string)null);
+                    b.ToTable("Peripherals");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.PeripheralHistoryEntry", b =>
@@ -3998,7 +4007,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("PeripheralId");
 
-                    b.ToTable("PeripheralHistoryEntries", (string)null);
+                    b.ToTable("PeripheralHistoryEntries");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.Phone", b =>
@@ -4069,7 +4078,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("StatusId");
 
-                    b.ToTable("Phones", (string)null);
+                    b.ToTable("Phones");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.PhoneHistoryEntry", b =>
@@ -4102,7 +4111,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("PhoneId");
 
-                    b.ToTable("PhoneHistoryEntries", (string)null);
+                    b.ToTable("PhoneHistoryEntries");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.Printer", b =>
@@ -4203,7 +4212,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("StatusId");
 
-                    b.ToTable("Printers", (string)null);
+                    b.ToTable("Printers");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.PrinterHistoryEntry", b =>
@@ -4236,7 +4245,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("PrinterId");
 
-                    b.ToTable("PrinterHistoryEntries", (string)null);
+                    b.ToTable("PrinterHistoryEntries");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.Rack", b =>
@@ -4304,7 +4313,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("StatusId");
 
-                    b.ToTable("Racks", (string)null);
+                    b.ToTable("Racks");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.RackHistoryEntry", b =>
@@ -4337,7 +4346,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("RackId");
 
-                    b.ToTable("RackHistoryEntries", (string)null);
+                    b.ToTable("RackHistoryEntries");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.RefusedImportLog", b =>
@@ -4375,7 +4384,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("RefusedImportLogs", (string)null);
+                    b.ToTable("RefusedImportLogs");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.SavedSearch", b =>
@@ -4433,7 +4442,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("EntityId");
 
-                    b.ToTable("SavedSearches", (string)null);
+                    b.ToTable("SavedSearches");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.SavedSearchOrder", b =>
@@ -4458,7 +4467,7 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("UserId", "SavedSearchId")
                         .IsUnique();
 
-                    b.ToTable("SavedSearchOrders", (string)null);
+                    b.ToTable("SavedSearchOrders");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.SimCard", b =>
@@ -4547,7 +4556,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("StatusId");
 
-                    b.ToTable("SimCards", (string)null);
+                    b.ToTable("SimCards");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.SimCardHistoryEntry", b =>
@@ -4580,7 +4589,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("SimCardId");
 
-                    b.ToTable("SimCardHistoryEntries", (string)null);
+                    b.ToTable("SimCardHistoryEntries");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.TableColumnPreference", b =>
@@ -4607,7 +4616,7 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("UserId", "ItemType")
                         .IsUnique();
 
-                    b.ToTable("TableColumnPreferences", (string)null);
+                    b.ToTable("TableColumnPreferences");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.KnowledgeBase.Models.KnowledgeBaseArticle", b =>
@@ -4674,7 +4683,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("EntityId");
 
-                    b.ToTable("KnowledgeBaseArticles", (string)null);
+                    b.ToTable("KnowledgeBaseArticles");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.KnowledgeBase.Models.KnowledgeBaseArticleHistoryEntry", b =>
@@ -4707,7 +4716,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ArticleId", "OccurredAt");
 
-                    b.ToTable("KnowledgeBaseArticleHistoryEntries", (string)null);
+                    b.ToTable("KnowledgeBaseArticleHistoryEntries");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.KnowledgeBase.Models.KnowledgeBaseArticleRevision", b =>
@@ -4743,7 +4752,7 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("ArticleId", "Number")
                         .IsUnique();
 
-                    b.ToTable("KnowledgeBaseArticleRevisions", (string)null);
+                    b.ToTable("KnowledgeBaseArticleRevisions");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.KnowledgeBase.Models.KnowledgeBaseArticleTarget", b =>
@@ -4774,7 +4783,7 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("ArticleId", "Type", "ItemId", "ScopeEntityId")
                         .IsUnique();
 
-                    b.ToTable("KnowledgeBaseArticleTargets", (string)null);
+                    b.ToTable("KnowledgeBaseArticleTargets");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.KnowledgeBase.Models.KnowledgeBaseCategory", b =>
@@ -4813,7 +4822,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ParentId");
 
-                    b.ToTable("KnowledgeBaseCategories", (string)null);
+                    b.ToTable("KnowledgeBaseCategories");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Management.Models.Appliance", b =>
@@ -4875,7 +4884,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("SupplierId");
 
-                    b.ToTable("Appliances", (string)null);
+                    b.ToTable("Appliances");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Management.Models.Budget", b =>
@@ -4928,7 +4937,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("EntityId");
 
-                    b.ToTable("Budgets", (string)null);
+                    b.ToTable("Budgets");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Management.Models.Certificate", b =>
@@ -4993,7 +5002,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("SupplierId");
 
-                    b.ToTable("Certificates", (string)null);
+                    b.ToTable("Certificates");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Management.Models.Cluster", b =>
@@ -5039,7 +5048,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("EntityId");
 
-                    b.ToTable("Clusters", (string)null);
+                    b.ToTable("Clusters");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Management.Models.Contact", b =>
@@ -5112,7 +5121,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("EntityId");
 
-                    b.ToTable("Contacts", (string)null);
+                    b.ToTable("Contacts");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Management.Models.Contract", b =>
@@ -5176,7 +5185,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("EntityId");
 
-                    b.ToTable("Contracts", (string)null);
+                    b.ToTable("Contracts");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Management.Models.ContractCost", b =>
@@ -5213,7 +5222,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ContractId");
 
-                    b.ToTable("ContractCosts", (string)null);
+                    b.ToTable("ContractCosts");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Management.Models.ContractSupplier", b =>
@@ -5237,7 +5246,7 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("ContractId", "SupplierId")
                         .IsUnique();
 
-                    b.ToTable("ContractSuppliers", (string)null);
+                    b.ToTable("ContractSuppliers");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Management.Models.DatabaseInstance", b =>
@@ -5292,7 +5301,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("EntityId");
 
-                    b.ToTable("DatabaseInstances", (string)null);
+                    b.ToTable("DatabaseInstances");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Management.Models.Datacenter", b =>
@@ -5351,7 +5360,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("SupplierId");
 
-                    b.ToTable("Datacenters", (string)null);
+                    b.ToTable("Datacenters");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Management.Models.Domain", b =>
@@ -5407,7 +5416,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("SupplierId");
 
-                    b.ToTable("Domains", (string)null);
+                    b.ToTable("Domains");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Management.Models.ManagementHistoryEntry", b =>
@@ -5442,7 +5451,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ItemType", "ItemId", "OccurredAt");
 
-                    b.ToTable("ManagementHistoryEntries", (string)null);
+                    b.ToTable("ManagementHistoryEntries");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Management.Models.PhoneLine", b =>
@@ -5501,7 +5510,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("SupplierId");
 
-                    b.ToTable("PhoneLines", (string)null);
+                    b.ToTable("PhoneLines");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Management.Models.SoftwareLicense", b =>
@@ -5572,7 +5581,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("SupplierId");
 
-                    b.ToTable("SoftwareLicenses", (string)null);
+                    b.ToTable("SoftwareLicenses");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Management.Models.Supplier", b =>
@@ -5639,7 +5648,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("EntityId");
 
-                    b.ToTable("Suppliers", (string)null);
+                    b.ToTable("Suppliers");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Management.Models.SupplierContact", b =>
@@ -5663,7 +5672,101 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("SupplierId", "ContactId")
                         .IsUnique();
 
-                    b.ToTable("SupplierContacts", (string)null);
+                    b.ToTable("SupplierContacts");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Reservations.Models.ReservableItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("EntityId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsRecursive")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ItemName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ItemType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ItemUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityId");
+
+                    b.HasIndex("ItemType", "ItemId")
+                        .IsUnique();
+
+                    b.ToTable("ReservableItems");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Reservations.Models.Reservation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("AlertSentAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("Begin")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("End")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ReservableItemId")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("SeriesId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Begin");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("ReservableItemId", "Begin");
+
+                    b.ToTable("Reservations");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.ApiClient", b =>
@@ -5711,7 +5814,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ApiClients", (string)null);
+                    b.ToTable("ApiClients");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.AppSetting", b =>
@@ -5729,7 +5832,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasKey("SectionName");
 
-                    b.ToTable("AppSettings", (string)null);
+                    b.ToTable("AppSettings");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.AuthLdapServer", b =>
@@ -5860,7 +5963,7 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("AuthLdapServers", (string)null);
+                    b.ToTable("AuthLdapServers");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.AuthMailServer", b =>
@@ -5914,7 +6017,7 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("AuthMailServers", (string)null);
+                    b.ToTable("AuthMailServers");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.CustomAssets.CustomAsset", b =>
@@ -5953,7 +6056,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("EntityId");
 
-                    b.ToTable("CustomAssets", (string)null);
+                    b.ToTable("CustomAssets");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.CustomAssets.CustomAssetDefinition", b =>
@@ -6006,7 +6109,7 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("SystemName")
                         .IsUnique();
 
-                    b.ToTable("CustomAssetDefinitions", (string)null);
+                    b.ToTable("CustomAssetDefinitions");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.CustomAssets.CustomAssetField", b =>
@@ -6040,7 +6143,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("CustomAssetDefinitionId");
 
-                    b.ToTable("CustomAssetFields", (string)null);
+                    b.ToTable("CustomAssetFields");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.CustomAssets.CustomAssetHistoryEntry", b =>
@@ -6071,7 +6174,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("CustomAssetId", "OccurredAt");
 
-                    b.ToTable("CustomAssetHistoryEntries", (string)null);
+                    b.ToTable("CustomAssetHistoryEntries");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.CustomAssets.CustomAssetValue", b =>
@@ -6098,7 +6201,7 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("CustomAssetId", "CustomAssetFieldId")
                         .IsUnique();
 
-                    b.ToTable("CustomAssetValues", (string)null);
+                    b.ToTable("CustomAssetValues");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.DashboardCardPreference", b =>
@@ -6121,7 +6224,7 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("DashboardCardPreferences", (string)null);
+                    b.ToTable("DashboardCardPreferences");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.Documents.Document", b =>
@@ -6197,7 +6300,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("SourceGlpiId");
 
-                    b.ToTable("Documents", (string)null);
+                    b.ToTable("Documents");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.Documents.DocumentCategory", b =>
@@ -6236,7 +6339,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ParentId");
 
-                    b.ToTable("DocumentCategories", (string)null);
+                    b.ToTable("DocumentCategories");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.Documents.DocumentItem", b =>
@@ -6267,7 +6370,7 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("DocumentId", "ItemType", "ItemId")
                         .IsUnique();
 
-                    b.ToTable("DocumentItems", (string)null);
+                    b.ToTable("DocumentItems");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.EventLogEntry", b =>
@@ -6303,7 +6406,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("EventLogEntries", (string)null);
+                    b.ToTable("EventLogEntries");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.ExternalLinks.ExternalLink", b =>
@@ -6344,7 +6447,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("EntityId");
 
-                    b.ToTable("ExternalLinks", (string)null);
+                    b.ToTable("ExternalLinks");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.ExternalLinks.ExternalLinkItemType", b =>
@@ -6369,7 +6472,7 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("ExternalLinkId", "ItemType")
                         .IsUnique();
 
-                    b.ToTable("ExternalLinkItemTypes", (string)null);
+                    b.ToTable("ExternalLinkItemTypes");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.FieldUnicity.FieldUnicityCriterion", b =>
@@ -6418,7 +6521,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ItemType", "IsActive");
 
-                    b.ToTable("FieldUnicityCriteria", (string)null);
+                    b.ToTable("FieldUnicityCriteria");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.FieldUnicity.FieldUnicityField", b =>
@@ -6441,7 +6544,7 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("FieldUnicityCriterionId", "FieldName")
                         .IsUnique();
 
-                    b.ToTable("FieldUnicityFields", (string)null);
+                    b.ToTable("FieldUnicityFields");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.GlpiEntity", b =>
@@ -6536,7 +6639,7 @@ namespace GlpiNg.Web.Migrations
                         .IsUnique()
                         .HasFilter("\"SourceGlpiId\" IS NOT NULL");
 
-                    b.ToTable("Entities", (string)null);
+                    b.ToTable("Entities");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.GlpiEntityHistoryEntry", b =>
@@ -6569,7 +6672,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("EntityId");
 
-                    b.ToTable("EntityHistoryEntries", (string)null);
+                    b.ToTable("EntityHistoryEntries");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.GlpiEntityNote", b =>
@@ -6598,7 +6701,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("EntityId");
 
-                    b.ToTable("EntityNotes", (string)null);
+                    b.ToTable("EntityNotes");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.GlpiGroup", b =>
@@ -6674,7 +6777,7 @@ namespace GlpiNg.Web.Migrations
                         .IsUnique()
                         .HasFilter("\"SourceGlpiId\" IS NOT NULL");
 
-                    b.ToTable("Groups", (string)null);
+                    b.ToTable("Groups");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.GlpiGroupHistoryEntry", b =>
@@ -6707,7 +6810,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("GroupId");
 
-                    b.ToTable("GroupHistoryEntries", (string)null);
+                    b.ToTable("GroupHistoryEntries");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.GlpiGroupNote", b =>
@@ -6736,7 +6839,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("GroupId");
 
-                    b.ToTable("GroupNotes", (string)null);
+                    b.ToTable("GroupNotes");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.GlpiGroupUser", b =>
@@ -6751,7 +6854,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("GroupUsers", (string)null);
+                    b.ToTable("GroupUsers");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.GlpiProfile", b =>
@@ -6805,7 +6908,7 @@ namespace GlpiNg.Web.Migrations
                         .IsUnique()
                         .HasFilter("\"SourceGlpiId\" IS NOT NULL");
 
-                    b.ToTable("Profiles", (string)null);
+                    b.ToTable("Profiles");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.GlpiProfileHistoryEntry", b =>
@@ -6838,7 +6941,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ProfileId");
 
-                    b.ToTable("ProfileHistoryEntries", (string)null);
+                    b.ToTable("ProfileHistoryEntries");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.GlpiUser", b =>
@@ -6961,7 +7064,7 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("UserName")
                         .IsUnique();
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.GlpiUserHistoryEntry", b =>
@@ -6994,7 +7097,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserHistoryEntries", (string)null);
+                    b.ToTable("UserHistoryEntries");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.GlpiUserProfile", b =>
@@ -7025,7 +7128,86 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserProfiles", (string)null);
+                    b.ToTable("UserProfiles");
+                });
+
+            modelBuilder.Entity("GlpiNg.Web.Models.MailCollector", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Encryption")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("EntityId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Folder")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Host")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("ImportAttachments")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LastError")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("LastImportedCount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("LastRunAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Login")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("MaxFetchPerRun")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MoveToFolder")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("PasswordProtected")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("Port")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("ValidateCertificate")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityId");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("MailCollectors");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.Notes.Notepad", b =>
@@ -7070,7 +7252,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("ItemType", "ItemId");
 
-                    b.ToTable("Notepads", (string)null);
+                    b.ToTable("Notepads");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.Notifications.Notification", b =>
@@ -7120,7 +7302,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("NotificationTemplateId");
 
-                    b.ToTable("Notifications", (string)null);
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.Notifications.NotificationRecipient", b =>
@@ -7154,7 +7336,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("NotificationRecipients", (string)null);
+                    b.ToTable("NotificationRecipients");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.Notifications.NotificationTemplate", b =>
@@ -7202,7 +7384,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("EntityId");
 
-                    b.ToTable("NotificationTemplates", (string)null);
+                    b.ToTable("NotificationTemplates");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.Notifications.QueuedNotification", b =>
@@ -7260,7 +7442,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("NotificationId");
 
-                    b.ToTable("QueuedNotifications", (string)null);
+                    b.ToTable("QueuedNotifications");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.OAuthClient", b =>
@@ -7315,7 +7497,7 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("OAuthClients", (string)null);
+                    b.ToTable("OAuthClients");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.Webhooks.QueuedWebhook", b =>
@@ -7390,7 +7572,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("Status", "CreatedAt");
 
-                    b.ToTable("QueuedWebhooks", (string)null);
+                    b.ToTable("QueuedWebhooks");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.Webhooks.Webhook", b =>
@@ -7454,7 +7636,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("EntityId");
 
-                    b.ToTable("Webhooks", (string)null);
+                    b.ToTable("Webhooks");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.Webhooks.WebhookHeader", b =>
@@ -7479,7 +7661,7 @@ namespace GlpiNg.Web.Migrations
 
                     b.HasIndex("WebhookId");
 
-                    b.ToTable("WebhookHeaders", (string)null);
+                    b.ToTable("WebhookHeaders");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.Calendar", b =>
@@ -9126,6 +9308,25 @@ namespace GlpiNg.Web.Migrations
                     b.Navigation("Supplier");
                 });
 
+            modelBuilder.Entity("GlpiNg.Modules.Reservations.Models.ReservableItem", b =>
+                {
+                    b.HasOne("GlpiNg.Web.Models.GlpiEntity", null)
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Reservations.Models.Reservation", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Reservations.Models.ReservableItem", "ReservableItem")
+                        .WithMany("Reservations")
+                        .HasForeignKey("ReservableItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ReservableItem");
+                });
+
             modelBuilder.Entity("GlpiNg.Web.Models.CustomAssets.CustomAsset", b =>
                 {
                     b.HasOne("GlpiNg.Web.Models.CustomAssets.CustomAssetDefinition", "Definition")
@@ -9399,6 +9600,16 @@ namespace GlpiNg.Web.Migrations
                     b.Navigation("Profile");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("GlpiNg.Web.Models.MailCollector", b =>
+                {
+                    b.HasOne("GlpiNg.Web.Models.GlpiEntity", "Entity")
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Entity");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.Notifications.Notification", b =>
@@ -9729,6 +9940,11 @@ namespace GlpiNg.Web.Migrations
                     b.Navigation("Contacts");
 
                     b.Navigation("Contracts");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Reservations.Models.ReservableItem", b =>
+                {
+                    b.Navigation("Reservations");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.CustomAssets.CustomAsset", b =>

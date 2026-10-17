@@ -29,7 +29,7 @@ public class InstallCommand : AsyncCommand<InstallCommand.Settings>
         public string? ContentRoot { get; init; }
     }
 
-    protected override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellation)
+    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellation)
     {
         var webPath = Path.GetFullPath(settings.ContentRoot ?? Directory.GetCurrentDirectory());
 
