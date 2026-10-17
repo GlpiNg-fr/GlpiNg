@@ -62,7 +62,7 @@ public static class GlpiNgCli
 /// </summary>
 public sealed class ServeCommand : Command
 {
-    protected override int Execute(CommandContext context, CancellationToken cancellationToken)
+    public override int Execute(CommandContext context, CancellationToken cancellationToken)
     {
         Program.RunServer([.. context.Remaining.Raw]);
         return 0;

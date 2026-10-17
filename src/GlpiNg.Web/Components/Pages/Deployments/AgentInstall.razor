@@ -1,0 +1,155 @@
+@page "/tools/deployments/agent-install"
+@using GlpiNg.Modules.Deployment.Components.Pages.Deployments
+@rendermode InteractiveServer
+
+<PageTitle>@T("Installation de l'agent — GlpiNg")</PageTitle>
+
+<DeploymentTopMenu Current="agentinstall" />
+
+@if (_model is null)
+{
+    <p>@T("Chargement…")</p>
+}
+else
+{
+    <div class="card mb-3">
+        <div class="card-header">
+            <h3 class="card-title"><i class="ti ti-file-download me-1"></i>@T("Fichier d'installation")</h3>
+        </div>
+        <div class="card-body">
+            @if (_model.InstallerFileName is { Length: > 0 } fileName)
+            {
+                <p class="mb-2">
+                    <i class="ti ti-package me-1"></i><strong>@fileName</strong>
+                    <span class="text-secondary ms-2">@(_model.InstallerSizeBytes / (1024 * 1024)) @T("Mo")</span>
+                </p>
+                <div class="mb-3">
+                    <label class="form-label" for="installer-url">@T("URL de téléchargement utilisée par les postes")</label>
+                    <input id="installer-url" class="form-control" readonly value="@InstallerUrl()" />
+                    <div class="form-hint">
+                        @T("Accessible sans authentification : le poste n'a pas encore d'agent. Le jeton de l'URL est changé à chaque téléversement.")
+                    </div>
+                </div>
+            }
+            else
+            {
+                <p class="text-secondary">@T("Aucun installeur téléversé. Téléversez le MSI de GLPI-Agent correspondant à vos postes.")</p>
+            }
+
+            <label class="form-label" for="installer-upload">@T("Téléverser un installeur (.msi)")</label>
+            <InputFile id="installer-upload" class="form-control" OnChange="UploadAsync" disabled="@_isUploading" accept=".msi" />
+
+            @if (_error is { Length: > 0 } error)
+            {
+                <div class="alert alert-danger mt-3 mb-0">@error</div>
+            }
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="glping-config">
+            <div class="glping-config-body">
+                <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
+                    <div class="glping-config-field">
+                        <label for="cfg-server">@T("URL du serveur transmise à l'agent")</label>
+                        <input id="cfg-server" class="glping-config-input" @bind="_model.ServerUrl" placeholder="https://glping.exemple.fr/inventory" />
+                    </div>
+
+                    <div class="glping-config-field">
+                        <label for="cfg-tag">@T("Marque (TAG)")</label>
+                        <input id="cfg-tag" class="glping-config-input" @bind="_model.Tag" />
+                    </div>
+
+                    <div class="glping-config-field checkbox">
+                        <label for="cfg-runnow">@T("Lancer un inventaire dès la fin de l'installation")</label>
+                        <label class="glping-switch">
+                            <input id="cfg-runnow" type="checkbox" @bind="_model.RunInventoryNow" />
+                            <span class="glping-switch-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="glping-config-field checkbox">
+                        <label for="cfg-nosslcheck">@T("Ne pas vérifier le certificat du serveur")</label>
+                        <label class="glping-switch">
+                            <input id="cfg-nosslcheck" type="checkbox" @bind="_model.NoSslCheck" />
+                            <span class="glping-switch-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="glping-config-field checkbox">
+                        <label for="cfg-nohttpd">@T("Désactiver le serveur HTTP local de l'agent")</label>
+                        <label class="glping-switch">
+                            <input id="cfg-nohttpd" type="checkbox" @bind="_model.NoHttpd" />
+                            <span class="glping-switch-slider"></span>
+                        </label>
+                    </div>
+
+                    @if (!_model.NoHttpd)
+                    {
+                        <div class="glping-config-field">
+                            <label for="cfg-httpdport">@T("Port du serveur HTTP local de l'agent")</label>
+                            <input id="cfg-httpdport" type="number" min="1" max="65535" @bind="_model.HttpdPort" />
+                        </div>
+                    }
+
+                    <div class="glping-config-field">
+                        <label for="cfg-installdir">@T("Répertoire d'installation")</label>
+                        <input id="cfg-installdir" class="glping-config-input" @bind="_model.InstallDir" placeholder="C:\Program Files\GLPI-Agent" />
+                    </div>
+
+                    <div class="glping-config-field">
+                        <label for="cfg-extra">@T("Propriétés supplémentaires de l'installeur")</label>
+                        <input id="cfg-extra" class="glping-config-input" @bind="_model.ExtraProperties" placeholder="DEBUG=1 ADD_FIREWALL_EXCEPTION=1" />
+                    </div>
+
+                    <div class="glping-config-divider">
+                        <span><i class="ti ti-plug-connected"></i> @T("Accès aux postes distants (WinRM)")</span>
+                    </div>
+
+                    <div class="glping-config-field">
+                        <label for="cfg-winrmport">@T("Port WinRM")</label>
+                        <input id="cfg-winrmport" type="number" min="1" max="65535" @bind="_model.WinRmPort" />
+                    </div>
+
+                    <div class="glping-config-field checkbox">
+                        <label for="cfg-winrmhttps">@T("Utiliser HTTPS")</label>
+                        <label class="glping-switch">
+                            <input id="cfg-winrmhttps" type="checkbox" @bind="_model.WinRmUseHttps" />
+                            <span class="glping-switch-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="glping-config-field checkbox">
+                        <label for="cfg-winrmcert">@T("Accepter un certificat WinRM non vérifiable")</label>
+                        <label class="glping-switch">
+                            <input id="cfg-winrmcert" type="checkbox" @bind="_model.WinRmAcceptAnyCertificate" />
+                            <span class="glping-switch-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="glping-config-field">
+                        <label for="cfg-timeout">@T("Délai maximum par poste (minutes)")</label>
+                        <input id="cfg-timeout" type="number" min="1" @bind="_model.TimeoutMinutes" />
+                    </div>
+
+                    <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? T("Enregistrement…") : T("Enregistrer"))</button>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+
+    @if (_model.InstallerFileName is { Length: > 0 })
+    {
+        <div class="card mt-3">
+            <div class="card-header">
+                <h3 class="card-title"><i class="ti ti-terminal-2 me-1"></i>@T("Script exécuté sur le poste")</h3>
+            </div>
+            <div class="card-body">
+                <p class="text-secondary">
+                    @T("C'est ce que « Déployer l'agent » exécute par WinRM. Utilisable tel quel en GPO ou en script d'ouverture de session quand WinRM n'est pas ouvert.")
+                </p>
+                <textarea class="form-control font-monospace" rows="8" readonly>@Script()</textarea>
+            </div>
+        </div>
+    }
+}

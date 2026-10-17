@@ -16,7 +16,7 @@ public class CheckCommand : AsyncCommand<CheckCommand.Settings>
         public bool Fix { get; init; }
     }
 
-    protected override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellation)
+    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellation)
     {
         await using var db = ConsoleDbContext.Create();
 

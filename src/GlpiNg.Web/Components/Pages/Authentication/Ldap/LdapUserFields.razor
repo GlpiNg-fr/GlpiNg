@@ -16,11 +16,6 @@
             <input class="form-control" @bind="Server.LoginField" />
         </div>
         <div class="glping-fiche-field">
-            <label>@T("Filtre de connexion (optionnel)")</label>
-            <textarea class="form-control" rows="2" @bind="Server.LoginFilter"
-                      placeholder="@(T("(memberOf=cn=glping-users,ou=groups,dc=example,dc=com)"))"></textarea>
-        </div>
-        <div class="glping-fiche-field">
             <label>@T("Champ de synchronisation (optionnel)")</label>
             <input class="form-control" @bind="Server.SyncField" placeholder="@(T("objectguid"))" />
         </div>

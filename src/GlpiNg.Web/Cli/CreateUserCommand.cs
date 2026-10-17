@@ -32,7 +32,7 @@ public class CreateUserCommand : AsyncCommand<CreateUserCommand.Settings>
         public string? Email { get; init; }
     }
 
-    protected override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellation)
+    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellation)
     {
         await using var db = ConsoleDbContext.Create();
 

@@ -11,7 +11,7 @@ obj_check/
 *.db-wal
 
 ## AnthoDingo.Setup — écrit à la fin de l'installation, contient la chaîne de connexion
-appsettings.local.json
+appsettings.local.json*
 
 ## Historique des modifications enregistrées depuis /config (onglet "Historique")
 src/GlpiNg.Web/config-history.json

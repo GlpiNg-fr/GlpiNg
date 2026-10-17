@@ -64,7 +64,24 @@ else
                     default:
                         <LdapServerFormFields Server="_server" HasStoredPassword="@(_server.BindPasswordProtected is not null)"
                                               StoredPasswordUnreadable="_storedPasswordUnreadable"
-                                              @bind-BindPasswordPlain="_bindPasswordPlain" />
+                                              @bind-BindPasswordPlain="_bindPasswordPlain" OnChanged="StateHasChanged" />
+                        <div class="row">
+                            <div class="col-md-6 ms-auto">
+                                <div class="glping-fiche-field">
+                                    <label>@T("Tester le filtre de connexion avec un compte")</label>
+                                    <div>
+                                        <div class="input-group">
+                                            <input class="form-control" @bind="_filterTestLogin" @bind:event="oninput" placeholder="@T("Identifiant")" />
+                                            <button type="button" class="btn btn-outline-secondary"
+                                                    disabled="@(_isTesting || string.IsNullOrWhiteSpace(_filterTestLogin))" @onclick="TestFilterAsync">
+                                                <i class="ti ti-user-search me-1"></i>@T("Tester")
+                                            </button>
+                                        </div>
+                                        <div class="form-hint">@T("Cherche le compte dans l'annuaire, sans mot de passe, et dit si le filtre le laisse se connecter.")</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         break;
                 }
 
