@@ -5,6 +5,9 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using AnthoDingo.Setup;
+using Microsoft.Data.SqlClient;
+using MySqlConnector;
+using Npgsql;
 using GlpiNg.Modules.Abstractions.Cron;
 using GlpiNg.Modules.Abstractions.Deployment;
 using GlpiNg.Modules.Abstractions.Directory;
@@ -298,7 +301,13 @@ public class Program
         // que les bases relationnelles serveur — SQLite n'est volontairement pas proposé.
         builder.Services.AddFileBasedSetup<GlpiNgSetupInitializer>(setupOptions =>
         {
-            setupOptions.AllowedProviders = [DbProvider.SqlServer, DbProvider.MySql, DbProvider.Postgres];
+            // Depuis AnthoDingo.Setup 3.0.0, la bibliothèque n'embarque plus aucun pilote
+            // ADO.NET : l'application fournit ceux qu'elle référence déjà, et la liste des
+            // types de base proposés découle de ce qui est enregistré ici — d'où l'absence
+            // de SQLite. Le premier inscrit est présélectionné.
+            setupOptions.Providers[DbProvider.SqlServer] = SqlClientFactory.Instance;
+            setupOptions.Providers[DbProvider.MySql] = MySqlConnectorFactory.Instance;
+            setupOptions.Providers[DbProvider.Postgres] = NpgsqlFactory.Instance;
             setupOptions.AllowUsernameAdmin = true;
 
             // L'assistant écrit dans la racine du stockage et non à côté du binaire, comme le

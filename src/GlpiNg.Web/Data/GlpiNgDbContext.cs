@@ -1813,7 +1813,7 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     /// <see cref="Services.GlpiNgSetupInitializer"/> — avant que la configuration finale ne
     /// soit chargée — et par l'enregistrement DI une fois l'installation terminée.
     /// SQLite n'est volontairement pas géré ici : seuls SQL Server, MySQL et PostgreSQL
-    /// sont autorisés pour GlpiNg (voir <c>SetupOptions.AllowedProviders</c> dans Program.cs).
+    /// sont autorisés pour GlpiNg (voir <c>SetupOptions.Providers</c> dans Program.cs).
     /// </summary>
     /// <param name="builder">Le builder d'options EF Core à configurer.</param>
     /// <param name="provider">Le provider de base de données choisi lors de l'installation.</param>
