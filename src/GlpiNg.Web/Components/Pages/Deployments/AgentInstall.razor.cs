@@ -61,6 +61,40 @@ public partial class AgentInstall : ComponentBase
     private string Script()
         => _model is null ? string.Empty : AgentInstallService.BuildScript(_model, new Uri(InstallerUrl()));
 
+    /// <summary>Valeur courante d'une propriété de l'installeur, celle de l'installeur par défaut.</summary>
+    private string Value(AgentInstallProperty property)
+        => _model?.Properties.GetValueOrDefault(property.Name) ?? property.Default;
+
+    private bool IsOn(AgentInstallProperty property) => Value(property) == "1";
+
+    private void SetSwitch(AgentInstallProperty property, bool on) => Set(property, on ? "1" : "0");
+
+    private void Set(AgentInstallProperty property, string? value)
+    {
+        if (_model is null)
+        {
+            return;
+        }
+
+        // Une valeur ramenée à celle de l'installeur sort du dictionnaire : la configuration
+        // enregistrée ne garde que ce que l'administrateur a vraiment changé.
+        if (string.IsNullOrWhiteSpace(value) || value.Trim().Equals(property.Default, StringComparison.Ordinal))
+        {
+            _model.Properties.Remove(property.Name);
+            return;
+        }
+
+        _model.Properties[property.Name] = value.Trim();
+    }
+
+    /// <summary>Nombre de propriétés modifiées dans un groupe, affiché sur son en-tête replié.</summary>
+    private string ChangedCount(IReadOnlyList<AgentInstallProperty> properties)
+    {
+        int changed = _model is null ? 0 : properties.Count(property => _model.Properties.ContainsKey(property.Name));
+
+        return changed == 0 ? Tr.T("par défaut") : Tr.T("{0} modifiée(s)", changed);
+    }
+
     private async Task UploadAsync(InputFileChangeEventArgs args)
     {
         if (_model is null)

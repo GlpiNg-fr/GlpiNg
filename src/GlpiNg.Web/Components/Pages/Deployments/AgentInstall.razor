@@ -1,5 +1,6 @@
 @page "/tools/deployments/agent-install"
 @using GlpiNg.Modules.Deployment.Components.Pages.Deployments
+@using GlpiNg.Modules.Deployment.Models
 @rendermode InteractiveServer
 
 <PageTitle>@T("Installation de l'agent — GlpiNg")</PageTitle>
@@ -97,10 +98,62 @@ else
                         <input id="cfg-installdir" class="glping-config-input" @bind="_model.InstallDir" placeholder="C:\Program Files\GLPI-Agent" />
                     </div>
 
-                    <div class="glping-config-field">
-                        <label for="cfg-extra">@T("Propriétés supplémentaires de l'installeur")</label>
-                        <input id="cfg-extra" class="glping-config-input" @bind="_model.ExtraProperties" placeholder="DEBUG=1 ADD_FIREWALL_EXCEPTION=1" />
-                    </div>
+                    @foreach ((string group, IReadOnlyList<AgentInstallProperty> properties) in AgentInstallProperties.Groups)
+                    {
+                        <details class="glping-config-field" style="display: block;">
+                            <summary class="glping-config-divider" style="cursor: pointer;">
+                                <span><i class="ti ti-adjustments"></i> @T(group) <span class="text-secondary">(@ChangedCount(properties))</span></span>
+                            </summary>
+
+                            @foreach (AgentInstallProperty property in properties)
+                            {
+                                <div class="glping-config-field @(property.Kind == AgentInstallPropertyKind.Switch ? "checkbox" : "")">
+                                    <label for="@($"prop-{property.Name}")" title="@T(property.Help)">
+                                        @T(property.Label)
+                                        <span class="text-secondary ms-1 font-monospace">@property.Name</span>
+                                    </label>
+
+                                    @switch (property.Kind)
+                                    {
+                                        case AgentInstallPropertyKind.Switch:
+                                            <label class="glping-switch" title="@T(property.Help)">
+                                                <input id="@($"prop-{property.Name}")" type="checkbox"
+                                                       checked="@IsOn(property)"
+                                                       @onchange="args => SetSwitch(property, args.Value is true)" />
+                                                <span class="glping-switch-slider"></span>
+                                            </label>
+                                            break;
+
+                                        case AgentInstallPropertyKind.Choice:
+                                            <select id="@($"prop-{property.Name}")" class="glping-config-input" title="@T(property.Help)"
+                                                    value="@Value(property)"
+                                                    @onchange="args => Set(property, args.Value?.ToString())">
+                                                @foreach ((string value, string label) in property.Choices ?? [])
+                                                {
+                                                    <option value="@value">@T(label)</option>
+                                                }
+                                            </select>
+                                            break;
+
+                                        case AgentInstallPropertyKind.Number:
+                                            <input id="@($"prop-{property.Name}")" type="number" title="@T(property.Help)"
+                                                   placeholder="@property.Default" value="@Value(property)"
+                                                   @onchange="args => Set(property, args.Value?.ToString())" />
+                                            break;
+
+                                        default:
+                                            <input id="@($"prop-{property.Name}")" class="glping-config-input"
+                                                   type="@(property.Kind == AgentInstallPropertyKind.Secret ? "password" : "text")"
+                                                   autocomplete="off" title="@T(property.Help)"
+                                                   placeholder="@property.Default" value="@Value(property)"
+                                                   @onchange="args => Set(property, args.Value?.ToString())" />
+                                            break;
+                                    }
+                                </div>
+                                <div class="form-hint mb-2">@T(property.Help)</div>
+                            }
+                        </details>
+                    }
 
                     <div class="glping-config-divider">
                         <span><i class="ti ti-plug-connected"></i> @T("Accès aux postes distants (WinRM)")</span>
