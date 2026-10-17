@@ -1,4 +1,4 @@
-using GlpiNg.Web.Models;
+﻿using GlpiNg.Web.Models;
 
 namespace GlpiNg.Web.Services;
 
@@ -178,7 +178,8 @@ public static class ProfileSectionMap
         {
             return type.Name switch
             {
-                nameof(AuthLdapServer) or nameof(AuthMailServer) or nameof(OAuthClient) or nameof(AppSetting)
+                nameof(AuthLdapServer) or nameof(AuthMailServer) or nameof(MailCollector)
+                    or nameof(OAuthClient) or nameof(AppSetting)
                     or nameof(Models.FieldUnicity.FieldUnicityCriterion) or nameof(Models.FieldUnicity.FieldUnicityField)
                     // Définir un type d'actif est de la configuration ; remplir le parc avec ces
                     // actifs est du parc — d'où deux sections pour la même fonctionnalité.

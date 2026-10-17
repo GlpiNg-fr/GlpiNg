@@ -4,6 +4,7 @@ using GlpiNg.Web.Models;
 using GlpiNg.Web.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.EntityFrameworkCore;
 
 namespace GlpiNg.Web.Components.Layout;
@@ -61,7 +62,8 @@ public partial class MainLayout : IDisposable
         ]),
         new("outils", "ti-briefcase", "Outils",
         [
-            new("Réservations", Icon: "ti-calendar-event"),
+            // « Réservations » n'est plus ici : l'entrée vient du module Réservations
+            // (ReservationsMenuProvider), avec sa page derrière.
             new("Notes", "/tools/notes", "ti-notes"),
             new("Rapports", "/tools/reports", "ti-report"),
         ]),
@@ -85,9 +87,9 @@ public partial class MainLayout : IDisposable
             new("Actions automatiques", "/config/automatic-actions", "ti-robot"),
             new("Authentification", "/config/auth", "ti-key"),
             new("Clients OAuth", "/config/oauth-clients", "ti-lock-access"),
-            new("Collecteurs", Icon: "ti-mail"),
+            new("Collecteurs", "/config/mail-collectors", "ti-mail"),
             new("Liens externes", "/config/external-links", "ti-external-link"),
-            new("Plugins", Icon: "ti-plug"),
+            new("Plugins", "/config/plugins", "ti-plug"),
         ]),
     ];
 
@@ -341,6 +343,17 @@ public partial class MainLayout : IDisposable
     private List<NavItem> FilteredItems(NavGroup group) => !IsSearching || group.Label.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase)
         ? group.Items
         : group.Items.Where(i => i.Label.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    /// <summary>
+    /// Une entrée dont le lien est le préfixe d'une autre entrée (« /config » face à
+    /// « /config/webhooks ») doit matcher exactement, sinon elle reste active sur les
+    /// pages de ses voisines.
+    /// </summary>
+    private NavLinkMatch MatchFor(string href) =>
+        href == "/" || Groups.SelectMany(g => g.Items).Any(other =>
+            other.Href is not null && other.Href.StartsWith(href + "/", StringComparison.OrdinalIgnoreCase))
+            ? NavLinkMatch.All
+            : NavLinkMatch.Prefix;
 
     private bool IsGroupOpen(NavGroup group) => IsSearching || _expandedGroup == group.Key;
 

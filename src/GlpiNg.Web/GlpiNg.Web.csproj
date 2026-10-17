@@ -56,6 +56,7 @@
     <ProjectReference Include="..\GlpiNg.Modules.KnowledgeBase\GlpiNg.Modules.KnowledgeBase.csproj" />
     <ProjectReference Include="..\GlpiNg.Modules.Management\GlpiNg.Modules.Management.csproj" />
     <ProjectReference Include="..\GlpiNg.Modules.Assistance\GlpiNg.Modules.Assistance.csproj" />
+    <ProjectReference Include="..\GlpiNg.Modules.Reservations\GlpiNg.Modules.Reservations.csproj" />
     <ProjectReference Include="..\GlpiNg.Plugins.Sdk\GlpiNg.Plugins.Sdk.csproj" />
   </ItemGroup>
 

@@ -46,6 +46,9 @@ public static class NotificationEventCatalog
     /// <inheritdoc cref="AssistanceTicket"/>
     public const string AssistanceChange = GlpiNg.Modules.Abstractions.Items.ItemTypes.Change;
 
+    /// <inheritdoc cref="AssistanceTicket"/>
+    public const string Reservation = GlpiNg.Modules.Abstractions.Items.ItemTypes.Reservation;
+
     public const string EventNew = "new";
     public const string EventSuccess = "success";
     public const string EventError = "error";
@@ -59,6 +62,12 @@ public static class NotificationEventCatalog
 
     /// <summary>Un approbateur a répondu (clé « validation_answer » de GLPI).</summary>
     public const string EventValidationAnswer = "validation_answer";
+
+    /// <summary>Objet supprimé ou créneau annulé (clé « delete » de GLPI).</summary>
+    public const string EventDelete = "delete";
+
+    /// <summary>Échéance proche (clé « alert » de GLPI) — voir ReservationAlertCronTask.</summary>
+    public const string EventAlert = "alert";
 
     public static readonly IReadOnlyList<NotificationEventDefinition> All =
     [
@@ -216,6 +225,41 @@ public static class NotificationEventCatalog
             new("validation.status", "Réponse (Accepté / Refusé)"),
             new("validation.answer", "Commentaire de l'approbateur"),
             new("change.url", "Lien vers la fiche"),
+        ]),
+
+        // Réservations (module Réservations) : publiées par ReservationService (pose et
+        // annulation) et par ReservationAlertCronTask (rappel d'échéance).
+        new(Reservation, "Réservation", EventNew, "Nouvelle réservation",
+        [
+            new("reservation.item", "Élément réservé"),
+            new("reservation.itemtype", "Type de l'élément"),
+            new("reservation.user", "Auteur de la réservation"),
+            new("reservation.begin", "Début du créneau"),
+            new("reservation.end", "Fin du créneau"),
+            new("reservation.comment", "Commentaire"),
+            new("reservation.url", "Lien vers le planning"),
+        ]),
+
+        new(Reservation, "Réservation", EventDelete, "Réservation annulée",
+        [
+            new("reservation.item", "Élément réservé"),
+            new("reservation.itemtype", "Type de l'élément"),
+            new("reservation.user", "Auteur de la réservation"),
+            new("reservation.begin", "Début du créneau"),
+            new("reservation.end", "Fin du créneau"),
+            new("reservation.comment", "Commentaire"),
+            new("reservation.url", "Lien vers le planning"),
+        ]),
+
+        new(Reservation, "Réservation", EventAlert, "Rappel : réservation imminente",
+        [
+            new("reservation.item", "Élément réservé"),
+            new("reservation.itemtype", "Type de l'élément"),
+            new("reservation.user", "Auteur de la réservation"),
+            new("reservation.begin", "Début du créneau"),
+            new("reservation.end", "Fin du créneau"),
+            new("reservation.comment", "Commentaire"),
+            new("reservation.url", "Lien vers le planning"),
         ]),
     ];
 

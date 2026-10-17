@@ -114,6 +114,12 @@ src/
     Components/Pages/ServiceLevels/ # /config/service-levels : niveaux, engagements, escalades
     Components/Pages/Calendars/     # /config/calendars : plages horaires et fermetures
     AssistanceMenuProvider.cs       # Contribue à "Assistance" et à "Configuration"
+  GlpiNg.Modules.Reservations/      # Module Réservations (éléments réservables et créneaux)
+    Models/                         # ReservableItem (polymorphe ItemType+ItemId), Reservation
+    Services/                       # ReservationService (chevauchement, séries),
+                                     #   ReservationAlertCronTask (rappel d'échéance)
+    Components/Pages/Reservations/  # /tools/reservations (planning) et /tools/reservations/items
+    ReservationsMenuProvider.cs     # Contribue l'entrée « Réservations » du groupe "Outils"
   GlpiNg.Modules.Cron/              # Ordonnanceur applicatif : CronBackgroundService + AutomaticActionRunner
   GlpiNg.Modules.Scheduler/         # Tâches cron qui déclenchent déploiements / tâches réseau / WoL
   GlpiNg.Modules.Abstractions/      # Contrats de contribution : Menu (IMenuProvider / MenuGroup /
@@ -124,6 +130,7 @@ src/
                                      #   Documents (IDocumentAttachments), Notes (IItemNotes),
                                      #   Items (ItemTypes), FieldUnicity (IFieldUnicityChecker),
                                      #   Notifications (INotificationPublisher)
+                                     #   Reservations (IItemReservations)
 ```
 
 Les modules (`GlpiNg.Modules.*`) sont des bibliothèques de classes autonomes,
@@ -693,6 +700,42 @@ ni le disque.
 Limites connues : pas d'écran de fiche par document (l'écran de gestion liste, téléverse,
 télécharge et supprime), pas de vignettes ni d'aperçu, et le rattachement ne se fait que
 depuis les objets qui proposent l'onglet.
+
+### Réservations (`/tools/reservations`)
+
+Équivalent de « Outils > Réservations » de GLPI, en **module** (`GlpiNg.Modules.Reservations`) :
+un objet du parc n'est pas réservable par défaut — quelqu'un l'autorise depuis sa propre fiche,
+onglet « Réservations » (`glpi_reservationitems`), et les créneaux se posent ensuite sur cette
+autorisation (`glpi_reservations`).
+
+- **Planning** : grille mensuelle (semaines complètes, lundi en premier) plus la liste des
+  créneaux à venir, avec annulation à l'unité ou par série.
+- **Pose d'un créneau** : depuis le planning ou depuis la fiche de l'objet. Le **chevauchement**
+  est refusé, avec le nom de celui qui tient déjà le créneau et ses dates — un refus muet oblige
+  à aller lire le planning pour comprendre.
+- **Séries** : répétition quotidienne, hebdomadaire ou mensuelle, jusqu'à 52 occurrences, qui
+  partagent un identifiant de série et s'annulent d'un geste. Un chevauchement sur une seule
+  occurrence refuse toute la série : une série à trous est pire qu'un refus net.
+- **Suspension** : une autorisation se désactive sans perdre ses réservations (matériel en
+  réparation) ; la retirer, en revanche, les supprime.
+- **Rappel d'échéance** : action automatique `reservation_alert` (horaire par défaut), qui publie
+  l'événement « Réservation : rappel d'échéance » pour les créneaux commençant dans moins de 24 h,
+  une seule fois par réservation. Les événements « nouvelle réservation » et « réservation
+  annulée » sont publiés à la pose et à l'annulation : gabarits et destinataires se règlent dans
+  `/config/notifications` comme pour les autres.
+- **Onglets** : fiches Ordinateur, Écran et Périphérique (module Inventory, via le contrat
+  `Abstractions/Reservations/IItemReservations`) et fiche Utilisateur, qui liste ses réservations.
+- **Rapport** « Réservations » dans `/tools/reports` : créneaux et heures réservées par élément,
+  et les éléments réservables que personne ne réserve.
+
+Les créneaux sont stockés en **heure murale** (telle que saisie dans le champ
+`datetime-local`) et jamais convertis : « de 14 h à 16 h » reste « de 14 h à 16 h » quel que soit
+le fuseau du lecteur — ils s'affichent donc par `Display.LocalDateTime`.
+
+Limites connues : le nom et le lien de l'objet réservé sont **dénormalisés** (le module ne connaît
+aucun modèle de parc), donc un objet renommé garde son ancien nom jusqu'à la prochaine visite de sa
+fiche ; pas de validation d'une réservation par un responsable, pas de réservation depuis
+l'interface simplifiée, et les réservations ne sont pas reprises à l'import depuis GLPI.
 
 ### Rapports (`/tools/reports`)
 
@@ -1276,8 +1319,8 @@ manques suivants sont connus et assumés à ce stade.
   satisfaction et règles métier.
 - **Gestion** : le groupe est couvert (voir sa section ci-dessus), mais ses
   fiches ne sont pas encore reliées aux actifs du parc.
-- **Outils** : réservations (et, absents même de la sidebar : projets, rappels,
-  flux RSS). Les rapports et la base de connaissances existent (voir leurs sections
+- **Outils** : absents même de la sidebar : projets, rappels, flux RSS. Les
+  réservations, les rapports et la base de connaissances existent (voir leurs sections
   ci-dessus) ; côté rapports, ceux de GLPI qui portent sur des modules absents —
   contrats, licences, financier — n'ont pas d'équivalent, et côté base de
   connaissances, le contenu est du Markdown (pas de WYSIWYG) et sans commentaires — les

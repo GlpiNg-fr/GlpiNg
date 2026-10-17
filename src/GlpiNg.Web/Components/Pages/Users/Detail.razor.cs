@@ -1,5 +1,6 @@
 using BlazorBootstrap;
 using GlpiNg.Web.Data;
+using GlpiNg.Modules.Abstractions.Reservations;
 using GlpiNg.Web.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -38,6 +39,10 @@ public partial class Detail : ComponentBase, IAsyncDisposable
     [Inject]
     private ToastService ToastService { get; set; } = null!;
 
+    /// <summary>Réservations de l'utilisateur, rendues par le module Réservations.</summary>
+    [Inject]
+    private IItemReservations Reservations { get; set; } = null!;
+
     [CascadingParameter]
     private Task<AuthenticationState>? AuthStateTask { get; set; }
 
@@ -50,6 +55,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
     private List<GlpiProfile> _allProfiles = [];
     private List<GlpiUserProfile> _userHabilitations = [];
     private List<GlpiUserHistoryEntry> _historyEntries = [];
+    private List<ItemReservation> _reservations = [];
     private List<FicheTab> _tabs = [];
     private string _activeTabKey = "utilisateur";
     private bool _isSaving;
@@ -120,6 +126,11 @@ public partial class Detail : ComponentBase, IAsyncDisposable
             .Where(h => h.UserId == _user.Id)
             .ToListAsync();
 
+        // Réservations de l'utilisateur, lues par le contrat partagé (IItemReservations) et non
+        // par le DbContext : le modèle appartient au module Réservations, et l'hôte n'a pas à
+        // savoir comment un créneau est rangé.
+        _reservations = [.. await Reservations.GetForUserAsync(_user.Id)];
+
         _historyEntries = await _db.UserHistoryEntries.AsNoTracking()
             .Where(h => h.UserId == _user.Id)
             .OrderByDescending(h => h.OccurredAt)
@@ -158,7 +169,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
             new("problemes", "ti-alert-triangle", "Problèmes créés", null),
             new("changements", "ti-replace", "Changements créés", null),
             new("documents", "ti-file", "Documents", null),
-            new("reservations", "ti-calendar-event", "Réservations", null),
+            new("reservations", "ti-calendar-event", "Réservations", _reservations.Count > 0 ? _reservations.Count : null),
             new("synchronisation", "ti-refresh", "Synchronisation", null),
             new("liens", "ti-link", "Liens", null),
             new("certificats", "ti-certificate", "Certificats", null),
@@ -180,7 +191,6 @@ public partial class Detail : ComponentBase, IAsyncDisposable
         ["problemes"] = "Nécessite un module Assistance (problèmes) qui n'existe pas encore dans GlpiNg.",
         ["changements"] = "Nécessite un module Assistance (changements) qui n'existe pas encore dans GlpiNg.",
         ["documents"] = "Nécessite un module de gestion documentaire qui n'existe pas encore dans GlpiNg.",
-        ["reservations"] = "Nécessite un module Réservations qui n'existe pas encore dans GlpiNg.",
         ["liens"] = "Nécessite les intitulés « Liens » de GLPI, qui n'existent pas encore dans GlpiNg.",
         ["certificats"] = "Nécessite un module Certificats qui n'existe pas encore dans GlpiNg.",
         ["licences"] = "Nécessite un module Licences (logiciels) qui n'existe pas encore dans GlpiNg.",

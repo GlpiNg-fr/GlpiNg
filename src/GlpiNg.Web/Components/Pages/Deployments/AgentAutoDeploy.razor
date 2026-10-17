@@ -1,0 +1,147 @@
+@page "/tools/deployments/agent-auto"
+@using GlpiNg.Modules.Deployment.Components.Pages.Deployments
+@using GlpiNg.Modules.Deployment.Models
+@rendermode InteractiveServer
+
+<PageTitle>@T("Déploiement automatique — GlpiNg")</PageTitle>
+
+<DeploymentTopMenu Current="agentauto" />
+
+@if (_model is null)
+{
+    <p>@T("Chargement…")</p>
+}
+else
+{
+    @if (!_hasInstaller)
+    {
+        <div class="alert alert-warning">
+            @T("Aucun installeur n'est configuré.")
+            <a href="/tools/deployments/agent-install">@T("Téléversez-en un dans « Installation de l'agent ».")</a>
+        </div>
+    }
+
+    <div class="alert alert-info">
+        <i class="ti ti-clock-play me-1"></i>
+        @T("L'installation est menée par l'action automatique « Déploiement automatique de l'agent », dont la fréquence et l'exécution manuelle se règlent dans")
+        <a href="/config/automatic-actions">@T("les actions automatiques")</a>.
+        @T("Elle reprend le fichier d'installation et les options de « Installation de l'agent ».")
+    </div>
+
+    <div class="card">
+        <div class="glping-config">
+            <div class="glping-config-body">
+                <EditForm Model="_model" OnValidSubmit="SaveAsync" class="glping-config-form">
+                    <div class="glping-config-field checkbox">
+                        <label for="auto-enabled">@T("Équiper automatiquement les nouveaux matériels")</label>
+                        <label class="glping-switch">
+                            <input id="auto-enabled" type="checkbox" @bind="_model.Enabled" />
+                            <span class="glping-switch-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="glping-config-divider">
+                        <span><i class="ti ti-key"></i> @T("Compte administrateur des postes")</span>
+                    </div>
+
+                    <div class="glping-config-field">
+                        <label for="auto-user">@T("Identifiant")</label>
+                        <input id="auto-user" class="glping-config-input" autocomplete="off" @bind="_model.AdminUser" placeholder="DOMAINE\administrateur" />
+                    </div>
+
+                    <div class="glping-config-field">
+                        <label for="auto-password">@T("Mot de passe")</label>
+                        <input id="auto-password" class="glping-config-input" type="password" autocomplete="new-password"
+                               @bind="_password" placeholder="@(_hasPassword ? T("Inchangé") : string.Empty)" />
+                    </div>
+
+                    <div class="form-hint mb-3">
+                        @T("Chiffré avant enregistrement, comme le compte de service d'un annuaire. Laissez vide pour conserver celui déjà enregistré.")
+                    </div>
+
+                    <div class="glping-config-divider">
+                        <span><i class="ti ti-filter"></i> @T("Matériels retenus")</span>
+                    </div>
+
+                    <div class="glping-config-field checkbox">
+                        <label for="auto-snmp">@T("Ignorer les matériels qui répondent en SNMP")</label>
+                        <label class="glping-switch">
+                            <input id="auto-snmp" type="checkbox" @bind="_model.SkipSnmpDevices" />
+                            <span class="glping-switch-slider"></span>
+                        </label>
+                    </div>
+                    <div class="form-hint mb-3">
+                        @T("Un poste de travail répond rarement au SNMP, une imprimante ou un commutateur se décrivent volontiers : c'est le tri qui évite de s'acharner sur ce qui n'est pas un ordinateur.")
+                    </div>
+
+                    <div class="glping-config-field">
+                        <label for="auto-hostname">@T("Le nom d'hôte contient")</label>
+                        <input id="auto-hostname" class="glping-config-input" @bind="_model.HostnameContains" placeholder="@T("aucun filtre")" />
+                    </div>
+
+                    <div class="glping-config-field">
+                        <label for="auto-exclusions">@T("Ne jamais équiper (un nom d'hôte ou une IP par ligne)")</label>
+                        <textarea id="auto-exclusions" class="glping-config-input font-monospace" rows="4" @bind="_model.Exclusions"></textarea>
+                    </div>
+
+                    <div class="glping-config-divider">
+                        <span><i class="ti ti-gauge"></i> @T("Rythme")</span>
+                    </div>
+
+                    <div class="glping-config-field">
+                        <label for="auto-max-run">@T("Matériels équipés au maximum à chaque passage")</label>
+                        <input id="auto-max-run" type="number" min="1" @bind="_model.MaxPerRun" />
+                    </div>
+
+                    <div class="glping-config-field">
+                        <label for="auto-max-attempts">@T("Tentatives avant abandon")</label>
+                        <input id="auto-max-attempts" type="number" min="1" @bind="_model.MaxAttempts" />
+                    </div>
+
+                    <button type="submit" class="glping-config-save" disabled="@_isSaving">@(_isSaving ? T("Enregistrement…") : T("Enregistrer"))</button>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+
+    @if (_pending.Count > 0)
+    {
+        <div class="card mt-3">
+            <div class="card-header">
+                <h3 class="card-title"><i class="ti ti-device-desktop-search me-1"></i>@T("Dernières tentatives")</h3>
+            </div>
+            <div class="table-responsive">
+                <table class="table card-table table-vcenter">
+                    <thead>
+                        <tr>
+                            <th>@T("Matériel")</th>
+                            <th>@T("Tentatives")</th>
+                            <th>@T("Dernière")</th>
+                            <th>@T("Résultat")</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (DiscoveredNetworkDevice device in _pending)
+                        {
+                            <tr>
+                                <td>@(string.IsNullOrWhiteSpace(device.Hostname) ? device.IpAddress : device.Hostname)</td>
+                                <td>@device.AgentDeployAttempts</td>
+                                <td>@Display.DateTime(device.AgentDeployLastAttemptAt)</td>
+                                <td class="text-secondary">
+                                    @if (device.AgentDeployLastError is { Length: > 0 } error)
+                                    {
+                                        <span class="badge bg-danger text-white me-1">@T("Échec")</span>@error
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success text-white">@T("Installé")</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+}

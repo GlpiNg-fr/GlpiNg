@@ -1,5 +1,6 @@
 ﻿@page "/admin/users/{UserId:int}"
 @using GlpiNg.Web.Models
+@using GlpiNg.Modules.Abstractions.Reservations
 @rendermode InteractiveServer
 
 <PageTitle>@(_user?.UserName ?? T("Utilisateur")) — GlpiNg</PageTitle>
@@ -294,6 +295,54 @@ else
                             </button>
                         </div>
                     </EditForm>
+                    break;
+
+                case "reservations":
+                    <div class="glping-fiche-block">
+                        <div class="glping-fiche-block-title">
+                            <i class="ti ti-calendar-event"></i>@T("Réservations")
+                        </div>
+                        @if (_reservations.Count == 0)
+                        {
+                            <p class="mb-0 text-secondary">@T("Cet utilisateur n'a aucune réservation.")</p>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-vcenter card-table">
+                                    <thead>
+                                        <tr>
+                                            <th>@T("Élément")</th>
+                                            <th>@T("Du")</th>
+                                            <th>@T("Au")</th>
+                                            <th>@T("Commentaire")</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (ItemReservation reservation in _reservations)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    @if (reservation.ItemUrl is { Length: > 0 } itemUrl)
+                                                    {
+                                                        <a href="@itemUrl" class="text-reset fw-semibold">@reservation.ItemName</a>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="fw-semibold">@reservation.ItemName</span>
+                                                    }
+                                                </td>
+                                                @* Heures murales : LocalDateTime, jamais DateTime — voir ItemReservation. *@
+                                                <td class="text-secondary">@Display.LocalDateTime(reservation.Begin)</td>
+                                                <td class="text-secondary">@Display.LocalDateTime(reservation.End)</td>
+                                                <td class="text-secondary">@reservation.Comment</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
                     break;
 
                 case "synchronisation":

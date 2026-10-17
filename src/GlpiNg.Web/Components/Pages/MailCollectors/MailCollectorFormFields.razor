@@ -1,0 +1,113 @@
+@using GlpiNg.Web.Models
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="glping-fiche-field">
+            <label>@T("Nom")</label>
+            <input class="form-control" @bind="Collector.Name" @bind:event="oninput" @bind:after="NotifyChangedAsync" />
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Activé")</label>
+            @YesNoSelect(Collector.IsActive, v => Collector.IsActive = v)
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Serveur")</label>
+            <input class="form-control" @bind="Collector.Host" @bind:event="oninput" @bind:after="NotifyChangedAsync" placeholder="imap.example.com" />
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Port (optionnel)")</label>
+            <input type="number" class="form-control" value="@Collector.Port" @onchange="OnPortChanged" />
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Chiffrement")</label>
+            <select class="form-select" @bind="Collector.Encryption">
+                <option value="@MailServerEncryption.Ssl">@T("SSL")</option>
+                <option value="@MailServerEncryption.Tls">@T("STARTTLS")</option>
+                <option value="@MailServerEncryption.None">@T("Aucun")</option>
+            </select>
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Valider le certificat")</label>
+            @YesNoSelect(Collector.ValidateCertificate, v => Collector.ValidateCertificate = v)
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Commentaires")</label>
+            <textarea class="form-control" rows="3" @bind="Collector.Comment"></textarea>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="glping-fiche-field">
+            <label>@T("Identifiant de connexion")</label>
+            <input class="form-control" @bind="Collector.Login" @bind:event="oninput" @bind:after="NotifyChangedAsync" />
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Mot de passe")</label>
+            @* Le mot de passe est chiffré au repos : il n'est jamais réaffiché, et un champ laissé
+               vide conserve celui déjà enregistré. *@
+            <input type="password" class="form-control" autocomplete="new-password"
+                   placeholder="@(Collector.PasswordProtected is null ? T("Aucun mot de passe enregistré") : T("Inchangé"))"
+                   value="@Password" @onchange="OnPasswordChanged" />
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Dossier relevé")</label>
+            <input class="form-control" @bind="Collector.Folder" placeholder="INBOX" />
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Dossier des messages traités (optionnel)")</label>
+            <input class="form-control" @bind="Collector.MoveToFolder" placeholder="@(T("laisser vide pour marquer lu sur place"))" />
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Entité des tickets créés")</label>
+            <select class="form-select" value="@(Collector.EntityId?.ToString() ?? "")"
+                    @onchange="@(e => Collector.EntityId = int.TryParse(e.Value?.ToString(), out int id) ? id : null)">
+                <option value="">@T("Entité racine")</option>
+                @foreach (GlpiEntity entity in Entities)
+                {
+                    <option value="@entity.Id">@entity.Name</option>
+                }
+            </select>
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Messages par relève")</label>
+            <input type="number" min="1" class="form-control" @bind="Collector.MaxFetchPerRun" />
+        </div>
+        <div class="glping-fiche-field">
+            <label>@T("Importer les pièces jointes")</label>
+            @YesNoSelect(Collector.ImportAttachments, v => Collector.ImportAttachments = v)
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public MailCollector Collector { get; set; } = null!;
+
+    [Parameter]
+    public List<GlpiEntity> Entities { get; set; } = [];
+
+    /// <summary>Mot de passe saisi, en clair et le temps du formulaire ; chiffré à l'enregistrement.</summary>
+    [Parameter]
+    public string? Password { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> PasswordChanged { get; set; }
+
+    [Parameter]
+    public EventCallback OnChanged { get; set; }
+
+    private Task NotifyChangedAsync() => OnChanged.InvokeAsync();
+
+    private Task OnPasswordChanged(ChangeEventArgs e) => PasswordChanged.InvokeAsync(e.Value?.ToString());
+
+    private void OnPortChanged(ChangeEventArgs e)
+    {
+        string? value = e.Value?.ToString();
+        Collector.Port = int.TryParse(value, out int parsed) ? parsed : null;
+    }
+
+    private RenderFragment YesNoSelect(bool value, Action<bool> setter) =>
+        @<select class="form-select" value="@(value ? "true" : "false")" @onchange="@(e => setter(e.Value?.ToString() == "true"))">
+            <option value="false">@T("Non")</option>
+            <option value="true">@T("Oui")</option>
+        </select>;
+}
