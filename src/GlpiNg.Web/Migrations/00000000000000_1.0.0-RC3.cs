@@ -6,11 +6,30 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace GlpiNg.Web.Migrations
 {
     /// <inheritdoc />
-    public partial class CollecteursDeCourriels : Migration
+    public partial class Release_1_0_0_RC3 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.AddColumn<int>(
+                name: "AgentDeployAttempts",
+                table: "DiscoveredNetworkDevices",
+                type: "int",
+                nullable: false,
+                defaultValue: 0);
+
+            migrationBuilder.AddColumn<DateTime>(
+                name: "AgentDeployLastAttemptAt",
+                table: "DiscoveredNetworkDevices",
+                type: "datetime2",
+                nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "AgentDeployLastError",
+                table: "DiscoveredNetworkDevices",
+                type: "nvarchar(max)",
+                nullable: true);
+
             migrationBuilder.CreateTable(
                 name: "MailCollectors",
                 columns: table => new
@@ -151,6 +170,18 @@ namespace GlpiNg.Web.Migrations
 
             migrationBuilder.DropTable(
                 name: "ReservableItems");
+
+            migrationBuilder.DropColumn(
+                name: "AgentDeployAttempts",
+                table: "DiscoveredNetworkDevices");
+
+            migrationBuilder.DropColumn(
+                name: "AgentDeployLastAttemptAt",
+                table: "DiscoveredNetworkDevices");
+
+            migrationBuilder.DropColumn(
+                name: "AgentDeployLastError",
+                table: "DiscoveredNetworkDevices");
         }
     }
 }

@@ -12,15 +12,15 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GlpiNg.Web.Migrations
 {
     [DbContext(typeof(GlpiNgDbContext))]
-    [Migration("20261017162215_SuiviDeploiementAutomatiqueAgent")]
-    partial class SuiviDeploiementAutomatiqueAgent
+    [Migration("00000000000000_1.0.0-RC3")]
+    partial class Release_1_0_0_RC3
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.12")
+                .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -5678,6 +5678,100 @@ namespace GlpiNg.Web.Migrations
                     b.ToTable("SupplierContacts");
                 });
 
+            modelBuilder.Entity("GlpiNg.Modules.Reservations.Models.ReservableItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("EntityId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsRecursive")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ItemName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ItemType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ItemUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityId");
+
+                    b.HasIndex("ItemType", "ItemId")
+                        .IsUnique();
+
+                    b.ToTable("ReservableItems");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Reservations.Models.Reservation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("AlertSentAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("Begin")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("End")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ReservableItemId")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("SeriesId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Begin");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("ReservableItemId", "Begin");
+
+                    b.ToTable("Reservations");
+                });
+
             modelBuilder.Entity("GlpiNg.Web.Models.ApiClient", b =>
                 {
                     b.Property<int>("Id")
@@ -7038,6 +7132,85 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("UserProfiles");
+                });
+
+            modelBuilder.Entity("GlpiNg.Web.Models.MailCollector", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Encryption")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("EntityId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Folder")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Host")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("ImportAttachments")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LastError")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("LastImportedCount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("LastRunAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Login")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("MaxFetchPerRun")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MoveToFolder")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("PasswordProtected")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("Port")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("ValidateCertificate")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityId");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("MailCollectors");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.Notes.Notepad", b =>
@@ -9138,6 +9311,25 @@ namespace GlpiNg.Web.Migrations
                     b.Navigation("Supplier");
                 });
 
+            modelBuilder.Entity("GlpiNg.Modules.Reservations.Models.ReservableItem", b =>
+                {
+                    b.HasOne("GlpiNg.Web.Models.GlpiEntity", null)
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Reservations.Models.Reservation", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Reservations.Models.ReservableItem", "ReservableItem")
+                        .WithMany("Reservations")
+                        .HasForeignKey("ReservableItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ReservableItem");
+                });
+
             modelBuilder.Entity("GlpiNg.Web.Models.CustomAssets.CustomAsset", b =>
                 {
                     b.HasOne("GlpiNg.Web.Models.CustomAssets.CustomAssetDefinition", "Definition")
@@ -9411,6 +9603,16 @@ namespace GlpiNg.Web.Migrations
                     b.Navigation("Profile");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("GlpiNg.Web.Models.MailCollector", b =>
+                {
+                    b.HasOne("GlpiNg.Web.Models.GlpiEntity", "Entity")
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Entity");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.Notifications.Notification", b =>
@@ -9741,6 +9943,11 @@ namespace GlpiNg.Web.Migrations
                     b.Navigation("Contacts");
 
                     b.Navigation("Contracts");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Reservations.Models.ReservableItem", b =>
+                {
+                    b.Navigation("Reservations");
                 });
 
             modelBuilder.Entity("GlpiNg.Web.Models.CustomAssets.CustomAsset", b =>
