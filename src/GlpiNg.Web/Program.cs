@@ -462,6 +462,7 @@ public class Program
             builder.Services.AddScoped<IItemNotes>(sp => sp.GetRequiredService<NoteService>());
             builder.Services.AddScoped<GlpiNg.Modules.Abstractions.Items.IItemRelations, GlpiNg.Web.Services.Items.ItemRelationService>();
             builder.Services.AddScoped<GlpiNg.Modules.Abstractions.Items.IItemManagement, GlpiNg.Web.Services.Items.ItemManagementService>();
+            builder.Services.AddScoped<GlpiNg.Modules.Abstractions.Items.IItemCosts, GlpiNg.Web.Services.Items.ItemCostService>();
 
             // Cache mémoire des sections de réglages /config (Valeurs par défaut, Parc, Assistance,
             // Modules, ...), lues/écrites dans la table AppSettings plutôt que dans appsettings.json

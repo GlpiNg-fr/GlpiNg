@@ -878,6 +878,45 @@ namespace GlpiNg.Web.Migrations
                     b.ToTable("TicketEscalations");
                 });
 
+            modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.TicketValidation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("RequestComment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RequesterName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("SubmittedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("TicketId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ValidatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ValidationComment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ValidatorUserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TicketId");
+
+                    b.ToTable("TicketValidations");
+                });
+
             modelBuilder.Entity("GlpiNg.Modules.Cron.Models.AutomaticActionRunLog", b =>
                 {
                     b.Property<int>("Id")
@@ -5445,6 +5484,38 @@ namespace GlpiNg.Web.Migrations
                     b.ToTable("Domains");
                 });
 
+            modelBuilder.Entity("GlpiNg.Modules.Management.Models.DomainRecord", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DomainId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Target")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("Ttl")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DomainId");
+
+                    b.ToTable("DomainRecords");
+                });
+
             modelBuilder.Entity("GlpiNg.Modules.Management.Models.ManagementHistoryEntry", b =>
                 {
                     b.Property<int>("Id")
@@ -5586,6 +5657,94 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("EntityId");
 
                     b.ToTable("Projects");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Management.Models.ProjectMember", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("ProjectMembers");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Management.Models.ProjectTask", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Percent")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("PlannedEnd")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("PlannedStart")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("ProjectTasks");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Management.Models.ServerRoom", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("DatacenterId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DatacenterId");
+
+                    b.ToTable("ServerRooms");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Management.Models.SoftwareLicense", b =>
@@ -7206,6 +7365,42 @@ namespace GlpiNg.Web.Migrations
                     b.ToTable("UserProfiles");
                 });
 
+            modelBuilder.Entity("GlpiNg.Web.Models.Items.ItemCost", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ItemType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemType", "ItemId");
+
+                    b.ToTable("ItemCosts");
+                });
+
             modelBuilder.Entity("GlpiNg.Web.Models.Items.ItemManagement", b =>
                 {
                     b.Property<int>("Id")
@@ -8078,6 +8273,17 @@ namespace GlpiNg.Web.Migrations
                         .IsRequired();
 
                     b.Navigation("Escalation");
+
+                    b.Navigation("Ticket");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.TicketValidation", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Assistance.Models.Ticket", "Ticket")
+                        .WithMany()
+                        .HasForeignKey("TicketId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Ticket");
                 });
@@ -9413,6 +9619,17 @@ namespace GlpiNg.Web.Migrations
                     b.Navigation("Supplier");
                 });
 
+            modelBuilder.Entity("GlpiNg.Modules.Management.Models.DomainRecord", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Management.Models.Domain", "Domain")
+                        .WithMany()
+                        .HasForeignKey("DomainId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Domain");
+                });
+
             modelBuilder.Entity("GlpiNg.Modules.Management.Models.PhoneLine", b =>
                 {
                     b.HasOne("GlpiNg.Modules.Management.Models.Contract", "Contract")
@@ -9441,6 +9658,39 @@ namespace GlpiNg.Web.Migrations
                         .WithMany()
                         .HasForeignKey("EntityId")
                         .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Management.Models.ProjectMember", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Management.Models.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Management.Models.ProjectTask", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Management.Models.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Management.Models.ServerRoom", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Management.Models.Datacenter", "Datacenter")
+                        .WithMany()
+                        .HasForeignKey("DatacenterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Datacenter");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Management.Models.SoftwareLicense", b =>

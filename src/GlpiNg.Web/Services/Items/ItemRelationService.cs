@@ -32,6 +32,13 @@ public sealed class ItemRelationService(
         [ItemRelationKinds.Problem] = [ItemTypes.Problem],
         [ItemRelationKinds.Change] = [ItemTypes.Change],
         [ItemRelationKinds.Knowledge] = [ItemTypes.KnowledgeBaseArticle],
+        [ItemRelationKinds.Line] = [ItemTypes.PhoneLine],
+        [ItemRelationKinds.Database] = [ItemTypes.DatabaseInstance],
+        [ItemRelationKinds.Rack] = [ItemTypes.Rack],
+        [ItemRelationKinds.Enclosure] = [ItemTypes.Enclosure],
+        [ItemRelationKinds.Pdu] = [ItemTypes.Pdu],
+        [ItemRelationKinds.License] = [ItemTypes.SoftwareLicense],
+        [ItemRelationKinds.Printer] = [ItemTypes.Printer],
         [ItemRelationKinds.Impact] = ImpactTypes,
     };
 

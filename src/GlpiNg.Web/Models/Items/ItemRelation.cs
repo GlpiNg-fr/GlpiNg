@@ -54,3 +54,22 @@ public class ItemManagement
 
     public string? DeliveryNumber { get; set; }
 }
+
+/// <summary>Coût imputé à un objet — voir <c>IItemCosts</c>. Polymorphe, sans clé étrangère, comme les notes.</summary>
+public class ItemCost
+{
+    public int Id { get; set; }
+
+    public required string ItemType { get; set; }
+
+    public int ItemId { get; set; }
+
+    public required string Name { get; set; }
+
+    /// <summary>Date du coût, valeur murale saisie à la main.</summary>
+    public DateTime? Date { get; set; }
+
+    public decimal Amount { get; set; }
+
+    public string? Comment { get; set; }
+}

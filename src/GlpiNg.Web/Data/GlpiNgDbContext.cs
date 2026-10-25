@@ -178,8 +178,14 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<ContractCost> ContractCosts => Set<ContractCost>();
     public DbSet<ContractItem> ContractItems => Set<ContractItem>();
     public DbSet<Project> Projects => Set<Project>();
+    public DbSet<ProjectTask> ProjectTasks => Set<ProjectTask>();
+    public DbSet<ProjectMember> ProjectMembers => Set<ProjectMember>();
+    public DbSet<DomainRecord> DomainRecords => Set<DomainRecord>();
+    public DbSet<ServerRoom> ServerRooms => Set<ServerRoom>();
+    public DbSet<TicketValidation> TicketValidations => Set<TicketValidation>();
     public DbSet<GlpiNg.Web.Models.Items.ItemRelation> ItemRelations => Set<GlpiNg.Web.Models.Items.ItemRelation>();
     public DbSet<GlpiNg.Web.Models.Items.ItemManagement> ItemManagements => Set<GlpiNg.Web.Models.Items.ItemManagement>();
+    public DbSet<GlpiNg.Web.Models.Items.ItemCost> ItemCosts => Set<GlpiNg.Web.Models.Items.ItemCost>();
     public DbSet<Budget> Budgets => Set<Budget>();
     public DbSet<SoftwareLicense> SoftwareLicenses => Set<SoftwareLicense>();
     public DbSet<PhoneLine> PhoneLines => Set<PhoneLine>();
@@ -1095,9 +1101,47 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
             .HasIndex(m => new { m.ItemType, m.ItemId })
             .IsUnique();
 
+        modelBuilder.Entity<GlpiNg.Web.Models.Items.ItemCost>()
+            .HasIndex(c => new { c.ItemType, c.ItemId });
+
+        modelBuilder.Entity<GlpiNg.Web.Models.Items.ItemCost>()
+            .Property(c => c.Amount)
+            .HasPrecision(18, 2);
+
         modelBuilder.Entity<GlpiNg.Web.Models.Items.ItemManagement>()
             .Property(m => m.Value)
             .HasPrecision(18, 2);
+
+        // Les tâches et l'équipe disparaissent avec le projet.
+        modelBuilder.Entity<ProjectTask>()
+            .HasOne(t => t.Project)
+            .WithMany()
+            .HasForeignKey(t => t.ProjectId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ProjectMember>()
+            .HasOne(m => m.Project)
+            .WithMany()
+            .HasForeignKey(m => m.ProjectId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DomainRecord>()
+            .HasOne(r => r.Domain)
+            .WithMany()
+            .HasForeignKey(r => r.DomainId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ServerRoom>()
+            .HasOne(r => r.Datacenter)
+            .WithMany()
+            .HasForeignKey(r => r.DatacenterId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<TicketValidation>()
+            .HasOne(v => v.Ticket)
+            .WithMany()
+            .HasForeignKey(v => v.TicketId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<ContractItem>()
             .HasIndex(link => new { link.ContractId, link.ItemType, link.ItemId })
