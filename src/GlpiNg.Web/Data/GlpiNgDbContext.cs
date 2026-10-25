@@ -176,6 +176,10 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<Contract> Contracts => Set<Contract>();
     public DbSet<ContractSupplier> ContractSuppliers => Set<ContractSupplier>();
     public DbSet<ContractCost> ContractCosts => Set<ContractCost>();
+    public DbSet<ContractItem> ContractItems => Set<ContractItem>();
+    public DbSet<Project> Projects => Set<Project>();
+    public DbSet<GlpiNg.Web.Models.Items.ItemRelation> ItemRelations => Set<GlpiNg.Web.Models.Items.ItemRelation>();
+    public DbSet<GlpiNg.Web.Models.Items.ItemManagement> ItemManagements => Set<GlpiNg.Web.Models.Items.ItemManagement>();
     public DbSet<Budget> Budgets => Set<Budget>();
     public DbSet<SoftwareLicense> SoftwareLicenses => Set<SoftwareLicense>();
     public DbSet<PhoneLine> PhoneLines => Set<PhoneLine>();
@@ -1077,6 +1081,33 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
         modelBuilder.Entity<ContractSupplier>()
             .HasIndex(link => new { link.ContractId, link.SupplierId })
             .IsUnique();
+
+        // Un contrat ne se rattache qu'une fois au même objet ; le lien disparaît avec le contrat.
+        // Un rattachement ne se pose qu'une fois ; les informations de gestion tiennent en une ligne par objet.
+        modelBuilder.Entity<GlpiNg.Web.Models.Items.ItemRelation>()
+            .HasIndex(r => new { r.Relation, r.ItemType, r.ItemId, r.TargetType, r.TargetId })
+            .IsUnique();
+
+        modelBuilder.Entity<GlpiNg.Web.Models.Items.ItemRelation>()
+            .HasIndex(r => new { r.Relation, r.TargetType, r.TargetId });
+
+        modelBuilder.Entity<GlpiNg.Web.Models.Items.ItemManagement>()
+            .HasIndex(m => new { m.ItemType, m.ItemId })
+            .IsUnique();
+
+        modelBuilder.Entity<GlpiNg.Web.Models.Items.ItemManagement>()
+            .Property(m => m.Value)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<ContractItem>()
+            .HasIndex(link => new { link.ContractId, link.ItemType, link.ItemId })
+            .IsUnique();
+
+        modelBuilder.Entity<ContractItem>()
+            .HasOne(link => link.Contract)
+            .WithMany()
+            .HasForeignKey(link => link.ContractId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<SupplierContact>()
             .HasOne(link => link.Supplier)
