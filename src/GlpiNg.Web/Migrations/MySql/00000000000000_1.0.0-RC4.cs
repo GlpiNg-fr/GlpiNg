@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace GlpiNg.Web.Migrations.MySql
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class Release_1_0_0_RC4 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -4640,6 +4640,60 @@ namespace GlpiNg.Web.Migrations.MySql
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "ComputerEnvironmentVariables",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    ComputerId = table.Column<int>(type: "int", nullable: false),
+                    Name = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Value = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ComputerEnvironmentVariables", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ComputerEnvironmentVariables_Computers_ComputerId",
+                        column: x => x.ComputerId,
+                        principalTable: "Computers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "ComputerFirewalls",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    ComputerId = table.Column<int>(type: "int", nullable: false),
+                    Profile = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Status = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Description = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    IpAddress = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    IpAddress6 = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ComputerFirewalls", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ComputerFirewalls_Computers_ComputerId",
+                        column: x => x.ComputerId,
+                        principalTable: "Computers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "ComputerHistoryEntries",
                 columns: table => new
                 {
@@ -4688,6 +4742,66 @@ namespace GlpiNg.Web.Migrations.MySql
                     table.PrimaryKey("PK_ComputerImportHistories", x => x.Id);
                     table.ForeignKey(
                         name: "FK_ComputerImportHistories_Computers_ComputerId",
+                        column: x => x.ComputerId,
+                        principalTable: "Computers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "ComputerLicenses",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    ComputerId = table.Column<int>(type: "int", nullable: false),
+                    Name = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    FullName = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Key = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ProductId = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Components = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Trial = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    Update = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    Oem = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    ActivationDate = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ComputerLicenses", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ComputerLicenses_Computers_ComputerId",
+                        column: x => x.ComputerId,
+                        principalTable: "Computers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "ComputerLocalAccounts",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    ComputerId = table.Column<int>(type: "int", nullable: false),
+                    IsGroup = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    AccountId = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Name = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ComputerLocalAccounts", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ComputerLocalAccounts_Computers_ComputerId",
                         column: x => x.ComputerId,
                         principalTable: "Computers",
                         principalColumn: "Id",
@@ -4773,6 +4887,35 @@ namespace GlpiNg.Web.Migrations.MySql
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "ComputerProcesses",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    ComputerId = table.Column<int>(type: "int", nullable: false),
+                    Pid = table.Column<int>(type: "int", nullable: true),
+                    User = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Command = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CpuUsage = table.Column<double>(type: "double", nullable: true),
+                    VirtualMemory = table.Column<long>(type: "bigint", nullable: true),
+                    Started = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ComputerProcesses", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ComputerProcesses_Computers_ComputerId",
+                        column: x => x.ComputerId,
+                        principalTable: "Computers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "ComputerSoftwares",
                 columns: table => new
                 {
@@ -4793,6 +4936,38 @@ namespace GlpiNg.Web.Migrations.MySql
                     table.PrimaryKey("PK_ComputerSoftwares", x => x.Id);
                     table.ForeignKey(
                         name: "FK_ComputerSoftwares_Computers_ComputerId",
+                        column: x => x.ComputerId,
+                        principalTable: "Computers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "ComputerVirtualMachines",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    ComputerId = table.Column<int>(type: "int", nullable: false),
+                    Name = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Uuid = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    VmType = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Subsystem = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Status = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    VCpu = table.Column<int>(type: "int", nullable: true),
+                    MemoryMb = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ComputerVirtualMachines", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ComputerVirtualMachines_Computers_ComputerId",
                         column: x => x.ComputerId,
                         principalTable: "Computers",
                         principalColumn: "Id",
@@ -6397,6 +6572,16 @@ namespace GlpiNg.Web.Migrations.MySql
                 column: "ComputerId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ComputerEnvironmentVariables_ComputerId",
+                table: "ComputerEnvironmentVariables",
+                column: "ComputerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ComputerFirewalls_ComputerId",
+                table: "ComputerFirewalls",
+                column: "ComputerId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ComputerHistoryEntries_ComputerId",
                 table: "ComputerHistoryEntries",
                 column: "ComputerId");
@@ -6404,6 +6589,16 @@ namespace GlpiNg.Web.Migrations.MySql
             migrationBuilder.CreateIndex(
                 name: "IX_ComputerImportHistories_ComputerId",
                 table: "ComputerImportHistories",
+                column: "ComputerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ComputerLicenses_ComputerId",
+                table: "ComputerLicenses",
+                column: "ComputerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ComputerLocalAccounts_ComputerId",
+                table: "ComputerLocalAccounts",
                 column: "ComputerId");
 
             migrationBuilder.CreateIndex(
@@ -6420,6 +6615,11 @@ namespace GlpiNg.Web.Migrations.MySql
                 name: "IX_ComputerPeripherals_StatusId",
                 table: "ComputerPeripherals",
                 column: "StatusId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ComputerProcesses_ComputerId",
+                table: "ComputerProcesses",
+                column: "ComputerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ComputerRuleAction_ComputerRuleId",
@@ -6467,6 +6667,11 @@ namespace GlpiNg.Web.Migrations.MySql
             migrationBuilder.CreateIndex(
                 name: "IX_ComputerSoftwares_ComputerId",
                 table: "ComputerSoftwares",
+                column: "ComputerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ComputerVirtualMachines_ComputerId",
+                table: "ComputerVirtualMachines",
                 column: "ComputerId");
 
             migrationBuilder.CreateIndex(
@@ -7791,16 +7996,31 @@ namespace GlpiNg.Web.Migrations.MySql
                 name: "ComputerConnectors");
 
             migrationBuilder.DropTable(
+                name: "ComputerEnvironmentVariables");
+
+            migrationBuilder.DropTable(
+                name: "ComputerFirewalls");
+
+            migrationBuilder.DropTable(
                 name: "ComputerHistoryEntries");
 
             migrationBuilder.DropTable(
                 name: "ComputerImportHistories");
 
             migrationBuilder.DropTable(
+                name: "ComputerLicenses");
+
+            migrationBuilder.DropTable(
+                name: "ComputerLocalAccounts");
+
+            migrationBuilder.DropTable(
                 name: "ComputerNetworkPorts");
 
             migrationBuilder.DropTable(
                 name: "ComputerPeripherals");
+
+            migrationBuilder.DropTable(
+                name: "ComputerProcesses");
 
             migrationBuilder.DropTable(
                 name: "ComputerRuleAction");
@@ -7810,6 +8030,9 @@ namespace GlpiNg.Web.Migrations.MySql
 
             migrationBuilder.DropTable(
                 name: "ComputerSoftwares");
+
+            migrationBuilder.DropTable(
+                name: "ComputerVirtualMachines");
 
             migrationBuilder.DropTable(
                 name: "ComputerVolumes");

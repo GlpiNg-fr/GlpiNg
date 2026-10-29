@@ -12,15 +12,15 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GlpiNg.Web.Migrations.Postgres
 {
     [DbContext(typeof(GlpiNgDbContext))]
-    [Migration("20261029192636_Initial")]
-    partial class Initial
+    [Migration("00000000000000_1.0.0-RC4")]
+    partial class Release_1_0_0_RC4
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.13")
+                .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
