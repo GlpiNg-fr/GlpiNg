@@ -1,4 +1,5 @@
-﻿using AnthoDingo.Setup;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
+using AnthoDingo.Setup;
 using GlpiNg.Modules.Abstractions.Entities;
 using GlpiNg.Modules.Cron.Models;
 using GlpiNg.Modules.Deployment.Models;
@@ -35,6 +36,12 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<ComputerPeripheral> ComputerPeripherals => Set<ComputerPeripheral>();
     public DbSet<ComputerVolume> ComputerVolumes => Set<ComputerVolume>();
     public DbSet<ComputerBattery> ComputerBatteries => Set<ComputerBattery>();
+    public DbSet<ComputerVirtualMachine> ComputerVirtualMachines => Set<ComputerVirtualMachine>();
+    public DbSet<ComputerFirewall> ComputerFirewalls => Set<ComputerFirewall>();
+    public DbSet<ComputerLicense> ComputerLicenses => Set<ComputerLicense>();
+    public DbSet<ComputerProcess> ComputerProcesses => Set<ComputerProcess>();
+    public DbSet<ComputerEnvironmentVariable> ComputerEnvironmentVariables => Set<ComputerEnvironmentVariable>();
+    public DbSet<ComputerLocalAccount> ComputerLocalAccounts => Set<ComputerLocalAccount>();
     public DbSet<ComputerConnector> ComputerConnectors => Set<ComputerConnector>();
     public DbSet<ComputerNetworkPort> ComputerNetworkPorts => Set<ComputerNetworkPort>();
     public DbSet<ComputerAntivirus> ComputerAntiviruses => Set<ComputerAntivirus>();
@@ -1911,12 +1918,15 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
         {
             case DbProvider.SqlServer:
                 builder.UseSqlServer(effectiveConnectionString);
+                builder.ReplaceService<IMigrationsAssembly, SqlServerMigrationsAssembly>();
                 break;
             case DbProvider.MySql:
                 builder.UseMySql(effectiveConnectionString, ServerVersion.AutoDetect(effectiveConnectionString));
+                builder.ReplaceService<IMigrationsAssembly, MySqlMigrationsAssembly>();
                 break;
             case DbProvider.Postgres:
                 builder.UseNpgsql(effectiveConnectionString);
+                builder.ReplaceService<IMigrationsAssembly, PostgresMigrationsAssembly>();
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(provider), provider,

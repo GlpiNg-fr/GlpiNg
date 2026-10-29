@@ -1375,18 +1375,22 @@ matrice appliquée est celle de GLPI par défaut, en dur.
 
 ## À faire
 
-- [ ] Champ « Entité » sur les fiches hors parc (déploiement, notifications,
-      groupes) : seules les fiches d'actifs l'exposent
-- [ ] Sections d'inventaire encore non reprises, faute d'équivalent dans le
-      modèle : machines virtuelles, processus, variables d'environnement, règles
-      de pare-feu, comptes et groupes locaux, licences logicielles
-- [ ] Page `/self-service` coté utilisateur (le déploiement à la demande est déjà
-      opérant depuis la fiche d'un poste : seuls les paquets dont le libre-service
-      est activé pour un groupe dont ce poste est membre y sont proposés)
-- [ ] Migrations EF Core dédiées pour MySQL/PostgreSQL (l'installation utilise
-      `EnsureCreatedAsync` pour ces providers, donc `dotnet ef database update`
-      n'y est pas encore utilisable pour les évolutions de schéma futures)
-- [ ] Compression brotli et chiffrement (`GLPI-CryptoKey-ID`) côté protocole agent
+- [x] Champ « Entité » sur les fiches hors parc (déploiement, notifications, groupes)
+- [x] Sections d'inventaire reprises (onglet « Système » du poste) : machines
+      virtuelles, processus, variables d'environnement, comptes et groupes locaux,
+      pare-feu (un profil par ligne), licences logicielles (réglages « Importer ... »
+      de la configuration Inventaire pour les trois premières ; le reste est toujours
+      importé)
+- [x] Page `/self-service` côté utilisateur (paquets ouverts au libre-service pour un
+      groupe dont le poste de l'utilisateur est membre ; poste résolu via `LastLoggedUser`)
+- [x] Migrations EF Core dédiées pour MySQL/PostgreSQL (`Migrations/MySql`,
+      `Migrations/Postgres`). Une base MySQL/PostgreSQL installée avant ce changement
+      (créée par `EnsureCreatedAsync`) n'a pas d'historique de migrations : à réinstaller
+- [x] Compression brotli en entrée du protocole agent
+- [ ] Chiffrement (`GLPI-CryptoKey-ID`) côté protocole agent — bloqué : le protocole
+      REGISTER qui le porte est un brouillon, non implémenté par GLPI 10 ni par
+      GLPI-Agent (1.18 vérifié : aucun code de chiffrement), et la spécification ne
+      fixe ni le mode AES, ni l'IV, ni le remplissage
 - [ ] Pages restantes de la sidebar (voir « Écarts avec GLPI » ci-dessus)
 
 ## Démarrage

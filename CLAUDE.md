@@ -42,6 +42,16 @@ has-pending-model-changes` against a simulated install), `codeql.yml` (whose res
 ruleset requires, so direct pushes there are refused — go through a PR) and `release.yml` (a version
 tag such as `1.0.0-RC1` publishes one `glping` zip per RID (linux-x64/win-x64) as a GitHub release).
 
+**EF Core migrations — three sets.** SQL Server's live in `Migrations/`; MySQL's and PostgreSQL's in
+`Migrations/MySql` and `Migrations/Postgres`, each with its own snapshot (`GlpiNg{MySql,Postgres}ModelSnapshot`)
+and selected by `ProviderMigrationsAssembly` (EF can't filter by provider, so it is namespace-scoped).
+Every model change needs a migration in **each** set (all three are namespace-scoped, since SQL Server's default discovery would otherwise pick up the other two). For the other two, run with
+`Setup__IsComplete=true Setup__Provider=MySql|Postgres ConnectionStrings__DefaultConnection=...` and
+`dotnet ef migrations add X --output-dir Migrations/MySql --namespace GlpiNg.Web.Migrations.MySql`
+(idem Postgres; for SQL Server pass `--output-dir Migrations --namespace GlpiNg.Web.Migrations`, EF otherwise drops the file in whichever folder it ran last). **Restore `Migrations/GlpiNgDbContextModelSnapshot.cs` afterwards** if EF overwrote it
+(it does when the provider's own snapshot isn't found), and keep the seed call (`ProviderSeed.Insert`)
+in each set's first migration. Prove them against real servers (`wslc run mysql:8.4` / `postgres:17`).
+
 **EF Core migrations — one rule per branch.** On `dev/main`, add them freely: one per change,
 named after the change. On `main`, a version ships with **a single migration covering everything
 since the previous version** — cutting a release squashes `dev/main`'s migrations into one
