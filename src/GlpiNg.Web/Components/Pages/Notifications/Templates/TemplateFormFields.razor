@@ -1,3 +1,4 @@
+@using GlpiNg.Modules.Inventory.Components.Shared
 @using GlpiNg.Web.Models.Notifications
 
 <div class="row">
@@ -48,6 +49,8 @@
         </div>
     </div>
 </div>
+
+<EntityScopeFields Item="Template" />
 
 @code {
     [Parameter, EditorRequired]

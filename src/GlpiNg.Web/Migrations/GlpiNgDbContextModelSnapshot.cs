@@ -2753,6 +2753,64 @@ namespace GlpiNg.Web.Migrations
                     b.ToTable("ComputerConnectors");
                 });
 
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerEnvironmentVariable", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ComputerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ComputerId");
+
+                    b.ToTable("ComputerEnvironmentVariables");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerFirewall", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ComputerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("IpAddress")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("IpAddress6")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Profile")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ComputerId");
+
+                    b.ToTable("ComputerFirewalls");
+                });
+
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerHistoryEntry", b =>
                 {
                     b.Property<int>("Id")
@@ -2819,6 +2877,80 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("ComputerId");
 
                     b.ToTable("ComputerImportHistories");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerLicense", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ActivationDate")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Components")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ComputerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FullName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Key")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Oem")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ProductId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Trial")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("Update")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ComputerId");
+
+                    b.ToTable("ComputerLicenses");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerLocalAccount", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ComputerId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsGroup")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ComputerId");
+
+                    b.ToTable("ComputerLocalAccounts");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerNetworkPort", b =>
@@ -2913,6 +3045,43 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("StatusId");
 
                     b.ToTable("ComputerPeripherals");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerProcess", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Command")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ComputerId")
+                        .HasColumnType("int");
+
+                    b.Property<double?>("CpuUsage")
+                        .HasColumnType("float");
+
+                    b.Property<int?>("Pid")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Started")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("User")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long?>("VirtualMemory")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ComputerId");
+
+                    b.ToTable("ComputerProcesses");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerRule", b =>
@@ -3040,6 +3209,46 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("ComputerId");
 
                     b.ToTable("ComputerSoftwares");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerVirtualMachine", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ComputerId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MemoryMb")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Subsystem")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Uuid")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("VCpu")
+                        .HasColumnType("int");
+
+                    b.Property<string>("VmType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ComputerId");
+
+                    b.ToTable("ComputerVirtualMachines");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerVolume", b =>
@@ -8899,6 +9108,24 @@ namespace GlpiNg.Web.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerEnvironmentVariable", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Inventory.Models.Computer", null)
+                        .WithMany("EnvironmentVariables")
+                        .HasForeignKey("ComputerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerFirewall", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Inventory.Models.Computer", null)
+                        .WithMany("Firewalls")
+                        .HasForeignKey("ComputerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerHistoryEntry", b =>
                 {
                     b.HasOne("GlpiNg.Modules.Inventory.Models.Computer", null)
@@ -8912,6 +9139,24 @@ namespace GlpiNg.Web.Migrations
                 {
                     b.HasOne("GlpiNg.Modules.Inventory.Models.Computer", null)
                         .WithMany("ImportHistories")
+                        .HasForeignKey("ComputerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerLicense", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Inventory.Models.Computer", null)
+                        .WithMany("Licenses")
+                        .HasForeignKey("ComputerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerLocalAccount", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Inventory.Models.Computer", null)
+                        .WithMany("LocalAccounts")
                         .HasForeignKey("ComputerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -8940,6 +9185,15 @@ namespace GlpiNg.Web.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("StatusItem");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerProcess", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Inventory.Models.Computer", null)
+                        .WithMany("Processes")
+                        .HasForeignKey("ComputerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerRule", b =>
@@ -8972,6 +9226,15 @@ namespace GlpiNg.Web.Migrations
                 {
                     b.HasOne("GlpiNg.Modules.Inventory.Models.Computer", null)
                         .WithMany("Softwares")
+                        .HasForeignKey("ComputerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerVirtualMachine", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Inventory.Models.Computer", null)
+                        .WithMany("VirtualMachines")
                         .HasForeignKey("ComputerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -10247,15 +10510,27 @@ namespace GlpiNg.Web.Migrations
 
                     b.Navigation("Connectors");
 
+                    b.Navigation("EnvironmentVariables");
+
+                    b.Navigation("Firewalls");
+
                     b.Navigation("HistoryEntries");
 
                     b.Navigation("ImportHistories");
+
+                    b.Navigation("Licenses");
+
+                    b.Navigation("LocalAccounts");
 
                     b.Navigation("NetworkPorts");
 
                     b.Navigation("Peripherals");
 
+                    b.Navigation("Processes");
+
                     b.Navigation("Softwares");
+
+                    b.Navigation("VirtualMachines");
 
                     b.Navigation("Volumes");
                 });

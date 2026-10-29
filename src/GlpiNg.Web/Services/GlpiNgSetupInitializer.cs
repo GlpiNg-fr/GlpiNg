@@ -10,17 +10,12 @@ namespace GlpiNg.Web.Services;
 /// Implémentation GlpiNg de <see cref="ISetupInitializer"/>, appelée par le middleware
 /// AnthoDingo.Setup pendant l'assistant d'installation (étapes 2 et 3 du wizard).
 ///
-/// Le schéma SQL Server est créé via <c>MigrateAsync</c> (les migrations EF Core du projet
-/// ne sont écrites/testées que pour ce provider — voir les appels
-/// SqlServerModelBuilderExtensions dans Migrations/*.Designer.cs) : ça peuple aussi
+/// Le schéma est créé via <c>MigrateAsync</c> pour les trois providers : ça peuple aussi
 /// __EFMigrationsHistory, sans quoi MigrationsGateMiddleware considérerait toutes les
 /// migrations comme en attente juste après l'installation et redirigerait en boucle vers
-/// /update (qui échouerait, les tables existant déjà).
-///
-/// Pour MySQL/PostgreSQL, à défaut de jeux de migrations dédiés par provider, le schéma est
-/// encore créé via <c>EnsureCreatedAsync</c> — limite connue : les futures évolutions de
-/// schéma ne pourront pas être appliquées via `dotnet ef database update` sur une base
-/// installée avec ces providers tant que ce chantier n'est pas fait.
+/// /update (qui échouerait, les tables existant déjà). SQL Server utilise les migrations de
+/// Migrations/, MySQL et PostgreSQL leur propre jeu (Migrations/MySql, Migrations/Postgres,
+/// voir <see cref="ProviderMigrationsAssembly"/>).
 /// </summary>
 public sealed class GlpiNgSetupInitializer : ISetupInitializer
 {
@@ -30,14 +25,7 @@ public sealed class GlpiNgSetupInitializer : ISetupInitializer
     {
         await using GlpiNgDbContext db = GlpiNgDbContext.Create(provider, connectionString);
 
-        if (provider == DbProvider.SqlServer)
-        {
-            await db.Database.MigrateAsync(ct);
-        }
-        else
-        {
-            await db.Database.EnsureCreatedAsync(ct);
-        }
+        await db.Database.MigrateAsync(ct);
     }
 
     public async Task CreateAdminAsync(DbProvider provider, string connectionString, AdminAccount admin, CancellationToken ct = default)

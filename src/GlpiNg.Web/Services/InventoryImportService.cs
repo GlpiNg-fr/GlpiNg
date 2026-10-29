@@ -177,6 +177,11 @@ public class InventoryImportService(
         if (settings.ImportPeripherals) await ApplyPeripheralsAsync(computer, content, cancellationToken);
         ApplyVolumes(computer, content, settings);
         if (settings.ImportBatteries) ApplyBatteries(computer, content);
+        if (settings.ImportVirtualMachines) ApplyVirtualMachines(computer, content);
+        if (settings.ImportProcesses) ApplyProcesses(computer, content);
+        if (settings.ImportEnvironments) ApplyEnvironmentVariables(computer, content);
+        ApplyLocalAccounts(computer, content);
+        ApplyFirewallsAndLicenses(computer, content);
 
         // Catalogue de composants (Configuration > Composants) : les modèles rencontrés y sont
         // référencés au passage. Sans cela la page reste vide à jamais — les composants d'un
@@ -304,6 +309,12 @@ public class InventoryImportService(
             .Include(c => c.Peripherals)
             .Include(c => c.Volumes)
             .Include(c => c.Batteries)
+            .Include(c => c.VirtualMachines)
+            .Include(c => c.Processes)
+            .Include(c => c.EnvironmentVariables)
+            .Include(c => c.LocalAccounts)
+            .Include(c => c.Firewalls)
+            .Include(c => c.Licenses)
             .Include(c => c.NetworkPorts)
             .Include(c => c.Antiviruses)
             .AsSplitQuery();
@@ -987,6 +998,110 @@ public class InventoryImportService(
         "4" => settings.ImportNetworkDrives,
         _ => settings.ImportVolumes
     };
+
+    // Machines virtuelles, processus, variables d'environnement, comptes locaux : instantané
+    // complet à chaque inventaire, comme les batteries. Pas d'historique de modifications — ces
+    // données changent à chaque remontée (processus) ou n'ont pas d'identité stable à comparer.
+    private static void ApplyVirtualMachines(Computer computer, InventoryContent content)
+    {
+        computer.VirtualMachines.Clear();
+        foreach (InventoryVirtualMachine vm in content.VirtualMachines)
+        {
+            computer.VirtualMachines.Add(new ComputerVirtualMachine
+            {
+                Name = vm.Name ?? vm.Uuid ?? "Machine virtuelle inconnue",
+                Uuid = vm.Uuid,
+                VmType = vm.VmType,
+                Subsystem = vm.Subsystem,
+                Status = vm.Status,
+                VCpu = vm.VCpu,
+                MemoryMb = vm.MemoryMb
+            });
+        }
+    }
+
+    private static void ApplyProcesses(Computer computer, InventoryContent content)
+    {
+        computer.Processes.Clear();
+        foreach (InventoryProcess process in content.Processes.Where(p => !string.IsNullOrWhiteSpace(p.Cmd)))
+        {
+            computer.Processes.Add(new ComputerProcess
+            {
+                Pid = process.Pid,
+                User = process.User,
+                Command = process.Cmd!,
+                CpuUsage = double.TryParse(process.CpuUsage, System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out double cpu) ? cpu : null,
+                VirtualMemory = process.VirtualMemory,
+                Started = process.Started
+            });
+        }
+    }
+
+    private static void ApplyEnvironmentVariables(Computer computer, InventoryContent content)
+    {
+        computer.EnvironmentVariables.Clear();
+        foreach (InventoryEnvironmentVariable env in content.Envs.Where(e => !string.IsNullOrWhiteSpace(e.Key)))
+        {
+            computer.EnvironmentVariables.Add(new ComputerEnvironmentVariable { Name = env.Key!, Value = env.Val });
+        }
+    }
+
+    private static void ApplyFirewallsAndLicenses(Computer computer, InventoryContent content)
+    {
+        computer.Firewalls.Clear();
+        foreach (InventoryFirewall firewall in content.Firewalls)
+        {
+            computer.Firewalls.Add(new ComputerFirewall
+            {
+                Profile = firewall.Profile,
+                Status = firewall.Status,
+                Description = firewall.Description,
+                IpAddress = firewall.IpAddress,
+                IpAddress6 = firewall.IpAddress6
+            });
+        }
+
+        computer.Licenses.Clear();
+        foreach (InventoryLicense license in content.LicenseInfos.Where(l => (l.Name ?? l.FullName) is not null))
+        {
+            computer.Licenses.Add(new ComputerLicense
+            {
+                Name = (license.Name ?? license.FullName)!,
+                FullName = license.FullName,
+                Key = license.Key,
+                ProductId = license.ProductId,
+                Components = license.Components,
+                Trial = IsTrue(license.Trial),
+                Update = IsTrue(license.Update),
+                Oem = IsTrue(license.Oem),
+                ActivationDate = license.ActivationDate
+            });
+        }
+    }
+
+    // L'agent envoie ces drapeaux tantôt en booléen JSON, tantôt en « 0 » / « 1 ».
+    private static bool IsTrue(System.Text.Json.JsonElement? flag) => flag?.ValueKind switch
+    {
+        System.Text.Json.JsonValueKind.True => true,
+        System.Text.Json.JsonValueKind.Number => flag.Value.GetInt32() != 0,
+        System.Text.Json.JsonValueKind.String => flag.Value.GetString() is "1" or "true" or "True",
+        _ => false
+    };
+
+    private static void ApplyLocalAccounts(Computer computer, InventoryContent content)
+    {
+        computer.LocalAccounts.Clear();
+        foreach (InventoryLocalAccount user in content.LocalUsers.Where(a => !string.IsNullOrWhiteSpace(a.Name)))
+        {
+            computer.LocalAccounts.Add(new ComputerLocalAccount { IsGroup = false, AccountId = user.Id, Name = user.Name! });
+        }
+
+        foreach (InventoryLocalAccount group in content.LocalGroups.Where(a => !string.IsNullOrWhiteSpace(a.Name)))
+        {
+            computer.LocalAccounts.Add(new ComputerLocalAccount { IsGroup = true, AccountId = group.Id, Name = group.Name! });
+        }
+    }
 
     /// <summary>
     /// Remplace intégralement les batteries du poste par celles de l'inventaire courant, même

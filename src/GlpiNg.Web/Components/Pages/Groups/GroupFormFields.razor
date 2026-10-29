@@ -1,3 +1,4 @@
+@using GlpiNg.Modules.Inventory.Components.Shared
 @using GlpiNg.Web.Models
 
 <div class="row">
@@ -20,13 +21,6 @@
                 }
             </select>
         </div>
-        <div class="glping-fiche-field">
-            <label>@T("Appartenance récursive")</label>
-            <select class="form-select" value="@(Group.IsRecursive ? "true" : "false")" @onchange="@(e => Group.IsRecursive = e.Value?.ToString() == "true")">
-                <option value="false">@T("Non")</option>
-                <option value="true">@T("Oui")</option>
-            </select>
-        </div>
     </div>
     <div class="col-md-6">
         <div class="glping-fiche-field">
@@ -35,6 +29,8 @@
         </div>
     </div>
 </div>
+
+<EntityScopeFields Item="Group" />
 
 <div class="glping-fiche-block-title mt-2"><i class="ti ti-ticket"></i>@T("Visible dans un ticket")</div>
 <div class="row">
