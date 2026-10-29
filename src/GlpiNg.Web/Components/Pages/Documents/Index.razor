@@ -63,7 +63,7 @@ else
                 @foreach (DocumentRow row in _documents)
                 {
                     <tr>
-                        <td>@row.Document.Name</td>
+                        <td><a href="@($"/management/documents/{row.Document.Id}")" class="text-reset fw-semibold">@row.Document.Name</a></td>
                         <td class="text-secondary">@row.Document.FileName</td>
                         <td class="text-secondary">@(row.Document.Category?.Name ?? "—")</td>
                         <td class="text-secondary text-nowrap">@FormatSize(row.Document.SizeBytes)</td>

@@ -17,7 +17,7 @@ namespace GlpiNg.Web.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.13")
+                .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -876,6 +876,45 @@ namespace GlpiNg.Web.Migrations
                         .IsUnique();
 
                     b.ToTable("TicketEscalations");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.TicketValidation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("RequestComment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RequesterName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("SubmittedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("TicketId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ValidatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ValidationComment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ValidatorUserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TicketId");
+
+                    b.ToTable("TicketValidations");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Cron.Models.AutomaticActionRunLog", b =>
@@ -2714,6 +2753,64 @@ namespace GlpiNg.Web.Migrations
                     b.ToTable("ComputerConnectors");
                 });
 
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerEnvironmentVariable", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ComputerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ComputerId");
+
+                    b.ToTable("ComputerEnvironmentVariables");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerFirewall", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ComputerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("IpAddress")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("IpAddress6")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Profile")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ComputerId");
+
+                    b.ToTable("ComputerFirewalls");
+                });
+
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerHistoryEntry", b =>
                 {
                     b.Property<int>("Id")
@@ -2780,6 +2877,80 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("ComputerId");
 
                     b.ToTable("ComputerImportHistories");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerLicense", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ActivationDate")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Components")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ComputerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FullName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Key")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Oem")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ProductId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Trial")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("Update")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ComputerId");
+
+                    b.ToTable("ComputerLicenses");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerLocalAccount", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ComputerId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsGroup")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ComputerId");
+
+                    b.ToTable("ComputerLocalAccounts");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerNetworkPort", b =>
@@ -2874,6 +3045,43 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("StatusId");
 
                     b.ToTable("ComputerPeripherals");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerProcess", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Command")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ComputerId")
+                        .HasColumnType("int");
+
+                    b.Property<double?>("CpuUsage")
+                        .HasColumnType("float");
+
+                    b.Property<int?>("Pid")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Started")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("User")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long?>("VirtualMemory")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ComputerId");
+
+                    b.ToTable("ComputerProcesses");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerRule", b =>
@@ -3001,6 +3209,46 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("ComputerId");
 
                     b.ToTable("ComputerSoftwares");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerVirtualMachine", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ComputerId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MemoryMb")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Subsystem")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Uuid")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("VCpu")
+                        .HasColumnType("int");
+
+                    b.Property<string>("VmType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ComputerId");
+
+                    b.ToTable("ComputerVirtualMachines");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerVolume", b =>
@@ -5225,6 +5473,32 @@ namespace GlpiNg.Web.Migrations
                     b.ToTable("ContractCosts");
                 });
 
+            modelBuilder.Entity("GlpiNg.Modules.Management.Models.ContractItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ContractId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ItemType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContractId", "ItemType", "ItemId")
+                        .IsUnique();
+
+                    b.ToTable("ContractItems");
+                });
+
             modelBuilder.Entity("GlpiNg.Modules.Management.Models.ContractSupplier", b =>
                 {
                     b.Property<int>("Id")
@@ -5419,6 +5693,38 @@ namespace GlpiNg.Web.Migrations
                     b.ToTable("Domains");
                 });
 
+            modelBuilder.Entity("GlpiNg.Modules.Management.Models.DomainRecord", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DomainId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Target")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("Ttl")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DomainId");
+
+                    b.ToTable("DomainRecords");
+                });
+
             modelBuilder.Entity("GlpiNg.Modules.Management.Models.ManagementHistoryEntry", b =>
                 {
                     b.Property<int>("Id")
@@ -5511,6 +5817,143 @@ namespace GlpiNg.Web.Migrations
                     b.HasIndex("SupplierId");
 
                     b.ToTable("PhoneLines");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Management.Models.Project", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("EntityId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsRecursive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Percent")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("PlannedEnd")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("PlannedStart")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityId");
+
+                    b.ToTable("Projects");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Management.Models.ProjectMember", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("ProjectMembers");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Management.Models.ProjectTask", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Percent")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("PlannedEnd")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("PlannedStart")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("ProjectTasks");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Management.Models.ServerRoom", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("DatacenterId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DatacenterId");
+
+                    b.ToTable("ServerRooms");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Management.Models.SoftwareLicense", b =>
@@ -7131,6 +7574,132 @@ namespace GlpiNg.Web.Migrations
                     b.ToTable("UserProfiles");
                 });
 
+            modelBuilder.Entity("GlpiNg.Web.Models.Items.ItemCost", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ItemType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemType", "ItemId");
+
+                    b.ToTable("ItemCosts");
+                });
+
+            modelBuilder.Entity("GlpiNg.Web.Models.Items.ItemManagement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("BudgetId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeliveryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeliveryNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ItemType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("OrderNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("PurchaseDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("SupplierId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UseDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal?>("Value")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("WarrantyInfo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("WarrantyMonths")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemType", "ItemId")
+                        .IsUnique();
+
+                    b.ToTable("ItemManagements");
+                });
+
+            modelBuilder.Entity("GlpiNg.Web.Models.Items.ItemRelation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ItemType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Relation")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("TargetId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TargetType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Relation", "TargetType", "TargetId");
+
+                    b.HasIndex("Relation", "ItemType", "ItemId", "TargetType", "TargetId")
+                        .IsUnique();
+
+                    b.ToTable("ItemRelations");
+                });
+
             modelBuilder.Entity("GlpiNg.Web.Models.MailCollector", b =>
                 {
                     b.Property<int>("Id")
@@ -7917,6 +8486,17 @@ namespace GlpiNg.Web.Migrations
                     b.Navigation("Ticket");
                 });
 
+            modelBuilder.Entity("GlpiNg.Modules.Assistance.Models.TicketValidation", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Assistance.Models.Ticket", "Ticket")
+                        .WithMany()
+                        .HasForeignKey("TicketId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Ticket");
+                });
+
             modelBuilder.Entity("GlpiNg.Modules.Deployment.Models.CollectDefinition", b =>
                 {
                     b.HasOne("GlpiNg.Web.Models.GlpiEntity", null)
@@ -8528,6 +9108,24 @@ namespace GlpiNg.Web.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerEnvironmentVariable", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Inventory.Models.Computer", null)
+                        .WithMany("EnvironmentVariables")
+                        .HasForeignKey("ComputerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerFirewall", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Inventory.Models.Computer", null)
+                        .WithMany("Firewalls")
+                        .HasForeignKey("ComputerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerHistoryEntry", b =>
                 {
                     b.HasOne("GlpiNg.Modules.Inventory.Models.Computer", null)
@@ -8541,6 +9139,24 @@ namespace GlpiNg.Web.Migrations
                 {
                     b.HasOne("GlpiNg.Modules.Inventory.Models.Computer", null)
                         .WithMany("ImportHistories")
+                        .HasForeignKey("ComputerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerLicense", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Inventory.Models.Computer", null)
+                        .WithMany("Licenses")
+                        .HasForeignKey("ComputerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerLocalAccount", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Inventory.Models.Computer", null)
+                        .WithMany("LocalAccounts")
                         .HasForeignKey("ComputerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -8569,6 +9185,15 @@ namespace GlpiNg.Web.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("StatusItem");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerProcess", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Inventory.Models.Computer", null)
+                        .WithMany("Processes")
+                        .HasForeignKey("ComputerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerRule", b =>
@@ -8601,6 +9226,15 @@ namespace GlpiNg.Web.Migrations
                 {
                     b.HasOne("GlpiNg.Modules.Inventory.Models.Computer", null)
                         .WithMany("Softwares")
+                        .HasForeignKey("ComputerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerVirtualMachine", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Inventory.Models.Computer", null)
+                        .WithMany("VirtualMachines")
                         .HasForeignKey("ComputerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -9166,6 +9800,17 @@ namespace GlpiNg.Web.Migrations
                     b.Navigation("Contract");
                 });
 
+            modelBuilder.Entity("GlpiNg.Modules.Management.Models.ContractItem", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Management.Models.Contract", "Contract")
+                        .WithMany()
+                        .HasForeignKey("ContractId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Contract");
+                });
+
             modelBuilder.Entity("GlpiNg.Modules.Management.Models.ContractSupplier", b =>
                 {
                     b.HasOne("GlpiNg.Modules.Management.Models.Contract", "Contract")
@@ -9237,6 +9882,17 @@ namespace GlpiNg.Web.Migrations
                     b.Navigation("Supplier");
                 });
 
+            modelBuilder.Entity("GlpiNg.Modules.Management.Models.DomainRecord", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Management.Models.Domain", "Domain")
+                        .WithMany()
+                        .HasForeignKey("DomainId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Domain");
+                });
+
             modelBuilder.Entity("GlpiNg.Modules.Management.Models.PhoneLine", b =>
                 {
                     b.HasOne("GlpiNg.Modules.Management.Models.Contract", "Contract")
@@ -9257,6 +9913,47 @@ namespace GlpiNg.Web.Migrations
                     b.Navigation("Contract");
 
                     b.Navigation("Supplier");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Management.Models.Project", b =>
+                {
+                    b.HasOne("GlpiNg.Web.Models.GlpiEntity", null)
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Management.Models.ProjectMember", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Management.Models.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Management.Models.ProjectTask", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Management.Models.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Management.Models.ServerRoom", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Management.Models.Datacenter", "Datacenter")
+                        .WithMany()
+                        .HasForeignKey("DatacenterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Datacenter");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Management.Models.SoftwareLicense", b =>
@@ -9813,15 +10510,27 @@ namespace GlpiNg.Web.Migrations
 
                     b.Navigation("Connectors");
 
+                    b.Navigation("EnvironmentVariables");
+
+                    b.Navigation("Firewalls");
+
                     b.Navigation("HistoryEntries");
 
                     b.Navigation("ImportHistories");
+
+                    b.Navigation("Licenses");
+
+                    b.Navigation("LocalAccounts");
 
                     b.Navigation("NetworkPorts");
 
                     b.Navigation("Peripherals");
 
+                    b.Navigation("Processes");
+
                     b.Navigation("Softwares");
+
+                    b.Navigation("VirtualMachines");
 
                     b.Navigation("Volumes");
                 });

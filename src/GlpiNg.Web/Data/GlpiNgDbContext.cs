@@ -1,4 +1,5 @@
-﻿using AnthoDingo.Setup;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
+using AnthoDingo.Setup;
 using GlpiNg.Modules.Abstractions.Entities;
 using GlpiNg.Modules.Cron.Models;
 using GlpiNg.Modules.Deployment.Models;
@@ -35,6 +36,12 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<ComputerPeripheral> ComputerPeripherals => Set<ComputerPeripheral>();
     public DbSet<ComputerVolume> ComputerVolumes => Set<ComputerVolume>();
     public DbSet<ComputerBattery> ComputerBatteries => Set<ComputerBattery>();
+    public DbSet<ComputerVirtualMachine> ComputerVirtualMachines => Set<ComputerVirtualMachine>();
+    public DbSet<ComputerFirewall> ComputerFirewalls => Set<ComputerFirewall>();
+    public DbSet<ComputerLicense> ComputerLicenses => Set<ComputerLicense>();
+    public DbSet<ComputerProcess> ComputerProcesses => Set<ComputerProcess>();
+    public DbSet<ComputerEnvironmentVariable> ComputerEnvironmentVariables => Set<ComputerEnvironmentVariable>();
+    public DbSet<ComputerLocalAccount> ComputerLocalAccounts => Set<ComputerLocalAccount>();
     public DbSet<ComputerConnector> ComputerConnectors => Set<ComputerConnector>();
     public DbSet<ComputerNetworkPort> ComputerNetworkPorts => Set<ComputerNetworkPort>();
     public DbSet<ComputerAntivirus> ComputerAntiviruses => Set<ComputerAntivirus>();
@@ -176,6 +183,16 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
     public DbSet<Contract> Contracts => Set<Contract>();
     public DbSet<ContractSupplier> ContractSuppliers => Set<ContractSupplier>();
     public DbSet<ContractCost> ContractCosts => Set<ContractCost>();
+    public DbSet<ContractItem> ContractItems => Set<ContractItem>();
+    public DbSet<Project> Projects => Set<Project>();
+    public DbSet<ProjectTask> ProjectTasks => Set<ProjectTask>();
+    public DbSet<ProjectMember> ProjectMembers => Set<ProjectMember>();
+    public DbSet<DomainRecord> DomainRecords => Set<DomainRecord>();
+    public DbSet<ServerRoom> ServerRooms => Set<ServerRoom>();
+    public DbSet<TicketValidation> TicketValidations => Set<TicketValidation>();
+    public DbSet<GlpiNg.Web.Models.Items.ItemRelation> ItemRelations => Set<GlpiNg.Web.Models.Items.ItemRelation>();
+    public DbSet<GlpiNg.Web.Models.Items.ItemManagement> ItemManagements => Set<GlpiNg.Web.Models.Items.ItemManagement>();
+    public DbSet<GlpiNg.Web.Models.Items.ItemCost> ItemCosts => Set<GlpiNg.Web.Models.Items.ItemCost>();
     public DbSet<Budget> Budgets => Set<Budget>();
     public DbSet<SoftwareLicense> SoftwareLicenses => Set<SoftwareLicense>();
     public DbSet<PhoneLine> PhoneLines => Set<PhoneLine>();
@@ -1078,6 +1095,71 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
             .HasIndex(link => new { link.ContractId, link.SupplierId })
             .IsUnique();
 
+        // Un contrat ne se rattache qu'une fois au même objet ; le lien disparaît avec le contrat.
+        // Un rattachement ne se pose qu'une fois ; les informations de gestion tiennent en une ligne par objet.
+        modelBuilder.Entity<GlpiNg.Web.Models.Items.ItemRelation>()
+            .HasIndex(r => new { r.Relation, r.ItemType, r.ItemId, r.TargetType, r.TargetId })
+            .IsUnique();
+
+        modelBuilder.Entity<GlpiNg.Web.Models.Items.ItemRelation>()
+            .HasIndex(r => new { r.Relation, r.TargetType, r.TargetId });
+
+        modelBuilder.Entity<GlpiNg.Web.Models.Items.ItemManagement>()
+            .HasIndex(m => new { m.ItemType, m.ItemId })
+            .IsUnique();
+
+        modelBuilder.Entity<GlpiNg.Web.Models.Items.ItemCost>()
+            .HasIndex(c => new { c.ItemType, c.ItemId });
+
+        modelBuilder.Entity<GlpiNg.Web.Models.Items.ItemCost>()
+            .Property(c => c.Amount)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<GlpiNg.Web.Models.Items.ItemManagement>()
+            .Property(m => m.Value)
+            .HasPrecision(18, 2);
+
+        // Les tâches et l'équipe disparaissent avec le projet.
+        modelBuilder.Entity<ProjectTask>()
+            .HasOne(t => t.Project)
+            .WithMany()
+            .HasForeignKey(t => t.ProjectId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ProjectMember>()
+            .HasOne(m => m.Project)
+            .WithMany()
+            .HasForeignKey(m => m.ProjectId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DomainRecord>()
+            .HasOne(r => r.Domain)
+            .WithMany()
+            .HasForeignKey(r => r.DomainId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ServerRoom>()
+            .HasOne(r => r.Datacenter)
+            .WithMany()
+            .HasForeignKey(r => r.DatacenterId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<TicketValidation>()
+            .HasOne(v => v.Ticket)
+            .WithMany()
+            .HasForeignKey(v => v.TicketId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ContractItem>()
+            .HasIndex(link => new { link.ContractId, link.ItemType, link.ItemId })
+            .IsUnique();
+
+        modelBuilder.Entity<ContractItem>()
+            .HasOne(link => link.Contract)
+            .WithMany()
+            .HasForeignKey(link => link.ContractId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         modelBuilder.Entity<SupplierContact>()
             .HasOne(link => link.Supplier)
             .WithMany(supplier => supplier.Contacts)
@@ -1836,12 +1918,15 @@ public class GlpiNgDbContext(DbContextOptions<GlpiNgDbContext> options) : DbCont
         {
             case DbProvider.SqlServer:
                 builder.UseSqlServer(effectiveConnectionString);
+                builder.ReplaceService<IMigrationsAssembly, SqlServerMigrationsAssembly>();
                 break;
             case DbProvider.MySql:
                 builder.UseMySql(effectiveConnectionString, ServerVersion.AutoDetect(effectiveConnectionString));
+                builder.ReplaceService<IMigrationsAssembly, MySqlMigrationsAssembly>();
                 break;
             case DbProvider.Postgres:
                 builder.UseNpgsql(effectiveConnectionString);
+                builder.ReplaceService<IMigrationsAssembly, PostgresMigrationsAssembly>();
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(provider), provider,

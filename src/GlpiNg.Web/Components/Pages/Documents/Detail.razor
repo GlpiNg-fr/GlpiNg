@@ -1,0 +1,123 @@
+@page "/management/documents/{DocumentId:int}"
+@rendermode InteractiveServer
+@using GlpiNg.Modules.Abstractions.Items
+@using GlpiNg.Web.Services.Documents
+@using GlpiNg.Web.Models.Documents
+@using Microsoft.EntityFrameworkCore
+@inject DocumentService Documents
+@inject IEnumerable<IRelationTargetSource> Sources
+@inject IDbContextFactory<GlpiNg.Web.Data.GlpiNgDbContext> DbFactory
+
+<PageTitle>@(_document?.Name ?? T("Document")) — GlpiNg</PageTitle>
+
+@* Fiche d'un document : ses informations et les objets auxquels il est rattaché. Le nom et l'adresse de chaque objet
+   viennent des modules qui les portent (IRelationTargetSource), qui appliquent leurs propres règles de visibilité :
+   un objet qu'on n'a pas le droit de voir n'apparaît pas, même s'il porte le document. *@
+
+@if (_document is null)
+{
+    <div class="card"><div class="card-body text-center text-secondary py-5">@T("Document introuvable.")</div></div>
+}
+else
+{
+    <div class="glping-fiche">
+        <div class="glping-fiche-header d-flex align-items-center justify-content-between">
+            <h2 class="mb-0"><i class="ti ti-file me-2"></i>@_document.Name</h2>
+            <div class="btn-list">
+                <a class="btn" href="/management/documents"><i class="ti ti-arrow-left me-1"></i>@T("Retour à la liste")</a>
+                @if (!_document.IsContentMissing)
+                {
+                    <a class="btn btn-primary" href="@($"/documents/{_document.Id}/download")"><i class="ti ti-download me-1"></i>@T("Télécharger")</a>
+                }
+            </div>
+        </div>
+
+        <div class="glping-fiche-layout">
+            <aside class="glping-fiche-sidebar">
+                <button type="button" class="glping-fiche-tab-item @(_tab == "main" ? "active" : "")" @onclick='() => _tab = "main"'>
+                    <i class="ti ti-file"></i><span>@T("Document")</span>
+                </button>
+                <button type="button" class="glping-fiche-tab-item @(_tab == "items" ? "active" : "")" @onclick='() => _tab = "items"'>
+                    <i class="ti ti-link"></i><span>@T("Éléments rattachés")</span><span class="glping-fiche-tab-count">@_items.Count</span>
+                </button>
+            </aside>
+
+            <div class="glping-fiche-panel">
+                @switch (_tab)
+                {
+                    case "main":
+                        <div class="glping-fiche-field"><label>@T("Nom")</label><div class="glping-fiche-value-box">@_document.Name</div></div>
+                        <div class="glping-fiche-field"><label>@T("Fichier")</label><div class="glping-fiche-value-box">@_document.FileName</div></div>
+                        <div class="glping-fiche-field"><label>@T("Type MIME")</label><div class="glping-fiche-value-box">@(_document.MimeType ?? "—")</div></div>
+                        <div class="glping-fiche-field"><label>@T("Taille")</label><div class="glping-fiche-value-box">@Size(_document.SizeBytes)</div></div>
+                        <div class="glping-fiche-field"><label>@T("Empreinte SHA-256")</label><div class="glping-fiche-value-box" style="word-break: break-all;">@_document.Sha256</div></div>
+                        <div class="glping-fiche-field"><label>@T("Ajouté par")</label><div class="glping-fiche-value-box">@(_document.AuthorName ?? "—") — @Display.DateTime(_document.CreatedAt)</div></div>
+                        @if (!string.IsNullOrWhiteSpace(_document.Comment))
+                        {
+                            <div class="glping-fiche-field"><label>@T("Commentaires")</label><div class="glping-fiche-value-box" style="white-space: pre-wrap;">@_document.Comment</div></div>
+                        }
+                        break;
+
+                    case "items":
+                        @if (_items.Count == 0)
+                        {
+                            <div class="glping-config-placeholder"><i class="ti ti-link-off"></i><p class="mb-0">@T("Ce document n'est rattaché à aucun élément visible.")</p></div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-vcenter card-table">
+                                    <thead><tr><th>@T("Type")</th><th>@T("Nom")</th></tr></thead>
+                                    <tbody>
+                                        @foreach (RelationTarget item in _items)
+                                        {
+                                            <tr><td class="text-secondary">@item.ItemType</td><td><a href="@item.Url" class="text-reset fw-semibold">@item.Name</a></td></tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        break;
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int DocumentId { get; set; }
+
+    private Document? _document;
+    private List<RelationTarget> _items = [];
+    private string _tab = "main";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _document = await Documents.GetAsync(DocumentId);
+        if (_document is null)
+        {
+            return;
+        }
+
+        await using GlpiNg.Web.Data.GlpiNgDbContext db = await DbFactory.CreateDbContextAsync();
+        var links = await db.Set<DocumentItem>().AsNoTracking().Where(i => i.DocumentId == DocumentId)
+            .Select(i => new { i.ItemType, i.ItemId }).ToListAsync();
+
+        _items = [];
+        foreach (var group in links.GroupBy(l => l.ItemType))
+        {
+            foreach (IRelationTargetSource source in Sources.Where(s => s.SupportedTypes.Contains(group.Key)))
+            {
+                _items.AddRange(await source.ResolveAsync(group.Key, [.. group.Select(g => g.ItemId)]));
+            }
+        }
+    }
+
+    private static string Size(long bytes) => bytes switch
+    {
+        < 1024 => $"{bytes} o",
+        < 1024 * 1024 => $"{bytes / 1024d:0.#} Ko",
+        _ => $"{bytes / (1024d * 1024d):0.#} Mo",
+    };
+}

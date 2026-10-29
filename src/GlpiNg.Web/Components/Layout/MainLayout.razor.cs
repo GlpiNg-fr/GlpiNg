@@ -75,7 +75,6 @@ public partial class MainLayout : IDisposable
             new("Profils", "/admin/profiles", "ti-id-badge"),
             new("File d'attente des notifications", "/config/notifications/queue", "ti-bell"),
             new("Journaux", "/admin/logs", "ti-history"),
-            new("Formulaires", Icon: "ti-forms"),
         ]),
         new("configuration", "ti-settings", "Configuration",
         [
