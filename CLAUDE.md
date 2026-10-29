@@ -51,6 +51,10 @@ Every model change needs a migration in **each** set (all three are namespace-sc
 (idem Postgres; for SQL Server pass `--output-dir Migrations --namespace GlpiNg.Web.Migrations`, EF otherwise drops the file in whichever folder it ran last). **Restore `Migrations/GlpiNgDbContextModelSnapshot.cs` afterwards** if EF overwrote it
 (it does when the provider's own snapshot isn't found), and keep the seed call (`ProviderSeed.Insert`)
 in each set's first migration. Prove them against real servers (`wslc run mysql:8.4` / `postgres:17`).
+`Program.Main` sets `Npgsql.EnableLegacyTimestampBehavior`: the code stores wall-clock `DateTime`s of any
+`Kind` (reservations, task planning), which Npgsql refuses on `timestamptz`; the PostgreSQL set is
+generated with it on (`timestamp without time zone`). Run the dev server with
+`ASPNETCORE_ENVIRONMENT=Development` or `_framework`/`_content` assets are not served.
 
 **EF Core migrations — one rule per branch.** On `dev/main`, add them freely: one per change,
 named after the change. On `main`, a version ships with **a single migration covering everything

@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GlpiNg.Web.Migrations.Postgres
 {
     [DbContext(typeof(GlpiNgDbContext))]
-    [Migration("20261029093233_Initial")]
+    [Migration("20261029192636_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -48,7 +48,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("OccurredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("User")
                         .HasColumnType("text");
@@ -72,7 +72,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -85,7 +85,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -179,7 +179,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("ClosedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Content")
                         .HasColumnType("text");
@@ -188,7 +188,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("DueDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -213,7 +213,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("OpenedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("Priority")
                         .HasColumnType("integer");
@@ -228,13 +228,13 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("SolvedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("Urgency")
                         .HasColumnType("integer");
@@ -321,10 +321,10 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("SubmittedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("ValidatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("ValidationComment")
                         .HasColumnType("text");
@@ -357,7 +357,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<bool>("IsPrivate")
                         .HasColumnType("boolean");
@@ -391,14 +391,14 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("DurationMinutes")
                         .HasColumnType("integer");
@@ -411,10 +411,10 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("PlannedEnd")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("PlannedStart")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("State")
                         .HasColumnType("integer");
@@ -450,13 +450,13 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("ClosedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Content")
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("DueDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -478,7 +478,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("OpenedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("Priority")
                         .HasColumnType("integer");
@@ -490,7 +490,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("SolvedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -499,7 +499,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("Urgency")
                         .HasColumnType("integer");
@@ -559,7 +559,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -572,7 +572,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -595,7 +595,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("DurationUnit")
                         .HasColumnType("integer");
@@ -620,7 +620,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -638,7 +638,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
@@ -702,13 +702,13 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("ClosedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Content")
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("DueDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -717,10 +717,10 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("InternalTimeToOwn")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("InternalTimeToResolve")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<bool>("IsPriorityManual")
                         .HasColumnType("boolean");
@@ -733,7 +733,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("OlaStartedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("OlaTimeToOwnId")
                         .HasColumnType("integer");
@@ -742,7 +742,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("OpenedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("Priority")
                         .HasColumnType("integer");
@@ -766,25 +766,25 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("SolvedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("TakenIntoAccountAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("TimeToOwn")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("TimeToResolve")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("Type")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("Urgency")
                         .HasColumnType("integer");
@@ -824,7 +824,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -843,7 +843,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -863,7 +863,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("ExecutedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("ServiceLevelEscalationId")
                         .HasColumnType("integer");
@@ -899,13 +899,13 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("SubmittedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("TicketId")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("ValidatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("ValidationComment")
                         .HasColumnType("text");
@@ -935,7 +935,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("RanAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<bool>("Success")
                         .HasColumnType("boolean");
@@ -966,7 +966,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("boolean");
 
                     b.Property<DateTime?>("LastRunAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<long?>("LastRunDurationMs")
                         .HasColumnType("bigint");
@@ -1001,7 +1001,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -1120,7 +1120,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("CollectedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("ComputerId")
                         .HasColumnType("integer");
@@ -1280,10 +1280,10 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Log")
                         .HasColumnType("text");
@@ -1292,7 +1292,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("StartedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -1323,7 +1323,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -1369,7 +1369,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("DeployComputerGroupId")
                         .HasColumnType("integer");
@@ -1606,7 +1606,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -1621,7 +1621,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("boolean");
 
                     b.Property<DateTime?>("LastLaunchedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -1631,10 +1631,10 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("ScheduledEndTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("ScheduledStartTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -1717,7 +1717,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -1758,7 +1758,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("AgentDeployLastAttemptAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("AgentDeployLastError")
                         .HasColumnType("text");
@@ -1770,7 +1770,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("FirstSeenAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("GuessedType")
                         .HasColumnType("text");
@@ -1786,7 +1786,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("boolean");
 
                     b.Property<DateTime>("LastSeenAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("MacAddress")
                         .HasColumnType("text");
@@ -1832,7 +1832,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("EndIp")
                         .IsRequired()
@@ -1874,7 +1874,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -1889,7 +1889,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("boolean");
 
                     b.Property<DateTime?>("LastLaunchedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("Method")
                         .HasColumnType("integer");
@@ -1899,10 +1899,10 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("ScheduledEndTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("ScheduledStartTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -1997,10 +1997,10 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Log")
                         .HasColumnType("text");
@@ -2009,7 +2009,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("StartedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -2041,7 +2041,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -2142,7 +2142,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -2157,17 +2157,17 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("boolean");
 
                     b.Property<DateTime?>("LastLaunchedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("ScheduledEndTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("ScheduledStartTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -2214,16 +2214,16 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Log")
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("StartedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -2290,7 +2290,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("EndpointAId")
                         .HasColumnType("integer");
@@ -2321,7 +2321,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -2352,7 +2352,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("OccurredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("User")
                         .IsRequired()
@@ -2377,19 +2377,19 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("DateIn")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("DateOut")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("DateUse")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("LevelPercent")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("LevelReadAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("PrinterId")
                         .HasColumnType("integer");
@@ -2418,7 +2418,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -2449,7 +2449,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -2480,7 +2480,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("OccurredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("User")
                         .IsRequired()
@@ -2514,7 +2514,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Domain")
                         .HasColumnType("text");
@@ -2532,7 +2532,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("boolean");
 
                     b.Property<DateTime?>("LastInventoryAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("LastLoggedUser")
                         .HasColumnType("text");
@@ -2755,6 +2755,64 @@ namespace GlpiNg.Web.Migrations.Postgres
                     b.ToTable("ComputerConnectors");
                 });
 
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerEnvironmentVariable", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ComputerId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ComputerId");
+
+                    b.ToTable("ComputerEnvironmentVariables");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerFirewall", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ComputerId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("IpAddress")
+                        .HasColumnType("text");
+
+                    b.Property<string>("IpAddress6")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Profile")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ComputerId");
+
+                    b.ToTable("ComputerFirewalls");
+                });
+
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerHistoryEntry", b =>
                 {
                     b.Property<int>("Id")
@@ -2775,7 +2833,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("OccurredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("User")
                         .IsRequired()
@@ -2810,7 +2868,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("OccurredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("RuleName")
                         .IsRequired()
@@ -2821,6 +2879,80 @@ namespace GlpiNg.Web.Migrations.Postgres
                     b.HasIndex("ComputerId");
 
                     b.ToTable("ComputerImportHistories");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerLicense", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ActivationDate")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Components")
+                        .HasColumnType("text");
+
+                    b.Property<int>("ComputerId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("FullName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Key")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Oem")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ProductId")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("Trial")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("Update")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ComputerId");
+
+                    b.ToTable("ComputerLicenses");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerLocalAccount", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AccountId")
+                        .HasColumnType("text");
+
+                    b.Property<int>("ComputerId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsGroup")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ComputerId");
+
+                    b.ToTable("ComputerLocalAccounts");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerNetworkPort", b =>
@@ -2915,6 +3047,43 @@ namespace GlpiNg.Web.Migrations.Postgres
                     b.HasIndex("StatusId");
 
                     b.ToTable("ComputerPeripherals");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerProcess", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Command")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("ComputerId")
+                        .HasColumnType("integer");
+
+                    b.Property<double?>("CpuUsage")
+                        .HasColumnType("double precision");
+
+                    b.Property<int?>("Pid")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Started")
+                        .HasColumnType("text");
+
+                    b.Property<string>("User")
+                        .HasColumnType("text");
+
+                    b.Property<long?>("VirtualMemory")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ComputerId");
+
+                    b.ToTable("ComputerProcesses");
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerRule", b =>
@@ -3044,6 +3213,46 @@ namespace GlpiNg.Web.Migrations.Postgres
                     b.ToTable("ComputerSoftwares");
                 });
 
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerVirtualMachine", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ComputerId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("MemoryMb")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Subsystem")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Uuid")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("VCpu")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("VmType")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ComputerId");
+
+                    b.ToTable("ComputerVirtualMachines");
+                });
+
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerVolume", b =>
                 {
                     b.Property<int>("Id")
@@ -3096,10 +3305,10 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("DateIn")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("DateOut")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -3123,7 +3332,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -3151,7 +3360,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -3182,7 +3391,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("OccurredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("User")
                         .IsRequired()
@@ -3325,7 +3534,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -3365,7 +3574,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -3398,7 +3607,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("OccurredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("User")
                         .IsRequired()
@@ -3440,7 +3649,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("FirstContactAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Hostname")
                         .HasColumnType("text");
@@ -3453,7 +3662,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("boolean");
 
                     b.Property<DateTime>("LastContactAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("LastContactIp")
                         .HasColumnType("text");
@@ -3604,7 +3813,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Field")
                         .IsRequired()
@@ -3643,7 +3852,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -3683,7 +3892,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Uuid")
                         .HasColumnType("text");
@@ -3719,7 +3928,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("OccurredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("User")
                         .IsRequired()
@@ -3747,7 +3956,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -3784,7 +3993,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -3814,7 +4023,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("OccurredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("PassiveEquipmentId")
                         .HasColumnType("integer");
@@ -3845,7 +4054,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -3882,7 +4091,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -3912,7 +4121,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("OccurredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("PduId")
                         .HasColumnType("integer");
@@ -3958,7 +4167,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -4001,7 +4210,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Uuid")
                         .HasColumnType("text");
@@ -4034,7 +4243,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("OccurredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("PeripheralId")
                         .HasColumnType("integer");
@@ -4065,7 +4274,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -4105,7 +4314,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Uuid")
                         .HasColumnType("text");
@@ -4138,7 +4347,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("OccurredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("PhoneId")
                         .HasColumnType("integer");
@@ -4169,7 +4378,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("CurrentPageCount")
                         .HasColumnType("integer");
@@ -4239,7 +4448,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Uuid")
                         .HasColumnType("text");
@@ -4272,7 +4481,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("OccurredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("PrinterId")
                         .HasColumnType("integer");
@@ -4303,7 +4512,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -4343,7 +4552,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -4373,7 +4582,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("OccurredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("RackId")
                         .HasColumnType("integer");
@@ -4410,7 +4619,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("OccurredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("RuleName")
                         .IsRequired()
@@ -4439,7 +4648,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("CriteriaJson")
                         .IsRequired()
@@ -4531,7 +4740,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -4583,7 +4792,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Voltage")
                         .HasColumnType("text");
@@ -4616,7 +4825,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("OccurredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("SimCardId")
                         .HasColumnType("integer");
@@ -4681,7 +4890,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -4706,16 +4915,16 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("ViewCount")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("VisibleFrom")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("VisibleUntil")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -4746,7 +4955,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("OccurredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("User")
                         .IsRequired()
@@ -4781,7 +4990,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("RevisedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Subject")
                         .IsRequired()
@@ -4838,7 +5047,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -4880,7 +5089,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -4908,7 +5117,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Url")
                         .HasColumnType("text");
@@ -4946,10 +5155,10 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("EndDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -4965,13 +5174,13 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("StartDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Type")
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -4995,7 +5204,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("DnsName")
                         .HasColumnType("text");
@@ -5004,7 +5213,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("ExpirationDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
@@ -5013,7 +5222,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("boolean");
 
                     b.Property<DateTime?>("IssuedDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Issuer")
                         .HasColumnType("text");
@@ -5032,7 +5241,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -5057,7 +5266,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -5079,7 +5288,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Version")
                         .HasColumnType("text");
@@ -5109,7 +5318,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Email")
                         .HasColumnType("text");
@@ -5155,7 +5364,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -5182,7 +5391,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("DurationMonths")
                         .HasColumnType("integer");
@@ -5213,13 +5422,13 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("StartDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Type")
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -5247,14 +5456,14 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("EndDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("StartDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -5327,7 +5536,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Engine")
                         .HasColumnType("text");
@@ -5358,7 +5567,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Version")
                         .HasColumnType("text");
@@ -5391,7 +5600,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -5416,7 +5625,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -5444,16 +5653,16 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("CreationDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("ExpirationDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
@@ -5472,7 +5681,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -5540,7 +5749,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("OccurredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("User")
                         .HasColumnType("text");
@@ -5570,7 +5779,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -5598,7 +5807,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -5626,7 +5835,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -5642,16 +5851,16 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("PlannedEnd")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("PlannedStart")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Status")
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -5704,10 +5913,10 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("PlannedEnd")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("PlannedStart")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("ProjectId")
                         .HasColumnType("integer");
@@ -5763,13 +5972,13 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("ExpirationDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
@@ -5785,7 +5994,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("PurchaseDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("Seats")
                         .HasColumnType("integer");
@@ -5803,7 +6012,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("UsedSeats")
                         .HasColumnType("integer");
@@ -5837,7 +6046,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Email")
                         .HasColumnType("text");
@@ -5874,7 +6083,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Website")
                         .HasColumnType("text");
@@ -5922,7 +6131,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -5966,19 +6175,19 @@ namespace GlpiNg.Web.Migrations.Postgres
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime?>("AlertSentAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime>("Begin")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Comment")
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime>("End")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("ReservableItemId")
                         .HasColumnType("integer");
@@ -6013,7 +6222,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime?>("AppTokenDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("AppTokenHash")
                         .HasMaxLength(64)
@@ -6023,7 +6232,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<long?>("Ipv4RangeEnd")
                         .HasColumnType("bigint");
@@ -6045,7 +6254,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -6059,7 +6268,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("character varying(100)");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("ValueJson")
                         .IsRequired()
@@ -6095,7 +6304,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("DisplayNameField")
                         .HasColumnType("text");
@@ -6179,7 +6388,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<bool>("UseBind")
                         .HasColumnType("boolean");
@@ -6213,7 +6422,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("EmailDomain")
                         .HasColumnType("text");
@@ -6242,7 +6451,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<bool>("ValidateCertificate")
                         .HasColumnType("boolean");
@@ -6267,7 +6476,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("CustomAssetDefinitionId")
                         .HasColumnType("integer");
@@ -6283,7 +6492,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -6306,7 +6515,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<bool>("DocumentsEnabled")
                         .HasColumnType("boolean");
@@ -6337,7 +6546,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -6400,7 +6609,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("OccurredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("User")
                         .HasColumnType("text");
@@ -6483,7 +6692,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -6550,7 +6759,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -6586,7 +6795,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("AttachedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("DocumentId")
                         .HasColumnType("integer");
@@ -6633,7 +6842,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("OccurredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Service")
                         .IsRequired()
@@ -6656,7 +6865,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -6672,7 +6881,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("boolean");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Url")
                         .IsRequired()
@@ -6722,7 +6931,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -6748,7 +6957,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("boolean");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -6812,7 +7021,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("CustomCss")
                         .HasColumnType("text");
@@ -6861,7 +7070,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("boolean");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Website")
                         .HasColumnType("text");
@@ -6897,7 +7106,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("OccurredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("User")
                         .IsRequired()
@@ -6927,7 +7136,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("EntityId")
                         .HasColumnType("integer");
@@ -6966,7 +7175,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -6988,7 +7197,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("boolean");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<bool>("VisibleAsAssignee")
                         .HasColumnType("boolean");
@@ -7035,7 +7244,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("OccurredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("User")
                         .IsRequired()
@@ -7065,7 +7274,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("GroupId")
                         .HasColumnType("integer");
@@ -7113,7 +7322,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("GestionRight")
                         .HasColumnType("integer");
@@ -7135,7 +7344,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -7163,7 +7372,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("OccurredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("ProfileId")
                         .HasColumnType("integer");
@@ -7188,7 +7397,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime?>("ApiTokenDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("ApiTokenHash")
                         .HasMaxLength(64)
@@ -7201,7 +7410,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("CsvDelimiter")
                         .HasColumnType("text");
@@ -7319,7 +7528,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("OccurredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("User")
                         .IsRequired()
@@ -7382,7 +7591,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("Date")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("ItemId")
                         .HasColumnType("integer");
@@ -7414,7 +7623,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("DeliveryDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("DeliveryNumber")
                         .HasColumnType("text");
@@ -7430,13 +7639,13 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("PurchaseDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("SupplierId")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("UseDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<decimal?>("Value")
                         .HasPrecision(18, 2)
@@ -7504,7 +7713,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("Encryption")
                         .HasColumnType("integer");
@@ -7533,7 +7742,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("LastRunAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Login")
                         .IsRequired()
@@ -7556,7 +7765,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<bool>("ValidateCertificate")
                         .HasColumnType("boolean");
@@ -7591,7 +7800,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("ItemId")
                         .HasColumnType("integer");
@@ -7607,7 +7816,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -7628,7 +7837,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -7655,7 +7864,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -7718,7 +7927,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("EntityId")
                         .HasColumnType("integer");
@@ -7739,7 +7948,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -7766,7 +7975,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("ItemId")
                         .HasColumnType("integer");
@@ -7790,7 +7999,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("SentAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -7826,7 +8035,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("Grants")
                         .HasColumnType("integer");
@@ -7848,7 +8057,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
@@ -7873,7 +8082,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Event")
                         .IsRequired()
@@ -7911,7 +8120,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("SentAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -7948,7 +8157,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("CustomPayload")
                         .HasColumnType("text");
@@ -7987,7 +8196,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Url")
                         .IsRequired()
@@ -8900,6 +9109,24 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerEnvironmentVariable", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Inventory.Models.Computer", null)
+                        .WithMany("EnvironmentVariables")
+                        .HasForeignKey("ComputerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerFirewall", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Inventory.Models.Computer", null)
+                        .WithMany("Firewalls")
+                        .HasForeignKey("ComputerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerHistoryEntry", b =>
                 {
                     b.HasOne("GlpiNg.Modules.Inventory.Models.Computer", null)
@@ -8913,6 +9140,24 @@ namespace GlpiNg.Web.Migrations.Postgres
                 {
                     b.HasOne("GlpiNg.Modules.Inventory.Models.Computer", null)
                         .WithMany("ImportHistories")
+                        .HasForeignKey("ComputerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerLicense", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Inventory.Models.Computer", null)
+                        .WithMany("Licenses")
+                        .HasForeignKey("ComputerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerLocalAccount", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Inventory.Models.Computer", null)
+                        .WithMany("LocalAccounts")
                         .HasForeignKey("ComputerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -8941,6 +9186,15 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("StatusItem");
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerProcess", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Inventory.Models.Computer", null)
+                        .WithMany("Processes")
+                        .HasForeignKey("ComputerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerRule", b =>
@@ -8973,6 +9227,15 @@ namespace GlpiNg.Web.Migrations.Postgres
                 {
                     b.HasOne("GlpiNg.Modules.Inventory.Models.Computer", null)
                         .WithMany("Softwares")
+                        .HasForeignKey("ComputerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GlpiNg.Modules.Inventory.Models.ComputerVirtualMachine", b =>
+                {
+                    b.HasOne("GlpiNg.Modules.Inventory.Models.Computer", null)
+                        .WithMany("VirtualMachines")
                         .HasForeignKey("ComputerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -10248,15 +10511,27 @@ namespace GlpiNg.Web.Migrations.Postgres
 
                     b.Navigation("Connectors");
 
+                    b.Navigation("EnvironmentVariables");
+
+                    b.Navigation("Firewalls");
+
                     b.Navigation("HistoryEntries");
 
                     b.Navigation("ImportHistories");
+
+                    b.Navigation("Licenses");
+
+                    b.Navigation("LocalAccounts");
 
                     b.Navigation("NetworkPorts");
 
                     b.Navigation("Peripherals");
 
+                    b.Navigation("Processes");
+
                     b.Navigation("Softwares");
+
+                    b.Navigation("VirtualMachines");
 
                     b.Navigation("Volumes");
                 });

@@ -68,6 +68,13 @@ public class Program
     /// </summary>
     public static int Main(string[] args)
     {
+        // Le code stocke des heures « murales » (dates de réservation, planning de tâches...) et des
+        // DateTime de Kind quelconque, comme avec datetime2 de SQL Server. Npgsql 6+ les refuse sur
+        // timestamptz (« only UTC is supported ») ; ce commutateur rétablit timestamp sans fuseau,
+        // qui stocke la valeur telle quelle. À poser avant tout usage de Npgsql (donc avant la CLI et
+        // dotnet ef), et les migrations PostgreSQL sont générées avec lui.
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
         bool serve = args is ["serve", ..] && !args.Any(a => a is "-h" or "--help");
 
         if (serve || EF.IsDesignTime || Environment.GetEnvironmentVariable("ASPNETCORE_IIS_PHYSICAL_PATH") is not null)

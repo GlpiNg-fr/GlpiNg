@@ -24,11 +24,11 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Ipv4RangeEnd = table.Column<long>(type: "bigint", nullable: true),
                     Ipv6 = table.Column<string>(type: "text", nullable: true),
                     AppTokenHash = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: true),
-                    AppTokenDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    AppTokenDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     LogMethod = table.Column<int>(type: "integer", nullable: false),
                     Comment = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -41,7 +41,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                 {
                     SectionName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     ValueJson = table.Column<string>(type: "text", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -56,7 +56,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     ItemType = table.Column<string>(type: "text", nullable: false),
                     ItemId = table.Column<int>(type: "integer", nullable: false),
-                    OccurredAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    OccurredAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     User = table.Column<string>(type: "text", nullable: true),
                     Field = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: true)
@@ -107,8 +107,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     PageSize = table.Column<int>(type: "integer", nullable: false),
                     MaxResults = table.Column<int>(type: "integer", nullable: false),
                     EntityAssignmentTag = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -131,8 +131,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Encryption = table.Column<int>(type: "integer", nullable: false),
                     ValidateCertificate = table.Column<bool>(type: "boolean", nullable: false),
                     EmailDomain = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -146,7 +146,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     TaskKey = table.Column<string>(type: "text", nullable: false),
-                    RanAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    RanAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     Success = table.Column<bool>(type: "boolean", nullable: false),
                     DurationMs = table.Column<long>(type: "bigint", nullable: false),
                     Error = table.Column<string>(type: "text", nullable: true)
@@ -165,7 +165,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     TaskKey = table.Column<string>(type: "text", nullable: false),
                     IsEnabled = table.Column<bool>(type: "boolean", nullable: false),
                     FrequencyMinutes = table.Column<int>(type: "integer", nullable: true),
-                    LastRunAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    LastRunAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     LastRunSuccess = table.Column<bool>(type: "boolean", nullable: true),
                     LastRunDurationMs = table.Column<long>(type: "bigint", nullable: true),
                     LastRunError = table.Column<string>(type: "text", nullable: true)
@@ -182,7 +182,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     IntervalMinutes = table.Column<int>(type: "integer", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -204,8 +204,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     DocumentsEnabled = table.Column<bool>(type: "boolean", nullable: false),
                     NotesEnabled = table.Column<bool>(type: "boolean", nullable: false),
                     HistoryEnabled = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -255,8 +255,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     AgentBaseUrl = table.Column<string>(type: "text", nullable: true),
                     CustomCssEnabled = table.Column<bool>(type: "boolean", nullable: false),
                     CustomCss = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -275,7 +275,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    OccurredAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    OccurredAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     Service = table.Column<string>(type: "text", nullable: false),
                     Level = table.Column<int>(type: "integer", nullable: false),
                     Message = table.Column<string>(type: "text", nullable: false),
@@ -297,7 +297,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     ItemType = table.Column<string>(type: "text", nullable: false),
                     ItemId = table.Column<int>(type: "integer", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
-                    Date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    Date = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     Comment = table.Column<string>(type: "text", nullable: true)
                 },
@@ -316,9 +316,9 @@ namespace GlpiNg.Web.Migrations.Postgres
                     ItemId = table.Column<int>(type: "integer", nullable: false),
                     SupplierId = table.Column<int>(type: "integer", nullable: true),
                     BudgetId = table.Column<int>(type: "integer", nullable: true),
-                    PurchaseDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    DeliveryDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    UseDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    PurchaseDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    DeliveryDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    UseDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     WarrantyMonths = table.Column<int>(type: "integer", nullable: true),
                     WarrantyInfo = table.Column<string>(type: "text", nullable: true),
                     Value = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: true),
@@ -357,7 +357,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     ItemId = table.Column<int>(type: "integer", nullable: false),
                     Content = table.Column<string>(type: "text", nullable: false),
                     AuthorName = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     IsPrivate = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
@@ -376,12 +376,12 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Content = table.Column<string>(type: "text", nullable: false),
                     State = table.Column<int>(type: "integer", nullable: false),
                     AssignedUserId = table.Column<int>(type: "integer", nullable: true),
-                    PlannedStart = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    PlannedEnd = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    PlannedStart = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    PlannedEnd = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     DurationMinutes = table.Column<int>(type: "integer", nullable: true),
                     AuthorName = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    CompletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    CompletedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -397,7 +397,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     ItemType = table.Column<string>(type: "text", nullable: false),
                     ItemId = table.Column<int>(type: "integer", nullable: false),
                     Field = table.Column<string>(type: "text", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     LockedBy = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -413,7 +413,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     ItemType = table.Column<string>(type: "text", nullable: false),
                     ItemId = table.Column<int>(type: "integer", nullable: false),
-                    OccurredAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    OccurredAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     User = table.Column<string>(type: "text", nullable: true),
                     Field = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: true)
@@ -434,8 +434,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Content = table.Column<string>(type: "text", nullable: false),
                     AuthorUserId = table.Column<int>(type: "integer", nullable: true),
                     AuthorName = table.Column<string>(type: "text", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     LastEditorName = table.Column<string>(type: "text", nullable: true),
                     SourceGlpiId = table.Column<int>(type: "integer", nullable: true)
                 },
@@ -459,8 +459,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Comment = table.Column<string>(type: "text", nullable: true),
                     RedirectUrisRaw = table.Column<string>(type: "text", nullable: true),
                     IpRestrictionsRaw = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -483,8 +483,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     OutilsRight = table.Column<int>(type: "integer", nullable: false),
                     AdministrationRight = table.Column<int>(type: "integer", nullable: false),
                     ConfigurationRight = table.Column<int>(type: "integer", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -497,7 +497,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    OccurredAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    OccurredAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     RuleName = table.Column<string>(type: "text", nullable: false),
                     ComputerName = table.Column<string>(type: "text", nullable: true),
                     SerialNumber = table.Column<string>(type: "text", nullable: true),
@@ -565,7 +565,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     ColorPalette = table.Column<string>(type: "text", nullable: true),
                     HighContrast = table.Column<bool>(type: "boolean", nullable: true),
                     Language = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     SourceGlpiId = table.Column<int>(type: "integer", nullable: true),
                     AuthSource = table.Column<int>(type: "integer", nullable: false),
                     LdapServerId = table.Column<int>(type: "integer", nullable: true),
@@ -578,7 +578,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
                     TwoFactorAuthDisabled = table.Column<bool>(type: "boolean", nullable: false),
                     ApiTokenHash = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: true),
-                    ApiTokenDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    ApiTokenDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -631,8 +631,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Tag = table.Column<string>(type: "text", nullable: true),
                     InstalledTasks = table.Column<string[]>(type: "text[]", nullable: false),
                     EnabledTasks = table.Column<string[]>(type: "text[]", nullable: false),
-                    FirstContactAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    LastContactAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    FirstContactAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    LastContactAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     LastUserAgent = table.Column<string>(type: "text", nullable: true),
                     LastContactIp = table.Column<string>(type: "text", nullable: true)
                 },
@@ -658,13 +658,13 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Name = table.Column<string>(type: "text", nullable: false),
                     Code = table.Column<string>(type: "text", nullable: true),
                     Type = table.Column<string>(type: "text", nullable: true),
-                    StartDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    EndDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    StartDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    EndDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     Comment = table.Column<string>(type: "text", nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -687,8 +687,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     IsRecursive = table.Column<bool>(type: "boolean", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
                     Comment = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -715,8 +715,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     NodeCount = table.Column<int>(type: "integer", nullable: true),
                     Comment = table.Column<string>(type: "text", nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -802,8 +802,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Country = table.Column<string>(type: "text", nullable: true),
                     Comment = table.Column<string>(type: "text", nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -827,7 +827,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Name = table.Column<string>(type: "text", nullable: false),
                     Number = table.Column<string>(type: "text", nullable: true),
                     Type = table.Column<string>(type: "text", nullable: true),
-                    StartDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    StartDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     DurationMonths = table.Column<int>(type: "integer", nullable: true),
                     NoticeMonths = table.Column<int>(type: "integer", nullable: true),
                     Periodicity = table.Column<int>(type: "integer", nullable: false),
@@ -836,8 +836,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     AccountNumber = table.Column<string>(type: "text", nullable: true),
                     Comment = table.Column<string>(type: "text", nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -861,8 +861,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     CustomAssetDefinitionId = table.Column<int>(type: "integer", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
                     Comment = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -898,8 +898,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     IsBackedUp = table.Column<bool>(type: "boolean", nullable: false),
                     Comment = table.Column<string>(type: "text", nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -947,7 +947,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Url = table.Column<string>(type: "text", nullable: false),
                     Comment = table.Column<string>(type: "text", nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -997,7 +997,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Text = table.Column<string>(type: "text", nullable: false),
                     AllowSkip = table.Column<bool>(type: "boolean", nullable: false),
                     Comment = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1049,7 +1049,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Name = table.Column<string>(type: "text", nullable: false),
                     Comment = table.Column<string>(type: "text", nullable: true),
                     ParentId = table.Column<int>(type: "integer", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     SourceGlpiId = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
@@ -1107,7 +1107,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     EntityId = table.Column<int>(type: "integer", nullable: false),
-                    OccurredAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    OccurredAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     User = table.Column<string>(type: "text", nullable: false),
                     Field = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false)
@@ -1132,7 +1132,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     EntityId = table.Column<int>(type: "integer", nullable: false),
                     Content = table.Column<string>(type: "text", nullable: false),
                     Author = table.Column<string>(type: "text", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1157,8 +1157,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Comment = table.Column<string>(type: "text", nullable: true),
                     Url = table.Column<string>(type: "text", nullable: false),
                     OpenInNewWindow = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1185,8 +1185,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
                     RefuseCreation = table.Column<bool>(type: "boolean", nullable: false),
                     NotifyOnDuplicate = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1221,8 +1221,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     CanContainItems = table.Column<bool>(type: "boolean", nullable: false),
                     CanContainUsers = table.Column<bool>(type: "boolean", nullable: false),
                     TwoFactorAuthRequired = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1302,7 +1302,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     StartIp = table.Column<string>(type: "text", nullable: false),
                     EndIp = table.Column<string>(type: "text", nullable: false),
                     Comment = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1326,7 +1326,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Name = table.Column<string>(type: "text", nullable: false),
                     Comment = table.Column<string>(type: "text", nullable: true),
                     ParentId = table.Column<int>(type: "integer", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     SourceGlpiId = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
@@ -1366,11 +1366,11 @@ namespace GlpiNg.Web.Migrations.Postgres
                     EntityId = table.Column<int>(type: "integer", nullable: true),
                     MaxFetchPerRun = table.Column<int>(type: "integer", nullable: false),
                     ImportAttachments = table.Column<bool>(type: "boolean", nullable: false),
-                    LastRunAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    LastRunAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     LastImportedCount = table.Column<int>(type: "integer", nullable: false),
                     LastError = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1397,8 +1397,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Subject = table.Column<string>(type: "text", nullable: false),
                     ContentText = table.Column<string>(type: "text", nullable: true),
                     ContentHtml = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1422,12 +1422,12 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Name = table.Column<string>(type: "text", nullable: false),
                     Code = table.Column<string>(type: "text", nullable: true),
                     Status = table.Column<string>(type: "text", nullable: true),
-                    PlannedStart = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    PlannedEnd = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    PlannedStart = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    PlannedEnd = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     Percent = table.Column<int>(type: "integer", nullable: false),
                     Comment = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1454,7 +1454,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     ItemUrl = table.Column<string>(type: "text", nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
                     Comment = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1485,7 +1485,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     CountMode = table.Column<int>(type: "integer", nullable: false),
                     CriteriaJson = table.Column<string>(type: "text", nullable: false),
                     SortJson = table.Column<string>(type: "text", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1515,7 +1515,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     AuthPassphrase = table.Column<string>(type: "text", nullable: true),
                     PrivProtocol = table.Column<int>(type: "integer", nullable: false),
                     PrivPassphrase = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1549,8 +1549,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Website = table.Column<string>(type: "text", nullable: true),
                     Comment = table.Column<string>(type: "text", nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1575,8 +1575,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     ParentId = table.Column<int>(type: "integer", nullable: true),
                     Comment = table.Column<string>(type: "text", nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1636,8 +1636,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     CustomPayload = table.Column<string>(type: "text", nullable: true),
                     SecretProtected = table.Column<string>(type: "text", nullable: true),
                     SaveResponseBody = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1657,7 +1657,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     ProfileId = table.Column<int>(type: "integer", nullable: false),
-                    OccurredAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    OccurredAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     User = table.Column<string>(type: "text", nullable: false),
                     Field = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false)
@@ -1680,7 +1680,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     UserId = table.Column<int>(type: "integer", nullable: false),
-                    OccurredAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    OccurredAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     User = table.Column<string>(type: "text", nullable: false),
                     Field = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false)
@@ -1786,8 +1786,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Name = table.Column<string>(type: "text", nullable: false),
                     Comment = table.Column<string>(type: "text", nullable: true),
                     CalendarId = table.Column<int>(type: "integer", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1864,7 +1864,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     EntryName = table.Column<string>(type: "text", nullable: false),
                     Key = table.Column<string>(type: "text", nullable: true),
                     Value = table.Column<string>(type: "text", nullable: true),
-                    CollectedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CollectedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1952,8 +1952,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     ContractId = table.Column<int>(type: "integer", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
-                    StartDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    EndDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    StartDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    EndDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     Amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     BudgetId = table.Column<int>(type: "integer", nullable: true)
                 },
@@ -2002,7 +2002,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     CustomAssetId = table.Column<int>(type: "integer", nullable: false),
-                    OccurredAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    OccurredAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     User = table.Column<string>(type: "text", nullable: true),
                     Field = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: true)
@@ -2080,7 +2080,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Name = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: true),
                     SourceGlpiId = table.Column<int>(type: "integer", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     DeployComputerGroupId = table.Column<int>(type: "integer", nullable: true),
                     ActionsJson = table.Column<string>(type: "text", nullable: false),
                     ChecksJson = table.Column<string>(type: "text", nullable: false),
@@ -2175,7 +2175,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Link = table.Column<string>(type: "text", nullable: true),
                     AuthorUserId = table.Column<int>(type: "integer", nullable: true),
                     AuthorName = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     SourceGlpiId = table.Column<int>(type: "integer", nullable: true),
                     SourceSha1 = table.Column<string>(type: "text", nullable: true),
                     IsContentMissing = table.Column<bool>(type: "boolean", nullable: false)
@@ -2214,8 +2214,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     EndpointAId = table.Column<int>(type: "integer", nullable: false),
                     EndpointBType = table.Column<int>(type: "integer", nullable: true),
                     EndpointBId = table.Column<int>(type: "integer", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -2251,8 +2251,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     AlertThreshold = table.Column<int>(type: "integer", nullable: false),
                     SnmpLevelOid = table.Column<string>(type: "text", nullable: true),
                     Comment = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -2301,8 +2301,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Room = table.Column<string>(type: "text", nullable: true),
                     LocationId = table.Column<int>(type: "integer", nullable: true),
                     AssignedUser = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    LastInventoryAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    LastInventoryAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     AgentId = table.Column<int>(type: "integer", nullable: true),
                     SourceGlpiId = table.Column<int>(type: "integer", nullable: true)
                 },
@@ -2350,8 +2350,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     TechnicianInCharge = table.Column<string>(type: "text", nullable: true),
                     AlertThreshold = table.Column<int>(type: "integer", nullable: false),
                     Comment = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -2390,8 +2390,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     AssignedUser = table.Column<string>(type: "text", nullable: true),
                     SlotCount = table.Column<int>(type: "integer", nullable: true),
                     Comment = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -2437,8 +2437,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     AssignedUser = table.Column<string>(type: "text", nullable: true),
                     MemoryMb = table.Column<int>(type: "integer", nullable: true),
                     Comment = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -2482,8 +2482,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     TechnicianInCharge = table.Column<string>(type: "text", nullable: true),
                     AssignedUser = table.Column<string>(type: "text", nullable: true),
                     Comment = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -2527,8 +2527,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     TechnicianInCharge = table.Column<string>(type: "text", nullable: true),
                     AssignedUser = table.Column<string>(type: "text", nullable: true),
                     Comment = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -2574,8 +2574,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     AssignedUser = table.Column<string>(type: "text", nullable: true),
                     LineCount = table.Column<int>(type: "integer", nullable: true),
                     Comment = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -2631,8 +2631,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     SnmpAuthPassphrase = table.Column<string>(type: "text", nullable: true),
                     SnmpPrivProtocol = table.Column<int>(type: "integer", nullable: false),
                     SnmpPrivPassphrase = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -2677,8 +2677,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     AssignedUser = table.Column<string>(type: "text", nullable: true),
                     UnitCount = table.Column<int>(type: "integer", nullable: true),
                     Comment = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -2730,8 +2730,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     TechnicianInCharge = table.Column<string>(type: "text", nullable: true),
                     AssignedUser = table.Column<string>(type: "text", nullable: true),
                     Comment = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -2803,7 +2803,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     GroupId = table.Column<int>(type: "integer", nullable: false),
-                    OccurredAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    OccurredAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     User = table.Column<string>(type: "text", nullable: false),
                     Field = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false)
@@ -2828,7 +2828,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     GroupId = table.Column<int>(type: "integer", nullable: false),
                     Content = table.Column<string>(type: "text", nullable: false),
                     Author = table.Column<string>(type: "text", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -2921,14 +2921,14 @@ namespace GlpiNg.Web.Migrations.Postgres
                     CategoryId = table.Column<int>(type: "integer", nullable: true),
                     IsFaq = table.Column<bool>(type: "boolean", nullable: false),
                     IsPinned = table.Column<bool>(type: "boolean", nullable: false),
-                    VisibleFrom = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    VisibleUntil = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    VisibleFrom = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    VisibleUntil = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     ViewCount = table.Column<int>(type: "integer", nullable: false),
                     AuthorUserId = table.Column<int>(type: "integer", nullable: true),
                     AuthorName = table.Column<string>(type: "text", nullable: true),
                     LastEditorName = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     SourceGlpiId = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
@@ -2962,8 +2962,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     ItemType = table.Column<string>(type: "text", nullable: false),
                     Event = table.Column<string>(type: "text", nullable: false),
                     NotificationTemplateId = table.Column<int>(type: "integer", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -3012,8 +3012,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     ProjectId = table.Column<int>(type: "integer", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
                     Status = table.Column<string>(type: "text", nullable: false),
-                    PlannedStart = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    PlannedEnd = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    PlannedStart = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    PlannedEnd = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     Percent = table.Column<int>(type: "integer", nullable: false),
                     Comment = table.Column<string>(type: "text", nullable: true)
                 },
@@ -3037,12 +3037,12 @@ namespace GlpiNg.Web.Migrations.Postgres
                     ReservableItemId = table.Column<int>(type: "integer", nullable: false),
                     UserId = table.Column<int>(type: "integer", nullable: true),
                     UserName = table.Column<string>(type: "text", nullable: false),
-                    Begin = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    End = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Begin = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    End = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     Comment = table.Column<string>(type: "text", nullable: true),
                     SeriesId = table.Column<Guid>(type: "uuid", nullable: true),
-                    AlertSentAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    AlertSentAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -3073,8 +3073,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     ContractId = table.Column<int>(type: "integer", nullable: true),
                     Comment = table.Column<string>(type: "text", nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -3112,14 +3112,14 @@ namespace GlpiNg.Web.Migrations.Postgres
                     DnsName = table.Column<string>(type: "text", nullable: true),
                     SerialNumber = table.Column<string>(type: "text", nullable: true),
                     Issuer = table.Column<string>(type: "text", nullable: true),
-                    IssuedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    ExpirationDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    IssuedDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    ExpirationDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     SupplierId = table.Column<int>(type: "integer", nullable: true),
                     ContractId = table.Column<int>(type: "integer", nullable: true),
                     Comment = table.Column<string>(type: "text", nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -3187,8 +3187,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     ContractId = table.Column<int>(type: "integer", nullable: true),
                     Comment = table.Column<string>(type: "text", nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -3223,14 +3223,14 @@ namespace GlpiNg.Web.Migrations.Postgres
                     IsRecursive = table.Column<bool>(type: "boolean", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
                     Type = table.Column<string>(type: "text", nullable: true),
-                    CreationDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    ExpirationDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    CreationDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    ExpirationDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     SupplierId = table.Column<int>(type: "integer", nullable: true),
                     ContractId = table.Column<int>(type: "integer", nullable: true),
                     Comment = table.Column<string>(type: "text", nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -3272,8 +3272,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     ContractId = table.Column<int>(type: "integer", nullable: true),
                     Comment = table.Column<string>(type: "text", nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -3313,14 +3313,14 @@ namespace GlpiNg.Web.Migrations.Postgres
                     LicenseKey = table.Column<string>(type: "text", nullable: true),
                     Seats = table.Column<int>(type: "integer", nullable: false),
                     UsedSeats = table.Column<int>(type: "integer", nullable: false),
-                    PurchaseDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    ExpirationDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    PurchaseDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    ExpirationDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     SupplierId = table.Column<int>(type: "integer", nullable: true),
                     ContractId = table.Column<int>(type: "integer", nullable: true),
                     Comment = table.Column<string>(type: "text", nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -3390,11 +3390,11 @@ namespace GlpiNg.Web.Migrations.Postgres
                     AuthorUserId = table.Column<int>(type: "integer", nullable: true),
                     AssignedUserId = table.Column<int>(type: "integer", nullable: true),
                     AssignedGroupId = table.Column<int>(type: "integer", nullable: true),
-                    OpenedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    DueDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    SolvedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    ClosedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    OpenedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    DueDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    SolvedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    ClosedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     ImpactContent = table.Column<string>(type: "text", nullable: true),
                     ControlListContent = table.Column<string>(type: "text", nullable: true),
                     RolloutPlanContent = table.Column<string>(type: "text", nullable: true),
@@ -3440,11 +3440,11 @@ namespace GlpiNg.Web.Migrations.Postgres
                     AuthorUserId = table.Column<int>(type: "integer", nullable: true),
                     AssignedUserId = table.Column<int>(type: "integer", nullable: true),
                     AssignedGroupId = table.Column<int>(type: "integer", nullable: true),
-                    OpenedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    DueDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    SolvedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    ClosedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    OpenedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    DueDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    SolvedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    ClosedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     SymptomContent = table.Column<string>(type: "text", nullable: true),
                     CauseContent = table.Column<string>(type: "text", nullable: true),
                     ImpactContent = table.Column<string>(type: "text", nullable: true),
@@ -3481,14 +3481,14 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Comment = table.Column<string>(type: "text", nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
                     AllowRePreparation = table.Column<bool>(type: "boolean", nullable: false),
-                    ScheduledStartTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    ScheduledEndTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    ScheduledStartTime = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    ScheduledEndTime = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     PreparationTimeSlotId = table.Column<int>(type: "integer", nullable: true),
                     ExecutionTimeSlotId = table.Column<int>(type: "integer", nullable: true),
                     AgentWakeUpIntervalMinutes = table.Column<int>(type: "integer", nullable: false),
                     AgentWakeUpCount = table.Column<int>(type: "integer", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    LastLaunchedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    LastLaunchedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -3525,11 +3525,11 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Comment = table.Column<string>(type: "text", nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
                     Method = table.Column<int>(type: "integer", nullable: false),
-                    ScheduledStartTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    ScheduledEndTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    ScheduledStartTime = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    ScheduledEndTime = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     ExecutionTimeSlotId = table.Column<int>(type: "integer", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    LastLaunchedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    LastLaunchedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -3581,11 +3581,11 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Name = table.Column<string>(type: "text", nullable: false),
                     Comment = table.Column<string>(type: "text", nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    ScheduledStartTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    ScheduledEndTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    ScheduledStartTime = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    ScheduledEndTime = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     ExecutionTimeSlotId = table.Column<int>(type: "integer", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    LastLaunchedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    LastLaunchedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -3626,8 +3626,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     LastError = table.Column<string>(type: "text", nullable: true),
                     ResponseStatusCode = table.Column<int>(type: "integer", nullable: true),
                     ResponseBody = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    SentAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    SentAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -3675,8 +3675,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     DurationUnit = table.Column<int>(type: "integer", nullable: false),
                     EndOfWorkingDay = table.Column<bool>(type: "boolean", nullable: false),
                     Comment = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -3767,7 +3767,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     DocumentId = table.Column<int>(type: "integer", nullable: false),
                     ItemType = table.Column<string>(type: "text", nullable: false),
                     ItemId = table.Column<int>(type: "integer", nullable: false),
-                    AttachedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    AttachedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -3787,7 +3787,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     CableId = table.Column<int>(type: "integer", nullable: false),
-                    OccurredAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    OccurredAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     User = table.Column<string>(type: "text", nullable: false),
                     Field = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false)
@@ -3810,7 +3810,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     CartridgeItemId = table.Column<int>(type: "integer", nullable: false),
-                    OccurredAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    OccurredAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     User = table.Column<string>(type: "text", nullable: false),
                     Field = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false)
@@ -3928,13 +3928,58 @@ namespace GlpiNg.Web.Migrations.Postgres
                 });
 
             migrationBuilder.CreateTable(
+                name: "ComputerEnvironmentVariables",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ComputerId = table.Column<int>(type: "integer", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    Value = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ComputerEnvironmentVariables", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ComputerEnvironmentVariables_Computers_ComputerId",
+                        column: x => x.ComputerId,
+                        principalTable: "Computers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ComputerFirewalls",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ComputerId = table.Column<int>(type: "integer", nullable: false),
+                    Profile = table.Column<string>(type: "text", nullable: true),
+                    Status = table.Column<string>(type: "text", nullable: true),
+                    Description = table.Column<string>(type: "text", nullable: true),
+                    IpAddress = table.Column<string>(type: "text", nullable: true),
+                    IpAddress6 = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ComputerFirewalls", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ComputerFirewalls_Computers_ComputerId",
+                        column: x => x.ComputerId,
+                        principalTable: "Computers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ComputerHistoryEntries",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     ComputerId = table.Column<int>(type: "integer", nullable: false),
-                    OccurredAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    OccurredAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     User = table.Column<string>(type: "text", nullable: false),
                     Field = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false)
@@ -3957,7 +4002,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     ComputerId = table.Column<int>(type: "integer", nullable: false),
-                    OccurredAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    OccurredAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     RuleName = table.Column<string>(type: "text", nullable: false),
                     Module = table.Column<string>(type: "text", nullable: false),
                     AgentIdentifier = table.Column<string>(type: "text", nullable: true),
@@ -3968,6 +4013,56 @@ namespace GlpiNg.Web.Migrations.Postgres
                     table.PrimaryKey("PK_ComputerImportHistories", x => x.Id);
                     table.ForeignKey(
                         name: "FK_ComputerImportHistories_Computers_ComputerId",
+                        column: x => x.ComputerId,
+                        principalTable: "Computers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ComputerLicenses",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ComputerId = table.Column<int>(type: "integer", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    FullName = table.Column<string>(type: "text", nullable: true),
+                    Key = table.Column<string>(type: "text", nullable: true),
+                    ProductId = table.Column<string>(type: "text", nullable: true),
+                    Components = table.Column<string>(type: "text", nullable: true),
+                    Trial = table.Column<bool>(type: "boolean", nullable: false),
+                    Update = table.Column<bool>(type: "boolean", nullable: false),
+                    Oem = table.Column<bool>(type: "boolean", nullable: false),
+                    ActivationDate = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ComputerLicenses", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ComputerLicenses_Computers_ComputerId",
+                        column: x => x.ComputerId,
+                        principalTable: "Computers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ComputerLocalAccounts",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ComputerId = table.Column<int>(type: "integer", nullable: false),
+                    IsGroup = table.Column<bool>(type: "boolean", nullable: false),
+                    AccountId = table.Column<string>(type: "text", nullable: true),
+                    Name = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ComputerLocalAccounts", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ComputerLocalAccounts_Computers_ComputerId",
                         column: x => x.ComputerId,
                         principalTable: "Computers",
                         principalColumn: "Id",
@@ -4037,6 +4132,31 @@ namespace GlpiNg.Web.Migrations.Postgres
                 });
 
             migrationBuilder.CreateTable(
+                name: "ComputerProcesses",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ComputerId = table.Column<int>(type: "integer", nullable: false),
+                    Pid = table.Column<int>(type: "integer", nullable: true),
+                    User = table.Column<string>(type: "text", nullable: true),
+                    Command = table.Column<string>(type: "text", nullable: false),
+                    CpuUsage = table.Column<double>(type: "double precision", nullable: true),
+                    VirtualMemory = table.Column<long>(type: "bigint", nullable: true),
+                    Started = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ComputerProcesses", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ComputerProcesses_Computers_ComputerId",
+                        column: x => x.ComputerId,
+                        principalTable: "Computers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ComputerSoftwares",
                 columns: table => new
                 {
@@ -4053,6 +4173,32 @@ namespace GlpiNg.Web.Migrations.Postgres
                     table.PrimaryKey("PK_ComputerSoftwares", x => x.Id);
                     table.ForeignKey(
                         name: "FK_ComputerSoftwares_Computers_ComputerId",
+                        column: x => x.ComputerId,
+                        principalTable: "Computers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ComputerVirtualMachines",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ComputerId = table.Column<int>(type: "integer", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    Uuid = table.Column<string>(type: "text", nullable: true),
+                    VmType = table.Column<string>(type: "text", nullable: true),
+                    Subsystem = table.Column<string>(type: "text", nullable: true),
+                    Status = table.Column<string>(type: "text", nullable: true),
+                    VCpu = table.Column<int>(type: "integer", nullable: true),
+                    MemoryMb = table.Column<int>(type: "integer", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ComputerVirtualMachines", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ComputerVirtualMachines_Computers_ComputerId",
                         column: x => x.ComputerId,
                         principalTable: "Computers",
                         principalColumn: "Id",
@@ -4138,8 +4284,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     IsGlobalManagement = table.Column<bool>(type: "boolean", nullable: false),
                     Comment = table.Column<string>(type: "text", nullable: true),
                     ComputerId = table.Column<int>(type: "integer", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -4171,7 +4317,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     ConsumableItemId = table.Column<int>(type: "integer", nullable: false),
-                    OccurredAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    OccurredAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     User = table.Column<string>(type: "text", nullable: false),
                     Field = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false)
@@ -4194,8 +4340,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     ConsumableItemId = table.Column<int>(type: "integer", nullable: false),
-                    DateIn = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    DateOut = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    DateIn = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    DateOut = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -4215,7 +4361,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     EnclosureId = table.Column<int>(type: "integer", nullable: false),
-                    OccurredAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    OccurredAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     User = table.Column<string>(type: "text", nullable: false),
                     Field = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false)
@@ -4238,7 +4384,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     NetworkEquipmentId = table.Column<int>(type: "integer", nullable: false),
-                    OccurredAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    OccurredAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     User = table.Column<string>(type: "text", nullable: false),
                     Field = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false)
@@ -4261,7 +4407,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     PassiveEquipmentId = table.Column<int>(type: "integer", nullable: false),
-                    OccurredAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    OccurredAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     User = table.Column<string>(type: "text", nullable: false),
                     Field = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false)
@@ -4284,7 +4430,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     PduId = table.Column<int>(type: "integer", nullable: false),
-                    OccurredAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    OccurredAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     User = table.Column<string>(type: "text", nullable: false),
                     Field = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false)
@@ -4307,7 +4453,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     PhoneId = table.Column<int>(type: "integer", nullable: false),
-                    OccurredAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    OccurredAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     User = table.Column<string>(type: "text", nullable: false),
                     Field = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false)
@@ -4331,11 +4477,11 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     CartridgeItemId = table.Column<int>(type: "integer", nullable: false),
                     PrinterId = table.Column<int>(type: "integer", nullable: true),
-                    DateIn = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    DateUse = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    DateOut = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    DateIn = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    DateUse = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    DateOut = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     LevelPercent = table.Column<int>(type: "integer", nullable: true),
-                    LevelReadAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    LevelReadAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -4361,7 +4507,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     PrinterId = table.Column<int>(type: "integer", nullable: false),
-                    OccurredAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    OccurredAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     User = table.Column<string>(type: "text", nullable: false),
                     Field = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false)
@@ -4384,7 +4530,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     RackId = table.Column<int>(type: "integer", nullable: false),
-                    OccurredAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    OccurredAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     User = table.Column<string>(type: "text", nullable: false),
                     Field = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false)
@@ -4407,7 +4553,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     SimCardId = table.Column<int>(type: "integer", nullable: false),
-                    OccurredAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    OccurredAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     User = table.Column<string>(type: "text", nullable: false),
                     Field = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false)
@@ -4430,7 +4576,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     ArticleId = table.Column<int>(type: "integer", nullable: false),
-                    OccurredAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    OccurredAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     User = table.Column<string>(type: "text", nullable: false),
                     Field = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false)
@@ -4457,7 +4603,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Subject = table.Column<string>(type: "text", nullable: false),
                     Content = table.Column<string>(type: "text", nullable: false),
                     EditorName = table.Column<string>(type: "text", nullable: true),
-                    RevisedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    RevisedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -4545,8 +4691,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Status = table.Column<int>(type: "integer", nullable: false),
                     Attempts = table.Column<int>(type: "integer", nullable: false),
                     LastError = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    SentAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    SentAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -4615,8 +4761,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     RequestComment = table.Column<string>(type: "text", nullable: true),
                     ValidationComment = table.Column<string>(type: "text", nullable: true),
                     RequesterName = table.Column<string>(type: "text", nullable: true),
-                    SubmittedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    ValidatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    SubmittedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    ValidatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -4665,9 +4811,9 @@ namespace GlpiNg.Web.Migrations.Postgres
                     PackageId = table.Column<int>(type: "integer", nullable: false),
                     TaskId = table.Column<int>(type: "integer", nullable: true),
                     Status = table.Column<int>(type: "integer", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    StartedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    CompletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    StartedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    CompletedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     Log = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -4770,11 +4916,11 @@ namespace GlpiNg.Web.Migrations.Postgres
                     SysLocation = table.Column<string>(type: "text", nullable: true),
                     GuessedType = table.Column<string>(type: "text", nullable: true),
                     DiscoveredViaNetworkTaskId = table.Column<int>(type: "integer", nullable: true),
-                    FirstSeenAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    LastSeenAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    FirstSeenAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    LastSeenAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false),
                     AgentDeployAttempts = table.Column<int>(type: "integer", nullable: false),
-                    AgentDeployLastAttemptAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    AgentDeployLastAttemptAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     AgentDeployLastError = table.Column<string>(type: "text", nullable: true),
                     PromotedNetworkEquipmentId = table.Column<int>(type: "integer", nullable: true)
                 },
@@ -4888,9 +5034,9 @@ namespace GlpiNg.Web.Migrations.Postgres
                     AgentId = table.Column<int>(type: "integer", nullable: false),
                     NetworkTaskId = table.Column<int>(type: "integer", nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    StartedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    CompletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    StartedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    CompletedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     Log = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -4945,9 +5091,9 @@ namespace GlpiNg.Web.Migrations.Postgres
                     AgentId = table.Column<int>(type: "integer", nullable: false),
                     WakeOnLanTaskId = table.Column<int>(type: "integer", nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    StartedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    CompletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    StartedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    CompletedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     TargetMacsJson = table.Column<string>(type: "text", nullable: false),
                     Log = table.Column<string>(type: "text", nullable: true)
                 },
@@ -5012,7 +5158,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Name = table.Column<string>(type: "text", nullable: false),
                     OffsetMinutes = table.Column<int>(type: "integer", nullable: false),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -5046,21 +5192,21 @@ namespace GlpiNg.Web.Migrations.Postgres
                     RequesterName = table.Column<string>(type: "text", nullable: true),
                     AssignedUserId = table.Column<int>(type: "integer", nullable: true),
                     AssignedGroupId = table.Column<int>(type: "integer", nullable: true),
-                    OpenedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    DueDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    OpenedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    DueDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     SlaTimeToOwnId = table.Column<int>(type: "integer", nullable: true),
                     SlaTimeToResolveId = table.Column<int>(type: "integer", nullable: true),
                     OlaTimeToOwnId = table.Column<int>(type: "integer", nullable: true),
                     OlaTimeToResolveId = table.Column<int>(type: "integer", nullable: true),
-                    TimeToOwn = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    TimeToResolve = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    InternalTimeToOwn = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    InternalTimeToResolve = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    TakenIntoAccountAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    OlaStartedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    SolvedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    ClosedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    TimeToOwn = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    TimeToResolve = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    InternalTimeToOwn = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    InternalTimeToResolve = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    TakenIntoAccountAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    OlaStartedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    SolvedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    ClosedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     Solution = table.Column<string>(type: "text", nullable: true),
                     SolutionType = table.Column<string>(type: "text", nullable: true)
                 },
@@ -5135,7 +5281,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     PeripheralId = table.Column<int>(type: "integer", nullable: false),
-                    OccurredAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    OccurredAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     User = table.Column<string>(type: "text", nullable: false),
                     Field = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false)
@@ -5232,7 +5378,7 @@ namespace GlpiNg.Web.Migrations.Postgres
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     TicketId = table.Column<int>(type: "integer", nullable: false),
                     ServiceLevelEscalationId = table.Column<int>(type: "integer", nullable: false),
-                    ExecutedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    ExecutedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -5263,8 +5409,8 @@ namespace GlpiNg.Web.Migrations.Postgres
                     RequestComment = table.Column<string>(type: "text", nullable: true),
                     ValidationComment = table.Column<string>(type: "text", nullable: true),
                     RequesterName = table.Column<string>(type: "text", nullable: true),
-                    SubmittedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    ValidatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    SubmittedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    ValidatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -5515,6 +5661,16 @@ namespace GlpiNg.Web.Migrations.Postgres
                 column: "ComputerId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ComputerEnvironmentVariables_ComputerId",
+                table: "ComputerEnvironmentVariables",
+                column: "ComputerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ComputerFirewalls_ComputerId",
+                table: "ComputerFirewalls",
+                column: "ComputerId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ComputerHistoryEntries_ComputerId",
                 table: "ComputerHistoryEntries",
                 column: "ComputerId");
@@ -5522,6 +5678,16 @@ namespace GlpiNg.Web.Migrations.Postgres
             migrationBuilder.CreateIndex(
                 name: "IX_ComputerImportHistories_ComputerId",
                 table: "ComputerImportHistories",
+                column: "ComputerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ComputerLicenses_ComputerId",
+                table: "ComputerLicenses",
+                column: "ComputerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ComputerLocalAccounts_ComputerId",
+                table: "ComputerLocalAccounts",
                 column: "ComputerId");
 
             migrationBuilder.CreateIndex(
@@ -5538,6 +5704,11 @@ namespace GlpiNg.Web.Migrations.Postgres
                 name: "IX_ComputerPeripherals_StatusId",
                 table: "ComputerPeripherals",
                 column: "StatusId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ComputerProcesses_ComputerId",
+                table: "ComputerProcesses",
+                column: "ComputerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ComputerRuleAction_ComputerRuleId",
@@ -5585,6 +5756,11 @@ namespace GlpiNg.Web.Migrations.Postgres
             migrationBuilder.CreateIndex(
                 name: "IX_ComputerSoftwares_ComputerId",
                 table: "ComputerSoftwares",
+                column: "ComputerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ComputerVirtualMachines_ComputerId",
+                table: "ComputerVirtualMachines",
                 column: "ComputerId");
 
             migrationBuilder.CreateIndex(
@@ -6909,16 +7085,31 @@ namespace GlpiNg.Web.Migrations.Postgres
                 name: "ComputerConnectors");
 
             migrationBuilder.DropTable(
+                name: "ComputerEnvironmentVariables");
+
+            migrationBuilder.DropTable(
+                name: "ComputerFirewalls");
+
+            migrationBuilder.DropTable(
                 name: "ComputerHistoryEntries");
 
             migrationBuilder.DropTable(
                 name: "ComputerImportHistories");
 
             migrationBuilder.DropTable(
+                name: "ComputerLicenses");
+
+            migrationBuilder.DropTable(
+                name: "ComputerLocalAccounts");
+
+            migrationBuilder.DropTable(
                 name: "ComputerNetworkPorts");
 
             migrationBuilder.DropTable(
                 name: "ComputerPeripherals");
+
+            migrationBuilder.DropTable(
+                name: "ComputerProcesses");
 
             migrationBuilder.DropTable(
                 name: "ComputerRuleAction");
@@ -6928,6 +7119,9 @@ namespace GlpiNg.Web.Migrations.Postgres
 
             migrationBuilder.DropTable(
                 name: "ComputerSoftwares");
+
+            migrationBuilder.DropTable(
+                name: "ComputerVirtualMachines");
 
             migrationBuilder.DropTable(
                 name: "ComputerVolumes");
