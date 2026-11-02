@@ -63,10 +63,7 @@ public class InstallCommand : AsyncCommand<InstallCommand.Settings>
                 {
                     await using var db = GlpiNgDbContext.Create(provider, connectionString);
 
-                    if (provider == DbProvider.SqlServer)
-                        await db.Database.MigrateAsync();
-                    else
-                        await db.Database.EnsureCreatedAsync();
+                    await db.Database.MigrateAsync();
 
                     return (string?)null;
                 }

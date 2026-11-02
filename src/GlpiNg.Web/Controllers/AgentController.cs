@@ -31,9 +31,9 @@ namespace GlpiNg.Web.Controllers;
 /// de fichiers) : même adaptation que le déploiement — une action sur la route unique plutôt que
 /// le point d'accès b/collect du plugin d'origine.
 ///
-/// Non couvert pour l'instant : compression brotli, chiffrement (GLPI-CryptoKey-ID),
-/// proxy agent (GLPI-Proxy-ID). La compression zlib/gzip (Content-Type
-/// "application/x-compress-zlib"/"-gzip") est décompressée en entrée. Le PROLOG legacy XML
+/// Non couvert pour l'instant : chiffrement (GLPI-CryptoKey-ID), proxy agent (GLPI-Proxy-ID).
+/// La compression zlib/gzip/brotli (Content-Type "application/x-compress-zlib"/"-gzip"/"-brotli",
+/// ou Content-Encoding) est décompressée en entrée. Le PROLOG legacy XML
 /// (probe FusionInventory/OCS envoyé avant bascule sur le protocole JSON natif) est accepté
 /// en entrée mais toujours répondu en JSON.
 /// </summary>
@@ -1588,6 +1588,9 @@ public class AgentController(
             _ when contentType?.Contains("gzip", StringComparison.OrdinalIgnoreCase) == true
                 || contentEncoding?.Contains("gzip", StringComparison.OrdinalIgnoreCase) == true
                 => new GZipStream(compressed, CompressionMode.Decompress),
+            _ when contentType?.Contains("brotli", StringComparison.OrdinalIgnoreCase) == true
+                || contentEncoding?.Contains("br", StringComparison.OrdinalIgnoreCase) == true
+                => new BrotliStream(compressed, CompressionMode.Decompress),
             _ => null
         };
 

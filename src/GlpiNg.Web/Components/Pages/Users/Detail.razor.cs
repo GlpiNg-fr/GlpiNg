@@ -1,5 +1,6 @@
 using BlazorBootstrap;
 using GlpiNg.Web.Data;
+using GlpiNg.Modules.Abstractions.Items;
 using GlpiNg.Modules.Abstractions.Reservations;
 using GlpiNg.Web.Models;
 using Microsoft.AspNetCore.Components;
@@ -43,6 +44,10 @@ public partial class Detail : ComponentBase, IAsyncDisposable
     [Inject]
     private IItemReservations Reservations { get; set; } = null!;
 
+    /// <summary>Objets du parc rattachés à l'utilisateur, rendus par le module Inventory.</summary>
+    [Inject]
+    private IEnumerable<IUserItemSource> UserItemSources { get; set; } = null!;
+
     [CascadingParameter]
     private Task<AuthenticationState>? AuthStateTask { get; set; }
 
@@ -56,6 +61,9 @@ public partial class Detail : ComponentBase, IAsyncDisposable
     private List<GlpiUserProfile> _userHabilitations = [];
     private List<GlpiUserHistoryEntry> _historyEntries = [];
     private List<ItemReservation> _reservations = [];
+    private Dictionary<string, List<UserItem>> _userItems = [];
+
+    private int? ItemCount(string kind) => _userItems.TryGetValue(kind, out var l) && l.Count > 0 ? l.Count : null;
     private List<FicheTab> _tabs = [];
     private string _activeTabKey = "utilisateur";
     private bool _isSaving;
@@ -131,6 +139,16 @@ public partial class Detail : ComponentBase, IAsyncDisposable
         // savoir comment un créneau est rangé.
         _reservations = [.. await Reservations.GetForUserAsync(_user.Id)];
 
+        // Éléments utilisés / gérés : rattachement par nom, voir IUserItems.
+        _userItems = [];
+        foreach (IUserItemSource source in UserItemSources)
+        {
+            foreach (string kind in source.Kinds)
+            {
+                _userItems[kind] = [.. await source.GetAsync(kind, _user.Id, _user.UserName)];
+            }
+        }
+
         _historyEntries = await _db.UserHistoryEntries.AsNoTracking()
             .Where(h => h.UserId == _user.Id)
             .OrderByDescending(h => h.OccurredAt)
@@ -147,9 +165,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
         // Reprend la liste et l'ordre exacts des onglets de la fiche "Utilisateur" de GLPI
         // (vérifiés sur une instance GLPI réelle via front/user.form.php ; contrairement à
         // Entité/Groupe, GLPI n'a pas d'onglet "Notes" sur la fiche Utilisateur). "Éléments
-        // utilisés"/"Éléments gérés" nécessiteraient de relier un objet du parc (module
-        // Inventory) à un utilisateur (module Web) — même blocage architectural que "Éléments
-        // gérés" sur la fiche Groupe. "Consommables", "Tickets/Problèmes/Changements créés",
+        // utilisés"/"Éléments gérés" passent par le contrat IUserItems (le parc stocke le nom). "Consommables", "Tickets/Problèmes/Changements créés",
         // "Documents", "Réservations", "Certificats", "Licences" et "Contrats" dépendent chacun
         // d'un module entier absent de GlpiNg. "Liens" suppose les intitulés "Liens" de GLPI
         // (absents). "Synchronisation" a un contenu réel depuis l'ajout de l'annuaire LDAP (voir
@@ -161,13 +177,13 @@ public partial class Detail : ComponentBase, IAsyncDisposable
             new("habilitations", "ti-key", "Habilitations", _userHabilitations.Count),
             new("groupes", "ti-users", "Groupes", _user.GroupMemberships.Count),
             new("preferences", "ti-adjustments", "Préférences", null),
-            new("elementsutilises", "ti-device-desktop", "Éléments utilisés", null),
-            new("elementsgeres", "ti-box", "Éléments gérés", null),
+            new("elementsutilises", "ti-device-desktop", "Éléments utilisés", ItemCount(UserItemKinds.Used)),
+            new("elementsgeres", "ti-box", "Éléments gérés", ItemCount(UserItemKinds.Managed)),
             new("securite", "ti-shield", "Sécurité", null),
             new("consommables", "ti-package", "Consommables", null),
-            new("tickets", "ti-ticket", "Tickets créés", null),
-            new("problemes", "ti-alert-triangle", "Problèmes créés", null),
-            new("changements", "ti-replace", "Changements créés", null),
+            new("tickets", "ti-ticket", "Tickets créés", ItemCount(UserItemKinds.Tickets)),
+            new("problemes", "ti-alert-triangle", "Problèmes créés", ItemCount(UserItemKinds.Problems)),
+            new("changements", "ti-replace", "Changements créés", ItemCount(UserItemKinds.Changes)),
             new("documents", "ti-file", "Documents", null),
             new("reservations", "ti-calendar-event", "Réservations", _reservations.Count > 0 ? _reservations.Count : null),
             new("synchronisation", "ti-refresh", "Synchronisation", null),
@@ -184,12 +200,7 @@ public partial class Detail : ComponentBase, IAsyncDisposable
     // à la place du texte générique "n'est pas encore disponible" (voir Detail.razor).
     private static readonly Dictionary<string, string> UnavailableReasons = new()
     {
-        ["elementsutilises"] = "Nécessite de relier les objets du parc (postes, etc.) à un utilisateur — pas encore implémenté (le module Inventory ne dépend pas du module Web où vit GlpiUser).",
-        ["elementsgeres"] = "Nécessite de relier les objets du parc (postes, etc.) à un utilisateur propriétaire — pas encore implémenté (le module Inventory ne dépend pas du module Web où vit GlpiUser).",
         ["consommables"] = "Nécessite un module Consommables qui n'existe pas encore dans GlpiNg.",
-        ["tickets"] = "Nécessite un module Assistance (tickets, SLA) qui n'existe pas encore dans GlpiNg.",
-        ["problemes"] = "Nécessite un module Assistance (problèmes) qui n'existe pas encore dans GlpiNg.",
-        ["changements"] = "Nécessite un module Assistance (changements) qui n'existe pas encore dans GlpiNg.",
         ["documents"] = "Nécessite un module de gestion documentaire qui n'existe pas encore dans GlpiNg.",
         ["liens"] = "Nécessite les intitulés « Liens » de GLPI, qui n'existent pas encore dans GlpiNg.",
         ["certificats"] = "Nécessite un module Certificats qui n'existe pas encore dans GlpiNg.",

@@ -123,6 +123,27 @@ public class InventoryContent
     [JsonPropertyName("batteries")]
     public List<InventoryBattery> Batteries { get; set; } = [];
 
+    [JsonPropertyName("virtualmachines")]
+    public List<InventoryVirtualMachine> VirtualMachines { get; set; } = [];
+
+    [JsonPropertyName("processes")]
+    public List<InventoryProcess> Processes { get; set; } = [];
+
+    [JsonPropertyName("envs")]
+    public List<InventoryEnvironmentVariable> Envs { get; set; } = [];
+
+    [JsonPropertyName("firewall")]
+    public List<InventoryFirewall> Firewalls { get; set; } = [];
+
+    [JsonPropertyName("licenseinfos")]
+    public List<InventoryLicense> LicenseInfos { get; set; } = [];
+
+    [JsonPropertyName("local_users")]
+    public List<InventoryLocalAccount> LocalUsers { get; set; } = [];
+
+    [JsonPropertyName("local_groups")]
+    public List<InventoryLocalAccount> LocalGroups { get; set; } = [];
+
     [JsonPropertyName("usbdevices")]
     public List<InventoryUsbDevice> UsbDevices { get; set; } = [];
 
@@ -611,4 +632,118 @@ public class InventoryAntivirus
 
     [JsonPropertyName("base_version")]
     public string? BaseVersion { get; set; }
+}
+
+public class InventoryVirtualMachine
+{
+    [JsonPropertyName("name")]
+    public string? Name { get; set; }
+
+    [JsonPropertyName("uuid")]
+    public string? Uuid { get; set; }
+
+    [JsonPropertyName("vmtype")]
+    public string? VmType { get; set; }
+
+    [JsonPropertyName("subsystem")]
+    public string? Subsystem { get; set; }
+
+    [JsonPropertyName("status")]
+    public string? Status { get; set; }
+
+    [JsonPropertyName("vcpu")]
+    public int? VCpu { get; set; }
+
+    /// <summary>Mémoire en Mo.</summary>
+    [JsonPropertyName("memory")]
+    public int? MemoryMb { get; set; }
+}
+
+public class InventoryProcess
+{
+    [JsonPropertyName("pid")]
+    public int? Pid { get; set; }
+
+    [JsonPropertyName("user")]
+    public string? User { get; set; }
+
+    [JsonPropertyName("cmd")]
+    public string? Cmd { get; set; }
+
+    /// <summary>Texte, comme l'agent l'envoie (« 0.37 »).</summary>
+    [JsonPropertyName("cpuusage")]
+    public string? CpuUsage { get; set; }
+
+    [JsonPropertyName("virtualmemory")]
+    public long? VirtualMemory { get; set; }
+
+    [JsonPropertyName("started")]
+    public string? Started { get; set; }
+}
+
+public class InventoryEnvironmentVariable
+{
+    [JsonPropertyName("key")]
+    public string? Key { get; set; }
+
+    [JsonPropertyName("val")]
+    public string? Val { get; set; }
+}
+
+public class InventoryLocalAccount
+{
+    [JsonPropertyName("id")]
+    public string? Id { get; set; }
+
+    [JsonPropertyName("name")]
+    public string? Name { get; set; }
+}
+
+public class InventoryFirewall
+{
+    [JsonPropertyName("profile")]
+    public string? Profile { get; set; }
+
+    [JsonPropertyName("status")]
+    public string? Status { get; set; }
+
+    [JsonPropertyName("description")]
+    public string? Description { get; set; }
+
+    [JsonPropertyName("ipaddress")]
+    public string? IpAddress { get; set; }
+
+    [JsonPropertyName("ipaddress6")]
+    public string? IpAddress6 { get; set; }
+}
+
+public class InventoryLicense
+{
+    [JsonPropertyName("name")]
+    public string? Name { get; set; }
+
+    [JsonPropertyName("fullname")]
+    public string? FullName { get; set; }
+
+    [JsonPropertyName("key")]
+    public string? Key { get; set; }
+
+    [JsonPropertyName("productid")]
+    public string? ProductId { get; set; }
+
+    [JsonPropertyName("components")]
+    public string? Components { get; set; }
+
+    /// <summary>« 0 » / « 1 » selon l'agent, parfois un booléen : lu tel quel puis interprété.</summary>
+    [JsonPropertyName("trial")]
+    public System.Text.Json.JsonElement? Trial { get; set; }
+
+    [JsonPropertyName("update")]
+    public System.Text.Json.JsonElement? Update { get; set; }
+
+    [JsonPropertyName("oem")]
+    public System.Text.Json.JsonElement? Oem { get; set; }
+
+    [JsonPropertyName("activation_date")]
+    public string? ActivationDate { get; set; }
 }

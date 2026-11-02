@@ -1,5 +1,6 @@
 ﻿@page "/admin/users/{UserId:int}"
 @using GlpiNg.Web.Models
+@using GlpiNg.Modules.Abstractions.Items
 @using GlpiNg.Modules.Abstractions.Reservations
 @rendermode InteractiveServer
 
@@ -295,6 +296,41 @@ else
                             </button>
                         </div>
                     </EditForm>
+                    break;
+
+                case "elementsutilises":
+                case "elementsgeres":
+                case "tickets":
+                case "problemes":
+                case "changements":
+                    string itemsKind = _activeTabKey switch { "elementsutilises" => UserItemKinds.Used, "elementsgeres" => UserItemKinds.Managed, "tickets" => UserItemKinds.Tickets, "problemes" => UserItemKinds.Problems, _ => UserItemKinds.Changes };
+                    List<UserItem> userItems = _userItems.GetValueOrDefault(itemsKind) ?? [];
+                    <div class="glping-fiche-block">
+                        <div class="glping-fiche-block-title">
+                            <i class="ti @_tabs.First(t => t.Key == _activeTabKey).Icon"></i>@T(_tabs.First(t => t.Key == _activeTabKey).Label)
+                        </div>
+                        @if (userItems.Count == 0)
+                        {
+                            <p class="mb-0 text-secondary">@T("Aucun élément.")</p>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-vcenter card-table">
+                                    <thead><tr><th>@T("Type")</th><th>@T("Nom")</th></tr></thead>
+                                    <tbody>
+                                        @foreach (UserItem item in userItems)
+                                        {
+                                            <tr>
+                                                <td class="text-secondary">@T(item.ItemType)</td>
+                                                <td><a href="@item.Url" class="text-reset fw-semibold">@item.Name</a></td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
                     break;
 
                 case "reservations":
